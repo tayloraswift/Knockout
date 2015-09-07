@@ -1,0 +1,38 @@
+class StyleErrors(object):
+    def __init__(self):
+        self.missing = {}
+        self.tally = {}
+        self.first = ()
+    
+    def add_style_error(self, style, line):
+        if style not in self.tally:
+            self.tally[style] = []
+        self.tally[style].append(line)
+        self.tally[style].sort()
+    
+    def update(self, linenumber):
+        self.missing = { k: [l for l in v if l < linenumber] for k, v in self.missing.items() }
+        self.missing = { k: v for k, v in self.missing.items() if v }
+        for k, v in self.tally.items():
+            if k in self.missing:
+                self.missing[k] += v
+            else:
+                self.missing[k] = v
+        self.tally = {}
+        print(self.missing)
+        if self.missing:
+            ky = min(self.missing, key = lambda k: min(self.missing[k]))
+            self.first = (ky, self.missing[ky])
+        else:
+            self.first = ()
+    
+    def new_error(self, reference=[()]):
+
+        if self.first != reference[0]:
+            reference[0] = self.first
+            return True
+        else:
+            return False
+        
+
+styleerrors = StyleErrors()

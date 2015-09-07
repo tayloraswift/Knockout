@@ -14,7 +14,7 @@ nohints.set_hint_style(cairo.HINT_STYLE_NONE)
 def draw_text(cr):
     # prints text
     
-    for tract in meredith.mere.tracts:
+    for tract in meredith.mipsy.tracts:
         classed_glyphs = tract.extract_glyphs(200, 100)
 
         cr.set_font_options(nohints)
@@ -35,7 +35,7 @@ def draw_text(cr):
 
 def draw_channels(cr, x, y, highlight=False, radius=0):
 
-    for channel in meredith.mere.tracts[meredith.mere.t].channels.channels:
+    for channel in meredith.mipsy.tracts[meredith.mipsy.t].channels.channels:
         
         entrance = ui.Broken_bar(round(channel.railings[0][0][0] + 200), 
                 round(channel.railings[0][0][1] - 5 + 100),
@@ -58,13 +58,13 @@ def _get_fontsize(p, f):
 def draw_annotations(cr):
     
     
-    specials = [i for i, entity in enumerate(meredith.mere.text()) if character(entity) in ['<p>', '</p>', '<br>', '<f>', '</f>']]
+    specials = [i for i, entity in enumerate(meredith.mipsy.text()) if character(entity) in ['<p>', '</p>', '<br>', '<f>', '</f>']]
     
     cr.set_source_rgba(0, 0, 0, 0.4)
     for i in specials:
             
-        if character(meredith.mere.text()[i]) == '<p>':
-            x, y, p, f = meredith.mere.tracts[meredith.mere.t].text_index_location(i)
+        if character(meredith.mipsy.text()[i]) == '<p>':
+            x, y, p, f = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(i)
             x = round(x + 200)
             y = round(y + 100)
             fontsize = _get_fontsize(p, f)
@@ -76,8 +76,8 @@ def draw_annotations(cr):
             cr.line_to(x - 3, y)
             cr.close_path()
             cr.fill()
-        elif character(meredith.mere.text()[i]) == '<br>':
-            x, y, p, f = meredith.mere.tracts[meredith.mere.t].text_index_location(i + 1)
+        elif character(meredith.mipsy.text()[i]) == '<br>':
+            x, y, p, f = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(i + 1)
             fontsize = _get_fontsize(p, f)
             x = round(x + 200)
             y = round(y + 100)
@@ -85,8 +85,8 @@ def draw_annotations(cr):
             cr.rectangle(x - 10, y - 3, 4, 3)
             cr.fill()
         
-        elif character(meredith.mere.text()[i]) == '<f>':
-            x, y, p, f = meredith.mere.tracts[meredith.mere.t].text_index_location(i)
+        elif character(meredith.mipsy.text()[i]) == '<f>':
+            x, y, p, f = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(i)
             fontsize = _get_fontsize(p, f)
             x = round(x + 200)
             y = round(y + 100)
@@ -98,8 +98,8 @@ def draw_annotations(cr):
             cr.close_path()
             cr.fill()
 
-        elif character(meredith.mere.text()[i]) == '</f>':
-            x, y, p, f = meredith.mere.tracts[meredith.mere.t].text_index_location(i)
+        elif character(meredith.mipsy.text()[i]) == '</f>':
+            x, y, p, f = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(i)
             fontsize = _get_fontsize(p, f)
             x = round(x + 200)
             y = round(y + 100)
@@ -117,28 +117,28 @@ def draw_cursors(cr):
 
     cr.set_source_rgba(0, 0, 0, 0.1)
 
-    posts = sorted(list(meredith.mere.selection()))
+    posts = sorted(list(meredith.mipsy.selection()))
 
-    firstline = meredith.mere.tracts[meredith.mere.t].index_to_line(posts[0])
-    lastline = meredith.mere.tracts[meredith.mere.t].index_to_line(posts[1])
+    firstline = meredith.mipsy.tracts[meredith.mipsy.t].index_to_line(posts[0])
+    lastline = meredith.mipsy.tracts[meredith.mipsy.t].index_to_line(posts[1])
 
 
-    start = meredith.mere.tracts[meredith.mere.t].text_index_location(posts[0])[0]
+    start = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(posts[0])[0]
     
     linenumber = firstline
     while True:
         if linenumber != firstline:
-            start = meredith.mere.tracts[meredith.mere.t].glyphs[linenumber].anchor
+            start = meredith.mipsy.tracts[meredith.mipsy.t].glyphs[linenumber].anchor
         
-        stop = meredith.mere.tracts[meredith.mere.t].glyphs[linenumber].stop
+        stop = meredith.mipsy.tracts[meredith.mipsy.t].glyphs[linenumber].stop
 
         if linenumber == lastline:
-            stop = meredith.mere.tracts[meredith.mere.t].text_index_location(posts[1])[0]
+            stop = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(posts[1])[0]
 
-        leading = meredith.mere.tracts[meredith.mere.t].glyphs[linenumber].leading
+        leading = meredith.mipsy.tracts[meredith.mipsy.t].glyphs[linenumber].leading
         
         cr.rectangle(round(200 + start), 
-                round(100 + meredith.mere.tracts[meredith.mere.t].glyphs[linenumber].y - leading), 
+                round(100 + meredith.mipsy.tracts[meredith.mipsy.t].glyphs[linenumber].y - leading), 
                 stop - start, 
                 leading)
         linenumber += 1
@@ -149,14 +149,14 @@ def draw_cursors(cr):
 
     # print cursors
     cr.set_source_rgb(1, 0.2, 0.6)
-    cx, cy, p, f = meredith.mere.tracts[meredith.mere.t].text_index_location(meredith.mere.active_cursor())
+    cx, cy, p, f = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(meredith.mipsy.active_cursor())
 
     cr.rectangle(round(200 + cx - 1), 
                 round(100 + cy - text_t.paragraphclasses[p].leading), 
                 2, 
                 text_t.paragraphclasses[p].leading)
     # special cursor if adjacent to font tag
-    if character(meredith.mere.at(0)) in ['<f>', '</f>']:
+    if character(meredith.mipsy.at(0)) in ['<f>', '</f>']:
         cr.rectangle(round(200 + cx - 3), 
                 round(100 + cy - text_t.paragraphclasses[p].leading), 
                 4, 
@@ -165,7 +165,7 @@ def draw_cursors(cr):
                 round(100 + cy), 
                 4, 
                 2)
-    if character(meredith.mere.at(-1)) in ['<f>', '</f>']:
+    if character(meredith.mipsy.at(-1)) in ['<f>', '</f>']:
         cr.rectangle(round(200 + cx - 1), 
                 round(100 + cy - text_t.paragraphclasses[p].leading), 
                 4, 
@@ -177,14 +177,14 @@ def draw_cursors(cr):
     cr.fill()
 
 
-    cx, cy, p, f = meredith.mere.tracts[meredith.mere.t].text_index_location(meredith.mere.active_select())
+    cx, cy, p, f = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(meredith.mipsy.active_select())
 
     cr.rectangle(round(200 + cx - 1), 
                 round(100 + cy - text_t.paragraphclasses[p].leading), 
                 2, 
                 text_t.paragraphclasses[p].leading)
     # special cursor if adjacent to font tag
-    if character(meredith.mere.at_select(0)) in ['<f>', '</f>']:
+    if character(meredith.mipsy.at_select(0)) in ['<f>', '</f>']:
         cr.rectangle(round(200 + cx - 3), 
                 round(100 + cy - text_t.paragraphclasses[p].leading), 
                 4, 
@@ -193,7 +193,7 @@ def draw_cursors(cr):
                 round(100 + cy), 
                 4, 
                 2)
-    if character(meredith.mere.at_select(-1)) in ['<f>', '</f>']:
+    if character(meredith.mipsy.at_select(-1)) in ['<f>', '</f>']:
         cr.rectangle(round(200 + cx - 1), 
                 round(100 + cy - text_t.paragraphclasses[p].leading), 
                 4, 
@@ -207,7 +207,7 @@ def draw_cursors(cr):
 
 
 def draw_railings(cr, x, y):
-    for channel in meredith.mere.tracts[meredith.mere.t].channels.channels:
+    for channel in meredith.mipsy.tracts[meredith.mipsy.t].channels.channels:
         for railing in channel.railings:
             ui.Interactive_Line([(p[0] + 200, p[1] + 100) for p in railing], 0, 0, 0, 0.3, 2, 3, 20).draw(cr, x, y)
             # draw selections

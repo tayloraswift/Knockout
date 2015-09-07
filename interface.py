@@ -5,12 +5,16 @@ import _pickle as pickle
 
 from text_t import character
 import taylor
+import karlie
+import properties
 import ui
 import tree
 import kevin
 import meredith
 import errors
 import pycairo_font
+
+import constants
 
 import gc
 
@@ -48,9 +52,10 @@ class Display(Gtk.Window):
         self.darea.connect("button-release-event", self.on_button_release)
         self.darea.connect("motion_notify_event", self.motion_notify_event)
         self.connect("key-press-event", self.on_key_press)
+        self.connect("check-resize", self.on_resize)
         
         self.set_title("Lines")
-        self.resize(1000, 600)
+        self.resize(constants.windowwidth, constants.windowheight)
         self.set_position(Gtk.WindowPosition.CENTER)
         self.connect("delete-event", Gtk.main_quit)
         self.show_all()
@@ -69,7 +74,10 @@ class Display(Gtk.Window):
 #            self.clipboard.set_text(data)
 
     def on_draw(self, wid, cr):
+        h, k = self.get_size()
 #        print('draw')
+        cr.rectangle(100, 0, h - 300, k)
+        cr.clip()
         taylor.draw_text(cr)
         taylor.draw_annotations(cr)
         
@@ -82,13 +90,25 @@ class Display(Gtk.Window):
             taylor.draw_cursors(cr)
             taylor.draw_channels(cr, self.x, self.y)
 
+        cr.reset_clip()
         # DRAW UI
-        h, k = self.get_size()
+        cr.rectangle(h - constants.propertieswidth, 0, 
+                300, 
+                k)
+        cr.set_source_rgb(1, 1, 1)
+        cr.fill()
+        
         cr.rectangle(100, 0, 
+                2, 
+                k)
+        
+        cr.rectangle(h - constants.propertieswidth, 0, 
                 2, 
                 k)
         cr.set_source_rgb(0.9, 0.9, 0.9)
         cr.fill()
+        
+        karlie.draw_textboxes(cr)
         
         cr.set_font_size(14)
         cr.set_font_face(self.uifont)
@@ -106,11 +126,16 @@ class Display(Gtk.Window):
         if self.errorpanel.phase >= 20:
             return False
         return True
+    
+    def on_resize(self, w):
+        h, k = self.get_size()
+        properties.panel.resize(h, k)
+        
     def on_button_press(self, w, e):
         
         if e.type == Gdk.EventType.BUTTON_PRESS \
             and e.button == MouseButtons.LEFT_BUTTON:
-            self.mode = tree.take_event(e.x, e.y, 'press')
+            self.mode = tree.take_event(e.x, e.y, 'press', geometry=self.get_size())
 
             self.darea.queue_draw()
             self.down = True
@@ -121,7 +146,7 @@ class Display(Gtk.Window):
         if e.type == Gdk.EventType.BUTTON_RELEASE \
             and e.button == MouseButtons.LEFT_BUTTON:
             self.down = False
-            self.mode = tree.take_event(e.x, e.y, 'release')
+            self.mode = tree.take_event(e.x, e.y, 'release', geometry=self.get_size())
             self.darea.queue_draw()
 
 
@@ -134,9 +159,9 @@ class Display(Gtk.Window):
 #            state = event.state
 
         if Gdk.ModifierType.BUTTON1_MASK and self.down:
-            self.mode = tree.take_event(self.x, self.y, 'press_motion')
+            self.mode = tree.take_event(self.x, self.y, 'press_motion', geometry=self.get_size())
         else:
-            self.mode = tree.take_event(self.x, self.y, 'motion')
+            self.mode = tree.take_event(self.x, self.y, 'motion', geometry=self.get_size())
         self.darea.queue_draw()
 
     
@@ -153,13 +178,13 @@ class Display(Gtk.Window):
         elif e.state & Gdk.ModifierType.CONTROL_MASK:
             
             if name == 'v':
-                meredith.mere.tracts[meredith.mere.t].insert(kevin.deserialize(self.clipboard.wait_for_text()))
+                meredith.mipsy.tracts[meredith.mipsy.t].insert(kevin.deserialize(self.clipboard.wait_for_text()))
 
-            elif name in ['c', 'x'] and meredith.mere.tracts[meredith.mere.t].take_selection():
-                self.clipboard.set_text(kevin.serialize(meredith.mere.tracts[meredith.mere.t].take_selection()), -1)
+            elif name in ['c', 'x'] and meredith.mipsy.tracts[meredith.mipsy.t].take_selection():
+                self.clipboard.set_text(kevin.serialize(meredith.mipsy.tracts[meredith.mipsy.t].take_selection()), -1)
 
                 if name == 'x':
-                    meredith.mere.tracts[meredith.mere.t].delete( * meredith.mere.selection())
+                    meredith.mipsy.tracts[meredith.mipsy.t].delete( * meredith.mipsy.selection())
         
         
         elif name in ['Shift_L', 'Shift_R', 'Control_L', 'Control_R', 'Caps_Lock', 'Escape', 'Tab', 'Alt_L', 'Alt_R', 'Super_L', 'Multi_key']:

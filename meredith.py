@@ -71,4 +71,4 @@ tu = comp.Text('<p class="h1">We begin our story in <em>New York</em>. There onc
 c1 = channels.Channel([[0, 850, False], [0, 1000, False]], [[300, 850, False], [300, 1000, False]])
 c2 = channels.Channel([[350, 850, False], [350, 1000, False]], [[650, 850, False], [650, 1000, False]])
 tu.channels = channels.Channels([c1, c2])
-mere = Meredith([tt, tu])
+mipsy = Meredith([tt, tu])

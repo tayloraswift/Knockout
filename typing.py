@@ -1,8 +1,9 @@
 import meredith
+import time
 from gi.repository import Gdk
 from text_t import character
 
-def type_document(name, value):
+def type_document(name, value, lastpress=[0]):
     if name == 'paragraph':
         meredith.mipsy.tracts[meredith.mipsy.t].insert(['</p>', ['<p>', 'body']])
     

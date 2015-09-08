@@ -88,6 +88,8 @@ paragraphclasses = {}
 paragraphclasses['body'] = ParagraphClass(fontclasses_a, 1.3, 5)
 paragraphclasses['h1'] = ParagraphClass(fontclasses_b, 1.5, 10)
 
+def the_box_submitted(ip):
+    print('the textbox submitted' + ip)
 
 def character(entity):
     if not isinstance(entity, str):

@@ -1,5 +1,5 @@
-import time
 
+from gi.repository import Gdk
 import meredith
 import typing
 import olivia
@@ -25,7 +25,7 @@ button = ui.Button('Add portal', meredith.mipsy.add_channel)
 controls.buttons.append(button)
 
 
-def take_event(x, y, event, key=False, value=None, lastpress=[0], mode=['text'], region=['document'], geometry=None):
+def take_event(x, y, event, key=False, value=None, mode=['text'], region=['document'], geometry=None):
     if key:
         if region[0] == 'document':
             if mode[0] == 'text':
@@ -34,16 +34,26 @@ def take_event(x, y, event, key=False, value=None, lastpress=[0], mode=['text'],
             elif mode[0] == 'channels':
                 name = event
                 olivia.edit_channels(name, None, 'key')
-
+                
+        elif region[0] == 'properties':
+            properties.panel.key_input(event, chr(Gdk.keyval_to_unicode(value)))
+                
     else:
+        # Changing regions
+        
         if x > geometry[0] - constants.propertieswidth:
-            if event == 'press':
+            if event == 'press' and region[0] != 'properties':
                 region[0] = 'properties'
 
         else:
-            if event == 'press':
+            if event == 'press' and region[0] != 'document':
+                # if we're going from properties to document, dump properties
+                if region[0] == 'properties':
+                    properties.panel.press(x, y)
                 region[0] = 'document'
-
+                
+        #############
+        
         if event == 'press':
             if region[0] == 'document':
                 clicked = controls.is_clicked(x, y)
@@ -65,8 +75,9 @@ def take_event(x, y, event, key=False, value=None, lastpress=[0], mode=['text'],
                         pass
                 elif mode[0] == 'channels':
                     olivia.edit_channels(x - 200, y - 100, event)
+                    
             elif region[0] == 'properties':
-                properties.panel.target(x, y)
+                properties.panel.press(x, y)
                 
         elif event == 'press_motion':
             if region[0] == 'document':
@@ -80,6 +91,10 @@ def take_event(x, y, event, key=False, value=None, lastpress=[0], mode=['text'],
 
                 elif mode[0] == 'channels':
                     olivia.edit_channels(x - 200, y - 100, event)
+                    
+            elif region[0] == 'properties':
+                properties.panel.press_motion(x)
+                
         elif event == 'release':
             if region[0] == 'document':
                 if mode[0] == 'channels':

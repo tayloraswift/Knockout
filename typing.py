@@ -1,9 +1,9 @@
 import meredith
 import time
-from gi.repository import Gdk
+
 from text_t import character
 
-def type_document(name, value, lastpress=[0]):
+def type_document(name, char, lastpress=[0]):
     if name == 'paragraph':
         meredith.mipsy.tracts[meredith.mipsy.t].insert(['</p>', ['<p>', 'body']])
     
@@ -56,7 +56,22 @@ def type_document(name, value, lastpress=[0]):
         else:
             meredith.mipsy.tracts[meredith.mipsy.t].cursor.set_cursor(meredith.mipsy.tracts[meredith.mipsy.t].glyphs[li].startindex + len(meredith.mipsy.tracts[meredith.mipsy.t].glyphs[li].glyphs), meredith.mipsy.tracts[meredith.mipsy.t].text)
             meredith.mipsy.match_cursors()
+            
+    elif name == 'Paste':
+        
+        if meredith.mipsy.tracts[meredith.mipsy.t].take_selection():
+            meredith.mipsy.tracts[meredith.mipsy.t].delete( * meredith.mipsy.selection())
+        # char is a LIST in this case
+        meredith.mipsy.tracts[meredith.mipsy.t].insert(char)
+    elif name == 'Copy':
+        sel = meredith.mipsy.tracts[meredith.mipsy.t].take_selection()
+        if sel:
+            return sel
+    elif name == 'Cut':
+        sel = meredith.mipsy.tracts[meredith.mipsy.t].take_selection()
+        if sel:
+            meredith.mipsy.tracts[meredith.mipsy.t].delete( * meredith.mipsy.selection())
+            return sel
+            
     else:
-        # turn key name into unicode value then into character
-        cc = chr(Gdk.keyval_to_unicode(value))
-        meredith.mipsy.tracts[meredith.mipsy.t].insert([cc])
+        meredith.mipsy.tracts[meredith.mipsy.t].insert([char])

@@ -75,6 +75,46 @@ class Blank_Space(object):
             self._i = len(self._text) - 1
             self._j = len(self._text) - 1
         
+        elif name == 'Paste':
+            # check to make sure string contains no dangerous entities
+            if all(isinstance(e, str) for e in char):
+                # delete selection
+                if self._i != self._j:
+                    # sort
+                    if self._i > self._j:
+                        self._i, self._j = self._j, self._i
+                    del self._text[self._i : self._j]
+                    self._j = self._i
+                # take note that char is a LIST now
+                self._text[self._i:self._i] = char
+                self._i += len(char)
+                self._j = self._i
+            else:
+                print('selection contains characters that cannot be pasted into text box')
+        
+        elif name == 'Copy':
+            if self._i != self._j:
+                # sort
+                if self._i > self._j:
+                    self._i, self._j = self._j, self._i
+                
+                self._stamp_glyphs()
+                return self._text[self._i : self._j]
+        
+        elif name == 'Cut':
+            # delete selection
+            if self._i != self._j:
+                # sort
+                if self._i > self._j:
+                    self._i, self._j = self._j, self._i
+                sel = self._text[self._i : self._j]
+                del self._text[self._i : self._j]
+                self._j = self._i
+                
+                self._stamp_glyphs()
+                return sel
+            
+        
         elif char is not None:
             # delete selection
             if self._i != self._j:
@@ -88,7 +128,8 @@ class Blank_Space(object):
             self._j += 1
         
         self._stamp_glyphs()
-    
+        
+        return None
 #    def replace_text(self, text):
 #        self._text = text + [None]
 #        self._stamp_glyphs()

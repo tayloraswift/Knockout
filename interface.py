@@ -10,7 +10,7 @@ import properties
 import ui
 import tree
 import kevin
-import meredith
+
 import errors
 import pycairo_font
 
@@ -19,6 +19,11 @@ import constants
 import gc
 
 
+#def keyvalue_to_char(value):
+#    if value is not None:
+#        return chr(Gdk.keyval_to_unicode(value))
+#    else:
+#        return None
 
 class MouseButtons:
     
@@ -80,6 +85,8 @@ class Display(Gtk.Window):
         cr.clip()
         taylor.draw_text(cr)
         taylor.draw_annotations(cr)
+        
+#        print(self.mode)
         
 
         if self.mode == 'channels':
@@ -172,26 +179,29 @@ class Display(Gtk.Window):
         name = Gdk.keyval_name(e.keyval)
         
         if e.state & Gdk.ModifierType.SHIFT_MASK and name == 'Return':
-            self.mode = tree.take_event(0, 0, 'paragraph', key=True)
+            tree.take_event(0, 0, 'paragraph', key=True)
             
                 
         elif e.state & Gdk.ModifierType.CONTROL_MASK:
             
             if name == 'v':
-                meredith.mipsy.tracts[meredith.mipsy.t].insert(kevin.deserialize(self.clipboard.wait_for_text()))
+                tree.take_event(0, 0, 'Paste', key=True, char = kevin.deserialize(self.clipboard.wait_for_text()) )
 
-            elif name in ['c', 'x'] and meredith.mipsy.tracts[meredith.mipsy.t].take_selection():
-                self.clipboard.set_text(kevin.serialize(meredith.mipsy.tracts[meredith.mipsy.t].take_selection()), -1)
-
-                if name == 'x':
-                    meredith.mipsy.tracts[meredith.mipsy.t].delete( * meredith.mipsy.selection())
+            elif name in ['c', 'x']:
+                if name == 'c':
+                    cp = tree.take_event(0, 0, 'Copy', key=True)
+                else:
+                    cp = tree.take_event(0, 0, 'Cut', key=True)
+                    
+                if cp is not None:
+                    self.clipboard.set_text(kevin.serialize(cp), -1)
         
         
         elif name in ['Shift_L', 'Shift_R', 'Control_L', 'Control_R', 'Caps_Lock', 'Escape', 'Tab', 'Alt_L', 'Alt_R', 'Super_L', 'Multi_key']:
             pass
         
         else:
-            self.mode = tree.take_event(0, 0, name, key=True, value=e.keyval)
+            tree.take_event(0, 0, name, key=True, char = chr(Gdk.keyval_to_unicode(e.keyval)) )
         self.darea.queue_draw()
         
         #draw errors

@@ -1,5 +1,3 @@
-
-from gi.repository import Gdk
 import meredith
 import typing
 import olivia
@@ -25,18 +23,19 @@ button = ui.Button('Add portal', meredith.mipsy.add_channel)
 controls.buttons.append(button)
 
 
-def take_event(x, y, event, key=False, value=None, mode=['text'], region=['document'], geometry=None):
+
+def take_event(x, y, event, key=False, char=None, mode=['text'], region=['document'], geometry=None):
     if key:
         if region[0] == 'document':
             if mode[0] == 'text':
-                typing.type_document(event, value)
+                return typing.type_document(event, char)
 
             elif mode[0] == 'channels':
                 name = event
                 olivia.edit_channels(name, None, 'key')
                 
         elif region[0] == 'properties':
-            properties.panel.key_input(event, chr(Gdk.keyval_to_unicode(value)))
+            return properties.panel.key_input(event, char)
                 
     else:
         # Changing regions

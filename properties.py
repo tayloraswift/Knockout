@@ -34,7 +34,7 @@ class Properties_Panel(object):
             self._items[self._active_box_i].defocus()
             self._active_box_i = None
         else:
-            self._items[self._active_box_i].type_box(name, char)
+            return self._items[self._active_box_i].type_box(name, char)
     
     def press(self, x, y):
         b = None

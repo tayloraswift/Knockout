@@ -1,7 +1,5 @@
 from gi.repository import Gtk, Gdk, GObject
 import cairo
-import freetype
-import _pickle as pickle
 
 from text_t import character
 import taylor
@@ -16,7 +14,7 @@ import pycairo_font
 
 import constants
 
-import gc
+#import gc
 
 
 #def keyvalue_to_char(value):
@@ -121,7 +119,7 @@ class Display(Gtk.Window):
         cr.set_font_face(self.uifont)
         
         if self.errorpanel is not None:
-            self.errorpanel.draw(cr, h)
+            self.errorpanel.draw(cr, h - constants.propertieswidth)
         
         tree.controls.draw(cr)
 

@@ -2,7 +2,7 @@ import ctypes
 import cairo
 
 import sys
-import gc
+
 
 def _encode_filename(filename):
     encoded = filename.encode(sys.getfilesystemencoding())
@@ -75,5 +75,5 @@ def create_cairo_font_face_for_file (filename, faceindex=0, loadoptions=0):
     del ft_face
     del _surface
     print('Font loaded')
-    gc.collect()
+
     return face

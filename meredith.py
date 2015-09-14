@@ -14,6 +14,9 @@ class Meredith(object):
     def __init__(self, tracts):
         self.tracts = tracts
         self.t = 0
+        self.rerender()
+    
+    def rerender(self):
         for tr in self.tracts:
             tr.deep_recalculate()
     
@@ -49,6 +52,9 @@ class Meredith(object):
         return self.tracts[self.t].text[self.tracts[self.t].cursor.cursor + relativeindex]
     def at_select(self, relativeindex=0):
         return self.tracts[self.t].text[self.tracts[self.t].select.cursor + relativeindex]
+    
+    def glyph_at(self, relativeindex=0):
+        return self.tracts[self.t].text_index_location(self.tracts[self.t].cursor.cursor + relativeindex)
             
     def cdelete(self, rel1, rel2):
         return self.tracts[self.t].delete(self.tracts[self.t].cursor.cursor + rel1, self.tracts[self.t].cursor.cursor + rel2)
@@ -66,6 +72,16 @@ class Meredith(object):
 
     def add_channel(self):
         self.tracts[self.t].channels.add_channel()
+    
+    def rename_paragraph_class(self, old, new):
+        for tract in self.tracts:
+            tract.text[:] = [['<p>', new] if e == ['<p>', old] else e for e in tract.text]
+
+    def change_paragraph_class(self, i, po):
+        self.tracts[self.t].text[i][1] = po
+            
+#    def modify_font(self, p, names):
+#        fonts.paragraph_classes[p].fontclasses[names].update_path(path) 
 
 tu = comp.Text('<p class="h1">We begin our story in <em>New York</em>. There once was <strong>a girl</strong> known by everyone and no one. Her heart belonged to someone who couldn’t stay. </p><p>They loved each other recklessly.</p><p>They paid the price. She <em>danced</em> to forget him. He drove past her street every night. <em>She made <strong>friends and enemies</em>. He only</strong> saw her in his dreams. Then one day he came back. Timing is a funny thing. And everyone was watching. She lost him but she found herself and somehow that was everything.</p>')
 c1 = channels.Channel([[0, 850, False], [0, 1000, False]], [[300, 850, False], [300, 1000, False]])

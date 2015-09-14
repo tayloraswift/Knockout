@@ -1,6 +1,6 @@
 import meredith
 
-import text_t
+import fonts
 from text_t import character
 import cairo
 import math
@@ -21,12 +21,12 @@ def draw_text(cr):
         for name, glyphs in classed_glyphs.items():
             cr.set_source_rgb(0, 0, 0)
             try:
-                cr.set_font_size(text_t.paragraphclasses[name[0]].fontclasses[name[1]].fontsize)
-                cr.set_font_face(text_t.paragraphclasses[name[0]].fontclasses[name[1]].font)
+                cr.set_font_size(fonts.paragraph_classes[name[0]].fontclasses[name[1]].fontsize)
+                cr.set_font_face(fonts.paragraph_classes[name[0]].fontclasses[name[1]].font)
             except KeyError:
                 cr.set_source_rgb(1, 0.15, 0.2)
-                cr.set_font_size(text_t.paragraphclasses[name[0]].fontclasses[()].fontsize)
-                cr.set_font_face(text_t.paragraphclasses[name[0]].fontclasses[()].font)
+                cr.set_font_size(fonts.paragraph_classes[name[0]].fontclasses[()].fontsize)
+                cr.set_font_face(fonts.paragraph_classes[name[0]].fontclasses[()].font)
 
             cr.show_glyphs(glyphs)
             
@@ -50,9 +50,9 @@ def draw_channels(cr, x, y, highlight=False, radius=0):
 
 def _get_fontsize(p, f):
     try:
-        fontsize = text_t.paragraphclasses[p].fontclasses[f].fontsize
+        fontsize = fonts.paragraph_classes[p].fontclasses[f].fontsize
     except KeyError:
-        fontsize = text_t.paragraphclasses[p].fontclasses[()].fontsize
+        fontsize = fonts.paragraph_classes[p].fontclasses[()].fontsize
     return fontsize
     
 def draw_annotations(cr):
@@ -65,9 +65,13 @@ def draw_annotations(cr):
             
         if character(meredith.mipsy.text()[i]) == '<p>':
             x, y, p, f = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(i)
+            if i == meredith.mipsy.glyph_at(0)[2][1]:
+                cr.set_source_rgba(1, 0.2, 0.6, 0.7)
+            else:
+                cr.set_source_rgba(0, 0, 0, 0.4)
             x = round(x + 200)
             y = round(y + 100)
-            fontsize = _get_fontsize(p, f)
+            fontsize = _get_fontsize(p[0], f)
             
             cr.move_to(x, y)
             cr.rel_line_to(0, round(-fontsize))
@@ -78,7 +82,7 @@ def draw_annotations(cr):
             cr.fill()
         elif character(meredith.mipsy.text()[i]) == '<br>':
             x, y, p, f = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(i + 1)
-            fontsize = _get_fontsize(p, f)
+            fontsize = _get_fontsize(p[0], f)
             x = round(x + 200)
             y = round(y + 100)
             cr.rectangle(x - 6, y - round(fontsize), 3, round(fontsize))
@@ -87,7 +91,7 @@ def draw_annotations(cr):
         
         elif character(meredith.mipsy.text()[i]) == '<f>':
             x, y, p, f = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(i)
-            fontsize = _get_fontsize(p, f)
+            fontsize = _get_fontsize(p[0], f)
             x = round(x + 200)
             y = round(y + 100)
             
@@ -100,7 +104,7 @@ def draw_annotations(cr):
 
         elif character(meredith.mipsy.text()[i]) == '</f>':
             x, y, p, f = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(i)
-            fontsize = _get_fontsize(p, f)
+            fontsize = _get_fontsize(p[0], f)
             x = round(x + 200)
             y = round(y + 100)
             
@@ -152,13 +156,13 @@ def draw_cursors(cr):
     cx, cy, p, f = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(meredith.mipsy.active_cursor())
 
     cr.rectangle(round(200 + cx - 1), 
-                round(100 + cy - text_t.paragraphclasses[p].leading), 
+                round(100 + cy - fonts.paragraph_classes[p[0]].leading), 
                 2, 
-                text_t.paragraphclasses[p].leading)
+                fonts.paragraph_classes[p[0]].leading)
     # special cursor if adjacent to font tag
     if character(meredith.mipsy.at(0)) in ['<f>', '</f>']:
         cr.rectangle(round(200 + cx - 3), 
-                round(100 + cy - text_t.paragraphclasses[p].leading), 
+                round(100 + cy - fonts.paragraph_classes[p[0]].leading), 
                 4, 
                 2)
         cr.rectangle(round(200 + cx - 3), 
@@ -167,7 +171,7 @@ def draw_cursors(cr):
                 2)
     if character(meredith.mipsy.at(-1)) in ['<f>', '</f>']:
         cr.rectangle(round(200 + cx - 1), 
-                round(100 + cy - text_t.paragraphclasses[p].leading), 
+                round(100 + cy - fonts.paragraph_classes[p[0]].leading), 
                 4, 
                 2)
         cr.rectangle(round(200 + cx - 1), 
@@ -180,13 +184,13 @@ def draw_cursors(cr):
     cx, cy, p, f = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(meredith.mipsy.active_select())
 
     cr.rectangle(round(200 + cx - 1), 
-                round(100 + cy - text_t.paragraphclasses[p].leading), 
+                round(100 + cy - fonts.paragraph_classes[p[0]].leading), 
                 2, 
-                text_t.paragraphclasses[p].leading)
+                fonts.paragraph_classes[p[0]].leading)
     # special cursor if adjacent to font tag
     if character(meredith.mipsy.at_select(0)) in ['<f>', '</f>']:
         cr.rectangle(round(200 + cx - 3), 
-                round(100 + cy - text_t.paragraphclasses[p].leading), 
+                round(100 + cy - fonts.paragraph_classes[p[0]].leading), 
                 4, 
                 2)
         cr.rectangle(round(200 + cx - 3), 
@@ -195,7 +199,7 @@ def draw_cursors(cr):
                 2)
     if character(meredith.mipsy.at_select(-1)) in ['<f>', '</f>']:
         cr.rectangle(round(200 + cx - 1), 
-                round(100 + cy - text_t.paragraphclasses[p].leading), 
+                round(100 + cy - fonts.paragraph_classes[p[0]].leading), 
                 4, 
                 2)
         cr.rectangle(round(200 + cx - 1), 

@@ -22,13 +22,24 @@ controls.buttons.append(button)
 button = ui.Button('Add portal', meredith.mipsy.add_channel)
 controls.buttons.append(button)
 
-
+def paragraph_context_changed(previous=[None]):
+    p = meredith.mipsy.glyph_at(0)[2]
+    if p != previous[0]:
+        previous[0] = p
+        return p
+    else:
+        return None
 
 def take_event(x, y, event, key=False, char=None, mode=['text'], region=['document'], geometry=None):
     if key:
         if region[0] == 'document':
             if mode[0] == 'text':
-                return typing.type_document(event, char)
+                clipboard = typing.type_document(event, char)
+                # check if paragraph context changed
+                p = paragraph_context_changed()
+                if p is not None:
+                    properties.panel.refresh_class(p)
+                return clipboard
 
             elif mode[0] == 'channels':
                 name = event
@@ -72,6 +83,11 @@ def take_event(x, y, event, key=False, char=None, mode=['text'], region=['docume
                     except IndexError:
                         # occurs if an empty channel is selected
                         pass
+                    # check if paragraph context changed
+                    p = paragraph_context_changed()
+                    if p is not None:
+                        properties.panel.refresh_class(p)
+                    
                 elif mode[0] == 'channels':
                     olivia.edit_channels(x - 200, y - 100, event)
                     
@@ -101,6 +117,8 @@ def take_event(x, y, event, key=False, char=None, mode=['text'], region=['docume
                 
         elif event == 'motion':
             controls.update(x, y)
+            if x > geometry[0] - constants.propertieswidth:
+                properties.panel.hover(x, y)
     
     return mode[0]
 

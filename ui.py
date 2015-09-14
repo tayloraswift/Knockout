@@ -124,8 +124,6 @@ class Broken_bar(object):
     def draw(self, cr, x, y):
         cr.set_source_rgba(self.r, self.g, self.b, self.a)
 
-            
-        
         cr.rectangle(self.x1, self.y1, self.x2 - self.x1, 5)
         cr.clip()
         for f in range( (self.x2 - self.x1) //4):
@@ -198,7 +196,6 @@ class Panel(object):
         self.x = x
         self.y = y
 
-    
 
     def replace_brokenbars(self, bars):
         self.brokenbars = bars

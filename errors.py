@@ -19,7 +19,7 @@ class StyleErrors(object):
             else:
                 self.missing[k] = v
         self.tally = {}
-        print(self.missing)
+
         if self.missing:
             ky = min(self.missing, key = lambda k: min(self.missing[k]))
             self.first = (ky, self.missing[ky])
@@ -33,6 +33,23 @@ class StyleErrors(object):
             return True
         else:
             return False
-        
+        FT_Exception
 
 styleerrors = StyleErrors()
+
+"""
+class Error_noticeboard(object):
+    def __init__(self):
+        self.new = False
+        self.errors = []
+    
+    def push_new(self, name, subtitle):
+        self.errors.append((name, subtitle))
+        self.new = True
+    
+    def is_new(self):
+        if self.new:
+            return True
+"""    
+
+        

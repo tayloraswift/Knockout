@@ -294,6 +294,7 @@ class Blank_Space(Panel_object):
         self._label = self._build_line(self.x, self.y + self.font.fontsize + 5, self.name.upper(), self.font, factor=11/self.font.fontsize)
         
         self._active = False
+        self._hover = None
         self._should_update = update
         
         self._dropdown_active = False
@@ -576,7 +577,6 @@ class Object_Menu(Blank_Space):
         # must be list
         self._text = default + [None]
         self._previous = ''.join(default)
-
         
         self._callback = callback
         self._menu_callback = menu_callback
@@ -596,9 +596,17 @@ class Object_Menu(Blank_Space):
             self._active = True
             self._dropdown_active = True
             print('DROPDOWN')
-    
+
+            
+    def hover(self, x):
+        if x > self.x + self.width - 40:
+            self._hover = 2
+        else:
+            self._hover = None
+        
     def _sup_draw(self, cr):
-        if self._dropdown_active:
+        if self._dropdown_active or self._hover == 2:
+            self._hover = None
             cr.set_source_rgb(1, 0.2, 0.6)
         else:
             cr.set_source_rgba(0, 0, 0, 0.7)

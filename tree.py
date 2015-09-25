@@ -1,7 +1,7 @@
 import meredith
 import typing
 import olivia
-import properties
+import karlie
 
 import constants
 
@@ -30,7 +30,8 @@ def paragraph_context_changed(previous=[None]):
     else:
         return None
 
-def take_event(x, y, event, key=False, char=None, mode=['text'], region=['document'], geometry=None):
+def take_event(x, y, event, key=False, char=None, mode=['text'], region=['document', 'document'], geometry=None):
+
     if key:
         if region[0] == 'document':
             if mode[0] == 'text':
@@ -38,28 +39,35 @@ def take_event(x, y, event, key=False, char=None, mode=['text'], region=['docume
                 # check if paragraph context changed
                 p = paragraph_context_changed()
                 if p is not None:
-                    properties.panel.refresh_class(p)
+                    karlie.panel.refresh_class(p)
                 return clipboard
 
             elif mode[0] == 'channels':
                 name = event
-                olivia.edit_channels(name, None, 'key')
+                olivia.dibbles.key_input(name)
                 
         elif region[0] == 'properties':
-            return properties.panel.key_input(event, char)
+            return karlie.panel.key_input(event, char)
                 
     else:
         # Changing regions
-        
         if x > geometry[0] - constants.propertieswidth:
+            if region[1] != 'properties':
+                region[1] = 'properties'
             if event == 'press' and region[0] != 'properties':
                 region[0] = 'properties'
 
         else:
+            if region[1] != 'document':
+#                noticeboard.refresh.push_change()
+
+                if event == 'motion':
+                    karlie.panel.hover(x, y)
+                region[1] = 'document'
             if event == 'press' and region[0] != 'document':
                 # if we're going from properties to document, dump properties
                 if region[0] == 'properties':
-                    properties.panel.press(x, y)
+                    karlie.panel.press(x, y)
                 region[0] = 'document'
                 
         #############
@@ -86,13 +94,13 @@ def take_event(x, y, event, key=False, char=None, mode=['text'], region=['docume
                     # check if paragraph context changed
                     p = paragraph_context_changed()
                     if p is not None:
-                        properties.panel.refresh_class(p)
+                        karlie.panel.refresh_class(p)
                     
                 elif mode[0] == 'channels':
-                    olivia.edit_channels(x - 200, y - 100, event)
+                    olivia.dibbles.press(x - 200, y - 100)
                     
             elif region[0] == 'properties':
-                properties.panel.press(x, y)
+                karlie.panel.press(x, y)
                 
         elif event == 'press_motion':
             if region[0] == 'document':
@@ -105,20 +113,27 @@ def take_event(x, y, event, key=False, char=None, mode=['text'], region=['docume
                         pass
 
                 elif mode[0] == 'channels':
-                    olivia.edit_channels(x - 200, y - 100, event)
+                    olivia.dibbles.press_motion(x - 200, y - 100)
                     
             elif region[0] == 'properties':
-                properties.panel.press_motion(x)
+                karlie.panel.press_motion(x)
                 
         elif event == 'release':
             if region[0] == 'document':
                 if mode[0] == 'channels':
-                    olivia.edit_channels(x - 200, y - 100, event)
+                    olivia.dibbles.release()
                 
         elif event == 'motion':
-            controls.update(x, y)
+#            controls.update(x, y)
             if x > geometry[0] - constants.propertieswidth:
-                properties.panel.hover(x, y)
+                karlie.panel.hover(x, y)
+            else:
+                if mode[0] == 'text':
+                    pass
+
+                elif mode[0] == 'channels':
+                    olivia.dibbles.hover(x - 200, y - 100)
+
     
     return mode[0]
 

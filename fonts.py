@@ -1,5 +1,6 @@
 import freetype
 import pycairo_font
+import copy
 
 ordinalmap = {
         'other': -1,
@@ -40,7 +41,7 @@ class FFace(freetype.Face):
         
         
 class TypeClass(object):
-    def __init__(self, path, fontsize, tracking = 0):
+    def __init__(self, path=None, fontsize=13, tracking = 0):
         self.path = path
         self.path_valid = True
         
@@ -88,33 +89,49 @@ class ParagraphClass(object):
     def replace_fontclass(self, names, fontclass):
         self.fontclasses[names] = fontclass
 
+def add_paragraph_class(name, clone):
+    if name not in paragraph_classes:
+        paragraph_classes[name] = _clone_paragraph_class(clone)
 
+def _clone_font_class(p, f):
+    ff = paragraph_classes[p].fontclasses[f]
+    attributes = ff.path, ff.fontsize, ff.tracking
+    return TypeClass( * attributes )
+
+def _clone_paragraph_class(p):
+    pp = paragraph_classes[p]
+    attributes = pp.leading, pp.margin_bottom
+    new_class = ParagraphClass( * attributes )
+    for f in pp.fontclasses:
+        new_class.replace_fontclass(f, _clone_font_class(p, f))
+    
+    return new_class
 
 _interface_class = ParagraphClass(16, 5)
-_interface_class.replace_fontclass((), TypeClass('/home/kelvin/.fonts/NeueFrutiger45.otf', 13, tracking=0.5))
-_interface_class.replace_fontclass(('strong',), TypeClass('/home/kelvin/.fonts/NeueFrutiger65.otf', 13, tracking=1))
-_interface_class.replace_fontclass(('title',), TypeClass('/home/kelvin/.fonts/NeueFrutiger45.otf', 18, tracking=4))
+_interface_class.replace_fontclass((), TypeClass(path='/home/kelvin/.fonts/NeueFrutiger45.otf', fontsize=13, tracking=0.5))
+_interface_class.replace_fontclass(('strong',), TypeClass(path='/home/kelvin/.fonts/NeueFrutiger65.otf', fontsize=13, tracking=1))
+_interface_class.replace_fontclass(('title',), TypeClass(path='/home/kelvin/.fonts/NeueFrutiger45.otf', fontsize=18, tracking=4))
 
 _h1_class = ParagraphClass(28, 10)
-_h1_class.replace_fontclass((), TypeClass("/home/kelvin/.fonts/NeueFrutiger45.otf", 18))
-_h1_class.replace_fontclass(('caption',), TypeClass("/home/kelvin/.fonts/NeueFrutiger45.otf", 15))
-_h1_class.replace_fontclass(('emphasis',), TypeClass("/home/kelvin/.fonts/NeueFrutiger45Italic.otf", 18))
-_h1_class.replace_fontclass(('strong',), TypeClass("/home/kelvin/.fonts/NeueFrutiger65.otf", 18))
-_h1_class.replace_fontclass(('emphasis', 'strong'), TypeClass("/home/kelvin/.fonts/NeueFrutiger65Italic.otf", 18))
+_h1_class.replace_fontclass((), TypeClass(path="/home/kelvin/.fonts/NeueFrutiger45.otf", fontsize=18))
+_h1_class.replace_fontclass(('caption',), TypeClass(path="/home/kelvin/.fonts/NeueFrutiger45.otf", fontsize=15))
+_h1_class.replace_fontclass(('emphasis',), TypeClass(path="/home/kelvin/.fonts/NeueFrutiger45Italic.otf", fontsize=18))
+_h1_class.replace_fontclass(('strong',), TypeClass(path="/home/kelvin/.fonts/NeueFrutiger65.otf", fontsize=18))
+_h1_class.replace_fontclass(('emphasis', 'strong'), TypeClass(path="/home/kelvin/.fonts/NeueFrutiger65Italic.otf", fontsize=18))
 
 _body_class = ParagraphClass(20, 5)
-_body_class.replace_fontclass((), TypeClass("/home/kelvin/.fonts/Proforma-Book.otf", 15))
-_body_class.replace_fontclass(('caption',), TypeClass("/home/kelvin/.fonts/NeueFrutiger45.otf", 13))
-_body_class.replace_fontclass(('emphasis',), TypeClass("/home/kelvin/.fonts/Proforma-BookItalic.otf", 15))
-_body_class.replace_fontclass(('strong',), TypeClass("/home/kelvin/.fonts/Proforma-Bold.otf", 15))
-_body_class.replace_fontclass(('emphasis', 'strong',), TypeClass("/home/kelvin/.fonts/Proforma-BoldItalic.otf", 15))
+_body_class.replace_fontclass((), TypeClass(path="/home/kelvin/.fonts/Proforma-Book.otf", fontsize=15))
+_body_class.replace_fontclass(('caption',), TypeClass(path="/home/kelvin/.fonts/NeueFrutiger45.otf", fontsize=13))
+_body_class.replace_fontclass(('emphasis',), TypeClass(path="/home/kelvin/.fonts/Proforma-BookItalic.otf", fontsize=15))
+_body_class.replace_fontclass(('strong',), TypeClass(path="/home/kelvin/.fonts/Proforma-Bold.otf", fontsize=15))
+_body_class.replace_fontclass(('emphasis', 'strong',), TypeClass(path="/home/kelvin/.fonts/Proforma-BoldItalic.otf", fontsize=15))
 
 _q_class = ParagraphClass(20, 5)
-_q_class.replace_fontclass((), TypeClass("/home/kelvin/.fonts/Proforma-BookItalic.otf", 15))
-_q_class.replace_fontclass(('caption',), TypeClass("/home/kelvin/.fonts/NeueFrutiger45.otf", 13))
-_q_class.replace_fontclass(('emphasis',), TypeClass("/home/kelvin/.fonts/Proforma-Book.otf", 15))
-_q_class.replace_fontclass(('strong',), TypeClass("/home/kelvin/.fonts/Proforma-BoldItalic.otf", 15))
-_q_class.replace_fontclass(('emphasis', 'strong',), TypeClass("/home/kelvin/.fonts/Proforma-Bold.otf", 15))
+_q_class.replace_fontclass((), TypeClass(path="/home/kelvin/.fonts/Proforma-BookItalic.otf", fontsize=15))
+_q_class.replace_fontclass(('caption',), TypeClass(path="/home/kelvin/.fonts/NeueFrutiger45.otf", fontsize=13))
+_q_class.replace_fontclass(('emphasis',), TypeClass(path="/home/kelvin/.fonts/Proforma-Book.otf", fontsize=15))
+_q_class.replace_fontclass(('strong',), TypeClass(path="/home/kelvin/.fonts/Proforma-BoldItalic.otf", fontsize=15))
+_q_class.replace_fontclass(('emphasis', 'strong',), TypeClass(path="/home/kelvin/.fonts/Proforma-Bold.otf", fontsize=15))
 
 paragraph_classes = {'_interface': _interface_class,
         'body': _body_class,

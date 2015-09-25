@@ -10,7 +10,7 @@ class Base_kookie(object):
         self._height = height
         
         self._active = None
-        self._hover = None
+
         self._should_update = update
         
         self._texts = []
@@ -70,12 +70,13 @@ class Base_kookie(object):
     
     def is_over(self, x, y):
         if self._y <= y <= self._y_bottom and self._x <= x <= self._x_right:
-            return x
+            return True
         else:
-            return None
+            return False
     
     def is_over_hover(self, x, y):
-        return None
+        return False
+    
     
     def type_box(self, name, char):
         pass
@@ -123,12 +124,12 @@ class Tabs(Base_kookie):
         pass
 
     def hover(self, x):
-        self._hover = self._target(x)
+        return self._target(x)
 
     def active_name(self):
         return self._signals[self._active]
 
-    def draw(self, cr):
+    def draw(self, cr, hover=(None, None)):
         cr.set_font_size(self.font.fontsize)
         cr.set_font_face(self.font.font)
         
@@ -148,9 +149,9 @@ class Tabs(Base_kookie):
 
                 cr.set_source_rgb(1,1,1)
                 
-            elif self._hover is not None and i == self._hover:
+            elif i == hover[1]:
                 cr.set_source_rgba(1, 0.2, 0.6, 1)
-                self._hover = None
+
             else:
                 cr.set_source_rgb(0,0,0)
             cr.show_glyphs(self._texts[i])
@@ -189,13 +190,9 @@ class Menu(Base_kookie):
             return True
 
     def hover(self, x, y):
-        self._hover = self._target(x, y)
-        if self._hover is None:
-            return False
-        else:
-            return True
+        return self._target(x, y)
 
-    def draw(self, cr):
+    def draw(self, cr, hover=(None, None)):
         cr.set_source_rgba(0.8, 0.8, 0.8, 1)
         cr.rectangle(self._x, self._y, self._width, self._height)
         cr.fill()
@@ -207,12 +204,11 @@ class Menu(Base_kookie):
         cr.set_font_face(self.font.font)
         
         for i, label in enumerate(self._texts):
-            if self._hover is not None and i == self._hover:
+            if i == hover[1] and hover[0] == 'menu':
                 cr.set_source_rgba(1, 0.2, 0.6, 1)
                 cr.rectangle(self._x, self._y + i*self._item_height, self._width, self._item_height)
                 cr.fill()
                 cr.set_source_rgb(1, 1, 1)
-                self._hover = None
             else:
                 cr.set_source_rgb(0,0,0)
             cr.show_glyphs(label)
@@ -229,9 +225,9 @@ class Heading(Base_kookie):
         self._add_static_text(x, y + 1.5*(height - self.font.fontsize), text, fontsize=fontsize, upper=upper)
     
     def is_over(self, x, y):
-        return None
+        return False
         
-    def draw(self, cr):
+    def draw(self, cr, hover=(None, None)):
         
         cr.set_source_rgb(0,0,0)
         
@@ -293,13 +289,9 @@ class Blank_space(Base_kookie):
         
     def is_over(self, x, y):
         if self._y <= y <= self._y_bottom and self._x - 10 <= x <= self._x_right + 10:
-            if x < self._x:
-                x = self._x
-            elif x > self._x + self._width:
-                x = self._x + self._width
-            return x
+            return True
         else:
-            return None
+            return False
 
     def _entry(self):
         return ''.join(self._text[:-1])
@@ -436,7 +428,20 @@ class Blank_space(Base_kookie):
 
     def focus(self, x):
         self._active = True
-        self._i = self._target(x)
+        
+        # clip to edges of visible text
+        if x < self._x:
+            self._i = self._target(self._x)
+            # inch left or right
+            if self._glyphs[self._i][1] > self._x:
+                self._i -= 1
+        elif x > self._x + self._width:
+            self._i = self._target(self._x + self._width)
+            
+            if self._glyphs[self._i][1] < self._x + self._width:
+                self._i += 1
+        else:
+            self._i = self._target(x)
         self._j = self._i
         
         self._center_x(self._glyphs[self._j][1])
@@ -462,29 +467,26 @@ class Blank_space(Base_kookie):
         return self._should_update
 
     def hover(self, x):
-        self._hover = 1
-
+        return 1
     # drawing
-    def _sup_draw(self, cr):
+    def _sup_draw(self, cr, hover):
         pass
     
-    def draw(self, cr):
+    def draw(self, cr, hover=(None, None)):
     
-        self._sup_draw(cr)
+        self._sup_draw(cr, hover=hover)
         
         if self.broken:
-            if self._hover:
+            if hover[0] is not None:
                 resting_bar_color = self._broken_active_bar_color
-                self._hover = None
             else:
                 resting_bar_color = self._broken_resting_bar_color
             active_bar_color = self._broken_active_bar_color
             resting_text_color = self._broken_resting_text_color
             active_text_color = self._broken_active_text_color
         else:
-            if self._hover:
+            if hover[0] is not None:
                 resting_bar_color = self._active_bar_color
-                self._hover = None
             else:
                 resting_bar_color = self._resting_bar_color
             active_bar_color = self._active_bar_color
@@ -569,9 +571,10 @@ class Numeric_field(Blank_space):
         self._template = self._build_line(self._x, self._y + self.font.fontsize + 5, text, self.font, factor, sub_minus=True)
 
 class Object_menu(Blank_space):
-    def __init__(self, x, y, width, default, callback, menu_callback, name=None, update=False):
+    def __init__(self, x, y, width, default, callback, addition_callback, menu_callback, name=None, update=False):
         Blank_space.__init__(self, x, y, width, default, callback, name, update)
 
+        self._addition_callback = addition_callback
         self._menu_callback = menu_callback
         self.broken = False
         self._dropdown_active = False
@@ -586,20 +589,27 @@ class Object_menu(Blank_space):
             self._center_x(self._glyphs[self._j][1])
         else:
             self.defocus()
-            self._menu_callback()
-            self._active = True
-            self._dropdown_active = True
-            print('DROPDOWN')
+            if x < self._x + self._width - 20:
+                self._addition_callback()
+            else:
+                self._menu_callback()
+                self._active = True
+                self._dropdown_active = True
+                print('DROPDOWN')
             
     def hover(self, x):
-        if x > self._x + self._width - 40:
-            self._hover = 2
+        if x < self._x + self._width - 40:
+            j = 1
+        elif x < self._x + self._width - 20:
+            j = 2
         else:
-            self._hover = 1
+            j = 3
+        return j
         
-    def _sup_draw(self, cr):
-        if self._dropdown_active or self._hover == 2:
-            self._hover = None
+    def _sup_draw(self, cr, hover=(None, None)):
+        if self._dropdown_active:
+            cr.set_source_rgb(1, 0.2, 0.6)
+        elif hover[1] == 3:
             cr.set_source_rgb(1, 0.2, 0.6)
         else:
             cr.set_source_rgba(0, 0, 0, 0.7)
@@ -607,4 +617,12 @@ class Object_menu(Blank_space):
         cr.rel_line_to(8, 0)
         cr.rel_line_to(-4, 4*1.41)
         cr.close_path()
+        cr.fill()
+
+        if hover[1] == 2:
+            cr.set_source_rgb(1, 0.2, 0.6)
+        else:
+            cr.set_source_rgba(0, 0, 0, 0.7)
+        cr.rectangle(self._x + self._width - 25 - 8, self._y + 5, 2, 12)
+        cr.rectangle(self._x + self._width - 25 - 13, self._y + 5 + 5, 12, 2)
         cr.fill()

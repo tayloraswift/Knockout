@@ -4,13 +4,15 @@ import cairo
 from text_t import character
 import taylor
 import karlie
-import properties
+
 import ui
 import tree
 import kevin
 
 import errors
 import pycairo_font
+
+import noticeboard
 
 import constants
 
@@ -69,6 +71,7 @@ class Display(Gtk.Window):
         self.x = 0
         self.y = 0
     
+        self._c_ = 0
 #    def format_for_clipboard(self, clipboard, selectiondata, info, data=None):
 #        if selectiondata.get_target() == "UTF8_STRING":
 #            self.clipboard.set_text(self.clipboard_item.text)
@@ -89,11 +92,10 @@ class Display(Gtk.Window):
 
         if self.mode == 'channels':
 
-            taylor.draw_railings(cr, self.x, self.y)
-            taylor.draw_channels(cr, self.x, self.y, highlight=True, radius=5)
+            taylor.draw_channel_controls(cr, show_rails=True)
         elif self.mode == 'text':
             taylor.draw_cursors(cr)
-            taylor.draw_channels(cr, self.x, self.y)
+            taylor.draw_channel_controls(cr)
 
         cr.reset_clip()
         # DRAW UI
@@ -123,6 +125,8 @@ class Display(Gtk.Window):
         
         tree.controls.draw(cr)
 
+        print(self._c_)
+        self._c_ += 1
         
     def transition_errorpanel(self):
 
@@ -134,13 +138,14 @@ class Display(Gtk.Window):
     
     def on_resize(self, w):
         h, k = self.get_size()
-        properties.panel.resize(h, k)
+        karlie.panel.resize(h, k)
         
     def on_button_press(self, w, e):
         
         if e.type == Gdk.EventType.BUTTON_PRESS \
             and e.button == MouseButtons.LEFT_BUTTON:
             self.mode = tree.take_event(e.x, e.y, 'press', geometry=self.get_size())
+
 
             self.darea.queue_draw()
             self.down = True
@@ -152,6 +157,7 @@ class Display(Gtk.Window):
             and e.button == MouseButtons.LEFT_BUTTON:
             self.down = False
             self.mode = tree.take_event(e.x, e.y, 'release', geometry=self.get_size())
+
             self.darea.queue_draw()
 
 
@@ -165,9 +171,12 @@ class Display(Gtk.Window):
 
         if Gdk.ModifierType.BUTTON1_MASK and self.down:
             self.mode = tree.take_event(self.x, self.y, 'press_motion', geometry=self.get_size())
+            noticeboard.refresh.push_change()
         else:
             self.mode = tree.take_event(self.x, self.y, 'motion', geometry=self.get_size())
-        self.darea.queue_draw()
+
+        if noticeboard.refresh.should_refresh():
+            self.darea.queue_draw()
 
     
     def on_key_press(self, w, e):

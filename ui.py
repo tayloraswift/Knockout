@@ -78,37 +78,9 @@ class Line(object):
             cr.stroke()
                    
 
-class Interactive_Line(Line):
-    def __init__(self, points, r, g, b, a, w=2, radius=3, selectradius=10):
-        self.points = points
-        self.r = r
-        self.g = g
-        self.b = b
-        self.a = a
-        self.w = w
-        self.radius = radius
-        self.selectradius = selectradius
-        
-    def draw(self, cr, x, y):
-        nodes = []
-        cr.set_source_rgba(self.r, self.g, self.b, self.a)
-        cr.move_to(self.points[0][0], self.points[0][1])
-        nodes.append(Circle(self.points[0][0], self.points[0][1], self.radius))
-        for point in self.points[1:]:
-            cr.line_to(point[0], point[1])
-            nodes.append(Circle(point[0], point[1], self.radius))
-        cr.set_line_width(self.w)
-        cr.stroke()
-        
-        for n in nodes:
-            if abs(x - n.x) + abs(y - n.y) < self.selectradius:
-                n.set_color(self.r, self.g, self.b, self.a*0.5)
-            else:
-                n.set_color(self.r, self.g, self.b, self.a)
-            n.draw(cr)
         
 class Broken_bar(object):
-    def __init__(self, x1, y1, x2, r, g, b, a, highlight=False, radius=0):
+    def __init__(self, x1, y1, x2, r, g, b, a, highlight=False):
         self.x1 = x1
         self.x2 = x2
         self.y1 = y1
@@ -119,16 +91,15 @@ class Broken_bar(object):
         self.a = a
         
         self.highlight = highlight
-        self.radius = radius
 
-    def draw(self, cr, x, y):
+    def draw(self, cr):
         cr.set_source_rgba(self.r, self.g, self.b, self.a)
 
         cr.rectangle(self.x1, self.y1, self.x2 - self.x1, 5)
         cr.clip()
         for f in range( (self.x2 - self.x1) //4):
             cr.move_to(self.x1 + 4*f, self.y1)
-            if self.highlight and self.x1 <= x <= self.x2 and self.y1 - self.radius <= y <= self.y1 + self.radius + 5:
+            if self.highlight:
                 cr.rel_line_to(2, 0)
                 cr.rel_line_to(-4, 7)
                 cr.rel_line_to(-2, 0)

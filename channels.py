@@ -104,8 +104,7 @@ class Channels(object):
             for r in range(len(self.channels[c].railings)):
                 for i, point in enumerate(self.channels[c].railings[r]):
                     if abs(x - point[0]) + abs(y - point[1]) < radius:
-                        # make point selected
-                        point[2] = True
+
                         return c, r, i
                 # if that fails, take a railing, if possible
                 if not self.channels[c]._is_outside(y) and abs(x - self.channels[c].edge(r, y)[0]) <= radius:

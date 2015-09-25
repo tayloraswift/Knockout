@@ -66,7 +66,7 @@ class Textline(object):
         
         # lists that contain glyphs and specials
         self.glyphs = []
-        self.special = []
+#        self.special = []
         
         # start on the anchor
         x = self.anchor
@@ -88,7 +88,7 @@ class Textline(object):
                     glyphwidth = 0
                     x -= self._fontclass.tracking
                     # add to special marks
-                    self.special.append(('<p>', glyphanchor, self.y))
+#                    self.special.append(('<p>', glyphanchor, self.y))
 
             elif glyph == '</p>':
                 self.glyphs.append((self._fontclass.character_index(glyph), x, self.y, self._paragraph, tuple(self._fontclass_names)))

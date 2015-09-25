@@ -1,5 +1,5 @@
 import meredith
-
+import olivia
 import fonts
 from text_t import character
 import cairo
@@ -31,22 +31,6 @@ def draw_text(cr):
             cr.show_glyphs(glyphs)
             
         del classed_glyphs
-    
-
-def draw_channels(cr, x, y, highlight=False, radius=0):
-
-    for channel in meredith.mipsy.tracts[meredith.mipsy.t].channels.channels:
-        
-        entrance = ui.Broken_bar(round(channel.railings[0][0][0] + 200), 
-                round(channel.railings[0][0][1] - 5 + 100),
-                round(channel.railings[1][0][0] + 200),
-                0.3, 0.3, 0.3, 0.5, highlight, radius)
-        portal = ui.Broken_bar(round(channel.railings[0][-1][0] + 200), 
-                round(channel.railings[1][-1][1] + 100),
-                round(channel.railings[1][-1][0] + 200),
-                1, 0, 0.1, 0.5, highlight, radius)
-        entrance.draw(cr, x, y)
-        portal.draw(cr, x, y)
 
 def _get_fontsize(p, f):
     try:
@@ -208,15 +192,6 @@ def draw_cursors(cr):
                 2)
     cr.fill()
     
+def draw_channel_controls(cr, show_rails=False):
+    olivia.dibbles.render(cr, show_rails)
 
-
-def draw_railings(cr, x, y):
-    for channel in meredith.mipsy.tracts[meredith.mipsy.t].channels.channels:
-        for railing in channel.railings:
-            ui.Interactive_Line([(p[0] + 200, p[1] + 100) for p in railing], 0, 0, 0, 0.3, 2, 3, 20).draw(cr, x, y)
-            # draw selections
-            for p in railing:
-                if p[2]:
-                    cr.arc(p[0] + 200, p[1] + 100, 5, 0, 2*math.pi)
-                    cr.set_line_width(1)
-                    cr.stroke()

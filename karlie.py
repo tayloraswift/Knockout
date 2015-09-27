@@ -174,8 +174,6 @@ class Properties_Panel(object):
             
             self._items.append(_Paragraph_leading_Field(self._h - constants.propertieswidth + 15, y + 45, 250, p[0], name='LEADING' ))
             self._items.append(_Paragraph_margin_Field(self._h - constants.propertieswidth + 15, y + 90, 250, p[0], name='BOTTOM MARGIN' ))
-            pass
-        
 
 
     def _create_paragraph_style_menu(self):
@@ -215,10 +213,21 @@ class Properties_Panel(object):
         dx = h - self._h
         self._h = h
         for entry in self._items:
-            entry.translate(dx)
+            entry.translate(dx=dx)
         self.menu = None
     
-    def render(self, cr):
+    def render(self, cr, h, k):
+        # DRAW BACKGROUND
+        cr.rectangle(h - constants.propertieswidth, 0, 
+                300, 
+                k)
+        cr.set_source_rgb(1, 1, 1)
+        cr.fill()
+        
+        # check if entries need restacking
+        if noticeboard.refresh_properties_stack.should_refresh():
+            self.refresh_class(meredith.mipsy.glyph_at()[2])
+        
         for i, entry in enumerate(self._items):
             if i == self._hover_box_ij[0]:
                 entry.draw(cr, hover=self._hover_box_ij)
@@ -226,6 +235,13 @@ class Properties_Panel(object):
                 entry.draw(cr)
         if self.menu:
             self.menu.draw(cr, hover=self._hover_box_ij)
+        
+        # DRAW SEPARATOR
+        cr.rectangle(h - constants.propertieswidth, 0, 
+                2, 
+                k)
+        cr.set_source_rgb(0.9, 0.9, 0.9)
+        cr.fill()
     
     def key_input(self, name, char):
         if self._active_box_i is not None:
@@ -295,7 +311,5 @@ class Properties_Panel(object):
             hovered[0] = self._hover_box_ij
             noticeboard.refresh.push_change()
 
-panel = Properties_Panel()
+klossy = Properties_Panel()
 
-def draw_textboxes(cr):
-    panel.render(cr)

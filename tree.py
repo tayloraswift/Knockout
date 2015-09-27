@@ -1,53 +1,18 @@
-import meredith
-import typing
-import olivia
 import karlie
+import taylor
+import noticeboard
 
 import constants
 
-import ui
 
-controls = ui.Panel(100, [])
-
-def switch_mode_text():
-    return 'text'
-
-def switch_mode_channels():
-    return 'channels'
-    
-button = ui.Button('Text', switch_mode_text)
-controls.buttons.append(button)
-button = ui.Button('Channels', switch_mode_channels)
-controls.buttons.append(button)
-button = ui.Button('Add portal', meredith.mipsy.add_channel)
-controls.buttons.append(button)
-
-def paragraph_context_changed(previous=[None]):
-    p = meredith.mipsy.glyph_at(0)[2]
-    if p != previous[0]:
-        previous[0] = p
-        return p
-    else:
-        return None
-
-def take_event(x, y, event, key=False, char=None, mode=['text'], region=['document', 'document'], geometry=None):
+def take_event(x, y, event, key=False, char=None, region=['document', 'document'], geometry=None):
 
     if key:
         if region[0] == 'document':
-            if mode[0] == 'text':
-                clipboard = typing.type_document(event, char)
-                # check if paragraph context changed
-                p = paragraph_context_changed()
-                if p is not None:
-                    karlie.panel.refresh_class(p)
-                return clipboard
-
-            elif mode[0] == 'channels':
-                name = event
-                olivia.dibbles.key_input(name)
+            return taylor.becky.key_input(event, char)
                 
         elif region[0] == 'properties':
-            return karlie.panel.key_input(event, char)
+            return karlie.klossy.key_input(event, char)
                 
     else:
         # Changing regions
@@ -62,85 +27,38 @@ def take_event(x, y, event, key=False, char=None, mode=['text'], region=['docume
 #                noticeboard.refresh.push_change()
 
                 if event == 'motion':
-                    karlie.panel.hover(x, y)
+                    karlie.klossy.hover(x, y)
                 region[1] = 'document'
             if event == 'press' and region[0] != 'document':
                 # if we're going from properties to document, dump properties
                 if region[0] == 'properties':
-                    karlie.panel.press(x, y)
+                    karlie.klossy.press(x, y)
                 region[0] = 'document'
                 
         #############
         
         if event == 'press':
             if region[0] == 'document':
-                clicked = controls.is_clicked(x, y)
-                if clicked is not None:
-                    out = clicked.cb()
-                    # switch modes
-                    if out is not None:
-                        mode[0] = out
-            
-                # TEXT EDITING MODE
-                elif mode[0] == 'text':
-                    try:
-                        t, c = meredith.mipsy.target_channel(x - 200, y - 100, 20)
-                        meredith.mipsy.set_t(t)
-                        meredith.mipsy.set_cursor_xy(x - 200, y - 100, c)
-                        meredith.mipsy.match_cursors()
-                    except IndexError:
-                        # occurs if an empty channel is selected
-                        pass
-                    # check if paragraph context changed
-                    p = paragraph_context_changed()
-                    if p is not None:
-                        karlie.panel.refresh_class(p)
-                    
-                elif mode[0] == 'channels':
-                    olivia.dibbles.press(x - 200, y - 100)
+                taylor.becky.press(x, y)
                     
             elif region[0] == 'properties':
-                karlie.panel.press(x, y)
+                karlie.klossy.press(x, y)
                 
         elif event == 'press_motion':
             if region[0] == 'document':
-                # TEXT EDITING MODE
-                if mode[0] == 'text':
-                    try:
-                        meredith.mipsy.set_select_xy(x - 200, y - 100)
-                    except IndexError:
-                        # occurs if an empty channel is selected
-                        pass
-
-                elif mode[0] == 'channels':
-                    olivia.dibbles.press_motion(x - 200, y - 100)
+                taylor.becky.press_motion(x, y)
                     
             elif region[0] == 'properties':
-                karlie.panel.press_motion(x)
+                karlie.klossy.press_motion(x)
                 
         elif event == 'release':
             if region[0] == 'document':
-                if mode[0] == 'channels':
-                    olivia.dibbles.release()
+                taylor.becky.release(x, y)
                 
         elif event == 'motion':
 #            controls.update(x, y)
-            if x > geometry[0] - constants.propertieswidth:
-                karlie.panel.hover(x, y)
+            if region[1] == 'properties':
+                karlie.klossy.hover(x, y)
             else:
-                if mode[0] == 'text':
-                    pass
+                taylor.becky.hover(x, y)
 
-                elif mode[0] == 'channels':
-                    olivia.dibbles.hover(x - 200, y - 100)
-
-    
-    return mode[0]
-
-
-#def paste_local_text(self, clipboard, selectiondata, data=None):
-#    characters = pickle.loads(clipboard.wait_for_text())
-#    meredith.mipsy.tracts[meredith.mipsy.t].insert(characters)
-#def paste_text(self, clipboard, text, data=None):
-#    characters = [['<br>', '<p>', '</p>'][['\u000A', '\u2028', '\u2029'].index(u)] if u in ['\u000A', '\u2028', '\u2029'] else u for u in list(self.clipboard.wait_for_text()) ]
-#    meredith.mipsy.tracts[meredith.mipsy.t].insert(characters)

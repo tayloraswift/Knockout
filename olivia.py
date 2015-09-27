@@ -1,7 +1,7 @@
 import channels
-import ui
 import noticeboard
 import meredith
+import constants
 from math import pi
 
 class Channels_controls(object):
@@ -120,34 +120,54 @@ class Channels_controls(object):
             noticeboard.refresh.push_change()
             hovered[1] = self._hover_portal
 
+    def _draw_broken_bar(self, cr, highlight, x1, y1, x2, color_rgba):
+        
+        cr.set_source_rgba( * color_rgba)
 
-    def render(self, cr, show_rails):
+        cr.rectangle(x1, y1, x2 - x1, 5)
+        cr.clip()
+        for f in range( (x2 - x1) //4):
+            cr.move_to(x1 + 4*f, y1)
+            if highlight:
+                cr.rel_line_to(2, 0)
+                cr.rel_line_to(-4, 7)
+                cr.rel_line_to(-2, 0)
+            else:
+                cr.rel_line_to(1.5, 0)
+                cr.rel_line_to(-4, 7)
+                cr.rel_line_to(-1.5, 0)
+            cr.close_path()
+
+        cr.fill()
+        cr.reset_clip()
+
+    def render(self, cr, show_rails=False):
 
         for c, channel in enumerate(meredith.mipsy.tracts[meredith.mipsy.t].channels.channels):
             bolden = False
             if (c, 'entrance') == self._hover_portal:
                 bolden = True
             # draw portals            
-            entrance = ui.Broken_bar(round(channel.railings[0][0][0] + 200), 
-                    round(channel.railings[0][0][1] - 5 + 100),
-                    round(channel.railings[1][0][0] + 200),
-                    0.3, 0.3, 0.3, 0.5, bolden)
+            self._draw_broken_bar(cr, bolden, 
+                    round(channel.railings[0][0][0] + constants.text_margin_x), 
+                    round(channel.railings[0][0][1] - 5 + constants.text_margin_y),
+                    round(channel.railings[1][0][0] + constants.text_margin_x),
+                    (0.3, 0.3, 0.3, 0.5))
             if (c, 'portal') == self._hover_portal:
                 bolden = True
             else:
                 bolden = False
-            portal = ui.Broken_bar(round(channel.railings[0][-1][0] + 200), 
-                    round(channel.railings[1][-1][1] + 100),
-                    round(channel.railings[1][-1][0] + 200),
-                    1, 0, 0.1, 0.5, bolden)
-            entrance.draw(cr)
-            portal.draw(cr)
+            self._draw_broken_bar(cr, bolden, 
+                    round(channel.railings[0][-1][0] + constants.text_margin_x), 
+                    round(channel.railings[1][-1][1] - 5 + constants.text_margin_y),
+                    round(channel.railings[1][-1][0] + constants.text_margin_x),
+                    (1, 0, 0.1, 0.5))
             
             # draw railings
             if c == self._hover_point[0]:
                 cr.set_source_rgba(1, 0.2, 0.6, 1)
             else:
-                cr.set_source_rgba(1, 0.2, 0.6, 0.7)
+                cr.set_source_rgba(1, 0.2, 0.6, 0.5)
             
             if show_rails:
                 for r, railing in enumerate(channel.railings):

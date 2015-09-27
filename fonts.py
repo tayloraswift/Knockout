@@ -107,6 +107,14 @@ def _clone_paragraph_class(p):
     
     return new_class
 
+# used in rendering with undefined classes
+def get_fontsize(p, f):
+    try:
+        fontsize = paragraph_classes[p].fontclasses[f].fontsize
+    except KeyError:
+        fontsize = paragraph_classes[p].fontclasses[()].fontsize
+    return fontsize
+
 _interface_class = ParagraphClass(16, 5)
 _interface_class.replace_fontclass((), TypeClass(path='/home/kelvin/.fonts/NeueFrutiger45.otf', fontsize=13, tracking=0.5))
 _interface_class.replace_fontclass(('strong',), TypeClass(path='/home/kelvin/.fonts/NeueFrutiger65.otf', fontsize=13, tracking=1))

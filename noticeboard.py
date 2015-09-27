@@ -14,3 +14,4 @@ class Refresh_draw(object):
             return False
 
 refresh = Refresh_draw()
+refresh_properties_stack = Refresh_draw()

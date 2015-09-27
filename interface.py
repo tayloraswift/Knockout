@@ -4,7 +4,6 @@ import cairo
 import karlie
 import taylor
 
-import ui
 import tree
 import kevin
 
@@ -92,7 +91,7 @@ class Display(Gtk.Window):
         cr.set_font_face(self.uifont)
         
         if self.errorpanel is not None:
-            self.errorpanel.draw(cr, h - constants.propertieswidth)
+            self.errorpanel.draw(cr, self._h - constants.propertieswidth)
         
 
         print(self._c_)
@@ -180,7 +179,7 @@ class Display(Gtk.Window):
         if errors.styleerrors.new_error():
             
             if errors.styleerrors.first != ():
-                self.errorpanel = ui.ErrorPanel(1)
+                self.errorpanel = errors.ErrorPanel(1)
                 self.errorpanel.update_message('Undefined class', ', '.join(errors.styleerrors.first[0]), ', '.join([str(e + 1) for e in errors.styleerrors.first[1]]))
                 GObject.timeout_add(4, self.transition_errorpanel)
             else:

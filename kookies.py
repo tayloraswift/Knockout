@@ -25,16 +25,30 @@ class Base_kookie(object):
         
         self.y = self._y_bottom
     
-    def translate(self, dx):
-        self._x += dx
-        self._x_right += dx
+    def translate(self, dx=0, dy=0):
+        if dy != 0 and dx != 0:
+            self._x += dx
+            self._x_right += dx
+            self._y += dy
+            self._y_bottom += dy
+            self.y += dy
+            for glyphs in self._texts:
+                glyphs[:] = [(g[0], g[1] + dx, g[2] + dy) for g in glyphs]
+        elif dx != 0:
+            self._x += dx
+            self._x_right += dx
+            for glyphs in self._texts:
+                glyphs[:] = [(g[0], g[1] + dx, g[2]) for g in glyphs]
+        else:
+            self._y += dy
+            self._y_bottom += dy
+            self.y += dy
+            for glyphs in self._texts:
+                glyphs[:] = [(g[0], g[1], g[2] + dy) for g in glyphs]
         
-        for glyphs in self._texts:
-            glyphs[:] = [(g[0], g[1] + dx, g[2]) for g in glyphs]
-        
-        self._translate_other(dx)
+        self._translate_other(dx, dy)
     
-    def _translate_other(self, dx):
+    def _translate_other(self, dx, dy):
         pass
 
     def _build_line(self, x, y, text, font, factor=1, align=1, sub_minus=False):
@@ -81,6 +95,63 @@ class Base_kookie(object):
     def type_box(self, name, char):
         pass
 
+class Button(Base_kookie):
+    def __init__(self, x, y, width, height, callback=None, string=''):
+        # we do NOT set update to true because that controls updating when the widget is defocused
+        Base_kookie.__init__(self, x, y, width, height, update=False, font=fonts.paragraph_classes['_interface'].fontclasses[('strong',)])
+        
+        self._callback = callback
+#        self._string = string
+        
+        # set hover function equal to press function
+        self.is_over_hover = self.is_over
+        
+        self._add_static_text(x + width/2, self._y_bottom - self._height/2 + 5, string, align=0)
+    
+    def focus(self, x):
+        self._active = 1
+    
+    def focus_drag(self, x):
+        pass
+    
+    def release(self, action=True):
+        self._active = None
+        if action:
+            self._callback()
+    
+    def defocus(self):
+        pass
+
+    def hover(self, x):
+        return 1
+
+    def draw(self, cr, hover=(None, None)):
+        cr.set_font_size(self.font.fontsize)
+        cr.set_font_face(self.font.font)
+        
+        if self._active:
+            cr.set_source_rgba(1, 0.2, 0.6, 1)
+
+            radius = 5
+            y1, y2, x1, x2 = self._y, self._y_bottom, self._x, self._x_right
+            cr.arc(x1 + radius, y1 + radius, radius, 2*(pi/2), 3*(pi/2))
+            cr.arc(x2 - radius, y1 + radius, radius, 3*(pi/2), 4*(pi/2))
+            cr.arc(x2 - radius, y2 - radius, radius, 0*(pi/2), 1*(pi/2))
+            cr.arc(x1 + radius, y2 - radius, radius, 1*(pi/2), 2*(pi/2))
+            cr.close_path()
+
+            cr.fill()
+
+            cr.set_source_rgb(1,1,1)
+            
+        elif hover[1]:
+            cr.set_source_rgba(1, 0.2, 0.6, 1)
+
+        else:
+            cr.set_source_rgb(0,0,0)
+        cr.show_glyphs(self._texts[0])
+    
+
 class Tabs(Base_kookie):
     def __init__(self, x, y, width, height, default=0, callback=None, signals=None, strings=None):
         # we do NOT set update to true because that controls updating when the widget is defocused
@@ -107,8 +178,9 @@ class Tabs(Base_kookie):
             self._x_left.append(int(round(xo)))
             xo += self._button_width
     
-    def _translate_other(self, dx):
-        self._x_left[:] = [x + dx for x in self._x_left]
+    def _translate_other(self, dx, dy):
+        if dx != 0:
+            self._x_left[:] = [x + dx for x in self._x_left]
     
     def _target(self, x):
         return bisect.bisect(self._x_left, x) - 1
@@ -126,6 +198,7 @@ class Tabs(Base_kookie):
     def hover(self, x):
         return self._target(x)
 
+    # used only when initializing panel
     def active_name(self):
         return self._signals[self._active]
 
@@ -136,7 +209,7 @@ class Tabs(Base_kookie):
         for i, button in enumerate(self._x_left):
             if i == self._active:
                 cr.set_source_rgba(1, 0.2, 0.6, 1)
-#                cr.rectangle(button, self.y - 25, self._button_width, 30)
+
                 radius = 5
                 y1, y2, x1, x2 = self._y, self._y_bottom, button, button + int(round(self._button_width))
                 cr.arc(x1 + radius, y1 + radius, radius, 2*(pi/2), 3*(pi/2))
@@ -283,8 +356,13 @@ class Blank_space(Base_kookie):
         self._glyphs[:] = self._template[:]
 
     # translates stuff that was missed
-    def _translate_other(self, dx):
-        self._template[:] = [(g[0], g[1] + dx, g[2]) for g in self._template]
+    def _translate_other(self, dx, dy):
+        if dy != 0 and dx != 0:
+            self._template[:] = [(g[0], g[1] + dx, g[2] + dy) for g in self._template]
+        elif dx != 0:
+            self._template[:] = [(g[0], g[1] + dx, g[2]) for g in self._template]
+        else:
+            self._template[:] = [(g[0], g[1], g[2] + dy) for g in self._template]
         self._reset_scroll()
         
     def is_over(self, x, y):

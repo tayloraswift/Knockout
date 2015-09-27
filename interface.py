@@ -1,9 +1,8 @@
 from gi.repository import Gtk, Gdk, GObject
 import cairo
 
-from text_t import character
-import taylor
 import karlie
+import taylor
 
 import ui
 import tree
@@ -48,7 +47,6 @@ class Display(Gtk.Window):
         
         # states
         self.down = False
-        self.mode = 'text'
         
         self.uifont = pycairo_font.create_cairo_font_face_for_file('/home/kelvin/.fonts/NeueFrutiger45.otf')
         self.errorpanel = None
@@ -61,15 +59,17 @@ class Display(Gtk.Window):
         
         self.set_title("Lines")
         self.resize(constants.windowwidth, constants.windowheight)
+        
+        self._h = constants.windowwidth
+        self._k = constants.windowheight
+        
         self.set_position(Gtk.WindowPosition.CENTER)
         self.connect("delete-event", Gtk.main_quit)
         self.show_all()
         
         self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
 #        self.clipboard_item = None
-        
-        self.x = 0
-        self.y = 0
+
     
         self._c_ = 0
 #    def format_for_clipboard(self, clipboard, selectiondata, info, data=None):
@@ -80,42 +80,13 @@ class Display(Gtk.Window):
 #            self.clipboard.set_text(data)
 
     def on_draw(self, wid, cr):
-        h, k = self.get_size()
-#        print('draw')
-        cr.rectangle(100, 0, h - 300, k)
-        cr.clip()
-        taylor.draw_text(cr)
-        taylor.draw_annotations(cr)
-        
-#        print(self.mode)
-        
+        nohints = cairo.FontOptions()
+        nohints.set_hint_style(cairo.HINT_STYLE_NONE)
+        cr.set_font_options(nohints)
 
-        if self.mode == 'channels':
+        taylor.becky.render(cr, self._h, self._k)
 
-            taylor.draw_channel_controls(cr, show_rails=True)
-        elif self.mode == 'text':
-            taylor.draw_cursors(cr)
-            taylor.draw_channel_controls(cr)
-
-        cr.reset_clip()
-        # DRAW UI
-        cr.rectangle(h - constants.propertieswidth, 0, 
-                300, 
-                k)
-        cr.set_source_rgb(1, 1, 1)
-        cr.fill()
-        
-        cr.rectangle(100, 0, 
-                2, 
-                k)
-        
-        cr.rectangle(h - constants.propertieswidth, 0, 
-                2, 
-                k)
-        cr.set_source_rgb(0.9, 0.9, 0.9)
-        cr.fill()
-        
-        karlie.draw_textboxes(cr)
+        karlie.klossy.render(cr, self._h, self._k)
         
         cr.set_font_size(14)
         cr.set_font_face(self.uifont)
@@ -123,7 +94,6 @@ class Display(Gtk.Window):
         if self.errorpanel is not None:
             self.errorpanel.draw(cr, h - constants.propertieswidth)
         
-        tree.controls.draw(cr)
 
         print(self._c_)
         self._c_ += 1
@@ -137,14 +107,15 @@ class Display(Gtk.Window):
         return True
     
     def on_resize(self, w):
-        h, k = self.get_size()
-        karlie.panel.resize(h, k)
+        self._h, self._k = self.get_size()
+        karlie.klossy.resize(self._h, self._k)
+        taylor.becky.resize(self._h, self._k)
         
     def on_button_press(self, w, e):
         
         if e.type == Gdk.EventType.BUTTON_PRESS \
             and e.button == MouseButtons.LEFT_BUTTON:
-            self.mode = tree.take_event(e.x, e.y, 'press', geometry=self.get_size())
+            tree.take_event(e.x, e.y, 'press', geometry=self.get_size())
 
 
             self.darea.queue_draw()
@@ -156,24 +127,18 @@ class Display(Gtk.Window):
         if e.type == Gdk.EventType.BUTTON_RELEASE \
             and e.button == MouseButtons.LEFT_BUTTON:
             self.down = False
-            self.mode = tree.take_event(e.x, e.y, 'release', geometry=self.get_size())
+            tree.take_event(e.x, e.y, 'release', geometry=self.get_size())
 
             self.darea.queue_draw()
 
 
     def motion_notify_event(self, widget, event):
-#        if event.is_hint:
-#            state, self.x, self.y, f = event.window.get_pointer()
-
-        self.x = event.x
-        self.y = event.y
-#            state = event.state
 
         if Gdk.ModifierType.BUTTON1_MASK and self.down:
-            self.mode = tree.take_event(self.x, self.y, 'press_motion', geometry=self.get_size())
+            tree.take_event(event.x, event.y, 'press_motion', geometry=self.get_size())
             noticeboard.refresh.push_change()
         else:
-            self.mode = tree.take_event(self.x, self.y, 'motion', geometry=self.get_size())
+            tree.take_event(event.x, event.y, 'motion', geometry=self.get_size())
 
         if noticeboard.refresh.should_refresh():
             self.darea.queue_draw()

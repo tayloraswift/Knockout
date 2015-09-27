@@ -37,6 +37,36 @@ class StyleErrors(object):
 
 styleerrors = StyleErrors()
 
+class ErrorPanel(object):
+    def __init__(self, speed):
+        self.errorname = ''
+        self.name = ''
+        self.location = ''
+        self.speed = speed
+        self.phase = 0
+    
+    def update_message(self, error, name, location):
+        self.errorname = error
+        self.name = name
+        self.location = location
+    
+    def increment(self):
+        self.phase += 1
+
+    def draw(self, cr, width):
+        if self.phase >= 18:
+            phase = 1
+        else:
+            phase = self.phase/18
+        cr.set_source_rgb(1, 0.15, 0.2)
+        cr.rectangle(100, phase*55 - 55, width - 100, 55)
+        cr.fill()
+        cr.set_source_rgba(1, 1, 1, phase)
+        cr.move_to(100 + 30, 20)
+        cr.show_text(self.errorname + ': ' + self.name)
+        
+        cr.move_to(100 + 30, 40)
+        cr.show_text(self.location)
 """
 class Error_noticeboard(object):
     def __init__(self):

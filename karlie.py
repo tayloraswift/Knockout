@@ -136,6 +136,7 @@ class _preview(kookies.Heading):
 class Properties_Panel(object):
     def __init__(self):
         self._h = constants.windowwidth
+        self._k = constants.windowheight
         
         
         self._tabstrip = kookies.Tabs(self._h - constants.propertieswidth/2 - 50 , 50, 100, 30, callback=self._tab_switch, signals=['paragraph', 'font', '?'], strings=['P', 'F', '?'])
@@ -212,6 +213,7 @@ class Properties_Panel(object):
     def resize(self, h, k):
         dx = h - self._h
         self._h = h
+
         for entry in self._items:
             entry.translate(dx=dx)
         self.menu = None

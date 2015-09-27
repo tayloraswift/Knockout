@@ -91,7 +91,7 @@ class Mode_switcher(object):
         self._k = constants.windowheight
         self._hover_j = None
         self._hover_memory = None
-        self._switcher = Tabs_round((self._h - constants.propertieswidth - 100)/2 + 100 - 50, self._k - 70, 80, 30, callback=callback, signals=['text', 'channels'], strings=['T', 'C'], longstrings=['Edit text', 'Edit channels'])
+        self._switcher = Tabs_round((self._h - constants.propertieswidth - 100)/2 + 100 - 40, self._k - 70, 80, 30, callback=callback, signals=['text', 'channels'], strings=['T', 'C'], longstrings=['Edit text', 'Edit channels'])
 
     def is_over(self, x, y):
         return self._switcher.is_over(x, y)

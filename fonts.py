@@ -1,145 +1,114 @@
-import freetype
-import pycairo_font
 import copy
-
-ordinalmap = {
-        'other': -1,
-        '<br>': -2,
-        '<p>': -3,
-        '</p>': -4,
-        
-        '<f>': -5,
-        '</f>': -6
-        }
-
-_type_registry = {}
-
-def get_cairo_font(path):
-    if path not in _type_registry:
-        _type_registry[path] = pycairo_font.create_cairo_font_face_for_file(path)
-    
-    return _type_registry[path]
-
-
-# extended fontface class
-class FFace(freetype.Face):
-    
-    def advance_width(self, character):
-        if len(character) == 1:
-            avw = self.get_advance(self.get_char_index(character), True)
-        elif character == '<br>':
-            avw = 0
-        elif character == '<p>':
-            avw = 0
-        
-        elif character in ['<f>', '</f>']:
-            avw = 0
-        else:
-            avw = 1000
-            
-        return avw
         
         
 class TypeClass(object):
-    def __init__(self, path=None, fontsize=13, tracking = 0):
-        self.path = path
-        self.path_valid = True
-        
-        self.fontface = FFace(path)
-        self.fontsize = fontsize
-        
-        self.tracking = tracking
-        
-        self.font = get_cairo_font(self.path)
+    def __init__(self, path, fontsize=(False, 13), tracking=(False, 0)):
     
-    def character_index(self, c):
-        try:
-            return (self.fontface.get_char_index(c))
-        except TypeError:
-            return ordinalmap[c]
+        self._path = path
+        
+        self._fontsize = fontsize
+        self._tracking = tracking
     
-    def glyph_width(self, c):
-        return self.fontface.advance_width(c)/self.fontface.units_per_EM*self.fontsize
-    
+
     def update_path(self, path):
-        self.path = path
-        self.fontface = FFace(path)
-        
-        self.font = get_cairo_font(self.path)
+        if not self._path[0]:
+            self._path = (False, path)
     
     def update_size(self, size):
-        self.fontsize = size
+        if not self._fontsize[0]:
+            self._fontsize = (False, size)
     
     def update_tracking(self, tracking):
-        self.tracking = tracking
+        if not self._tracking[0]:
+            self._tracking = (False, tracking)
 
+
+def f_get_attribute(attribute, p, f):
+    p, f = get_fontclass_root(p, f)
+        
+    # assumes root p and f
+    a = f_read_attribute(attribute, p, f)
+    if a[0]:
+        return f_get_attribute(attribute, * a[1])
+    else:
+        return a
+
+def f_read_attribute(attribute, p, f):
+    # assumes root p and f
+    attribute = '_' + attribute
+    return getattr(paragraph_classes[p].fontclasses[1][f][1], attribute)
+
+def f_set_attribute(attribute, p, f, value):
+    # assumes root p and f
+    attribute = '_' + attribute
+    setattr(paragraph_classes[p].fontclasses[1][f][1], attribute, value)
+
+def f_read_f(p, f):
+    return paragraph_classes[p].fontclasses[1][f]
+
+def f_get_f(p, f):
+    # assumes root p
+    a = f_read_f(p, f)
+    if a[0]:
+        return f_get_f( * a[1])
+    else:
+        return a
 
 class ParagraphClass(object):
     def __init__(self, leading, margin_bottom):
-        self.fontclasses = {}
-        self.leading = leading
-        self.margin_bottom = margin_bottom
+        self.fontclasses = [False, {}]
+        self._leading = leading
+        self._margin_bottom = margin_bottom
+
+            
 
     def update_leading(self, leading):
-        self.leading = leading
+        if not self._leading[0]:
+            self._leading = (False, leading)
 
     def update_margin(self, margin):
-        self.margin_bottom = margin
+        if not self._margin_bottom[0]:
+            self._margin_bottom = (False, margin)
+
+    # only used for empty inheritance
+    def update_fontclasses(self, fontclasses):
+        self.fontclasses = fontclasses
             
     def replace_fontclass(self, names, fontclass):
-        self.fontclasses[names] = fontclass
+        if not self.fontclasses[0]:
+            self.fontclasses[1][names] = fontclass
 
 def add_paragraph_class(name, clone):
     if name not in paragraph_classes:
-        paragraph_classes[name] = _clone_paragraph_class(clone)
+        paragraph_classes[name] = copy.deepcopy(paragraph_classes[clone])
 
-def _clone_font_class(p, f):
-    ff = paragraph_classes[p].fontclasses[f]
-    attributes = ff.path, ff.fontsize, ff.tracking
-    return TypeClass( * attributes )
 
-def _clone_paragraph_class(p):
-    pp = paragraph_classes[p]
-    attributes = pp.leading, pp.margin_bottom
-    new_class = ParagraphClass( * attributes )
-    for f in pp.fontclasses:
-        new_class.replace_fontclass(f, _clone_font_class(p, f))
-    
-    return new_class
+_interface_class = ParagraphClass((False, 16), (False, 5))
+_interface_class.replace_fontclass( (), (False, TypeClass(path=(False, '/home/kelvin/.fonts/NeueFrutiger45.otf'), fontsize=(False, 13), tracking=(False, 0))) )
+_interface_class.replace_fontclass( ('strong',), (False, TypeClass(path=(False, '/home/kelvin/.fonts/NeueFrutiger65.otf'), fontsize=(False, 13), tracking=(False, 1))) )
+_interface_class.replace_fontclass( ('label',), (False, TypeClass(path=(False, '/home/kelvin/.fonts/NeueFrutiger45.otf'), fontsize=(False, 11), tracking=(False, 1))) )
+_interface_class.replace_fontclass( ('title',), (False, TypeClass(path=(False, '/home/kelvin/.fonts/NeueFrutiger45.otf'), fontsize=(False, 18), tracking=(False, 4))) )
 
-# used in rendering with undefined classes
-def get_fontsize(p, f):
-    try:
-        fontsize = paragraph_classes[p].fontclasses[f].fontsize
-    except KeyError:
-        fontsize = paragraph_classes[p].fontclasses[()].fontsize
-    return fontsize
+_h1_class = ParagraphClass((False, 28), (False, 10))
+_h1_class.replace_fontclass( (), (False, TypeClass(path=(False, "/home/kelvin/.fonts/NeueFrutiger45.otf"), fontsize=(False, 18))) )
+_h1_class.replace_fontclass( ('caption',), (False, TypeClass(path=(False, "/home/kelvin/.fonts/NeueFrutiger45.otf"), fontsize=(False, 15))) )
+_h1_class.replace_fontclass( ('emphasis',), (False, TypeClass(path=(False, "/home/kelvin/.fonts/NeueFrutiger45Italic.otf"), fontsize=(False, 18))) )
+_h1_class.replace_fontclass( ('strong',), (False, TypeClass(path=(False, "/home/kelvin/.fonts/NeueFrutiger65.otf"), fontsize=(False, 18))) )
+_h1_class.replace_fontclass( ('emphasis', 'strong'), (False, TypeClass(path=(False, "/home/kelvin/.fonts/NeueFrutiger65Italic.otf"), fontsize=(False, 18))) )
 
-_interface_class = ParagraphClass(16, 5)
-_interface_class.replace_fontclass((), TypeClass(path='/home/kelvin/.fonts/NeueFrutiger45.otf', fontsize=13, tracking=0.5))
-_interface_class.replace_fontclass(('strong',), TypeClass(path='/home/kelvin/.fonts/NeueFrutiger65.otf', fontsize=13, tracking=1))
-_interface_class.replace_fontclass(('title',), TypeClass(path='/home/kelvin/.fonts/NeueFrutiger45.otf', fontsize=18, tracking=4))
+_body_class = ParagraphClass((False, 20), (False, 5))
+_body_class.replace_fontclass( (), (False, TypeClass(path=(False, "/home/kelvin/.fonts/Proforma-Book.otf"), fontsize=(False, 15))) )
+_body_class.replace_fontclass( ('caption',), (False, TypeClass(path=(False, "/home/kelvin/.fonts/NeueFrutiger45.otf"), fontsize=(False, 13))) )
+_body_class.replace_fontclass( ('emphasis',), (False, TypeClass(path=(False, "/home/kelvin/.fonts/Proforma-BookItalic.otf"), fontsize=(True, ('body', () ) ))) )
+_body_class.replace_fontclass( ('strong',), (False, TypeClass(path=(False, "/home/kelvin/.fonts/Proforma-Bold.otf"), fontsize=(True, ('body', () ) ))) )
+_body_class.replace_fontclass( ('emphasis', 'strong',), (False, TypeClass(path=(False, "/home/kelvin/.fonts/Proforma-BoldItalic.otf"), fontsize=(True, ('body', () ) ))) )
 
-_h1_class = ParagraphClass(28, 10)
-_h1_class.replace_fontclass((), TypeClass(path="/home/kelvin/.fonts/NeueFrutiger45.otf", fontsize=18))
-_h1_class.replace_fontclass(('caption',), TypeClass(path="/home/kelvin/.fonts/NeueFrutiger45.otf", fontsize=15))
-_h1_class.replace_fontclass(('emphasis',), TypeClass(path="/home/kelvin/.fonts/NeueFrutiger45Italic.otf", fontsize=18))
-_h1_class.replace_fontclass(('strong',), TypeClass(path="/home/kelvin/.fonts/NeueFrutiger65.otf", fontsize=18))
-_h1_class.replace_fontclass(('emphasis', 'strong'), TypeClass(path="/home/kelvin/.fonts/NeueFrutiger65Italic.otf", fontsize=18))
-
-_body_class = ParagraphClass(20, 5)
-_body_class.replace_fontclass((), TypeClass(path="/home/kelvin/.fonts/Proforma-Book.otf", fontsize=15))
-_body_class.replace_fontclass(('caption',), TypeClass(path="/home/kelvin/.fonts/NeueFrutiger45.otf", fontsize=13))
-_body_class.replace_fontclass(('emphasis',), TypeClass(path="/home/kelvin/.fonts/Proforma-BookItalic.otf", fontsize=15))
-_body_class.replace_fontclass(('strong',), TypeClass(path="/home/kelvin/.fonts/Proforma-Bold.otf", fontsize=15))
-_body_class.replace_fontclass(('emphasis', 'strong',), TypeClass(path="/home/kelvin/.fonts/Proforma-BoldItalic.otf", fontsize=15))
-
-_q_class = ParagraphClass(20, 5)
-_q_class.replace_fontclass((), TypeClass(path="/home/kelvin/.fonts/Proforma-BookItalic.otf", fontsize=15))
-_q_class.replace_fontclass(('caption',), TypeClass(path="/home/kelvin/.fonts/NeueFrutiger45.otf", fontsize=13))
-_q_class.replace_fontclass(('emphasis',), TypeClass(path="/home/kelvin/.fonts/Proforma-Book.otf", fontsize=15))
-_q_class.replace_fontclass(('strong',), TypeClass(path="/home/kelvin/.fonts/Proforma-BoldItalic.otf", fontsize=15))
-_q_class.replace_fontclass(('emphasis', 'strong',), TypeClass(path="/home/kelvin/.fonts/Proforma-Bold.otf", fontsize=15))
+_q_class = ParagraphClass((True, 'body'), (False, 5))
+_q_class.replace_fontclass( (), (True, ('body', ('emphasis',) )) )
+_q_class.replace_fontclass( ('caption',), (False, TypeClass(path=(False, "/home/kelvin/.fonts/NeueFrutiger45.otf"), fontsize=(False, 13))) )
+_q_class.replace_fontclass( ('emphasis',), (False, TypeClass(path=(False, "/home/kelvin/.fonts/Proforma-Book.otf"), fontsize=(False, 15))) )
+_q_class.replace_fontclass( ('strong',), (False, TypeClass(path=(False, "/home/kelvin/.fonts/Proforma-BoldItalic.otf"), fontsize=(False, 15))) )
+_q_class.replace_fontclass( ('emphasis', 'strong',), (False, TypeClass(path=(False, "/home/kelvin/.fonts/Proforma-Bold.otf"), fontsize=(False, 15))) )
 
 paragraph_classes = {'_interface': _interface_class,
         'body': _body_class,
@@ -147,4 +116,53 @@ paragraph_classes = {'_interface': _interface_class,
         'h1': _h1_class
         }
 
-print(paragraph_classes['body'].leading)
+def get_leading(p):
+    l = paragraph_classes[p]._leading
+    if l[0]:
+        return get_leading(l[1])
+    else:
+        return l[1]
+
+def get_margin_bottom(p):
+    m = paragraph_classes[p]._margin_bottom
+    if m[0]:
+        return get_margin_bottom(m[1])
+    else:
+        return m[1]
+
+def get_fontclasses(p):
+    return paragraph_classes[p].fontclasses[1]
+
+
+def get_fontclass(p, f):
+    return paragraph_classes[p].fontclasses[1][f]
+
+def _get_root_p_fontclass(p):
+    # returns pclass name
+    c = paragraph_classes[p].fontclasses
+    if not c[0]:
+        return p
+    else:
+        return _get_root_p_fontclass(c[1])
+
+def _trace_fontclass_to_root(p, f):
+    # assumes p is root
+    fontclass = get_fontclass(p, f)
+
+    while True:
+        if fontclass[0]:
+            
+            p = fontclass[1][0]
+            f = fontclass[1][1]
+            fontclass = get_fontclass(p, f)
+        else:
+            break
+
+    return p, f
+    
+def get_fontclass_root(p, f):
+    p = _get_root_p_fontclass(p)
+
+    return _trace_fontclass_to_root(p, f)
+
+

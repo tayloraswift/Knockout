@@ -1,5 +1,6 @@
 import meredith
 import olivia
+import fonttable
 import fonts
 from text_t import character
 from math import pi
@@ -9,6 +10,14 @@ import noticeboard
 import constants
 
 import bisect
+
+# used in rendering with undefined classes
+def get_fontsize(p, f):
+    try:
+        fontsize = fonttable.table.get_font(p, f)['fontsize']
+    except KeyError:
+        fontsize = fonttable.table.get_font(p, () )['fontsize']
+    return fontsize
 
 def paragraph_context_changed(previous=[None]):
     p = meredith.mipsy.glyph_at(0)[2]
@@ -33,8 +42,8 @@ class Tabs_round(kookies.Tabs):
         self._add_static_text(self._x + self._width//2, self._y_bottom + 20, self._longstrings[self._active], align=0)
         
     def draw(self, cr, hover=(None, None)):
-        cr.set_font_size(self.font.fontsize)
-        cr.set_font_face(self.font.font)
+        cr.set_font_size(self.font['fontsize'])
+        cr.set_font_face(self.font['font'])
         
         for i, button in enumerate(self._x_left):
 
@@ -328,15 +337,19 @@ class Document_view(object):
             classed_glyphs = tract.extract_glyphs(200, 100)
 
             for name, glyphs in classed_glyphs.items():
-                cr.set_source_rgb(0, 0, 0)
                 try:
-                    cr.set_font_size(fonts.paragraph_classes[name[0]].fontclasses[name[1]].fontsize)
-                    cr.set_font_face(fonts.paragraph_classes[name[0]].fontclasses[name[1]].font)
+                    cr.set_source_rgb(0, 0, 0)
+                    font = fonttable.table.get_font( * name)
                 except KeyError:
                     cr.set_source_rgb(1, 0.15, 0.2)
-                    cr.set_font_size(fonts.paragraph_classes[name[0]].fontclasses[()].fontsize)
-                    cr.set_font_face(fonts.paragraph_classes[name[0]].fontclasses[()].font)
-
+                    try:
+                        font = fonttable.table.get_font(name[0], ())
+                    except AttributeError:
+                        font = fonttable.table.get_font('_interface', ())
+                
+                cr.set_font_size(font['fontsize'])
+                cr.set_font_face(font['font'])
+                    
                 cr.show_glyphs(glyphs)
                 
             del classed_glyphs
@@ -355,7 +368,7 @@ class Document_view(object):
                     cr.set_source_rgba(0, 0, 0, 0.4)
                 x = round(x + 200)
                 y = round(y + 100)
-                fontsize = fonts.get_fontsize(p[0], f)
+                fontsize = get_fontsize(p[0], f)
                 
                 cr.move_to(x, y)
                 cr.rel_line_to(0, round(-fontsize))
@@ -366,7 +379,7 @@ class Document_view(object):
                 cr.fill()
             elif character(meredith.mipsy.text()[i]) == '<br>':
                 x, y, p, f = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(i + 1)
-                fontsize = fonts.get_fontsize(p[0], f)
+                fontsize = get_fontsize(p[0], f)
                 x = round(x + 200)
                 y = round(y + 100)
                 cr.rectangle(x - 6, y - round(fontsize), 3, round(fontsize))
@@ -375,7 +388,7 @@ class Document_view(object):
             
             elif character(meredith.mipsy.text()[i]) == '<f>':
                 x, y, p, f = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(i)
-                fontsize = fonts.get_fontsize(p[0], f)
+                fontsize = get_fontsize(p[0], f)
                 x = round(x + 200)
                 y = round(y + 100)
                 
@@ -388,7 +401,7 @@ class Document_view(object):
 
             elif character(meredith.mipsy.text()[i]) == '</f>':
                 x, y, p, f = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(i)
-                fontsize = fonts.get_fontsize(p[0], f)
+                fontsize = get_fontsize(p[0], f)
                 x = round(x + 200)
                 y = round(y + 100)
                 
@@ -437,15 +450,16 @@ class Document_view(object):
         # print cursors
         cr.set_source_rgb(1, 0.2, 0.6)
         cx, cy, p, f = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(meredith.mipsy.active_cursor())
+        leading = fonts.get_leading(p[0])
 
         cr.rectangle(round(200 + cx - 1), 
-                    round(100 + cy - fonts.paragraph_classes[p[0]].leading), 
+                    round(100 + cy - leading), 
                     2, 
-                    fonts.paragraph_classes[p[0]].leading)
+                    leading)
         # special cursor if adjacent to font tag
         if character(meredith.mipsy.at(0)) in ['<f>', '</f>']:
             cr.rectangle(round(200 + cx - 3), 
-                    round(100 + cy - fonts.paragraph_classes[p[0]].leading), 
+                    round(100 + cy - leading), 
                     4, 
                     2)
             cr.rectangle(round(200 + cx - 3), 
@@ -454,7 +468,7 @@ class Document_view(object):
                     2)
         if character(meredith.mipsy.at(-1)) in ['<f>', '</f>']:
             cr.rectangle(round(200 + cx - 1), 
-                    round(100 + cy - fonts.paragraph_classes[p[0]].leading), 
+                    round(100 + cy - leading), 
                     4, 
                     2)
             cr.rectangle(round(200 + cx - 1), 
@@ -465,15 +479,16 @@ class Document_view(object):
 
 
         cx, cy, p, f = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(meredith.mipsy.active_select())
-
+        leading = fonts.get_leading(p[0])
+        
         cr.rectangle(round(200 + cx - 1), 
-                    round(100 + cy - fonts.paragraph_classes[p[0]].leading), 
+                    round(100 + cy - leading), 
                     2, 
-                    fonts.paragraph_classes[p[0]].leading)
+                    leading)
         # special cursor if adjacent to font tag
         if character(meredith.mipsy.at_select(0)) in ['<f>', '</f>']:
             cr.rectangle(round(200 + cx - 3), 
-                    round(100 + cy - fonts.paragraph_classes[p[0]].leading), 
+                    round(100 + cy - leading), 
                     4, 
                     2)
             cr.rectangle(round(200 + cx - 3), 
@@ -482,7 +497,7 @@ class Document_view(object):
                     2)
         if character(meredith.mipsy.at_select(-1)) in ['<f>', '</f>']:
             cr.rectangle(round(200 + cx - 1), 
-                    round(100 + cy - fonts.paragraph_classes[p[0]].leading), 
+                    round(100 + cy - leading), 
                     4, 
                     2)
             cr.rectangle(round(200 + cx - 1), 

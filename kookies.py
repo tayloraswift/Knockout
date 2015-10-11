@@ -1,22 +1,22 @@
 import bisect
-import fonts
+import menu
+import fonttable
+import constants
 from math import pi, floor
 
 class Base_kookie(object):
-    def __init__(self, x, y, width, height, update=False, font=None):
+    def __init__(self, x, y, width, height, font=None):
         self._x = x
         self._y = y
         self._width = width
         self._height = height
         
         self._active = None
-
-        self._should_update = update
         
         self._texts = []
         
         if font is None:
-            self.font = fonts.paragraph_classes['_interface'].fontclasses[()]
+            self.font = fonttable.table.get_font('_interface', () )
         else:
             self.font = font
         
@@ -58,8 +58,9 @@ class Base_kookie(object):
             if sub_minus and character == '-':
                 character = '–'
             try:
-                line.append((font.character_index(character), x, y))
-                x += (font.glyph_width(character) + font.tracking)*factor
+                line.append((fonttable.character_index(self.font['fontmetrics'], character), x, y))
+                # remember to remove factor
+                x += (fonttable.glyph_width(font['fontmetrics'], font['fontsize'], character) + font['tracking'])*factor
             except TypeError:
                 line.append((None, x, y))
 
@@ -76,7 +77,7 @@ class Base_kookie(object):
         if fontsize is None:
             ff = 1
         else:
-            ff = fontsize/self.font.fontsize
+            ff = fontsize/self.font['fontsize']
         
         if upper:
             text = text.upper()
@@ -94,11 +95,15 @@ class Base_kookie(object):
     
     def type_box(self, name, char):
         pass
+    
+    def _render_fonts(self, cr):
+        cr.set_font_size(self.font['fontsize'])
+        cr.set_font_face(self.font['font'])
+
 
 class Button(Base_kookie):
     def __init__(self, x, y, width, height, callback=None, string=''):
-        # we do NOT set update to true because that controls updating when the widget is defocused
-        Base_kookie.__init__(self, x, y, width, height, update=False, font=fonts.paragraph_classes['_interface'].fontclasses[('strong',)])
+        Base_kookie.__init__(self, x, y, width, height, font=fonttable.table.get_font('_interface', ('strong',) ))
         
         self._callback = callback
 #        self._string = string
@@ -126,8 +131,7 @@ class Button(Base_kookie):
         return 1
 
     def draw(self, cr, hover=(None, None)):
-        cr.set_font_size(self.font.fontsize)
-        cr.set_font_face(self.font.font)
+        self._render_fonts(cr)
         
         if self._active:
             cr.set_source_rgba(1, 0.2, 0.6, 1)
@@ -150,12 +154,58 @@ class Button(Base_kookie):
         else:
             cr.set_source_rgb(0,0,0)
         cr.show_glyphs(self._texts[0])
+
+class Checkbox(Button):
+    def __init__(self, x, y, width, height, default=None, callback=None, callback_parameters = (), string=''):
+        Base_kookie.__init__(self, x, y, width, height, font=fonttable.table.get_font('_interface', ('label', )) )
+        
+        if default:
+            self._active = 1
+        else:
+            self._active = None
+        
+        self._callback = callback
+        self._callback_parameters = callback_parameters
+
+        # set hover function equal to press function
+        self.is_over_hover = self.is_over
+        
+        self._add_static_text(self._x_right - 30, self._y_bottom - 5, string, align=-1)
+
+    def focus(self, x):
+        if self._active is None:
+            self._callback(True, * self._callback_parameters)
+            self._active = 1
+        else:
+            self._callback(False, * self._callback_parameters)
+            self._active = None
     
+    def release(self, action=True):
+        pass
+
+    def draw(self, cr, hover=(None, None)):
+        self._render_fonts(cr)
+        
+        cr.set_source_rgb(0,0,0)
+        cr.rectangle(self._x, self._y, self._width, self._height)
+        cr.fill()
+        
+        if self._active:
+            cr.set_source_rgb(1, 0.2, 0.6)
+            
+        elif hover[1]:
+            cr.set_source_rgb(1, 0.2, 0.6)
+
+        else:
+            cr.set_source_rgb(0,0,0)
+        
+        cr.show_glyphs(self._texts[0])
+
 
 class Tabs(Base_kookie):
     def __init__(self, x, y, width, height, default=0, callback=None, signals=None, strings=None):
-        # we do NOT set update to true because that controls updating when the widget is defocused
-        Base_kookie.__init__(self, x, y, width, height, update=False, font=fonts.paragraph_classes['_interface'].fontclasses[('strong',)])
+
+        Base_kookie.__init__(self, x, y, width, height, font=fonttable.table.get_font('_interface', ('strong',) ))
         
         self._signals = signals
         self._strings = strings
@@ -203,8 +253,7 @@ class Tabs(Base_kookie):
         return self._signals[self._active]
 
     def draw(self, cr, hover=(None, None)):
-        cr.set_font_size(self.font.fontsize)
-        cr.set_font_face(self.font.font)
+        self._render_fonts(cr)
         
         for i, button in enumerate(self._x_left):
             if i == self._active:
@@ -229,14 +278,24 @@ class Tabs(Base_kookie):
                 cr.set_source_rgb(0,0,0)
             cr.show_glyphs(self._texts[i])
 
+
 class Menu(Base_kookie):
-    def __init__(self, x, y, width, item_height, callback, signals=None, update=False):
-        Base_kookie.__init__(self, x, y, width, item_height*len(signals), update=update)
+    def __init__(self, x, y, width, item_height, signals=None):
+
+        Base_kookie.__init__(self, x, y, width, item_height*len(signals))
+        
+        # 'centers' menu
+        k = constants.window.get_k()
+        if self._y > k/2:
+            self.translate(dy = -self._height)
+            
+        if self._y < 0:
+            self.translate(dy = -self._y)
+        elif self._y_bottom > k:
+            self.translate(dy = k - self._y_bottom)
 
         self._item_height = item_height
         self._signals = signals
-        
-        self._callback = callback
         
         self._construct()
         
@@ -244,40 +303,32 @@ class Menu(Base_kookie):
         # build menu
         y = self._y
         for signal in self._signals:
-            self._add_static_text(self._x + 10, y + self._item_height - 11, signal)
+            self._add_static_text(self._x + 10, y + self._item_height - 11, str(signal) )
             y += self._item_height
 
-    def _target(self, x, y):
-        if self._x <= x <= self._x_right and self._y <= y <= self._y_bottom:
-            y = (y - self._y)/self._item_height
-            return int(floor(y))
-        else:
-            return None
+    def _target(self, y):
+        y = (y - self._y)/self._item_height
+        return int(floor(y))
             
-    def press(self, x, y):
-        i = self._target(x, y)
-        if i is None:
-            return False
-        else:
-            self._callback(self._signals[i])
-            return True
+    def press(self, y):
+        i = self._target(y)
+        return self._signals[i]
 
-    def hover(self, x, y):
-        return self._target(x, y)
+    def hover(self, y):
+        return self._target(y)
 
-    def draw(self, cr, hover=(None, None)):
+    def draw(self, cr, hover=None):
+        self._render_fonts(cr)
+        
         cr.set_source_rgba(0.8, 0.8, 0.8, 1)
         cr.rectangle(self._x, self._y, self._width, self._height)
         cr.fill()
         cr.set_source_rgba(1, 1, 1, 1)
-        cr.rectangle(self._x + 1, self._y, self._width - 2, self._height - 1)
+        cr.rectangle(self._x + 1, self._y + 1, self._width - 2, self._height - 2)
         cr.fill()
         
-        cr.set_font_size(self.font.fontsize)
-        cr.set_font_face(self.font.font)
-        
         for i, label in enumerate(self._texts):
-            if i == hover[1] and hover[0] == 'menu':
+            if i == hover:
                 cr.set_source_rgba(1, 0.2, 0.6, 1)
                 cr.rectangle(self._x, self._y + i*self._item_height, self._width, self._item_height)
                 cr.fill()
@@ -286,36 +337,37 @@ class Menu(Base_kookie):
                 cr.set_source_rgb(0,0,0)
             cr.show_glyphs(label)
 
+
+
 class Heading(Base_kookie):
-    def __init__(self, x, y, width, height, text, font=fonts.paragraph_classes['_interface'].fontclasses[('title',)], fontsize=None, upper=False):
+    def __init__(self, x, y, width, height, text, font=fonttable.table.get_font('_interface', ('title',) ), fontsize=None, upper=False):
         
-        Base_kookie.__init__(self, x, y, width, height, update=False)
+        Base_kookie.__init__(self, x, y, width, height)
         
         self.font = font
         if fontsize is None:
-            fontsize = self.font.fontsize
+            fontsize = self.font['fontsize']
         
-        self._add_static_text(x, y + 1.5*(height - self.font.fontsize), text, fontsize=fontsize, upper=upper)
+        self._add_static_text(self._x, self._y + fontsize, text, fontsize=fontsize, upper=upper)
     
     def is_over(self, x, y):
         return False
         
     def draw(self, cr, hover=(None, None)):
+        self._render_fonts(cr)
         
         cr.set_source_rgb(0,0,0)
         
         cr.rectangle(self._x, self._y_bottom - 2, self._width, 2)
         cr.fill()
         
-        cr.set_font_size(self.font.fontsize)
-        cr.set_font_face(self.font.font)
         cr.show_glyphs(self._texts[0])
 
 
 class Blank_space(Base_kookie):
-    def __init__(self, x, y, width, default, callback, name=None, update=False):
+    def __init__(self, x, y, width, default, callback, name=None):
         
-        Base_kookie.__init__(self, x, y, width, 40, update)
+        Base_kookie.__init__(self, x, y, width, 28)
         
         # must be list
         self._text = list(default) + [None]
@@ -324,6 +376,8 @@ class Blank_space(Base_kookie):
         self._callback = callback
         self._name = name
         
+        self.broken = False
+        
         self.is_over_hover = self.is_over
         
         # cursors
@@ -331,7 +385,7 @@ class Blank_space(Base_kookie):
         self._j = self._i
         
         # build static texts
-        self._add_static_text(self._x, self._y_bottom, self._name, 11, upper=True)
+        self._add_static_text(self._x, self._y + 40, self._name, 11, upper=True)
         
         self._resting_bar_color = (0, 0, 0, 0.4)
         self._active_bar_color = (0, 0, 0, 0.8)
@@ -350,7 +404,7 @@ class Blank_space(Base_kookie):
         self._reset_scroll()
         
     def _stamp_glyphs(self, text, factor=1):
-        self._template = self._build_line(self._x, self._y + self.font.fontsize + 5, text, self.font, factor)
+        self._template = self._build_line(self._x, self._y + self.font['fontsize'] + 5, text, self.font, factor)
 
     def _reset_scroll(self):
         self._glyphs[:] = self._template[:]
@@ -542,7 +596,7 @@ class Blank_space(Base_kookie):
             self._callback(out)
         else:
             return False
-        return self._should_update
+        return True
 
     def hover(self, x):
         return 1
@@ -551,7 +605,8 @@ class Blank_space(Base_kookie):
         pass
     
     def draw(self, cr, hover=(None, None)):
-    
+        self._render_fonts(cr)
+        
         self._sup_draw(cr, hover=hover)
         
         if self.broken:
@@ -571,7 +626,7 @@ class Blank_space(Base_kookie):
             resting_text_color = self._resting_text_color
             active_text_color = self._active_text_color
             
-        fontsize = round(self.font.fontsize)
+        fontsize = round(self.font['fontsize'])
         
         cr.rectangle(self._x - 1, self._y, self._width + 2, self._height)
         cr.clip()
@@ -602,8 +657,6 @@ class Blank_space(Base_kookie):
                         fontsize)
                 cr.fill()
                 
-        cr.set_font_size(self.font.fontsize)
-        cr.set_font_face(self.font.font)
         if self._active:
             cr.set_source_rgba( * active_text_color)
         else:
@@ -613,7 +666,7 @@ class Blank_space(Base_kookie):
         cr.reset_clip()
                 
         if self._name is not None:
-            cr.move_to(self._x, self._y + self.font.fontsize + 5)
+            cr.move_to(self._x, self._y + self.font['fontsize'] + 5)
             cr.set_font_size(11)
             # print label
             for label in self._texts:
@@ -626,10 +679,11 @@ class Blank_space(Base_kookie):
         cr.rectangle(self._x, self._y + fontsize + 10, self._width, 1)
         cr.fill()
 
+
 class Numeric_field(Blank_space):
-    def __init__(self, x, y, width, default, callback, name=None, update=False):
+    def __init__(self, x, y, width, default, callback, name=None):
     
-        Blank_space.__init__(self, x, y, width, default, callback, name, update)
+        Blank_space.__init__(self, x, y, width, default, callback, name)
 
         self.broken = False
         
@@ -646,14 +700,57 @@ class Numeric_field(Blank_space):
         return number
 
     def _stamp_glyphs(self, text, factor=1):
-        self._template = self._build_line(self._x, self._y + self.font.fontsize + 5, text, self.font, factor, sub_minus=True)
+        self._template = self._build_line(self._x, self._y + self.font['fontsize'] + 5, text, self.font, factor, sub_minus=True)
+
+#########
+class Selection_menu(Base_kookie):
+    def __init__(self, x, y, width, height, callback, menu_callback, menu_options, default):
+        Base_kookie.__init__(self, x, y, width, height, font=fonttable.table.get_font('_interface', ('strong',) ))
+        
+        self._callback = callback
+        self._menu_callback = menu_callback
+        self._menu_options = menu_options
+
+        self._dropdown_active = False
+        
+        # set hover function equal to press function
+        self.is_over_hover = self.is_over
+        
+        self._add_static_text(self._x_right, self._y_bottom - self._height/2 + 5, str(default), align=-1)
+    
+    def focus(self, x):
+        menu.menu.create(self._x_right - 170, self._y_bottom - 5, 200, self._menu_options, self._menu_callback, () )
+        self._active = True
+        self._dropdown_active = True
+        print('DROPDOWN')
+
+    def defocus(self):
+        self._active = None
+        self._dropdown_active = False
+
+        return False
+
+    def hover(self, x):
+        return 1
+    
+    def draw(self, cr, hover=(None, None)):
+        self._render_fonts(cr)
+        
+        if hover[1] == 1:
+            cr.set_source_rgb(1, 0.2, 0.6)
+        else:
+            cr.set_source_rgba(0, 0, 0, 0.7)
+            
+        cr.show_glyphs(self._texts[0])
+#########
 
 class Object_menu(Blank_space):
-    def __init__(self, x, y, width, default, callback, addition_callback, menu_callback, name=None, update=False):
-        Blank_space.__init__(self, x, y, width, default, callback, name, update)
+    def __init__(self, x, y, width, default, callback, addition_callback, menu_callback, menu_options, name=None):
+        Blank_space.__init__(self, x, y, width, default, callback, name)
 
         self._addition_callback = addition_callback
         self._menu_callback = menu_callback
+        self._menu_options = menu_options
         self.broken = False
         self._dropdown_active = False
     
@@ -670,7 +767,7 @@ class Object_menu(Blank_space):
             if x < self._x + self._width - 20:
                 self._addition_callback()
             else:
-                self._menu_callback()
+                menu.menu.create(self._x_right - 170, self._y_bottom - 5, 170, self._menu_options, self._menu_callback, () )
                 self._active = True
                 self._dropdown_active = True
                 print('DROPDOWN')

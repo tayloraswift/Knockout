@@ -4,79 +4,79 @@ import meredith
 
 import bisect
 import fonts
+import fonttable
 
 import noticeboard
 
 from freetype import ft_errors
-
-
-_ui_font = fonts.paragraph_classes['_interface'].fontclasses[()]
+from copy import deepcopy
 
 
 class _Font_file_Field(kookies.Blank_space):
-    def __init__(self, x, y, width, p, f, name=None, update=False):
+    def __init__(self, x, y, width, p, f, name=None):
     
-        kookies.Blank_space.__init__(self, x, y, width, fonts.paragraph_classes[p].fontclasses[f].path, callback=self._push_fontname, name=name, update=update)
+        kookies.Blank_space.__init__(self, x, y, width, fonttable.table.get_font(p, f)['path'], callback=self._push_fontname, name=name)
 
         self.p = p
         self.f = f
 
-        if not fonts.paragraph_classes[self.p].fontclasses[self.f].path_valid:
+        if not fonttable.table.get_font(self.p, self.f)['path_valid']:
             self.broken = True
         else:
             self.broken = False
 
     def _push_fontname(self, path):
-        try:
-            fonts.paragraph_classes[self.p].fontclasses[self.f].update_path(path)
-            self.broken = False
-            fonts.paragraph_classes[self.p].fontclasses[self.f].path_valid = True
-            meredith.mipsy.rerender()
-        except ft_errors.FT_Exception:
-#            fonts.paragraph_classes[self.p].fontclasses[self.f].font = None
-            self.broken = True
-            fonts.paragraph_classes[self.p].fontclasses[self.f].path_valid = False
-            meredith.mipsy.rerender()
-            print('Font not found')
+
+        fonttable.table.clear()
+        
+        fonts.f_set_attribute('path', self.p, self.f, (False, path))
+        self.broken = not fonttable.table.get_font(self.p, self.f)['path_valid']
+        
+        meredith.mipsy.rerender()
+
 
    
 class _Font_size_Field(kookies.Numeric_field):
-    def __init__(self, x, y, width, p, f, name=None, update=False):
+    def __init__(self, x, y, width, p, f, name=None):
         kookies.Numeric_field.__init__(self, x, y, width, 
-                str(fonts.paragraph_classes[p].fontclasses[f].fontsize), 
+                str(fonttable.table.get_font(p, f)['fontsize']), 
                 callback=self._push_fontsize, 
-                name=name, 
-                update=update)
+                name=name)
         
         self.p = p
         self.f = f
         
     def _push_fontsize(self, size):
-        fonts.paragraph_classes[self.p].fontclasses[self.f].update_size(self._to_number(size))
+        fonttable.table.clear()
+        
+        fonts.f_set_attribute('fontsize', self.p, self.f, (False, self._to_number(size)))
+        
         meredith.mipsy.rerender()
 
+
 class _Font_tracking_Field(kookies.Numeric_field):
-    def __init__(self, x, y, width, p, f, name=None, update=False):
+    def __init__(self, x, y, width, p, f, name=None):
         kookies.Numeric_field.__init__(self, x, y, width, 
-                str(fonts.paragraph_classes[p].fontclasses[f].tracking), 
+                str(fonttable.table.get_font(p, f)['tracking']), 
                 callback=self._push_tracking, 
-                name=name, 
-                update=update)
+                name=name)
         
         self.p = p
         self.f = f
         
     def _push_tracking(self, tracking):
-        fonts.paragraph_classes[self.p].fontclasses[self.f].update_tracking(self._to_number(tracking))
+        fonttable.table.clear()
+        
+        fonts.f_set_attribute('tracking', self.p, self.f, (False, self._to_number(tracking)))
+        
         meredith.mipsy.rerender()
 
 class _Paragraph_leading_Field(kookies.Numeric_field):
-    def __init__(self, x, y, width, p, name=None, update=False):
+    def __init__(self, x, y, width, p, name=None):
         kookies.Numeric_field.__init__(self, x, y, width, 
-                str(fonts.paragraph_classes[p].leading), 
+                str(fonts.get_leading(p)), 
                 callback=self._push_leading, 
-                name=name, 
-                update=update)
+                name=name)
         
         self.p = p
 
@@ -85,12 +85,11 @@ class _Paragraph_leading_Field(kookies.Numeric_field):
         meredith.mipsy.rerender()
 
 class _Paragraph_margin_Field(kookies.Numeric_field):
-    def __init__(self, x, y, width, p, name=None, update=False):
+    def __init__(self, x, y, width, p, name=None):
         kookies.Numeric_field.__init__(self, x, y, width, 
-                str(fonts.paragraph_classes[p].margin_bottom), 
+                str(fonts.get_margin_bottom(p)), 
                 callback=self._push_margin, 
-                name=name, 
-                update=update)
+                name=name)
         
         self.p = p
 
@@ -99,8 +98,8 @@ class _Paragraph_margin_Field(kookies.Numeric_field):
         meredith.mipsy.rerender()
 
 class _Paragraph_style_menu(kookies.Object_menu):
-    def __init__(self, x, y, width, p, addition_callback, menu_callback, name=None):
-        kookies.Object_menu.__init__(self, x, y, width, p, callback=self._push_pname, addition_callback=addition_callback, menu_callback=menu_callback, name=name, update=True)
+    def __init__(self, x, y, width, p, name=None):
+        kookies.Object_menu.__init__(self, x, y, width, p, callback=self._push_pname, addition_callback=self._add_paragraph_class, menu_callback=self._menu_select_class, menu_options=sorted(fonts.paragraph_classes.keys()), name=name)
         
         self.p = p
 
@@ -114,78 +113,11 @@ class _Paragraph_style_menu(kookies.Object_menu):
         self.p = name
 
         meredith.mipsy.rerender()
-    
 
-
-class _preview(kookies.Heading):
-    def __init__(self, x, y, width, height, text, p, f):
-        
-        kookies.Heading.__init__(self, x, y, width, height, text, font=fonts.paragraph_classes[p[0]].fontclasses[f], fontsize = 15)
-        
-        self.p = p
-        self.f = f
-
-        
-    def draw(self, cr, hover=(None, None)):
-        cr.set_source_rgb(0,0,0)
-        
-        cr.set_font_size(15)
-        cr.set_font_face(self.font.font)
-        cr.show_glyphs(self._texts[0])
-
-class Properties_Panel(object):
-    def __init__(self):
-        self._h = constants.windowwidth
-        self._k = constants.windowheight
-        
-        
-        self._tabstrip = kookies.Tabs(self._h - constants.propertieswidth/2 - 50 , 50, 100, 30, callback=self._tab_switch, signals=['paragraph', 'font', '?'], strings=['P', 'F', '?'])
-        self._tab = self._tabstrip.active_name()
-        
-        self.menu = None
-        
-        self.refresh_class(meredith.mipsy.glyph_at()[2])
-
-    
-    def refresh_class(self, p):
-        
-        self._items = [self._tabstrip]
-        self._active_box_i = None
-        self._hover_box_ij = (None, None)
-        
-        y = 145
-        
-        self._items.append(kookies.Heading(self._h - constants.propertieswidth + 15, 90, 250, 30, p[0], upper=True))
-
-        if self._tab == 'font':
-        
-            for key, item in sorted(fonts.paragraph_classes[p[0]].fontclasses.items()):
-                if key:
-                    classname = 'Class: ' + ', '.join(key)
-                else:
-                    classname = 'Class: none'
-                self._items.append(_preview(self._h - constants.propertieswidth + 16, y, 250, 30, classname, p, key ))
-                self._items.append(_Font_file_Field(self._h - constants.propertieswidth + 15, y + 30, 250, p[0], key, name='FONT FILE' ))
-                self._items.append(_Font_size_Field(self._h - constants.propertieswidth + 15, y + 75, 250, p[0], key, name='FONT SIZE' ))
-                self._items.append(_Font_tracking_Field(self._h - constants.propertieswidth + 15, y + 120, 250, p[0], key, name='TRACKING' ))
-                y += 180
-        
-        elif self._tab == 'paragraph':
-            self._items.append(_Paragraph_style_menu(self._h - constants.propertieswidth + 15, y, 250, p[0], addition_callback=self._add_paragraph_class, menu_callback=self._create_paragraph_style_menu, name='RENAME CLASS'))
-            
-            self._items.append(_Paragraph_leading_Field(self._h - constants.propertieswidth + 15, y + 45, 250, p[0], name='LEADING' ))
-            self._items.append(_Paragraph_margin_Field(self._h - constants.propertieswidth + 15, y + 90, 250, p[0], name='BOTTOM MARGIN' ))
-
-
-    def _create_paragraph_style_menu(self):
-        self.menu = kookies.Menu(self._h - constants.propertieswidth + 100, 150 + 18, 165, 30, self._menu_select_class, sorted(fonts.paragraph_classes.keys()) )
-        
     def _menu_select_class(self, name):
         p = meredith.mipsy.glyph_at()[2]
         meredith.mipsy.change_paragraph_class(p[1], name)
-        self.menu = None
-        meredith.mipsy.rerender() # must come before because it rewrites all the paragraph styles
-        self.refresh_class(meredith.mipsy.glyph_at()[2])
+        klossy.refresh()
         return False
 
     def _add_paragraph_class(self):
@@ -202,7 +134,146 @@ class Properties_Panel(object):
             name = p[0] + '.001'
         fonts.add_paragraph_class(name, p[0])
         meredith.mipsy.change_paragraph_class(p[1], name)
-        meredith.mipsy.rerender()
+
+        klossy.refresh()
+        
+
+class _Inheritance_selection_menu(kookies.Selection_menu):
+    def __init__(self, x, y, callback, p, f, attribute):
+        self._p = p
+        self._f = f
+        self._attribute = attribute
+        
+        if self._attribute == '_all':
+            current = fonts.paragraph_classes[self._p].fontclasses[1][self._f]
+        else:
+            current = fonts.f_read_attribute(self._attribute, self._p, self._f)
+        if current[0]:
+            default = current[1]
+        else:
+            default = 'x'
+        
+        combos = ['x']
+        for key in sorted(fonts.paragraph_classes.keys()):
+            if not fonts.paragraph_classes[key].fontclasses[0]:
+                combos += [ (key, ff) for ff in fonts.paragraph_classes[key].fontclasses[1].keys() ]
+        kookies.Selection_menu.__init__(self, x, y, width=50, height=15, callback=callback, menu_callback=self._push_inherit, menu_options=combos, default=default)
+        
+    def _push_inherit(self, value):
+        fonttable.table.clear()
+        if value == 'x':
+            if self._attribute == '_all':
+                fonts.paragraph_classes[self._p].fontclasses[1][self._f] = deepcopy(fonts.f_get_f(self._p, self._f))
+            else:
+                fonts.f_set_attribute(self._attribute, self._p, self._f, (False, fonttable.table.get_font(self._p, self._f)[self._attribute]) )
+        else:
+            if self._attribute == '_all':
+                # save old value in case of a disaster
+                v = fonts.f_get_f(self._p, self._f)
+                value = (True, value)
+                fonts.paragraph_classes[self._p].fontclasses[1][self._f] = value
+
+                try:
+                    fonttable.table.get_font(self._p, self._f)
+                except RuntimeError:
+                    fonttable.table.clear()
+                    fonts.paragraph_classes[self._p].fontclasses[1][self._f] = v
+                    print('REFERENCE LOOP DETECTED')
+            else:
+                # save old value in case of a disaster
+                v = fonts.f_get_attribute(self._attribute, self._p, self._f)
+                value = (True, value)
+                fonts.f_set_attribute(self._attribute, self._p, self._f, value)
+
+                try:
+                    fonttable.table.get_font(self._p, self._f)
+                except RuntimeError:
+                    fonttable.table.clear()
+                    fonts.f_set_attribute(self._attribute, self._p, self._f, v)
+                    print('REFERENCE LOOP DETECTED')
+        
+        klossy.refresh()
+    
+
+class _preview(kookies.Heading):
+    def __init__(self, x, y, width, height, text, p, f):
+        
+        kookies.Heading.__init__(self, x, y, width, height, text, font=fonttable.table.get_font(p[0], f), fontsize = 15)
+        
+        self.p = p
+        self.f = f
+
+        
+    def draw(self, cr, hover=(None, None)):
+        cr.set_source_rgb(0,0,0)
+        
+        cr.set_font_size(15)
+        cr.set_font_face(self.font['font'])
+        cr.show_glyphs(self._texts[0])
+
+class Properties_Panel(object):
+    def __init__(self):
+        self._h = constants.windowwidth
+        self._k = constants.windowheight
+        
+        self._tabstrip = kookies.Tabs(self._h - constants.propertieswidth/2 - 50 , 50, 100, 30, callback=self._tab_switch, signals=['paragraph', 'font', '?'], strings=['P', 'F', '?'])
+        self._tab = self._tabstrip.active_name()
+        
+        self.refresh_class(meredith.mipsy.glyph_at()[2])
+
+    
+    def refresh_class(self, p):
+        
+        self._items = [self._tabstrip]
+        self._active_box_i = None
+        self._hover_box_ij = (None, None)
+        
+        y = 145
+        
+        self._items.append(kookies.Heading(self._h - constants.propertieswidth + 15, 90, 250, 30, p[0], upper=True))
+
+        if self._tab == 'font':
+        
+            for key, item in sorted(fonts.get_fontclasses(p[0]).items()):
+                if key:
+                    classname = 'Class: ' + ', '.join(key)
+                else:
+                    classname = 'Class: none'
+                
+                self._items.append(_preview(self._h - constants.propertieswidth + 16, y, 250, 0, classname, p, key ))
+                
+                if fonts.f_read_f(p[0], key)[0]:
+                    self._items.append(_Inheritance_selection_menu(self._h - constants.propertieswidth + 200, y + 20, callback=None, p=p[0], f=key, attribute='_all'))
+                    y += 50
+                else:
+                    self._items.append(_Inheritance_selection_menu(self._h - constants.propertieswidth + 200, y + 3, callback=None, p=p[0], f=key, attribute='_all'))
+                    y += 30
+                    
+                    self._items.append(_Font_file_Field(self._h - constants.propertieswidth + 15, y, 250, p[0], key, name='FONT FILE' ))
+                    y += 30
+                    self._items.append(_Inheritance_selection_menu(self._h - constants.propertieswidth + 200, y, callback=None, p=p[0], f=key, attribute='path'))
+                    y += 15
+                    
+                    self._items.append(_Font_size_Field(self._h - constants.propertieswidth + 15, y, 250, p[0], key, name='FONT SIZE' ))
+                    y += 30
+                    self._items.append(_Inheritance_selection_menu(self._h - constants.propertieswidth + 200, y, callback=None, p=p[0], f=key, attribute='fontsize'))
+                    y += 15
+                    
+                    self._items.append(_Font_tracking_Field(self._h - constants.propertieswidth + 15, y, 250, p[0], key, name='TRACKING' ))
+                    y += 30
+                    self._items.append(_Inheritance_selection_menu(self._h - constants.propertieswidth + 200, y, callback=None, p=p[0], f=key, attribute='tracking'))
+                    y += 30
+                        
+        elif self._tab == 'paragraph':
+            self._items.append(_Paragraph_style_menu(self._h - constants.propertieswidth + 15, y, 250, p[0], name='RENAME CLASS'))
+            
+            self._items.append(_Paragraph_leading_Field(self._h - constants.propertieswidth + 15, y + 45, 250, p[0], name='LEADING' ))
+            self._items.append(_Paragraph_margin_Field(self._h - constants.propertieswidth + 15, y + 90, 250, p[0], name='BOTTOM MARGIN' ))
+
+        self._stack()
+
+    def refresh(self):
+        meredith.mipsy.rerender() # must come before because it rewrites all the paragraph styles
         self.refresh_class(meredith.mipsy.glyph_at()[2])
 
     def _tab_switch(self, name):
@@ -216,7 +287,6 @@ class Properties_Panel(object):
 
         for entry in self._items:
             entry.translate(dx=dx)
-        self.menu = None
     
     def render(self, cr, h, k):
         # DRAW BACKGROUND
@@ -235,8 +305,6 @@ class Properties_Panel(object):
                 entry.draw(cr, hover=self._hover_box_ij)
             else:
                 entry.draw(cr)
-        if self.menu:
-            self.menu.draw(cr, hover=self._hover_box_ij)
         
         # DRAW SEPARATOR
         cr.rectangle(h - constants.propertieswidth, 0, 
@@ -256,29 +324,34 @@ class Properties_Panel(object):
             else:
                 return self._items[self._active_box_i].type_box(name, char)
     
+    def _stack(self):
+        self._rows = [item.y for item in self._items]
+
+    def _stack_bisect(self, y):
+        return bisect.bisect(self._rows, y)
+    
     def press(self, x, y):
-        if self.menu is None or not self.menu.press(x, y):
-            self.menu = None
-            b = None
 
-            bb = bisect.bisect([item.y for item in self._items], y)
+        b = None
 
-            try:
-                if self._items[bb].is_over(x, y):
-                    self._items[bb].focus(x)
-                    b = bb
+        bb = self._stack_bisect(y)
 
-            except IndexError:
-                pass
-            # defocus the other box, if applicable
-            if b is None or b != self._active_box_i:
-                if self._active_box_i is not None:
-                    if self._items[self._active_box_i].defocus():
+        try:
+            if self._items[bb].is_over(x, y):
+                self._items[bb].focus(x)
+                b = bb
 
-                        print('UPDATE PANEL')
-                        self.refresh_class(meredith.mipsy.glyph_at()[2])
-                        
-                self._active_box_i = b
+        except IndexError:
+            pass
+        # defocus the other box, if applicable
+        if b is None or b != self._active_box_i:
+            if self._active_box_i is not None:
+                if self._items[self._active_box_i].defocus():
+
+                    print('UPDATE PANEL')
+                    self.refresh_class(meredith.mipsy.glyph_at()[2])
+                    
+            self._active_box_i = b
 
             
     def press_motion(self, x):
@@ -289,25 +362,14 @@ class Properties_Panel(object):
     
         self._hover_box_ij = (None, None)
         
-        if self.menu is not None:
-            j = self.menu.hover(x, y)
-            if j is None:
-                over_menu = False
-            else:
-                over_menu = True
-        else:
-            over_menu = False
-        if over_menu:
-            self._hover_box_ij = ('menu', j)
-        else:
-            bb = bisect.bisect([item.y for item in self._items], y)
-            try:
-                if self._items[bb].is_over_hover(x, y):
-                    self._hover_box_ij = (bb, self._items[bb].hover(x))
+        bb = self._stack_bisect(y)
+        try:
+            if self._items[bb].is_over_hover(x, y):
+                self._hover_box_ij = (bb, self._items[bb].hover(x))
 
-            except IndexError:
-                # if last index
-                pass
+        except IndexError:
+            # if last index
+            pass
 
         if hovered[0] != self._hover_box_ij:
             hovered[0] = self._hover_box_ij

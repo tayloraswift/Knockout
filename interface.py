@@ -3,7 +3,7 @@ import cairo
 
 import karlie
 import taylor
-
+import menu
 import tree
 import kevin
 
@@ -59,8 +59,8 @@ class Display(Gtk.Window):
         self.set_title("Lines")
         self.resize(constants.windowwidth, constants.windowheight)
         
-        self._h = constants.windowwidth
-        self._k = constants.windowheight
+        self._h = constants.window.get_h()
+        self._k = constants.window.get_k()
         
         self.set_position(Gtk.WindowPosition.CENTER)
         self.connect("delete-event", Gtk.main_quit)
@@ -87,6 +87,8 @@ class Display(Gtk.Window):
 
         karlie.klossy.render(cr, self._h, self._k)
         
+        menu.menu.render(cr)
+        
         cr.set_font_size(14)
         cr.set_font_face(self.uifont)
         
@@ -107,6 +109,8 @@ class Display(Gtk.Window):
     
     def on_resize(self, w):
         self._h, self._k = self.get_size()
+        constants.window.resize(self._h, self._k)
+        
         karlie.klossy.resize(self._h, self._k)
         taylor.becky.resize(self._h, self._k)
         

@@ -6,6 +6,7 @@ import kevin
 import errors
 
 import fonts
+import fonttable
 
 
 def the_box_submitted(ip):
@@ -33,13 +34,13 @@ def _fail_class(startindex, l, attempt):
         
 class Textline(object):
     def __init__(self, text, anchor, stop, y, c, l, startindex, paragraph, fontclass, leading):
-        self._paragraph = paragraph
-        self._fontclass_names = fontclass
+        self._p = paragraph
+        self._f = fontclass
 
         try:
-            self._fontclass = fonts.paragraph_classes[paragraph[0]].fontclasses[tuple(fontclass)]
+            self._fontclass = fonttable.table.get_font(paragraph[0], tuple(fontclass))
         except KeyError:
-            self._fontclass = fonts.paragraph_classes[paragraph[0]].fontclasses[()]
+            self._fontclass = fonttable.table.get_font(paragraph[0], () )
 
         # takes 1,989 characters starting from startindex
         self._sorts = text[startindex:startindex + 1989]
@@ -59,7 +60,7 @@ class Textline(object):
 
     def build_line(self):
         
-        p_name, p_i = self._paragraph
+        p, p_i = self._p
         
         # go by syllable until you reach the end
         index = self.startindex
@@ -84,14 +85,14 @@ class Textline(object):
                     # load style from tag
 #                    self.fontclass = fontclasses[entity[1]]
                     # retract x position
-                    glyphanchor -= self._fontclass.fontsize
+                    glyphanchor -= self._fontclass['fontsize']
                     glyphwidth = 0
-                    x -= self._fontclass.tracking
+                    x -= self._fontclass['tracking']
                     # add to special marks
 #                    self.special.append(('<p>', glyphanchor, self.y))
 
             elif glyph == '</p>':
-                self.glyphs.append((self._fontclass.character_index(glyph), x, self.y, self._paragraph, tuple(self._fontclass_names)))
+                self.glyphs.append((fonttable.character_index(self._fontclass['fontmetrics'], glyph), x, self.y, self._p, tuple(self._f)))
                 # paragraph breaks are signaled by a negative index
                 return (self.startindex + len(self.glyphs))*-1 - 1
                 break
@@ -100,39 +101,45 @@ class Textline(object):
 
                 
                 # look for negative classes
-                if '~' + entity[1] in self._fontclass_names:
-                    self._fontclass_names.remove('~' + entity[1])
+                if '~' + entity[1] in self._f:
+                    self._f.remove('~' + entity[1])
                 else:
-                    self._fontclass_names.append(entity[1])
-                    self._fontclass_names.sort()
+                    self._f.append(entity[1])
+                    self._f.sort()
                     
                 try:
-                    self._fontclass = fonts.paragraph_classes[p_name].fontclasses[tuple(self._fontclass_names)]
+                    self._fontclass = fonttable.table.get_font(p, tuple(self._f))
                 except KeyError:
                     # happens if requested style is not defined
-                    errors.styleerrors.add_style_error(tuple(self._fontclass_names), self.l)
-                    self._fontclass = fonts.paragraph_classes[p_name].fontclasses[()]
+                    errors.styleerrors.add_style_error(tuple(self._f), self.l)
+                    try:
+                        self._fontclass = fonttable.table.get_font(p, () )
+                    except AttributeError:
+                        self._fontclass = fonttable.table.get_font('_interface', () )
             elif glyph == '</f>':
 
                 try:
-                    self._fontclass_names.remove(entity[1])
-                    self._fontclass = fonts.paragraph_classes[p_name].fontclasses[tuple(self._fontclass_names)]
+                    self._f.remove(entity[1])
+                    self._fontclass = fonttable.table.get_font(p, tuple(self._f))
                 except (ValueError, KeyError):
                     # happens if the tag didn't exist
-                    self._fontclass_names.append('~' + entity[1])
-                    self._fontclass_names.sort()
-                    errors.styleerrors.add_style_error(tuple(self._fontclass_names), self.l)
-                    self._fontclass = fonts.paragraph_classes[p_name].fontclasses[()]
+                    self._f.append('~' + entity[1])
+                    self._f.sort()
+                    errors.styleerrors.add_style_error(tuple(self._f), self.l)
+                    try:
+                        self._fontclass = fonttable.table.get_font(p, () )
+                    except AttributeError:
+                        self._fontclass = fonttable.table.get_font('_interface', () )
 
-            glyphwidth = self._fontclass.glyph_width(glyph)
-            self.glyphs.append((self._fontclass.character_index(glyph), glyphanchor, self.y, self._paragraph, tuple(self._fontclass_names)))
+            glyphwidth = fonttable.glyph_width(self._fontclass['fontmetrics'], self._fontclass['fontsize'], glyph)
+            self.glyphs.append((fonttable.character_index(self._fontclass['fontmetrics'], glyph), glyphanchor, self.y, self._p, tuple(self._f)))
             
             
             if glyph == '<br>':
-                x -= self._fontclass.tracking
+                x -= self._fontclass['tracking']
                 break
             
-            x += glyphwidth + self._fontclass.tracking
+            x += glyphwidth + self._fontclass['tracking']
             n = len(self.glyphs)
             
             # work out line breaks
@@ -195,7 +202,7 @@ class Text(object):
         self.select = Cursor(self.text)
 
         
-    def _generate_lines(self, l, startindex, halt=[None]):
+    def _generate_lines(self, l, startindex):
         c = 0
         
         try:
@@ -215,13 +222,13 @@ class Text(object):
                 p, paragraphclass = _fail_class(startindex, l, (p[0],))
                 
             
-            y = self.channels.channels[c].railings[0][0][1] + paragraphclass.leading
+            y = self.channels.channels[c].railings[0][0][1] + fonts.get_leading(p[0])
         while True:
             # see if the lines have overrun the portals
             if y > self.channels.channels[c].railings[1][-1][1] and c < len(self.channels.channels) - 1:
                 c += 1
                 # shift to below entrance
-                y = self.channels.channels[c].railings[0][0][1] + paragraphclass.leading
+                y = self.channels.channels[c].railings[0][0][1] + fonts.get_leading(p[0])
             
             try:
                 if character(self.text[startindex]) != '<p>':
@@ -252,7 +259,7 @@ class Text(object):
                     startindex,
                     p, 
                     f,
-                    paragraphclass.leading
+                    fonts.get_leading(p[0])
                     )
             
             # get the index of the last glyph printed (while printing said line) so we know where to start next time
@@ -261,7 +268,7 @@ class Text(object):
             if startindex < 0:
 
                 startindex = abs(startindex) - 1
-                y += paragraphclass.leading + paragraphclass.margin_bottom
+                y += fonts.get_leading(p[0]) + fonts.get_margin_bottom(p[0])
                 
                 if startindex > len(self.text) - 1:
                     self.glyphs.append(line)
@@ -269,7 +276,7 @@ class Text(object):
                     # this is the end of the document
                     break
             else:
-                y += paragraphclass.leading
+                y += fonts.get_leading(p[0])
             l += 1
 
             self.glyphs.append(line)

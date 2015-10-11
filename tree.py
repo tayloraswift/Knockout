@@ -1,8 +1,9 @@
 import karlie
-import taylor
-import noticeboard
 
+import taylor
+import menu
 import constants
+
 
 
 def take_event(x, y, event, key=False, char=None, region=['document', 'document'], geometry=None):
@@ -16,6 +17,7 @@ def take_event(x, y, event, key=False, char=None, region=['document', 'document'
                 
     else:
         # Changing regions
+        
         if x > geometry[0] - constants.propertieswidth:
             if region[1] != 'properties':
                 region[1] = 'properties'
@@ -34,10 +36,24 @@ def take_event(x, y, event, key=False, char=None, region=['document', 'document'
                 if region[0] == 'properties':
                     karlie.klossy.press(x, y)
                 region[0] = 'document'
-                
+
+
+        if menu.menu.menu():
+            if menu.menu.in_bounds(x, y):
+                if event == 'motion':
+                    menu.menu.hover(y)
+                    x, y = -1, -1
+                    
+                if event == 'press':
+                    menu.menu.press(y)
+                    return
+            
+            menu.menu.test_change()
+
         #############
         
         if event == 'press':
+            menu.menu.destroy()
             if region[0] == 'document':
                 taylor.becky.press(x, y)
                     

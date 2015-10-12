@@ -3,16 +3,6 @@ import pycairo_font
 
 import fonts
 
-ordinalmap = {
-        'other': -1,
-        '<br>': -2,
-        '<p>': -3,
-        '</p>': -4,
-        
-        '<f>': -5,
-        '</f>': -6
-        }
-
 _type_registry = {}
 
 def _get_cairo_font(path):
@@ -25,21 +15,45 @@ def _get_cairo_font(path):
 # extended fontface class
 class _FFace(freetype.Face):
     
-    def advance_width(self, character):
-        if len(character) == 1:
-            avw = self.get_advance(self.get_char_index(character), True)
-        elif character == '<br>':
-            avw = 0
-        elif character == '<p>':
-            avw = 0
+    def __init__(self, path):
+        freetype.Face.__init__(self, path)
         
-        elif character in ['<f>', '</f>']:
-            avw = 0
-        else:
-            avw = 1000
-            
-        return avw
-
+        self._widths = {
+                '<br>': 0,
+                '<p>': 0,
+                '</p>' : 0,
+                '<f>': 0,
+                '</f>': 0,
+                None: 0
+                }
+        
+        self._ordinals = {
+                'other': -1,
+                '<br>': -2,
+                '<p>': -3,
+                '</p>': -4,
+                
+                '<f>': -5,
+                '</f>': -6
+                }
+    
+    def advance_pixel_width(self, character):
+        try:
+            return self._widths[character]
+        except KeyError:
+            p = self.get_advance(self.get_char_index(character), True)/self.units_per_EM
+            self._widths[character] = p
+            return p
+    
+    def character_index(self, character):
+        try:
+            return self._ordinals[character]
+        except KeyError:
+            i = self.get_char_index(character)
+            self._ordinals[character] = i
+            return i
+    
+    
 class _Font_table(object):
     def __init__(self):
         self._table = {}
@@ -76,11 +90,5 @@ class _Font_table(object):
 
 table = _Font_table()
 
-def character_index(fontmetrics, c):
-    try:
-        return (fontmetrics.get_char_index(c))
-    except TypeError:
-        return ordinalmap[c]
-
 def glyph_width(fontmetrics, size, c):
-    return fontmetrics.advance_width(c)/fontmetrics.units_per_EM*size
+    return fontmetrics.advance_pixel_width(c)*size

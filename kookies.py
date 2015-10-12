@@ -51,16 +51,18 @@ class Base_kookie(object):
     def _translate_other(self, dx, dy):
         pass
 
-    def _build_line(self, x, y, text, font, factor=1, align=1, sub_minus=False):
+    def _build_line(self, x, y, text, font, fontsize=None, align=1, sub_minus=False):
+        if fontsize is None:
+            fontsize = font['fontsize']
         xo = x
         line = []
         for character in text:
             if sub_minus and character == '-':
                 character = '–'
             try:
-                line.append((fonttable.character_index(self.font['fontmetrics'], character), x, y))
-                # remember to remove factor
-                x += (fonttable.glyph_width(font['fontmetrics'], font['fontsize'], character) + font['tracking'])*factor
+                line.append((font['fontmetrics'].character_index(character), x, y))
+
+                x += (font['fontmetrics'].advance_pixel_width(character)*fontsize + font['tracking'])
             except TypeError:
                 line.append((None, x, y))
 
@@ -73,15 +75,12 @@ class Base_kookie(object):
         
         return line
     
-    def _add_static_text(self, x, y, text, fontsize=None, upper=False, align=1):
-        if fontsize is None:
-            ff = 1
-        else:
-            ff = fontsize/self.font['fontsize']
-        
+    def _add_static_text(self, x, y, text, font=None, fontsize=None, upper=False, align=1):
+        if font is None:
+            font = self.font
         if upper:
             text = text.upper()
-        self._texts.append(self._build_line(x, y, text, self.font, factor=ff, align=align))
+        self._texts.append(self._build_line(x, y, text, font, fontsize=fontsize, align=align))
     
     def is_over(self, x, y):
         if self._y <= y <= self._y_bottom and self._x <= x <= self._x_right:
@@ -385,7 +384,7 @@ class Blank_space(Base_kookie):
         self._j = self._i
         
         # build static texts
-        self._add_static_text(self._x, self._y + 40, self._name, 11, upper=True)
+        self._add_static_text(self._x, self._y + 40, self._name, font=fonttable.table.get_font('_interface', ('label', )) , upper=True)
         
         self._resting_bar_color = (0, 0, 0, 0.4)
         self._active_bar_color = (0, 0, 0, 0.8)
@@ -403,8 +402,8 @@ class Blank_space(Base_kookie):
         self._stamp_glyphs(self._text)
         self._reset_scroll()
         
-    def _stamp_glyphs(self, text, factor=1):
-        self._template = self._build_line(self._x, self._y + self.font['fontsize'] + 5, text, self.font, factor)
+    def _stamp_glyphs(self, text):
+        self._template = self._build_line(self._x, self._y + self.font['fontsize'] + 5, text, self.font)
 
     def _reset_scroll(self):
         self._glyphs[:] = self._template[:]
@@ -552,7 +551,7 @@ class Blank_space(Base_kookie):
 
     # target glyph index
     def _target(self, x):
-        i = bisect.bisect([g[1] for g in self._glyphs[:-2]], x)
+        i = bisect.bisect([g[1] for g in self._glyphs[:-1]], x)
         if i > 0 and x - self._glyphs[i - 1][1] < self._glyphs[i][1] - x:
             i -= 1
         return i
@@ -662,7 +661,7 @@ class Blank_space(Base_kookie):
         else:
             cr.set_source_rgba( * resting_text_color)
         # don't print the cap glyph
-        cr.show_glyphs(self._glyphs[:-2])
+        cr.show_glyphs(self._glyphs[:-1])
         cr.reset_clip()
                 
         if self._name is not None:
@@ -699,8 +698,8 @@ class Numeric_field(Blank_space):
             number = int(string)
         return number
 
-    def _stamp_glyphs(self, text, factor=1):
-        self._template = self._build_line(self._x, self._y + self.font['fontsize'] + 5, text, self.font, factor, sub_minus=True)
+    def _stamp_glyphs(self, text):
+        self._template = self._build_line(self._x, self._y + self.font['fontsize'] + 5, text, self.font, sub_minus=True)
 
 #########
 class Selection_menu(Base_kookie):

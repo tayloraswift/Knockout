@@ -353,6 +353,7 @@ class Document_view(object):
                 cr.show_glyphs(glyphs)
                 
             del classed_glyphs
+
     
     def _draw_annotations(self, cr):
         specials = [i for i, entity in enumerate(meredith.mipsy.text()) if character(entity) in ['<p>', '</p>', '<br>', '<f>', '</f>']]

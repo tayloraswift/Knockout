@@ -13,7 +13,7 @@ def the_box_submitted(ip):
     print('the textbox submitted' + ip)
 
 def character(entity):
-    if not isinstance(entity, str):
+    if type(entity) is list:
         entity = entity[0]
     return entity
 
@@ -82,24 +82,20 @@ class Textline(object):
                     break
                 else:
                 
-                    # load style from tag
-#                    self.fontclass = fontclasses[entity[1]]
+                    # we don’t load the style because the outer function takes care of that
                     # retract x position
                     glyphanchor -= self._fontclass['fontsize']
                     glyphwidth = 0
                     x -= self._fontclass['tracking']
-                    # add to special marks
-#                    self.special.append(('<p>', glyphanchor, self.y))
 
             elif glyph == '</p>':
-                self.glyphs.append((fonttable.character_index(self._fontclass['fontmetrics'], glyph), x, self.y, self._p, tuple(self._f)))
+                self.glyphs.append((self._fontclass['fontmetrics'].character_index(glyph), x, self.y, self._p, tuple(self._f)))
                 # paragraph breaks are signaled by a negative index
                 return (self.startindex + len(self.glyphs))*-1 - 1
                 break
 
             elif glyph == '<f>':
 
-                
                 # look for negative classes
                 if '~' + entity[1] in self._f:
                     self._f.remove('~' + entity[1])
@@ -132,7 +128,7 @@ class Textline(object):
                         self._fontclass = fonttable.table.get_font('_interface', () )
 
             glyphwidth = fonttable.glyph_width(self._fontclass['fontmetrics'], self._fontclass['fontsize'], glyph)
-            self.glyphs.append((fonttable.character_index(self._fontclass['fontmetrics'], glyph), glyphanchor, self.y, self._p, tuple(self._f)))
+            self.glyphs.append((self._fontclass['fontmetrics'].character_index(glyph), glyphanchor, self.y, self._p, tuple(self._f)))
             
             
             if glyph == '<br>':

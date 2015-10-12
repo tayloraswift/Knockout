@@ -123,20 +123,23 @@ class Channels_controls(object):
     def _draw_broken_bar(self, cr, highlight, x1, y1, x2, color_rgba):
         
         cr.set_source_rgba( * color_rgba)
-
-        cr.rectangle(x1, y1, x2 - x1, 5)
+        width = x2 - x1
+        cr.rectangle(x1, y1, width, 5)
         cr.clip()
-        for f in range( (x2 - x1) //4):
-            cr.move_to(x1 + 4*f, y1)
-            if highlight:
+        if highlight:
+            for f in range( width//4):
+                cr.move_to(x1 + 4*f, y1)
+
                 cr.rel_line_to(2, 0)
                 cr.rel_line_to(-4, 7)
                 cr.rel_line_to(-2, 0)
-            else:
+        else:
+            for f in range( width//4):
+                cr.move_to(x1 + 4*f, y1)
                 cr.rel_line_to(1.5, 0)
                 cr.rel_line_to(-4, 7)
                 cr.rel_line_to(-1.5, 0)
-            cr.close_path()
+        cr.close_path()
 
         cr.fill()
         cr.reset_clip()

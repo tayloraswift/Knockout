@@ -34,68 +34,40 @@ class _Font_file_Field(kookies.Blank_space):
         
         meredith.mipsy.rerender()
 
-
-   
-class _Font_size_Field(kookies.Numeric_field):
-    def __init__(self, x, y, width, p, f, name=None):
+class _Font_numeric_Field(kookies.Numeric_field):
+    def __init__(self, x, y, width, p, f, attribute, name=None):
         kookies.Numeric_field.__init__(self, x, y, width, 
-                str(fonttable.table.get_font(p, f)['fontsize']), 
-                callback=self._push_fontsize, 
+                str(fonttable.table.get_font(p, f)[attribute]), 
+                callback=self._push_attribute, 
                 name=name)
         
         self.p = p
         self.f = f
+        self._attribute = attribute
         
-    def _push_fontsize(self, size):
+    def _push_attribute(self, value):
         fonttable.table.clear()
         
-        fonts.f_set_attribute('fontsize', self.p, self.f, (False, self._to_number(size)))
+        fonts.f_set_attribute(self._attribute, self.p, self.f, (False, self._to_number(value)))
         
         meredith.mipsy.rerender()
-
-
-class _Font_tracking_Field(kookies.Numeric_field):
-    def __init__(self, x, y, width, p, f, name=None):
+    
+class _Paragraph_numeric_Field(kookies.Numeric_field):
+    def __init__(self, x, y, width, p, attribute, name=None):
         kookies.Numeric_field.__init__(self, x, y, width, 
-                str(fonttable.table.get_font(p, f)['tracking']), 
-                callback=self._push_tracking, 
+                str(fonttable.p_table.get_paragraph(p)[attribute]), 
+                callback=self._push_attribute, 
                 name=name)
         
         self.p = p
-        self.f = f
+        self._attribute = attribute
+
+    def _push_attribute(self, value):
+        fonttable.p_table.clear()
         
-    def _push_tracking(self, tracking):
-        fonttable.table.clear()
-        
-        fonts.f_set_attribute('tracking', self.p, self.f, (False, self._to_number(tracking)))
-        
+        fonts.p_set_attribute(self._attribute, self.p, (False, self._to_number(value)))
         meredith.mipsy.rerender()
 
-class _Paragraph_leading_Field(kookies.Numeric_field):
-    def __init__(self, x, y, width, p, name=None):
-        kookies.Numeric_field.__init__(self, x, y, width, 
-                str(fonts.get_leading(p)), 
-                callback=self._push_leading, 
-                name=name)
-        
-        self.p = p
-
-    def _push_leading(self, leading):
-        fonts.paragraph_classes[self.p].update_leading(self._to_number(leading))
-        meredith.mipsy.rerender()
-
-class _Paragraph_margin_Field(kookies.Numeric_field):
-    def __init__(self, x, y, width, p, name=None):
-        kookies.Numeric_field.__init__(self, x, y, width, 
-                str(fonts.get_margin_bottom(p)), 
-                callback=self._push_margin, 
-                name=name)
-        
-        self.p = p
-
-    def _push_margin(self, margin):
-        fonts.paragraph_classes[self.p].update_margin(self._to_number(margin))
-        meredith.mipsy.rerender()
 
 class _Paragraph_style_menu(kookies.Object_menu):
     def __init__(self, x, y, width, p, name=None):
@@ -107,7 +79,8 @@ class _Paragraph_style_menu(kookies.Object_menu):
 
 
     def _push_pname(self, name):
-
+        fonttable.p_table.clear()
+        
         fonts.paragraph_classes[name] = fonts.paragraph_classes.pop(self.p)
         meredith.mipsy.rename_paragraph_class(self.p, name)
         self.p = name
@@ -121,7 +94,8 @@ class _Paragraph_style_menu(kookies.Object_menu):
         return False
 
     def _add_paragraph_class(self):
-        print('done')
+        fonttable.p_table.clear()
+        
         p = meredith.mipsy.glyph_at()[2]
         if len(p[0]) > 3 and p[0][-4] == '.' and len([c for c in p[0][-3:] if c in '1234567890']) == 3:
             serialnumber = int(p[0][-3:])
@@ -193,6 +167,41 @@ class _Inheritance_selection_menu(kookies.Selection_menu):
                     print('REFERENCE LOOP DETECTED')
         
         klossy.refresh()
+
+class _Paragraph_inheritance_menu(kookies.Selection_menu):
+    def __init__(self, x, y, callback, p, attribute):
+        self._p = p
+        self._attribute = attribute
+        
+        current = fonts.p_read_attribute(self._attribute, self._p)
+        
+        if current[0]:
+            default = current[1]
+        else:
+            default = 'x'
+        
+        combos = ['x']
+        combos += fonts.paragraph_classes.keys()
+        kookies.Selection_menu.__init__(self, x, y, width=50, height=15, callback=callback, menu_callback=self._push_inherit, menu_options=combos, default=default)
+        
+    def _push_inherit(self, value):
+        fonttable.p_table.clear()
+        if value == 'x':
+            fonts.p_set_attribute(self._attribute, self._p, (False, fonttable.p_table.get_paragraph(self._p)[self._attribute]) )
+        else:
+            # save old value in case of a disaster
+            v = fonts.p_get_attribute(self._attribute, self._p)
+            value = (True, value)
+            fonts.p_set_attribute(self._attribute, self._p, value)
+
+            try:
+                fonttable.p_table.get_paragraph(self._p)
+            except RuntimeError:
+                fonttable.p_table.clear()
+                fonts.p_set_attribute(self._attribute, self._p, v)
+                print('REFERENCE LOOP DETECTED')
+        
+        klossy.refresh()
     
 
 class _preview(kookies.Heading):
@@ -254,22 +263,30 @@ class Properties_Panel(object):
                     self._items.append(_Inheritance_selection_menu(self._h - constants.propertieswidth + 200, y, callback=None, p=p[0], f=key, attribute='path'))
                     y += 15
                     
-                    self._items.append(_Font_size_Field(self._h - constants.propertieswidth + 15, y, 250, p[0], key, name='FONT SIZE' ))
+                    self._items.append(_Font_numeric_Field(self._h - constants.propertieswidth + 15, y, 250, p[0], key, attribute='fontsize', name='FONT SIZE' ))
                     y += 30
                     self._items.append(_Inheritance_selection_menu(self._h - constants.propertieswidth + 200, y, callback=None, p=p[0], f=key, attribute='fontsize'))
                     y += 15
                     
-                    self._items.append(_Font_tracking_Field(self._h - constants.propertieswidth + 15, y, 250, p[0], key, name='TRACKING' ))
+                    self._items.append(_Font_numeric_Field(self._h - constants.propertieswidth + 15, y, 250, p[0], key, attribute='tracking', name='TRACKING' ))
                     y += 30
                     self._items.append(_Inheritance_selection_menu(self._h - constants.propertieswidth + 200, y, callback=None, p=p[0], f=key, attribute='tracking'))
                     y += 30
                         
         elif self._tab == 'paragraph':
             self._items.append(_Paragraph_style_menu(self._h - constants.propertieswidth + 15, y, 250, p[0], name='RENAME CLASS'))
+            y += 45
             
-            self._items.append(_Paragraph_leading_Field(self._h - constants.propertieswidth + 15, y + 45, 250, p[0], name='LEADING' ))
-            self._items.append(_Paragraph_margin_Field(self._h - constants.propertieswidth + 15, y + 90, 250, p[0], name='BOTTOM MARGIN' ))
-
+            self._items.append(_Paragraph_numeric_Field(self._h - constants.propertieswidth + 15, y, 250, p[0], attribute='leading', name='LEADING' ))
+            y += 30
+            self._items.append(_Paragraph_inheritance_menu(self._h - constants.propertieswidth + 200, y, callback=None, p=p[0], attribute='leading'))
+            y += 15
+            
+            self._items.append(_Paragraph_numeric_Field(self._h - constants.propertieswidth + 15, y, 250, p[0], attribute='margin_bottom', name='BOTTOM MARGIN' ))
+            y += 30
+            self._items.append(_Paragraph_inheritance_menu(self._h - constants.propertieswidth + 200, y, callback=None, p=p[0], attribute='margin_bottom'))
+            y += 15
+        
         self._stack()
 
     def refresh(self):

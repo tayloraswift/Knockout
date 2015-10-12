@@ -1,7 +1,7 @@
 import meredith
 import olivia
 import fonttable
-import fonts
+
 from text_t import character
 from math import pi
 import typing
@@ -447,7 +447,7 @@ class Document_view(object):
         # print cursors
         cr.set_source_rgb(1, 0.2, 0.6)
         cx, cy, p, f = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(meredith.mipsy.active_cursor())
-        leading = fonts.get_leading(p[0])
+        leading = fonttable.p_table.get_paragraph(p[0])['leading']
 
         cr.rectangle(round(200 + cx - 1), 
                     round(100 + cy - leading), 
@@ -476,7 +476,7 @@ class Document_view(object):
 
 
         cx, cy, p, f = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(meredith.mipsy.active_select())
-        leading = fonts.get_leading(p[0])
+        leading = fonttable.p_table.get_paragraph(p[0])['leading']
         
         cr.rectangle(round(200 + cx - 1), 
                     round(100 + cy - leading), 

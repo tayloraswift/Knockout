@@ -5,7 +5,6 @@ import channels
 import kevin
 import errors
 
-import fonts
 import fonttable
 
 
@@ -29,7 +28,7 @@ def outside_tag(sequence, tags=('<p>', '</p>')):
 
 def _fail_class(startindex, l, attempt):
     errors.styleerrors.add_style_error(attempt, l)
-    return ('_interface', startindex), fonts.paragraph_classes['_interface']
+    return ('_interface', startindex), fonttable.p_table.get_paragraph('_interface')
 
         
 class Textline(object):
@@ -214,19 +213,19 @@ class Text(object):
             p = (self.text[0][1], 0)
             f = []
             try:
-                paragraphclass = fonts.paragraph_classes[p[0]]
+                paragraphclass = fonttable.p_table.get_paragraph(p[0])
             except KeyError:
                 # happens if requested style is not defined
                 p, paragraphclass = _fail_class(startindex, l, (p[0],))
                 
             
-            y = self.channels.channels[c].railings[0][0][1] + fonts.get_leading(p[0])
+            y = self.channels.channels[c].railings[0][0][1] + paragraphclass['leading']
         while True:
             # see if the lines have overrun the portals
             if y > self.channels.channels[c].railings[1][-1][1] and c < len(self.channels.channels) - 1:
                 c += 1
                 # shift to below entrance
-                y = self.channels.channels[c].railings[0][0][1] + fonts.get_leading(p[0])
+                y = self.channels.channels[c].railings[0][0][1] + paragraphclass['leading']
             
             try:
                 if character(self.text[startindex]) != '<p>':
@@ -238,7 +237,7 @@ class Text(object):
                     p = (self.text[startindex][1], startindex)
                     
                 try:
-                    paragraphclass = fonts.paragraph_classes[p[0]]
+                    paragraphclass = fonttable.p_table.get_paragraph(p[0])
                 except KeyError:
                     # happens if requested style is not defined
                     p, paragraphclass = _fail_class(startindex, l, (p[0],))
@@ -257,7 +256,7 @@ class Text(object):
                     startindex,
                     p, 
                     f,
-                    fonts.get_leading(p[0])
+                    paragraphclass['leading']
                     )
             
             # get the index of the last glyph printed (while printing said line) so we know where to start next time
@@ -266,7 +265,7 @@ class Text(object):
             if startindex < 0:
 
                 startindex = abs(startindex) - 1
-                y += fonts.get_leading(p[0]) + fonts.get_margin_bottom(p[0])
+                y += paragraphclass['leading'] + paragraphclass['margin_bottom']
                 
                 if startindex > len(self.text) - 1:
                     self._glyphs.append(line)
@@ -274,7 +273,7 @@ class Text(object):
                     # this is the end of the document
                     break
             else:
-                y += fonts.get_leading(p[0])
+                y += paragraphclass['leading']
             l += 1
 
             self._glyphs.append(line)

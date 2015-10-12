@@ -82,6 +82,20 @@ def add_paragraph_class(name, clone):
     if name not in paragraph_classes:
         paragraph_classes[name] = copy.deepcopy(paragraph_classes[clone])
 
+def p_get_attribute(attribute, p):
+    a = p_read_attribute(attribute, p)
+    if a[0]:
+        return p_get_attribute(attribute, a[1])
+    else:
+        return a
+
+def p_read_attribute(attribute, p):
+    attribute = '_' + attribute
+    return getattr(paragraph_classes[p], attribute)
+
+def p_set_attribute(attribute, p, value):
+    attribute = '_' + attribute
+    setattr(paragraph_classes[p], attribute, value)
 
 _interface_class = ParagraphClass((False, 16), (False, 5))
 _interface_class.replace_fontclass( (), (False, TypeClass(path=(False, '/home/kelvin/.fonts/NeueFrutiger45.otf'), fontsize=(False, 13), tracking=(False, 0))) )
@@ -116,19 +130,6 @@ paragraph_classes = {'_interface': _interface_class,
         'h1': _h1_class
         }
 
-def get_leading(p):
-    l = paragraph_classes[p]._leading
-    if l[0]:
-        return get_leading(l[1])
-    else:
-        return l[1]
-
-def get_margin_bottom(p):
-    m = paragraph_classes[p]._margin_bottom
-    if m[0]:
-        return get_margin_bottom(m[1])
-    else:
-        return m[1]
 
 def get_fontclasses(p):
     return paragraph_classes[p].fontclasses[1]

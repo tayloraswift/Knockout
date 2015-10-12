@@ -88,7 +88,29 @@ class _Font_table(object):
     def clear(self):
         self._table = {}
 
+class _Paragraph_table(object):
+    def __init__(self):
+        self._table = {}
+
+    def get_paragraph(self, p):
+
+        if p not in self._table:
+
+            properties = {}
+            
+            properties['leading'] = fonts.p_get_attribute('leading', p)[1]
+            properties['margin_bottom'] = fonts.p_get_attribute('margin_bottom', p)[1]
+
+            
+            self._table[p] = properties
+    
+        return self._table[p]
+
+    def clear(self):
+        self._table = {}
+
 table = _Font_table()
+p_table = _Paragraph_table()
 
 def glyph_width(fontmetrics, size, c):
     return fontmetrics.advance_pixel_width(c)*size

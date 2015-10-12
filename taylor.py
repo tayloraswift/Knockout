@@ -354,15 +354,13 @@ class Document_view(object):
                 
             del classed_glyphs
 
-    
     def _draw_annotations(self, cr):
-        specials = [i for i, entity in enumerate(meredith.mipsy.text()) if character(entity) in ['<p>', '</p>', '<br>', '<f>', '</f>']]
-        
-        cr.set_source_rgba(0, 0, 0, 0.4)
+        specials = (i for i, entity in enumerate(meredith.mipsy.text()) if type(entity) is list or entity == '<br>')
+
         for i in specials:
-                
             if character(meredith.mipsy.text()[i]) == '<p>':
                 x, y, p, f = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(i)
+                # this works because paragraph always comes first
                 if i == meredith.mipsy.glyph_at(0)[2][1]:
                     cr.set_source_rgba(1, 0.2, 0.6, 0.7)
                 else:
@@ -374,6 +372,7 @@ class Document_view(object):
                 cr.move_to(x, y)
                 cr.rel_line_to(0, round(-fontsize))
                 cr.rel_line_to(-3, 0)
+                # sharp edge do not round
                 cr.rel_line_to(-3, round(fontsize)/2)
                 cr.line_to(x - 3, y)
                 cr.close_path()
@@ -423,23 +422,20 @@ class Document_view(object):
         firstline = meredith.mipsy.tracts[meredith.mipsy.t].index_to_line(posts[0])
         lastline = meredith.mipsy.tracts[meredith.mipsy.t].index_to_line(posts[1])
 
-
         start = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(posts[0])[0]
         
         linenumber = firstline
         while True:
+            # get line dimensions
+            anchor, stop, leading, y = meredith.mipsy.tracts[meredith.mipsy.t].line_data(linenumber)
             if linenumber != firstline:
-                start = meredith.mipsy.tracts[meredith.mipsy.t].glyphs[linenumber].anchor
-            
-            stop = meredith.mipsy.tracts[meredith.mipsy.t].glyphs[linenumber].stop
+                start = anchor
 
             if linenumber == lastline:
                 stop = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(posts[1])[0]
-
-            leading = meredith.mipsy.tracts[meredith.mipsy.t].glyphs[linenumber].leading
             
             cr.rectangle(round(200 + start), 
-                    round(100 + meredith.mipsy.tracts[meredith.mipsy.t].glyphs[linenumber].y - leading), 
+                    round(100 + y - leading), 
                     stop - start, 
                     leading)
             linenumber += 1

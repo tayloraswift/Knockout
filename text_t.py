@@ -127,7 +127,7 @@ class Textline(object):
                     except AttributeError:
                         self._fontclass = fonttable.table.get_font('_interface', () )
 
-            glyphwidth = fonttable.glyph_width(self._fontclass['fontmetrics'], self._fontclass['fontsize'], glyph)
+            glyphwidth = self._fontclass['fontmetrics'].advance_pixel_width(glyph)*self._fontclass['fontsize']
             self.glyphs.append((self._fontclass['fontmetrics'].character_index(glyph), glyphanchor, self.y, self._p, tuple(self._f)))
             
             
@@ -191,7 +191,9 @@ class Text(object):
         c3 = channels.Channel([[700, 0, False], [700, 800, False]], [[1000, 0, False], [1000, 800, False]])
         self.channels = channels.Channels([c1, c2, c3])
         
-        self.glyphs = []
+        self._glyphs = []
+        
+        self.sorted_glyphs = {}
         
         # create cursor objects
         self.cursor = Cursor(self.text)
@@ -204,7 +206,7 @@ class Text(object):
         try:
             # ylevel is the y position of the first line to print
             # here we are removing the last existing line so we can redraw that one as well
-            li = self.glyphs.pop(-1)
+            li = self._glyphs.pop(-1)
             y, c= li.y, li.c
             
         except IndexError:
@@ -229,8 +231,8 @@ class Text(object):
             try:
                 if character(self.text[startindex]) != '<p>':
                     # extract last used style
-                    f = list(self.glyphs[-1].glyphs[-1][4])
-                    p = self.glyphs[-1].glyphs[-1][3]
+                    f = list(self._glyphs[-1].glyphs[-1][4])
+                    p = self._glyphs[-1].glyphs[-1][3]
                 else:
                     f = []
                     p = (self.text[startindex][1], startindex)
@@ -267,7 +269,7 @@ class Text(object):
                 y += fonts.get_leading(p[0]) + fonts.get_margin_bottom(p[0])
                 
                 if startindex > len(self.text) - 1:
-                    self.glyphs.append(line)
+                    self._glyphs.append(line)
                     del line
                     # this is the end of the document
                     break
@@ -275,20 +277,22 @@ class Text(object):
                 y += fonts.get_leading(p[0])
             l += 1
 
-            self.glyphs.append(line)
+            self._glyphs.append(line)
             del line
 #            if startindex >= len(self.text):
 #                break
 
 
     def _recalculate(self):
+        # clear sorts
+        self.sorted_glyphs = {}
         # avoid recalculating lines that weren't affected
         try:
             affected = self.index_to_line( min(self.select.cursor, self.cursor.cursor) ) - 1
             if affected < 0:
                 affected = 0
-            startindex = self.glyphs[affected].startindex
-            self.glyphs = self.glyphs[:affected + 1]
+            startindex = self._glyphs[affected].startindex
+            self._glyphs = self._glyphs[:affected + 1]
             #        i = affected
             self._generate_lines(affected, startindex)
         except AttributeError:
@@ -299,7 +303,10 @@ class Text(object):
             
 
     def deep_recalculate(self):
-        self.glyphs = []
+        # clear sorts
+        self._glyphs = []
+        self.sorted_glyphs = {}
+        
         self._generate_lines(0, 0)
         
         # tally errors
@@ -310,7 +317,7 @@ class Text(object):
         if c is None:
             c = self.channels.target_channel(x, y, 20)
         # get all y values
-        yy = [textline for textline in self.glyphs if textline.c == c]
+        yy = [textline for textline in self._glyphs if textline.c == c]
         # find the clicked line
         lineindex = None
         if y >= yy[-1].y:
@@ -327,27 +334,26 @@ class Text(object):
             l = self.target_line(x, y, c)
 
         # find first glyph to the right of click spot
-        glyphindex = bisect.bisect([glyph[1] for glyph in self.glyphs[l].glyphs], x )
+        glyphindex = bisect.bisect([glyph[1] for glyph in self._glyphs[l].glyphs], x )
         # determine x position of glyph before it
-        glyphx = self.glyphs[l].glyphs[glyphindex - 1][1]
+        glyphx = self._glyphs[l].glyphs[glyphindex - 1][1]
         # if click is closer to it, shift glyph index left one
         try:
-            if abs(x - glyphx) < abs(x - self.glyphs[l].glyphs[glyphindex][1]):
+            if abs(x - glyphx) < abs(x - self._glyphs[l].glyphs[glyphindex][1]):
                 glyphindex += -1
         except IndexError:
-            if l + 1 == len(self.glyphs):
-                glyphindex = len(self.glyphs[l].glyphs)
+            if l + 1 == len(self._glyphs):
+                glyphindex = len(self._glyphs[l].glyphs)
 
             else:
-                glyphindex = len(self.glyphs[l].glyphs) - 1
+                glyphindex = len(self._glyphs[l].glyphs) - 1
 
-#        if glyphindex == len(self.glyphs)
             
-        return glyphindex + self.glyphs[l].startindex
+        return glyphindex + self._glyphs[l].startindex
 
     # get line number given character index
     def index_to_line(self, index):
-        return bisect.bisect([line.startindex for line in self.glyphs], index ) - 1
+        return bisect.bisect([line.startindex for line in self._glyphs], index ) - 1
 
     def take_selection(self):
         if self.cursor.cursor == self.select.cursor:
@@ -412,9 +418,9 @@ class Text(object):
     def text_index_location(self, index, ahead=False):
         l = self.index_to_line(index)
         try:
-            glyph = self.glyphs[l].glyphs[index - self.glyphs[l].startindex]
+            glyph = self._glyphs[l].glyphs[index - self._glyphs[l].startindex]
         except IndexError:
-            glyph = self.glyphs[l].glyphs[-1]
+            glyph = self._glyphs[l].glyphs[-1]
             print ('ahead')
             ahead = True
 
@@ -427,16 +433,23 @@ class Text(object):
 #            x += self.Face.advance_width(character(self.text[index]))/1000*self.fontsize
         return (x, y, p, f)
 
+    def line_data(self, l):
+        anchor = self._glyphs[l].anchor
+        stop = self._glyphs[l].stop
+        leading = self._glyphs[l].leading
+        y = self._glyphs[l].y
+        return anchor, stop, leading, y
 
     def extract_glyphs(self, xx, yy):
-        classed_glyphs = {}
-        for line in self.glyphs:
-
-            for glyph in line.glyphs:
-                p_name, f = glyph[3][0], glyph[4]
-                if (p_name, f) not in classed_glyphs:
-                    classed_glyphs[(p_name, f)] = []
-                classed_glyphs[(p_name, f)].append((glyph[0], glyph[1] + xx, glyph[2] + yy))
-
-        return classed_glyphs
+        if not self.sorted_glyphs:
+            for line in self._glyphs:
+                p_name = line.glyphs[0][3][0]
+                for glyph in line.glyphs:
+                    f = glyph[4]
+                    try:
+                        self.sorted_glyphs[(p_name, f)].append((glyph[0], glyph[1] + xx, glyph[2] + yy))
+                    except KeyError:
+                        self.sorted_glyphs[(p_name, f)] = []
+                        self.sorted_glyphs[(p_name, f)].append((glyph[0], glyph[1] + xx, glyph[2] + yy))
+        return self.sorted_glyphs
         

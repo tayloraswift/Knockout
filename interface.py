@@ -149,7 +149,7 @@ class Display(Gtk.Window):
     
     def on_key_press(self, w, e):
         
-        print (Gdk.keyval_name(e.keyval))
+#        print (Gdk.keyval_name(e.keyval))
 
         name = Gdk.keyval_name(e.keyval)
         

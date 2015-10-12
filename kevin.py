@@ -53,7 +53,6 @@ def deserialize(string):
 
                 style = entity[equals + 1:closetag]
                 style = style.partition('"')[-1].rpartition('"')[0]
-                print(style)
 
                 entity = ['<' + tag + '>', style]
             except ValueError:

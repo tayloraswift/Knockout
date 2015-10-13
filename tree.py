@@ -1,9 +1,8 @@
-import karlie
+from state import constants
 
-import taylor
-import menu
-import constants
-
+from interface import karlie
+from interface import taylor
+from interface import menu
 
 
 def take_event(x, y, event, key=False, char=None, region=['document', 'document'], geometry=None):

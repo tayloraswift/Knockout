@@ -1,3 +1,5 @@
+from fonts import fonttable
+
 class StyleErrors(object):
     def __init__(self):
         self.missing = {}
@@ -54,6 +56,8 @@ class ErrorPanel(object):
         self.phase += 1
 
     def draw(self, cr, width):
+        cr.set_font_size(14)
+        cr.set_font_face(fonttable.table.get_font('_interface', ('strong',))['font'])
         if self.phase >= 18:
             phase = 1
         else:

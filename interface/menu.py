@@ -1,5 +1,6 @@
-import kookies
-import noticeboard
+from state import noticeboard
+
+from interface import base
 
 class Menu(object):
     def __init__(self):
@@ -7,7 +8,7 @@ class Menu(object):
         self._hovered = None
     
     def create(self, x, y, width, options, callback, callback_parameters):
-        self._menu = kookies.Menu(x, y, width, 30, options)
+        self._menu = base.Menu(x, y, width, 30, options)
         self._callback = callback
         self._callback_parameters = callback_parameters
         

@@ -1,33 +1,23 @@
 from gi.repository import Gtk, Gdk, GObject
 import cairo
 
-import karlie
-import taylor
-import menu
+from state import noticeboard
+from state import constants
+
+from model import kevin
+from model import errors
+
+from interface import karlie
+from interface import taylor
+from interface import menu
+
 import tree
-import kevin
 
-import errors
-import pycairo_font
-
-import noticeboard
-
-import constants
-
-#import gc
-
-
-#def keyvalue_to_char(value):
-#    if value is not None:
-#        return chr(Gdk.keyval_to_unicode(value))
-#    else:
-#        return None
 
 class MouseButtons:
     
     LEFT_BUTTON = 1
     RIGHT_BUTTON = 3
-    
     
 class Display(Gtk.Window):
 
@@ -47,7 +37,6 @@ class Display(Gtk.Window):
         # states
         self.down = False
         
-        self.uifont = pycairo_font.create_cairo_font_face_for_file('/home/kelvin/.fonts/NeueFrutiger45.otf')
         self.errorpanel = None
         
         self.darea.connect("button-press-event", self.on_button_press)
@@ -88,13 +77,9 @@ class Display(Gtk.Window):
         karlie.klossy.render(cr, self._h, self._k)
         
         menu.menu.render(cr)
-        
-        cr.set_font_size(14)
-        cr.set_font_face(self.uifont)
-        
+
         if self.errorpanel is not None:
             self.errorpanel.draw(cr, self._h - constants.propertieswidth)
-        
 
         print(self._c_)
         self._c_ += 1

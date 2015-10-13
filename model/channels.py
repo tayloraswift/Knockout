@@ -35,19 +35,6 @@ class Channel(object):
             return None
     
     def _is_corner(self, r, i):
-        # keys: -1 upsloping 0 other 1 downsloping
-#        key = 0
-#        if r == 1:
-#            if i == 0:
-#                key = -1
-#            elif i == len(self.railings[r]) - 1 or i == -1:
-#                key = 1
-#        elif r == 0:
-#            if i == 0:
-#                key = 1
-#            elif i == len(self.railings[r]) - 1 or i == -1:
-#                key = -1
-#        return key
         if i == 0 or i == -1 or i == len(self.railings[r]) - 1:
             return True
         else:

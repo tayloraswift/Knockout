@@ -1,15 +1,19 @@
-import meredith
-import olivia
-import fonttable
-
-from text_t import character
-from math import pi
-import typing
-import kookies
-import noticeboard
-import constants
-
 import bisect
+from math import pi
+
+from state import noticeboard
+from state import constants
+
+from fonts import fonttable
+
+from model import meredith
+from model.text_t import character
+
+from typing import typing
+
+from interface import kookies
+from interface import olivia
+
 
 # used in rendering with undefined classes
 def get_fontsize(p, f):

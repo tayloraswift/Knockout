@@ -1,8 +1,11 @@
-import channels
-import noticeboard
-import meredith
-import constants
 from math import pi
+
+from state import constants
+from state import noticeboard
+
+from model import meredith
+from model import channels
+
 
 class Channels_controls(object):
     def __init__(self):

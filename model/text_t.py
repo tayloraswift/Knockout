@@ -1,15 +1,11 @@
 import bisect
 
-import channels
+from fonts import fonttable
 
-import kevin
-import errors
+from model import channels
+from model import kevin
+from model import errors
 
-import fonttable
-
-
-def the_box_submitted(ip):
-    print('the textbox submitted' + ip)
 
 def character(entity):
     if type(entity) is list:

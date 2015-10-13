@@ -1,5 +1,4 @@
-import copy
-        
+from copy import deepcopy
         
 class TypeClass(object):
     def __init__(self, path, fontsize=(False, 13), tracking=(False, 0)):
@@ -80,7 +79,7 @@ class ParagraphClass(object):
 
 def add_paragraph_class(name, clone):
     if name not in paragraph_classes:
-        paragraph_classes[name] = copy.deepcopy(paragraph_classes[clone])
+        paragraph_classes[name] = deepcopy(paragraph_classes[clone])
 
 def p_get_attribute(attribute, p):
     a = p_read_attribute(attribute, p)

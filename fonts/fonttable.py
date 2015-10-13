@@ -1,7 +1,7 @@
 import freetype
-import pycairo_font
 
-import fonts
+from fonts import pycairo_font
+from fonts import fonts
 
 _type_registry = {}
 

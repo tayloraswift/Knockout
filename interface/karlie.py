@@ -1,15 +1,16 @@
-import kookies
-import constants
-import meredith
-
 import bisect
-import fonts
-import fonttable
-
-import noticeboard
-
 from freetype import ft_errors
 from copy import deepcopy
+
+from state import constants
+from state import noticeboard
+
+from fonts import fonts
+from fonts import fonttable
+
+from interface import kookies
+
+from model import meredith
 
 
 class _Font_file_Field(kookies.Blank_space):

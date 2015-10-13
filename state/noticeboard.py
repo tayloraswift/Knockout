@@ -1,4 +1,3 @@
-
 class Refresh_draw(object):
     def __init__(self):
         self.properties_refresh = True

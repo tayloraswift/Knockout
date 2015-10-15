@@ -39,7 +39,7 @@ class Channels_controls(object):
 
             i = meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].insert_point(r, y)
         
-        elif r is None:
+        elif r is None and c is not None:
             portal = meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].target_portal(x, y, radius=5)
             # select multiple points
             if portal is not None:
@@ -95,6 +95,10 @@ class Channels_controls(object):
             if self._selected_portal is not None:
                 # delete channel
                 del meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[self._selected_point[0]]
+                # wipe out entire tract if it's the last one
+                if not meredith.mipsy.tracts[meredith.mipsy.t].channels.channels:
+                    del meredith.mipsy.tracts[meredith.mipsy.t]
+                    meredith.mipsy.set_t(0)
             else:
                 meredith.mipsy.tracts[meredith.mipsy.t].channels.delete_selection()
             meredith.mipsy.tracts[meredith.mipsy.t].deep_recalculate()
@@ -108,13 +112,15 @@ class Channels_controls(object):
 
         self._hover_point = (c, r, i)
         
-        if r is None:
+        if r is None and c is not None:
             portal = meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].target_portal(x, y, radius=5)
             # select multiple points
             if portal is not None:
                 self._hover_portal = (c, portal[0])
             else:
                 self._hover_portal = (None, None)
+
+            
 
         if self._hover_point != hovered[0]:
             noticeboard.refresh.push_change()

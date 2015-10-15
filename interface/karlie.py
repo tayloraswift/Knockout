@@ -120,7 +120,7 @@ class _Inheritance_selection_menu(kookies.Selection_menu):
         self._attribute = attribute
         
         if self._attribute == '_all':
-            current = fonts.paragraph_classes[self._p].fontclasses[1][self._f]
+            current = fonts.paragraph_classes[self._p]['fontclasses'][1][self._f]
         else:
             current = fonts.f_read_attribute(self._attribute, self._p, self._f)
         if current[0]:
@@ -130,15 +130,15 @@ class _Inheritance_selection_menu(kookies.Selection_menu):
         
         combos = ['x']
         for key in sorted(fonts.paragraph_classes.keys()):
-            if not fonts.paragraph_classes[key].fontclasses[0]:
-                combos += [ (key, ff) for ff in fonts.paragraph_classes[key].fontclasses[1].keys() ]
+            if not fonts.paragraph_classes[key]['fontclasses'][0]:
+                combos += [ (key, ff) for ff in fonts.paragraph_classes[key]['fontclasses'][1].keys() ]
         kookies.Selection_menu.__init__(self, x, y, width=50, height=15, callback=callback, menu_callback=self._push_inherit, menu_options=combos, default=default)
         
     def _push_inherit(self, value):
         fonttable.table.clear()
         if value == 'x':
             if self._attribute == '_all':
-                fonts.paragraph_classes[self._p].fontclasses[1][self._f] = deepcopy(fonts.f_get_f(self._p, self._f))
+                fonts.paragraph_classes[self._p]['fontclasses'][1][self._f] = deepcopy(fonts.f_get_f(self._p, self._f))
             else:
                 fonts.f_set_attribute(self._attribute, self._p, self._f, (False, fonttable.table.get_font(self._p, self._f)[self._attribute]) )
         else:
@@ -146,13 +146,13 @@ class _Inheritance_selection_menu(kookies.Selection_menu):
                 # save old value in case of a disaster
                 v = fonts.f_get_f(self._p, self._f)
                 value = (True, value)
-                fonts.paragraph_classes[self._p].fontclasses[1][self._f] = value
+                fonts.paragraph_classes[self._p]['fontclasses'][1][self._f] = value
 
                 try:
                     fonttable.table.get_font(self._p, self._f)
                 except RuntimeError:
                     fonttable.table.clear()
-                    fonts.paragraph_classes[self._p].fontclasses[1][self._f] = v
+                    fonts.paragraph_classes[self._p]['fontclasses'][1][self._f] = v
                     print('REFERENCE LOOP DETECTED')
             else:
                 # save old value in case of a disaster

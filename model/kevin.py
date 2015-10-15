@@ -2,7 +2,6 @@ from copy import deepcopy
 
 def serialize(text):
     b = deepcopy(text)
-    print(b)
     for e, entity in enumerate(b):
         if not isinstance(entity, str):
             if entity[0] == '<f>':
@@ -16,8 +15,7 @@ def serialize(text):
             
             elif entity[0] == '</f>':
                 b[e] = '</f class="' + entity[1] + '">'
-    print(b)
-    print (''.join(b))
+
     return ''.join(b)
 
 def deserialize(string):

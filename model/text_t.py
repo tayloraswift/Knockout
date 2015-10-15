@@ -2,7 +2,6 @@ import bisect
 
 from fonts import fonttable
 
-from model import channels
 from model import kevin
 from model import errors
 
@@ -178,13 +177,9 @@ class Cursor(object):
         self.skip(0, text)
 
 class Text(object):
-    def __init__(self, text):
+    def __init__(self, text, channels):
         self.text = kevin.deserialize(text)
-        
-        c1 = channels.Channel([[0, 0, False], [0, 800, False]], [[300, 0, False], [300, 800, False]])
-        c2 = channels.Channel([[350, 0, False], [350, 800, False]], [[650, 0, False], [650, 800, False]])
-        c3 = channels.Channel([[700, 0, False], [700, 800, False]], [[1000, 0, False], [1000, 800, False]])
-        self.channels = channels.Channels([c1, c2, c3])
+        self.channels = channels
         
         self._glyphs = []
         
@@ -202,7 +197,8 @@ class Text(object):
             # ylevel is the y position of the first line to print
             # here we are removing the last existing line so we can redraw that one as well
             li = self._glyphs.pop(-1)
-            y, c= li.y, li.c
+            y = li.y - li.leading
+            c = li.c
             
         except IndexError:
             # which happens if nothing has yet been rendered
@@ -215,14 +211,9 @@ class Text(object):
                 p, paragraphclass = _fail_class(startindex, l, (p[0],))
                 
             
-            y = self.channels.channels[c].railings[0][0][1] + paragraphclass['leading']
+            y = self.channels.channels[c].railings[0][0][1]
         while True:
-            # see if the lines have overrun the portals
-            if y > self.channels.channels[c].railings[1][-1][1] and c < len(self.channels.channels) - 1:
-                c += 1
-                # shift to below entrance
-                y = self.channels.channels[c].railings[0][0][1] + paragraphclass['leading']
-            
+            # check for paragraph change
             try:
                 if character(self.text[startindex]) != '<p>':
                     # extract last used style
@@ -241,6 +232,15 @@ class Text(object):
                     
             except IndexError:
                 pass
+
+            # move down
+            y += paragraphclass['leading']
+            
+            # see if the lines have overrun the portals
+            if y > self.channels.channels[c].railings[1][-1][1] and c < len(self.channels.channels) - 1:
+                c += 1
+                # shift to below entrance
+                y = self.channels.channels[c].railings[0][0][1] + paragraphclass['leading']
 
             # generate line objects
             line = Textline(self.text, 
@@ -261,7 +261,7 @@ class Text(object):
             if startindex < 0:
 
                 startindex = abs(startindex) - 1
-                y += paragraphclass['leading'] + paragraphclass['margin_bottom']
+                y += paragraphclass['margin_bottom']
                 
                 if startindex > len(self.text) - 1:
                     self._glyphs.append(line)
@@ -269,7 +269,7 @@ class Text(object):
                     # this is the end of the document
                     break
             else:
-                y += paragraphclass['leading']
+                pass
             l += 1
 
             self._glyphs.append(line)

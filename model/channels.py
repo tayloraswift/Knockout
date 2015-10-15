@@ -83,7 +83,7 @@ class Channels(object):
             if y >= channel.railings[0][0][1] - radius and y <= channel.railings[1][-1][1] + radius:
                 if x >= channel.edge(0, y)[0] - radius and x <= channel.edge(1, y)[0] + radius:
                     return c
-        return 0
+        return None
 #######################
     def target_point(self, x, y, radius):
         cc, rr, ii = None, None, None
@@ -109,8 +109,10 @@ class Channels(object):
                 railing[:] = [point for i, point in enumerate(railing) if not point[2] or self.channels[c]._is_corner(r, i)]
 
 
-    def add_channel(self):
-    
+    def generate_channel(self):
         x1, y1, x2 = self.channels[-1].railings[0][-1][0], self.channels[-1].railings[0][-1][1] + 40, self.channels[-1].railings[1][-1][0]
-        self.channels.append(Channel( [[x1, y1, False], [x1, y1 + 40, False]], [[x2, y1, False], [x2, y1 + 40, False]] ))
+        return Channel( [[x1, y1, False], [x1, y1 + 40, False]], [[x2, y1, False], [x2, y1 + 40, False]] )
+    
+    def add_channel(self):
+        self.channels.append(self.generate_channel())
 

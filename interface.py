@@ -1,6 +1,10 @@
 from gi.repository import Gtk, Gdk, GObject
 import cairo
 
+import sierra
+
+sierra.load()
+
 from state import noticeboard
 from state import constants
 
@@ -12,6 +16,7 @@ from interface import taylor
 from interface import menu
 
 import tree
+
 
 
 class MouseButtons:

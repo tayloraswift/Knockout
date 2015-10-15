@@ -1,6 +1,8 @@
 import bisect
 from math import pi
 
+import sierra
+
 from state import noticeboard
 from state import constants
 
@@ -145,9 +147,14 @@ class Document_toolbar(object):
         self._hover_box_ij = (None, None)
         self._hover_memory = (None, None)
         
-        y = 145
-        
+        y = 120
+        self._items.append(kookies.Button(5, y, 90, 30, callback=sierra.save, string='Save'))
+        y += 30
         self._items.append(kookies.Button(5, y, 90, 30, callback=meredith.mipsy.add_channel, string='Add portal'))
+        y += 30
+        self._items.append(kookies.Button(5, y, 90, 30, callback=meredith.mipsy.add_tract, string='Add tract'))
+
+
 
     def render(self, cr):
         for i, entry in enumerate(self._items):

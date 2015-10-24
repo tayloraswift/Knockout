@@ -63,8 +63,8 @@ class Button(Base_kookie):
         cr.show_glyphs(self._texts[0])
 
 class Checkbox(Button):
-    def __init__(self, x, y, width, height, default=None, callback=None, callback_parameters = (), string=''):
-        Base_kookie.__init__(self, x, y, width, height, font=fonttable.table.get_font('_interface', ('label', )) )
+    def __init__(self, x, y, width, default=None, callback=None, callback_parameters = (), string=''):
+        Base_kookie.__init__(self, x, y, width, 20, font=fonttable.table.get_font('_interface', ('label', )) )
         
         if default:
             self._active = 1
@@ -77,7 +77,7 @@ class Checkbox(Button):
         # set hover function equal to press function
         self.is_over_hover = self.is_over
         
-        self._add_static_text(self._x_right - 30, self._y_bottom - 5, string, align=-1)
+        self._add_static_text(self._x + 20, self._y_bottom - 5, string, align=1)
 
     def focus(self, x):
         if self._active is None:
@@ -92,21 +92,22 @@ class Checkbox(Button):
 
     def draw(self, cr, hover=(None, None)):
         self._render_fonts(cr)
-        
-        cr.set_source_rgb(0,0,0)
-        cr.rectangle(self._x, self._y, self._width, self._height)
-        cr.fill()
-        
-        if self._active:
-            cr.set_source_rgb(1, 0.2, 0.6)
             
-        elif hover[1]:
-            cr.set_source_rgb(1, 0.2, 0.6)
+        if hover[1]:
+            cr.set_source_rgb(0,0,0)
+            cr.show_glyphs(self._texts[0])
 
         else:
-            cr.set_source_rgb(0,0,0)
-        
-        cr.show_glyphs(self._texts[0])
+            cr.set_source_rgba(0,0,0, 0.6)
+            cr.show_glyphs(self._texts[0])
+
+
+        cr.arc(self._x + 6, self._y_bottom - 9, 6, 0, 2*pi)
+        cr.fill()
+        if not self._active:
+            cr.set_source_rgb(1, 1, 1)
+            cr.arc(self._x + 6, self._y_bottom - 9, 4.5, 0, 2*pi)
+            cr.fill()
 
 
 class Tabs(Base_kookie):

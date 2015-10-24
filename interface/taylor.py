@@ -121,6 +121,14 @@ class Mode_switcher(object):
 
     def render(self, cr):
         self._switcher.draw(cr, hover=(None, self._hover_j))
+        
+        #draw page border
+        cr.set_source_rgba(0, 0, 0, 0.2)
+        cr.rectangle(200, 100, 765, 1)
+        cr.rectangle(200, 100, 1, 990)
+        cr.rectangle(200 + 765, 100, 1, 990)
+        cr.rectangle(200, 100 + 990, 765, 1)
+        cr.fill()
     
     def press(self, x):
         self._switcher.focus(x)
@@ -135,6 +143,17 @@ class Mode_switcher(object):
         self._hover_j = None
         self._hover_memory = None
         noticeboard.refresh.push_change()
+
+
+def PDF():
+    import cairo
+    surface = cairo.PDFSurface("PDF.pdf", 765, 990)
+    cr = cairo.Context(surface)
+    becky._draw_text(cr, refresh=True)
+    cr.show_page()
+    
+    # put text back where it was before
+    meredith.mipsy.rerender()
         
 class Document_toolbar(object):
     def __init__(self):
@@ -149,6 +168,8 @@ class Document_toolbar(object):
         
         y = 120
         self._items.append(kookies.Button(5, y, 90, 30, callback=sierra.save, string='Save'))
+        y += 30
+        self._items.append(kookies.Button(5, y, 90, 30, callback=PDF, string='PDF'))
         y += 30
         self._items.append(kookies.Button(5, y, 90, 30, callback=meredith.mipsy.add_channel, string='Add portal'))
         y += 30
@@ -267,7 +288,7 @@ class Document_view(object):
         elif self._mode == 'channels':
             olivia.dibbles.key_input(name)
             
-    def press(self, x, y):
+    def press(self, x, y, name):
         self._check_region_press(x, y)
         
         if self._region_active == 'view':
@@ -286,7 +307,7 @@ class Document_view(object):
                     noticeboard.refresh_properties_stack.push_change()
                 
             elif self._mode == 'channels':
-                olivia.dibbles.press(x - 200, y - 100)
+                olivia.dibbles.press(x - 200, y - 100, name)
 
         elif self._region_active == 'toolbar':
             self._toolbar.press(x, y)
@@ -341,11 +362,11 @@ class Document_view(object):
         self._mode = mode
     
     
-    def _draw_text(self, cr):
+    def _draw_text(self, cr, mx=0, my=0, refresh=False):
         # prints text
 
         for tract in meredith.mipsy.tracts:
-            classed_glyphs = tract.extract_glyphs(200, 100)
+            classed_glyphs = tract.extract_glyphs(mx, my, refresh)
 
             for name, glyphs in classed_glyphs.items():
                 try:
@@ -520,7 +541,7 @@ class Document_view(object):
                 h - 100 - constants.propertieswidth, 
                 k)
         cr.clip()
-        self._draw_text(cr)
+        self._draw_text(cr, 200, 100, False)
         cr.reset_clip()
         self._draw_annotations(cr)
         

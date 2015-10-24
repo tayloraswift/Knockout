@@ -73,6 +73,9 @@ def type_document(name, char, lastpress=[0]):
         if sel:
             meredith.mipsy.tracts[meredith.mipsy.t].delete( * meredith.mipsy.selection())
             return sel
+    
+    elif name == 'All':
+        meredith.mipsy.select_all()
             
     else:
         meredith.mipsy.tracts[meredith.mipsy.t].insert([char])

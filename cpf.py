@@ -1,4 +1,4 @@
 import cProfile
-import interface
+import rt
 
-cProfile.run('interface.main()')
+cProfile.run('rt.main()')

@@ -1,10 +1,14 @@
 import bisect
 
+from pyphen import pyphen
+pyphen.language_fallback('en_US')
+
 from fonts import fonttable
 
 from model import kevin
 from model import errors
 
+hy = pyphen.Pyphen(lang='en_US')
 
 def character(entity):
     if type(entity) is list:
@@ -51,8 +55,11 @@ class Textline(object):
         self.y = y
         self.c = c
         self.l = l
+        
+        # terminal hyphen
+        self.hyphen = None
 
-    def build_line(self):
+    def build_line(self, hyphenate):
         
         p, p_i = self._p
         
@@ -122,7 +129,7 @@ class Textline(object):
                         self._fontclass = fonttable.table.get_font('_interface', () )
 
             glyphwidth = self._fontclass['fontmetrics'].advance_pixel_width(glyph)*self._fontclass['fontsize']
-            self.glyphs.append((self._fontclass['fontmetrics'].character_index(glyph), glyphanchor, self.y, self._p, tuple(self._f)))
+            self.glyphs.append((self._fontclass['fontmetrics'].character_index(glyph), glyphanchor, self.y, self._p, tuple(self._f), glyphanchor + glyphwidth))
             
             
             if glyph == '<br>':
@@ -137,13 +144,35 @@ class Textline(object):
                 if glyph == ' ':
                     pass
                 
-                elif ' ' in self._sorts[:n]:
-                    i = n - 2
-                    while True:
-                        if self._sorts[i] == ' ':
-                            del self.glyphs[i + 1:]
-                            break
-                        i -= 1
+                elif ' ' in self._sorts[:n] or '-' in self._sorts[:n]:
+                    i = next(i for i,v in zip(range(len(self._sorts[:n]) - 1, 0, -1), reversed(self._sorts[:n])) if v == ' ' or v == '-')
+                    
+                    ### AUTO HYPHENATION
+                    if hyphenate:
+                        try:
+                            j = self._sorts[i + 1:].index(' ')
+                        except ValueError:
+                            j = self.startindex
+                        
+                        word = ''.join([c if type(c) is not list else ' ' for c in self._sorts[i + 1: i + 1 + j] ])
+                        for pair in hy.iterate(word):
+                            k = len(pair[0])
+                            
+                            try:
+                                pf = (self.glyphs[i + k][3][0], self.glyphs[i + k][4])
+                                fc = fonttable.table.get_font( * pf )
+
+                                if self.glyphs[i + k][5] + fc['fontmetrics'].advance_pixel_width('-')*fc['fontsize'] < self.stop:
+                                    i = i + k
+                                    if self._sorts[i] != '-':
+                                        self.hyphen = (fc['fontmetrics'].character_index('-'), ) + (self.glyphs[i][5], self.glyphs[i][2]) + pf
+                                    break
+                            except IndexError:
+                                pass
+                    ####################
+                    
+                    del self.glyphs[i + 1:]
+
                 else:
                     del self.glyphs[-1]
                 break
@@ -256,7 +285,7 @@ class Text(object):
                     )
             
             # get the index of the last glyph printed (while printing said line) so we know where to start next time
-            startindex = line.build_line()
+            startindex = line.build_line(paragraphclass['hyphenate'])
             # check for paragraph break (which returns a negative version of startindex)
             if startindex < 0:
 
@@ -406,6 +435,19 @@ class Text(object):
     
     def match_cursors(self):
         self.select.cursor = self.cursor.cursor
+        
+    def expand_cursors(self):
+        # order
+        if self.cursor.cursor > self.select.cursor:
+            self.cursor.cursor, self.select.cursor = self.select.cursor, self.cursor.cursor
+        if character(self.text[self.cursor.cursor - 1]) == '<p>' and character(self.text[self.select.cursor]) == '</p>':
+            self.cursor.cursor = 1
+            self.select.cursor = len(self.text) - 1
+        else:
+            self.select.cursor += self.text[self.select.cursor + 1:].index('</p>') + 1
+            self.cursor.cursor = self.text_index_location(self.cursor.cursor)[2][1] + 1
+            
+
 
     ### FUNCTIONS USEFUL FOR DRAWING AND INTERFACE
             
@@ -427,6 +469,9 @@ class Text(object):
 #        if ahead:
 #            x += self.Face.advance_width(character(self.text[index]))/1000*self.fontsize
         return (x, y, p, f)
+    
+    def max_l(self):
+        return len(self._glyphs)
 
     def line_data(self, l):
         anchor = self._glyphs[l].anchor
@@ -435,16 +480,26 @@ class Text(object):
         y = self._glyphs[l].y
         return anchor, stop, leading, y
 
-    def extract_glyphs(self, xx, yy):
+    def extract_glyphs(self, xx, yy, refresh=False):
+        if refresh:
+            self.sorted_glyphs = {}
         if not self.sorted_glyphs:
             for line in self._glyphs:
                 p_name = line.glyphs[0][3][0]
+                hyphen = line.hyphen
                 for glyph in line.glyphs:
                     f = glyph[4]
+                    k = (glyph[0], glyph[1] + xx, glyph[2] + yy)
                     try:
-                        self.sorted_glyphs[(p_name, f)].append((glyph[0], glyph[1] + xx, glyph[2] + yy))
+                        self.sorted_glyphs[(p_name, f)].append(k)
                     except KeyError:
                         self.sorted_glyphs[(p_name, f)] = []
-                        self.sorted_glyphs[(p_name, f)].append((glyph[0], glyph[1] + xx, glyph[2] + yy))
+                        self.sorted_glyphs[(p_name, f)].append(k)
+                if hyphen is not None:
+                    try:
+                        self.sorted_glyphs[hyphen[3:5]].append((hyphen[0], hyphen[1] + xx, hyphen[2] + yy))
+                    except KeyError:
+                        self.sorted_glyphs[hyphen[3:5]] = []
+                        self.sorted_glyphs[hyphen[3:5]].append((hyphen[0], hyphen[1] + xx, hyphen[2] + yy))
         return self.sorted_glyphs
         

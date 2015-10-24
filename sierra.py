@@ -20,4 +20,10 @@ def load():
         doc = pickle.load(fi)
     fonts.paragraph_classes = doc['styles']
     
+#    print(fonts.paragraph_classes)
+    
+    for p in fonts.paragraph_classes:
+        if 'hyphenate' not in fonts.paragraph_classes[p]:
+            fonts.paragraph_classes[p]['hyphenate'] = (False, True)
+    
     mipsy.reinit(doc['kitty'])

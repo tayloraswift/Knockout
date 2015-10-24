@@ -106,9 +106,14 @@ class Display(Gtk.Window):
         
     def on_button_press(self, w, e):
         
-        if e.type == Gdk.EventType.BUTTON_PRESS \
-            and e.button == MouseButtons.LEFT_BUTTON:
-            tree.take_event(e.x, e.y, 'press', geometry=self.get_size())
+        if e.type == Gdk.EventType.BUTTON_PRESS and e.button == MouseButtons.LEFT_BUTTON:
+            
+            if e.state & Gdk.ModifierType.CONTROL_MASK:
+                mod = 'ctrl'
+            else:
+                mod = None
+                    
+            tree.take_event(e.x, e.y, 'press', char=mod, geometry=self.get_size())
 
 
             self.darea.queue_draw()
@@ -160,6 +165,9 @@ class Display(Gtk.Window):
                     
                 if cp is not None:
                     self.clipboard.set_text(kevin.serialize(cp), -1)
+            
+            elif name == 'a':
+                tree.take_event(0, 0, 'All', key=True)
         
         
         elif name in ['Shift_L', 'Shift_R', 'Control_L', 'Control_R', 'Caps_Lock', 'Escape', 'Tab', 'Alt_L', 'Alt_R', 'Super_L', 'Multi_key']:

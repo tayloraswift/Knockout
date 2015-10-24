@@ -30,8 +30,8 @@ def f_get_f(p, f):
         return a
 
 
-def _create_p_class(fontclasses, leading, margin_bottom):
-    return {'fontclasses': fontclasses, 'leading': leading, 'margin_bottom': margin_bottom}
+def _create_p_class(fontclasses, leading, margin_bottom, hyphenate):
+    return {'fontclasses': fontclasses, 'leading': leading, 'margin_bottom': margin_bottom, 'hyphenate': hyphenate}
 
 def add_paragraph_class(name, clone):
     if name not in paragraph_classes:
@@ -51,6 +51,47 @@ def p_set_attribute(attribute, p, value):
     paragraph_classes[p][attribute] = value
 
 paragraph_classes = {}
+
+def rename_p(old, new):
+    for k in paragraph_classes:
+        # travel through fontclasses
+        if not paragraph_classes[k]['fontclasses'][0]:
+            for f in paragraph_classes[k]['fontclasses'][1]:
+            
+                paragraph_classes[k]['fontclasses'][1][f] = list(paragraph_classes[k]['fontclasses'][1][f])
+                
+                # inherit flag
+                if paragraph_classes[k]['fontclasses'][1][f][0]:
+                    
+                    paragraph_classes[k]['fontclasses'][1][f][1] = list(paragraph_classes[k]['fontclasses'][1][f][1])
+                    
+                    if paragraph_classes[k]['fontclasses'][1][f][1] [0] == old:
+                        paragraph_classes[k]['fontclasses'][1][f][1] [0] = new
+                else:
+                    paragraph_classes[k]['fontclasses'][1][f] = list(paragraph_classes[k]['fontclasses'][1][f])
+                    
+                    for a in paragraph_classes[k]['fontclasses'][1][f][1]:
+                        paragraph_classes[k]['fontclasses'][1][f][1][a] = list(paragraph_classes[k]['fontclasses'][1][f][1][a])
+                        # inherit flag
+                        if paragraph_classes[k]['fontclasses'][1][f][1][a][0]:
+                            
+                            paragraph_classes[k]['fontclasses'][1][f][1][a][1] = list(paragraph_classes[k]['fontclasses'][1][f][1][a][1])
+
+                            if paragraph_classes[k]['fontclasses'][1][f][1][a][1] [0] == old:
+                                paragraph_classes[k]['fontclasses'][1][f][1][a][1] [0] = new
+
+                    
+            
+        for l in paragraph_classes[k]:
+            paragraph_classes[k][l] = list(paragraph_classes[k][l])
+            # inherit flag
+            if paragraph_classes[k][l][0]:
+                if paragraph_classes[k][l][1] == old:
+                    paragraph_classes[k][l][1] = new
+        
+        if k == old:
+            paragraph_classes[new] = paragraph_classes[k]
+            del paragraph_classes[old]
 
 
 def get_fontclasses(p):

@@ -69,6 +69,24 @@ class _Paragraph_numeric_Field(kookies.Numeric_field):
         fonts.p_set_attribute(self._attribute, self.p, (False, self._to_number(value)))
         meredith.mipsy.rerender()
 
+class _Paragraph_checkbox(kookies.Checkbox):
+    def __init__(self, x, y, width, p, attribute, name=None):
+        kookies.Checkbox.__init__(self, x, y, width,
+                fonttable.p_table.get_paragraph(p)[attribute], 
+                callback=self._push_attribute, 
+                string=name)
+        
+        self.p = p
+        self._attribute = attribute
+
+    def _push_attribute(self, value):
+        fonttable.p_table.clear()
+        
+        fonts.p_set_attribute(self._attribute, self.p, (False, value))
+        meredith.mipsy.rerender()
+        
+        klossy.refresh()
+
 
 class _Paragraph_style_menu(kookies.Object_menu):
     def __init__(self, x, y, width, p, name=None):
@@ -82,7 +100,7 @@ class _Paragraph_style_menu(kookies.Object_menu):
     def _push_pname(self, name):
         fonttable.p_table.clear()
         
-        fonts.paragraph_classes[name] = fonts.paragraph_classes.pop(self.p)
+        fonts.rename_p(self.p, name)
         meredith.mipsy.rename_paragraph_class(self.p, name)
         self.p = name
 
@@ -287,7 +305,12 @@ class Properties_Panel(object):
             y += 30
             self._items.append(_Paragraph_inheritance_menu(self._h - constants.propertieswidth + 200, y, callback=None, p=p[0], attribute='margin_bottom'))
             y += 15
-        
+
+            self._items.append(_Paragraph_checkbox(self._h - constants.propertieswidth + 15, y + 15, 100, p[0], attribute='hyphenate', name='HYPHENATE' ))
+            y += 30
+            self._items.append(_Paragraph_inheritance_menu(self._h - constants.propertieswidth + 200, y, callback=None, p=p[0], attribute='hyphenate'))
+            y += 15
+            
         self._stack()
 
     def refresh(self):

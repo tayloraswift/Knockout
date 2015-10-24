@@ -54,7 +54,7 @@ def take_event(x, y, event, key=False, char=None, region=['document', 'document'
         if event == 'press':
             menu.menu.destroy()
             if region[0] == 'document':
-                taylor.becky.press(x, y)
+                taylor.becky.press(x, y, char)
                     
             elif region[0] == 'properties':
                 karlie.klossy.press(x, y)

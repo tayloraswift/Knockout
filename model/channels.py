@@ -34,27 +34,11 @@ class Channel(object):
         else:
             return None
     
-    def _is_corner(self, r, i):
-        if i == 0 or i == -1 or i == len(self.railings[r]) - 1:
-            return True
-        else:
+    def can_fall(self, x, y):
+        if [x, y] in [p[:2] for p in self.railings[0] + self.railings[1]]:
             return False
-    
-    def move_point_to(self, r, i, x, y):
-        x, y = 10*round(x/10), 10*round(y/10)
-        # prevent points from falling on top of one another
-        if [x, y] not in [p[:2] for p in self.railings[r]]:
-            self.railings[r][i] = [x, y, True]
-            # if top or bottom, translate the other point too
-            if abs(self._is_corner(r, i)):
-                # first or last point
-                if i > 0:
-                    i = -1
-                self.railings[not r][i][1] = y
-
-    def move_point_unconstrained(self, r, i, x, y):
-        x, y = 10*round(x/10), 10*round(y/10)
-        self.railings[r][i] = [x, y, True]
+        else:
+            return True
 
     def fix(self, r):
         # removes points that are outside the portals
@@ -66,11 +50,11 @@ class Channel(object):
         portal = None
         if self.railings[0][0][1] - radius - 5 <= y <= self.railings[0][0][1] + radius:
             if self.railings[0][0][0] < x < self.railings[1][0][0]:
-                portal = ('entrance', x, y, self.railings[0][0][0], self.railings[0][0][1], self.railings[1][0][0])
+                portal = ('entrance', x - self.railings[0][0][0], y - self.railings[0][0][1])
 
         elif self.railings[0][-1][1] - radius <= y <= self.railings[0][-1][1] + radius + 5:
             if self.railings[0][-1][0] < x < self.railings[1][-1][0]:
-                portal = ('portal', x, y, self.railings[0][-1][0], self.railings[0][-1][1], self.railings[1][-1][0])
+                portal = ('portal', x - self.railings[1][-1][0], y - self.railings[1][-1][1])
         return portal
     
     
@@ -97,17 +81,72 @@ class Channels(object):
                 if not self.channels[c]._is_outside(y) and abs(x - self.channels[c].edge(r, y)[0]) <= radius:
                     cc, rr, ii = c, r, None
         return cc, rr, ii
+    
+    def is_selected(self, c, r, i):
+        try:
+            return self.channels[c].railings[r][i][2]
+        except TypeError:
+            return False
+    
+    def make_selected(self, c, r, i):
+        self.channels[c].railings[r][i][2] = True
         
     def clear_selection(self):
         for c in range(len(self.channels)):
             for r in range(len(self.channels[c].railings)):
                 for point in self.channels[c].railings[r]:
                     point[2] = False
+
+    def expand_selection(self, c):
+        if c is None:
+            self._select_all()
+        else:
+            touched = False
+            for r in range(len(self.channels[c].railings)):
+                for point in self.channels[c].railings[r]:
+                    if not point[2]:
+                        point[2] = True
+                        touched = True
+            if not touched:
+                self._select_all()
+    
+    def _select_all(self):
+        for c in range(len(self.channels)):
+            for r in range(len(self.channels[c].railings)):
+                for point in self.channels[c].railings[r]:
+                    point[2] = True
+
     def delete_selection(self):
         for c in range(len(self.channels)):
             for r, railing in enumerate(self.channels[c].railings):
-                railing[:] = [point for i, point in enumerate(railing) if not point[2] or self.channels[c]._is_corner(r, i)]
+                railing[:] = [point for i, point in enumerate(railing) if not point[2] or (i == 0 or i == len(railing) - 1)]
 
+    def translate_selection(self, x, y, xo, yo):
+        x, y = 10*round(x/10), 10*round(y/10)
+        
+        safe = True
+        
+        # survey conditions
+        for c in range(len(self.channels)):
+            for r in range(len(self.channels[c].railings)):
+                for i, point in enumerate(self.channels[c].railings[r]):
+                    if point[2]:
+                        # do any of the points fall on another point?
+                        if not self.channels[c].can_fall(x = point[0] + x - xo, y = point[1] + y - yo):
+                            safe = False
+
+        if safe:
+            for c in range(len(self.channels)):
+                for r in range(len(self.channels[c].railings)):
+                    for i, point in enumerate(self.channels[c].railings[r]):
+                        if point[2]:
+                            self.channels[c].railings[r][i] = [point[0] + x - xo, point[1] + y - yo, True]
+                # check y alignment
+                if self.channels[c].railings[0][0] [1] != self.channels[c].railings[1][0] [1]:
+                    self.channels[c].railings[1][0] [1] = self.channels[c].railings[0][0] [1]
+
+                if self.channels[c].railings[0][-1] [1] != self.channels[c].railings[1][-1] [1]:
+                    self.channels[c].railings[0][-1] [1] = self.channels[c].railings[1][-1] [1]
 
     def generate_channel(self):
         x1, y1, x2 = self.channels[-1].railings[0][-1][0], self.channels[-1].railings[0][-1][1] + 40, self.channels[-1].railings[1][-1][0]

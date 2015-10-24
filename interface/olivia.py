@@ -16,19 +16,24 @@ class Channels_controls(object):
         self._hover_point = (None, None, None)
         self._hover_portal = (None, None)
     
-    def press(self, x, y):
-        #clear selection
-        meredith.mipsy.tracts[meredith.mipsy.t].channels.clear_selection()
-        # target tract
-        t, c = meredith.mipsy.target_channel(x, y, 20)
-        meredith.mipsy.set_t(t)
+    def press(self, x, y, name):
         
         c, r, i = meredith.mipsy.tracts[meredith.mipsy.t].channels.target_point(x, y, 20)
         portal = None
         
+        #clear selection
+        if name != 'ctrl' and not meredith.mipsy.tracts[meredith.mipsy.t].channels.is_selected(c, r, i):
+            meredith.mipsy.tracts[meredith.mipsy.t].channels.clear_selection()
+            
+        # switch
+        if c is None:
+            # target tract
+            t, c = meredith.mipsy.target_channel(x, y, 20)
+            meredith.mipsy.set_t(t)
+        
         # make point selected
         if i is not None:
-            meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[r][i][2] = True
+            meredith.mipsy.tracts[meredith.mipsy.t].channels.make_selected(c, r, i)
         
         elif c is None:
             c = meredith.mipsy.tracts[meredith.mipsy.t].channels.target_channel(x, y, 20)
@@ -44,12 +49,11 @@ class Channels_controls(object):
             # select multiple points
             if portal is not None:
                 if portal[0] == 'entrance':
-                    print ('ENT')
-                    meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[0][0][2] = True
-                    meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[1][0][2] = True
+                    meredith.mipsy.tracts[meredith.mipsy.t].channels.make_selected(c, 0, 0)
+                    meredith.mipsy.tracts[meredith.mipsy.t].channels.make_selected(c, 1, 0)
                 elif portal[0] == 'portal':
-                    meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[0][-1][2] = True
-                    meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[1][-1][2] = True
+                    meredith.mipsy.tracts[meredith.mipsy.t].channels.make_selected(c, 0, -1)
+                    meredith.mipsy.tracts[meredith.mipsy.t].channels.make_selected(c, 1, -1)
         
         self._selected_point = (c, r, i)
         self._selected_portal = portal
@@ -60,31 +64,24 @@ class Channels_controls(object):
         # if point is selected
         if self._selected_point[2] is not None:
             c, r, i = self._selected_point
-            meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].move_point_to(r, i, x, y)
+            xo, yo = meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[r][i][:2]
+            meredith.mipsy.tracts[meredith.mipsy.t].channels.translate_selection(x, y, xo, yo)
         
         # if portal is selected
         elif self._selected_portal is not None:
             c = self._selected_point[0]
-            xx = x - self._selected_portal[1]
-            yy = y - self._selected_portal[2]
             
             if self._selected_portal[0] == 'entrance':
-                meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].move_point_unconstrained(0, 0, xx + self._selected_portal[3], yy + self._selected_portal[4])
-                meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].move_point_unconstrained(1, 0, xx + self._selected_portal[5], yy + self._selected_portal[4])
+                xo, yo = meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[0][0][:2]
+                meredith.mipsy.tracts[meredith.mipsy.t].channels.translate_selection(x - self._selected_portal[1], y - self._selected_portal[2], xo, yo)
+
             elif self._selected_portal[0] == 'portal':
-                meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].move_point_unconstrained(0, -1, xx + self._selected_portal[3], yy + self._selected_portal[4])
-                meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].move_point_unconstrained(1, -1, xx + self._selected_portal[5], yy + self._selected_portal[4])
+                xo, yo = meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[1][-1][:2]
+                meredith.mipsy.tracts[meredith.mipsy.t].channels.translate_selection(x - self._selected_portal[1], y - self._selected_portal[2], xo, yo)
 
     def release(self):
         # if point is selected
-        if self._selected_point[2] is not None:
-            c, r, i = self._selected_point
-            meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].fix(0)
-            meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].fix(1)
-            meredith.mipsy.tracts[meredith.mipsy.t].deep_recalculate()
-
-        # if portal is selected
-        elif self._selected_portal is not None:
+        if self._selected_point[0] is not None:
             meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[self._selected_point[0]].fix(0)
             meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[self._selected_point[0]].fix(1)
             meredith.mipsy.tracts[meredith.mipsy.t].deep_recalculate()
@@ -102,6 +99,9 @@ class Channels_controls(object):
             else:
                 meredith.mipsy.tracts[meredith.mipsy.t].channels.delete_selection()
             meredith.mipsy.tracts[meredith.mipsy.t].deep_recalculate()
+        elif name == 'All':
+            meredith.mipsy.tracts[meredith.mipsy.t].channels.expand_selection(self._selected_point[0])
+            
     
     def hover(self, x, y, hovered=[None, None]):
         

@@ -22,6 +22,7 @@ class Meredith(object):
         c = self.tracts[t].channels.target_channel(x, y, radius)
         
         if c is None:
+            print('None')
             for t, tract in enumerate(self.tracts):
                 c = tract.channels.target_channel(x, y, radius)
                 if c is not None:
@@ -42,6 +43,8 @@ class Meredith(object):
                 self.tracts[self.t].target_glyph(x, y, c=c),
                 self.tracts[self.t].text
                 )
+    def select_all(self):
+        self.tracts[self.t].expand_cursors()
     
     def text(self):
         return self.tracts[self.t].text
@@ -69,7 +72,7 @@ class Meredith(object):
         self.tracts[self.t].match_cursors()
     
     def hop(self, dl):
-        self.tracts[self.t].cursor.set_cursor(self.tracts[self.t].target_glyph(self.tracts[self.t].text_index_location(self.tracts[self.t].cursor.cursor)[0], 0, (self.tracts[self.t].index_to_line(self.tracts[self.t].cursor.cursor) + dl) % len(self.tracts[self.t].glyphs) ), self.tracts[self.t].text)
+        self.tracts[self.t].cursor.set_cursor(self.tracts[self.t].target_glyph(self.tracts[self.t].text_index_location(self.tracts[self.t].cursor.cursor)[0], 0, (self.tracts[self.t].index_to_line(self.tracts[self.t].cursor.cursor) + dl) % self.tracts[self.t].max_l() ), self.tracts[self.t].text)
 
     def add_channel(self):
         self.tracts[self.t].channels.add_channel()

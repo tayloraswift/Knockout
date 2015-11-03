@@ -165,7 +165,7 @@ class Channels_controls(object):
         cr.fill()
         cr.reset_clip()
 
-    def render(self, cr, show_rails=False):
+    def render(self, cr, H, K, show_rails=False):
 
         for c, channel in enumerate(meredith.mipsy.tracts[meredith.mipsy.t].channels.channels):
             bolden = False
@@ -173,18 +173,18 @@ class Channels_controls(object):
                 bolden = True
             # draw portals            
             self._draw_broken_bar(cr, bolden, 
-                    round(channel.railings[0][0][0] + constants.text_margin_x), 
-                    round(channel.railings[0][0][1] - 5 + constants.text_margin_y),
-                    round(channel.railings[1][0][0] + constants.text_margin_x),
+                    round(channel.railings[0][0][0] + H), 
+                    round(channel.railings[0][0][1] - 5 + K),
+                    round(channel.railings[1][0][0] + H),
                     (0.3, 0.3, 0.3, 0.5))
             if (c, 'portal') == self._hover_portal:
                 bolden = True
             else:
                 bolden = False
             self._draw_broken_bar(cr, bolden, 
-                    round(channel.railings[0][-1][0] + constants.text_margin_x), 
-                    round(channel.railings[1][-1][1] - 5 + constants.text_margin_y),
-                    round(channel.railings[1][-1][0] + constants.text_margin_x),
+                    round(channel.railings[0][-1][0] + H), 
+                    round(channel.railings[1][-1][1] - 5 + K),
+                    round(channel.railings[1][-1][0] + H),
                     (1, 0, 0.1, 0.5))
             
             # draw railings
@@ -195,7 +195,7 @@ class Channels_controls(object):
             
             if show_rails:
                 for r, railing in enumerate(channel.railings):
-                    pts = [(p[0] + constants.text_margin_x, p[1] + constants.text_margin_y) for p in railing]
+                    pts = [(p[0] + H, p[1] + K) for p in railing]
                     
                     cr.move_to(pts[0][0], pts[0][1])
 
@@ -207,7 +207,7 @@ class Channels_controls(object):
 
                     # draw selections
                     for i, p in enumerate(railing):
-                        cr.arc(p[0] + constants.text_margin_x, p[1] + constants.text_margin_y, 3, 0, 2*pi)
+                        cr.arc(p[0] + H, p[1] + K, 3, 0, 2*pi)
                         if (c, r, i) == self._hover_point:
                             cr.set_source_rgba(1, 0.2, 0.6, 0.5)
                             cr.fill()
@@ -215,7 +215,7 @@ class Channels_controls(object):
                         else:
                             cr.fill()
                         if p[2]:
-                            cr.arc(p[0] + constants.text_margin_x, p[1] + constants.text_margin_y, 5, 0, 2*pi)
+                            cr.arc(p[0] + H, p[1] + K, 5, 0, 2*pi)
                             cr.set_line_width(1)
                             cr.stroke()
 

@@ -2,6 +2,8 @@ import bisect
 
 from math import pi
 
+from state import noticeboard
+
 from fonts import fonttable
 
 from interface.base import Base_kookie
@@ -426,7 +428,12 @@ class Blank_space(Base_kookie):
         self._center_x(self._glyphs[self._j][1])
 
     def focus_drag(self, x):
-        self._j = self._target(x)
+        j = self._target(x)
+        
+        # force redraw if cursor moves
+        if self._j != j:
+            self._j = j
+            noticeboard.refresh.push_change()
         
         self._center_x(x)
 

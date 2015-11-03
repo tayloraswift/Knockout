@@ -301,13 +301,17 @@ class Document_view(object):
                     meredith.mipsy.set_t(t)
                     meredith.mipsy.set_cursor_xy(x - constants.text_margin_x, y - constants.text_margin_y, c)
                     meredith.mipsy.match_cursors()
+                    
+                    # used to keep track of ui redraws
+                    self._sel_cursor = meredith.mipsy.selection()[1]
                 except IndexError:
                     # occurs if an empty channel is selected
                     pass
                 # check if paragraph context changed
                 if paragraph_context_changed():
                     noticeboard.refresh_properties_stack.push_change()
-                
+            
+            # CHANNEL EDITING MODE
             elif self._mode == 'channels':
                 olivia.dibbles.press(x - constants.text_margin_x, y - constants.text_margin_y, name)
 
@@ -321,6 +325,9 @@ class Document_view(object):
             if self._mode == 'text':
                 try:
                     meredith.mipsy.set_select_xy(x - constants.text_margin_x, y - constants.text_margin_y)
+                    if meredith.mipsy.selection()[1] != self._sel_cursor:
+                        self._sel_cursor = meredith.mipsy.selection()[1]
+                        noticeboard.refresh.push_change()
                 except IndexError:
                     # occurs if an empty channel is selected
                     pass

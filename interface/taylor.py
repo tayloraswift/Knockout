@@ -332,21 +332,23 @@ class Document_view(object):
         elif self._region_active == 'switcher':
             pass
     
+    def press_mid(self, x, y):
+        self._stake = (x, y, constants.text_margin_x, constants.text_margin_y)
+    
     def drag(self, x, y):
+        # release
         if x == -1:
             self._stake = None
             constants.text_margin_x = int(round(constants.text_margin_x))
             constants.text_margin_y = int(round(constants.text_margin_y))
             
             meredith.mipsy.rerender()
+        # drag
         else:
-            if self._stake is None:
-                self._stake = (x, y, constants.text_margin_x, constants.text_margin_y)
-            else:
-                constants.text_margin_x = int(round(x - self._stake[0] + self._stake[2]))
-                constants.text_margin_y = int(round(y - self._stake[1] + self._stake[3]))
-                
-                meredith.mipsy.rerender()
+            constants.text_margin_x = int(round(x - self._stake[0] + self._stake[2]))
+            constants.text_margin_y = int(round(y - self._stake[1] + self._stake[3]))
+            
+            meredith.mipsy.rerender()
 
     def release(self, x, y):
         self._toolbar.release(x, y)

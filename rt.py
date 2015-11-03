@@ -104,16 +104,18 @@ class Display(Gtk.Window):
         
     def on_button_press(self, w, e):
         
-        if e.type == Gdk.EventType.BUTTON_PRESS and e.button == MouseButtons.LEFT_BUTTON:
+        if e.type == Gdk.EventType.BUTTON_PRESS:
+            if e.button == MouseButtons.LEFT_BUTTON:
+                if e.state & Gdk.ModifierType.CONTROL_MASK:
+                    mod = 'ctrl'
+                else:
+                    mod = None
+                        
+                tree.take_event(e.x, e.y, 'press', char=mod, geometry=self.get_size())
             
-            if e.state & Gdk.ModifierType.CONTROL_MASK:
-                mod = 'ctrl'
-            else:
-                mod = None
-                    
-            tree.take_event(e.x, e.y, 'press', char=mod, geometry=self.get_size())
-
-
+            elif e.button == MouseButtons.MIDDLE_BUTTON:
+                tree.take_event(e.x, e.y, 'press_mid', geometry=self.get_size())
+            
             self.darea.queue_draw()
             
             

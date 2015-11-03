@@ -20,7 +20,7 @@ def take_event(x, y, event, key=False, char=None, region=['document', 'document'
         if x > geometry[0] - constants.propertieswidth:
             if region[1] != 'properties':
                 region[1] = 'properties'
-            if event == 'press' and region[0] != 'properties':
+            if event in ('press', 'press_mid') and region[0] != 'properties':
                 region[0] = 'properties'
 
         else:
@@ -30,9 +30,9 @@ def take_event(x, y, event, key=False, char=None, region=['document', 'document'
                 if event == 'motion':
                     karlie.klossy.hover(x, y)
                 region[1] = 'document'
-            if event == 'press' and region[0] != 'document':
+            if event in ('press', 'press_mid') and region[0] != 'document':
                 # if we're going from properties to document, dump properties
-                if region[0] == 'properties':
+                if region[0] == 'properties' and event == 'press':
                     karlie.klossy.press(x, y)
                 region[0] = 'document'
 
@@ -51,33 +51,36 @@ def take_event(x, y, event, key=False, char=None, region=['document', 'document'
 
         #############
         
-        if event == 'press':
-            menu.menu.destroy()
-            if region[0] == 'document':
-                taylor.becky.press(x, y, char)
-                    
-            elif region[0] == 'properties':
-                karlie.klossy.press(x, y)
-                
-        elif event == 'press_motion':
-            if region[0] == 'document':
-                taylor.becky.press_motion(x, y)
-                    
-            elif region[0] == 'properties':
-                karlie.klossy.press_motion(x)
+        # motion operates under the hover context
+        if event == 'motion':
 
-        elif event == 'drag':
-            if region[0] == 'document':
-                taylor.becky.drag(x, y)
-
-        elif event == 'release':
-            if region[0] == 'document':
-                taylor.becky.release(x, y)
-                
-        elif event == 'motion':
-#            controls.update(x, y)
             if region[1] == 'properties':
                 karlie.klossy.hover(x, y)
             else:
                 taylor.becky.hover(x, y)
 
+        # other operate under the click context
+        elif region[0] == 'document':
+            if event == 'press':
+                menu.menu.destroy()
+                taylor.becky.press(x, y, char)
+                    
+            elif event == 'press_motion':
+                taylor.becky.press_motion(x, y)
+
+            elif event == 'press_mid':
+                taylor.becky.press_mid(x, y)
+
+            elif event == 'drag':
+                taylor.becky.drag(x, y)
+
+            elif event == 'release':
+                taylor.becky.release(x, y)
+            
+        elif region[0] == 'properties':
+            if event == 'press':
+                menu.menu.destroy()
+                karlie.klossy.press(x, y)
+            
+            elif event == 'press_motion':
+                karlie.klossy.press_motion(x)

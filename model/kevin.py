@@ -61,5 +61,15 @@ def deserialize(string):
         
         del b[opentag:closetag + 1]
         b.insert(opentag, entity)
+    
+    d = []
+    for i, e in enumerate(b):
+        if e == '\u000A':
+            if b[i - 1] != '\u000A':
+                d += ['</p>', ['<p>', 'body']]
+        else:
+            if not isinstance(e, list) and len(e) == 1:
+                print(str(e) + ' : ' + str(ord(e)))
+            d += [e]
 
-    return b
+    return d

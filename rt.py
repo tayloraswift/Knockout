@@ -22,6 +22,7 @@ import tree
 class MouseButtons:
     
     LEFT_BUTTON = 1
+    MIDDLE_BUTTON = 2
     RIGHT_BUTTON = 3
     
 class Display(Gtk.Window):
@@ -38,9 +39,6 @@ class Display(Gtk.Window):
         self.darea.set_events(Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_RELEASE_MASK | Gdk.EventMask.POINTER_MOTION_HINT_MASK | Gdk.EventMask.POINTER_MOTION_MASK)
 #        self.darea.set_events(Gdk.EventMask.BUTTON_RELEASE_MASK) 
         self.add(self.darea)
-        
-        # states
-        self.down = False
         
         self.errorpanel = None
         
@@ -117,23 +115,27 @@ class Display(Gtk.Window):
 
 
             self.darea.queue_draw()
-            self.down = True
             
             
     def on_button_release(self, w, e):
 
-        if e.type == Gdk.EventType.BUTTON_RELEASE \
-            and e.button == MouseButtons.LEFT_BUTTON:
-            self.down = False
-            tree.take_event(e.x, e.y, 'release', geometry=self.get_size())
+        if e.type == Gdk.EventType.BUTTON_RELEASE:
+            if e.button == MouseButtons.LEFT_BUTTON:
 
+                tree.take_event(e.x, e.y, 'release', geometry=self.get_size())
+            
+            elif e.button == MouseButtons.MIDDLE_BUTTON:
+                tree.take_event(-1, -1, 'drag', geometry=self.get_size())
+                
             self.darea.queue_draw()
-
 
     def motion_notify_event(self, widget, event):
 
-        if Gdk.ModifierType.BUTTON1_MASK and self.down:
+        if event.state & Gdk.ModifierType.BUTTON1_MASK:
             tree.take_event(event.x, event.y, 'press_motion', geometry=self.get_size())
+            noticeboard.refresh.push_change()
+        elif event.state & Gdk.ModifierType.BUTTON2_MASK:
+            tree.take_event(event.x, event.y, 'drag', geometry=self.get_size())
             noticeboard.refresh.push_change()
         else:
             tree.take_event(event.x, event.y, 'motion', geometry=self.get_size())

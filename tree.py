@@ -65,7 +65,11 @@ def take_event(x, y, event, key=False, char=None, region=['document', 'document'
                     
             elif region[0] == 'properties':
                 karlie.klossy.press_motion(x)
-                
+
+        elif event == 'drag':
+            if region[0] == 'document':
+                taylor.becky.drag(x, y)
+
         elif event == 'release':
             if region[0] == 'document':
                 taylor.becky.release(x, y)

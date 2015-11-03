@@ -183,7 +183,7 @@ class Channels_controls(object):
             
             if show_rails:
                 for r, railing in enumerate(channel.railings):
-                    pts = [(p[0] + 200, p[1] + 100) for p in railing]
+                    pts = [(p[0] + constants.text_margin_x, p[1] + constants.text_margin_y) for p in railing]
                     
                     cr.move_to(pts[0][0], pts[0][1])
 
@@ -195,7 +195,7 @@ class Channels_controls(object):
 
                     # draw selections
                     for i, p in enumerate(railing):
-                        cr.arc(p[0] + 200, p[1] + 100, 3, 0, 2*pi)
+                        cr.arc(p[0] + constants.text_margin_x, p[1] + constants.text_margin_y, 3, 0, 2*pi)
                         if (c, r, i) == self._hover_point:
                             cr.set_source_rgba(1, 0.2, 0.6, 0.5)
                             cr.fill()
@@ -203,7 +203,7 @@ class Channels_controls(object):
                         else:
                             cr.fill()
                         if p[2]:
-                            cr.arc(p[0] + 200, p[1] + 100, 5, 0, 2*pi)
+                            cr.arc(p[0] + constants.text_margin_x, p[1] + constants.text_margin_y, 5, 0, 2*pi)
                             cr.set_line_width(1)
                             cr.stroke()
 

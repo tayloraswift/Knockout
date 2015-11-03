@@ -157,6 +157,8 @@ class Textline(object):
                         word = ''.join([c if type(c) is not list else ' ' for c in self._sorts[i + 1: i + 1 + j] ])
                         for pair in hy.iterate(word):
                             k = len(pair[0])
+#                            if k < 3 or len(pair[1]) < 3:
+#                                continue
                             
                             try:
                                 pf = (self.glyphs[i + k][3][0], self.glyphs[i + k][4])

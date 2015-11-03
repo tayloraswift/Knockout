@@ -31,9 +31,11 @@ class Channels_controls(object):
             t, c = meredith.mipsy.target_channel(x, y, 20)
             meredith.mipsy.set_t(t)
         
-        # make point selected
+        # perfect case, make point selected
         if i is not None:
             meredith.mipsy.tracts[meredith.mipsy.t].channels.make_selected(c, r, i)
+            
+            self._sel_locale = tuple(meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[r][i][:2])
         
         elif c is None:
             c = meredith.mipsy.tracts[meredith.mipsy.t].channels.target_channel(x, y, 20)
@@ -43,6 +45,8 @@ class Channels_controls(object):
             # insert point if one was not found
 
             i = meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].insert_point(r, y)
+            
+            self._sel_locale = tuple(meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[r][i][:2])
         
         elif r is None and c is not None:
             portal = meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].target_portal(x, y, radius=5)
@@ -58,6 +62,7 @@ class Channels_controls(object):
         self._selected_point = (c, r, i)
         self._selected_portal = portal
         
+        
         print (str(self._selected_point) + ' ' + str(self._selected_portal))
     
     def press_motion(self, x, y):
@@ -66,6 +71,10 @@ class Channels_controls(object):
             c, r, i = self._selected_point
             xo, yo = meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[r][i][:2]
             meredith.mipsy.tracts[meredith.mipsy.t].channels.translate_selection(x, y, xo, yo)
+            
+            if self._sel_locale != tuple(meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[r][i][:2]):
+                self._sel_locale = tuple(meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[r][i][:2])
+                noticeboard.refresh.push_change()
         
         # if portal is selected
         elif self._selected_portal is not None:
@@ -78,6 +87,9 @@ class Channels_controls(object):
             elif self._selected_portal[0] == 'portal':
                 xo, yo = meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[1][-1][:2]
                 meredith.mipsy.tracts[meredith.mipsy.t].channels.translate_selection(x - self._selected_portal[1], y - self._selected_portal[2], xo, yo)
+            
+            # it’s too hard to determine this
+            noticeboard.refresh.push_change()
 
     def release(self):
         # if point is selected

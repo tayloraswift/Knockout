@@ -135,7 +135,7 @@ class Display(Gtk.Window):
 
         if event.state & Gdk.ModifierType.BUTTON1_MASK:
             tree.take_event(event.x, event.y, 'press_motion', geometry=self.get_size())
-            noticeboard.refresh.push_change()
+
         elif event.state & Gdk.ModifierType.BUTTON2_MASK:
             tree.take_event(event.x, event.y, 'drag', geometry=self.get_size())
             noticeboard.refresh.push_change()

@@ -459,9 +459,15 @@ class Text(object):
             self.cursor.cursor = self.text_index_location(self.cursor.cursor)[2][1] + 1
     
     def expand_cursors_word(self):
+        _breaking_chars = set((' ', '</p>', '<p>', '<f>', '</f>', '—', ':', '.', ',', ';', '/', '!', '?', '(', ')', '[', ']', '{', '}', '\\', '|', '=', '+', '_', '\'', '"', '‘', '’', '“', '”' ))
         try:
-            self.cursor.cursor -= list(reversed(self.text[:self.cursor.cursor])).index(' ')
-            self.select.cursor += self.text[self.select.cursor:].index(' ')
+            I = next(i for i, c in enumerate(self.text[self.select.cursor::-1]) if character(c) in _breaking_chars)
+            # so I never overruns length of text
+            if I < len(self.text[self.select.cursor:]) - 1:
+                self.cursor.cursor -= I - 1
+            
+            J = next(i for i, c in enumerate(self.text[self.select.cursor:]) if character(c) in _breaking_chars)
+            self.select.cursor += J
         except ValueError:
             pass
         

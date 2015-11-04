@@ -10,7 +10,6 @@ def save():
     styles = fonts.paragraph_classes
     
     doc = {'kitty': kitty, 'styles': styles}
-    print(doc)
     
     with open('doc.txt', 'wb') as fi:
         pickle.dump(doc, fi)

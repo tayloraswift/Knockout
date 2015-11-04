@@ -51,13 +51,19 @@ def take_event(x, y, event, key=False, char=None, region=['document', 'document'
 
         #############
         
-        # motion operates under the hover context
+        # motion and scrolling operates under the hover context
         if event == 'motion':
 
             if region[1] == 'properties':
                 karlie.klossy.hover(x, y)
-            else:
+            elif region[1] == 'document':
                 taylor.becky.hover(x, y)
+        
+        elif event == 'scroll':
+            if region[1] == 'properties':
+                pass
+            elif region[1] == 'document':
+                taylor.becky.scroll(x, y, char)
 
         # other operate under the click context
         elif region[0] == 'document':

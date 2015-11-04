@@ -444,14 +444,21 @@ class Text(object):
         # order
         if self.cursor.cursor > self.select.cursor:
             self.cursor.cursor, self.select.cursor = self.select.cursor, self.cursor.cursor
+        
         if character(self.text[self.cursor.cursor - 1]) == '<p>' and character(self.text[self.select.cursor]) == '</p>':
             self.cursor.cursor = 1
             self.select.cursor = len(self.text) - 1
         else:
-            self.select.cursor += self.text[self.select.cursor + 1:].index('</p>') + 1
+            self.select.cursor += self.text[self.select.cursor:].index('</p>')
             self.cursor.cursor = self.text_index_location(self.cursor.cursor)[2][1] + 1
-            
-
+    
+    def expand_cursors_word(self):
+        try:
+            self.cursor.cursor -= list(reversed(self.text[:self.cursor.cursor])).index(' ')
+            self.select.cursor += self.text[self.select.cursor:].index(' ')
+        except ValueError:
+            pass
+        
 
     ### FUNCTIONS USEFUL FOR DRAWING AND INTERFACE
             

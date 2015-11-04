@@ -342,6 +342,12 @@ class Document_view(object):
         elif self._region_active == 'switcher':
             self._mode_switcher.press(x)
 
+    def dpress(self):
+        if self._region_active == 'view':
+            # TEXT EDITING MODE
+            if self._mode == 'text':
+                meredith.mipsy.select_word()
+        
     def press_motion(self, x, y):
         if self._region_active == 'view':
             if self._mode == 'text':
@@ -531,6 +537,8 @@ class Document_view(object):
                 cr.fill()
 
     def _draw_cursors(self, cr):
+        cr.push_group()
+        
         # print highlights
 
         cr.set_source_rgba(0, 0, 0, 0.1)
@@ -563,7 +571,7 @@ class Document_view(object):
         cr.fill() 
 
         # print cursors
-        cr.set_source_rgb(1, 0.2, 0.6)
+        cr.set_source_rgb(1, 0, 0.5)
         cx, cy, p, f = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(meredith.mipsy.active_cursor())
         leading = fonttable.p_table.get_paragraph(p[0])['leading']
 
@@ -629,6 +637,8 @@ class Document_view(object):
                     2)
         cr.fill()
         
+        cr.pop_group_to_source()
+        cr.paint_with_alpha(0.65)
 
     def render(self, cr, h, k):
         #draw page border
@@ -645,10 +655,14 @@ class Document_view(object):
                 h - 100 - constants.propertieswidth, 
                 k)
         cr.clip()
+        
+        # text
         self._draw_text(cr, self._H, self._K, self._Hc, self._Kc, self._A, False)
         cr.reset_clip()
+        # annotations
         self._draw_annotations(cr)
         
+        # cursors
         if self._mode == 'text':
             self._draw_cursors(cr)
             olivia.dibbles.render(cr, self._Tx, self._Ty)

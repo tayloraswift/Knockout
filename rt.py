@@ -104,8 +104,14 @@ class Display(Gtk.Window):
         taylor.becky.resize(self._h, self._k)
         
     def on_button_press(self, w, e):
+
+        if e.type == Gdk.EventType._2BUTTON_PRESS:
+            if e.button == MouseButtons.LEFT_BUTTON:
+                print('double')
+                tree.take_event(e.x, e.y, 'press2', geometry=self.get_size())
+            self.darea.queue_draw()
         
-        if e.type == Gdk.EventType.BUTTON_PRESS:
+        elif e.type == Gdk.EventType.BUTTON_PRESS:
             if e.button == MouseButtons.LEFT_BUTTON:
                 if e.state & Gdk.ModifierType.CONTROL_MASK:
                     mod = 'ctrl'
@@ -118,7 +124,6 @@ class Display(Gtk.Window):
                 tree.take_event(e.x, e.y, 'press_mid', geometry=self.get_size())
             
             self.darea.queue_draw()
-            
             
     def on_button_release(self, w, e):
 

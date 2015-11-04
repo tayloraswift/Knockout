@@ -677,5 +677,8 @@ class Document_view(object):
         cr.move_to(130, k - 20)
         cr.show_text('{0:g}'.format(self._A*100) + '%')
         
+        cr.move_to(h - constants.propertieswidth - 100, k - 20)
+        cr.show_text(str(meredith.mipsy.words()) + ' words')
+        
 becky = Document_view()
 

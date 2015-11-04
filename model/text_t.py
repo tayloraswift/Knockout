@@ -162,8 +162,14 @@ class Textline(object):
                             
                             try:
                                 pf = (self.glyphs[i + k][3][0], self.glyphs[i + k][4])
-                                fc = fonttable.table.get_font( * pf )
-
+                                try:
+                                    fc = fonttable.table.get_font( * pf )
+                                except KeyError:
+                                    try:
+                                        fc = fonttable.table.get_font(p, () )
+                                    except AttributeError:
+                                        fc = fonttable.table.get_font('_interface', () )
+                                    
                                 if self.glyphs[i + k][5] + fc['fontmetrics'].advance_pixel_width('-')*fc['fontsize'] < self.stop:
                                     i = i + k
                                     if self._sorts[i] != '-':

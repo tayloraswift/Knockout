@@ -11,13 +11,16 @@ from state import constants
 from model import kevin
 from model import errors
 
+from typing import compose
+
 from interface import karlie
 from interface import taylor
 from interface import menu
 
 import tree
 
-
+_dead_keys = set(('dead_tilde', 'dead_acute', 'dead_grave', 'dead_circumflex', 'dead_abovering', 'dead_macron', 'dead_breve', 'dead_abovedot', 'dead_diaeresis', 'dead_doubleacute', 'dead_caron', 'dead_cedilla', 'dead_ogonek', 'dead_iota', 'Multi_key'))
+_special_keys = set(('Shift_L', 'Shift_R', 'Control_L', 'Control_R', 'Caps_Lock', 'Escape', 'Tab', 'Alt_L', 'Alt_R', 'Super_L')) ^ _dead_keys
 
 class MouseButtons:
     
@@ -41,6 +44,8 @@ class Display(Gtk.Window):
         self.add(self.darea)
         
         self.errorpanel = None
+        
+        self._compose = False
         
         self.darea.connect("button-press-event", self.on_button_press)
         self.darea.connect("button-release-event", self.on_button_release)
@@ -165,14 +170,11 @@ class Display(Gtk.Window):
 
         
     def on_key_press(self, w, e):
-        
-#        print (Gdk.keyval_name(e.keyval))
 
         name = Gdk.keyval_name(e.keyval)
         
         if e.state & Gdk.ModifierType.SHIFT_MASK and name == 'Return':
             tree.take_event(0, 0, 'paragraph', key=True)
-            
                 
         elif e.state & Gdk.ModifierType.CONTROL_MASK:
             
@@ -192,9 +194,21 @@ class Display(Gtk.Window):
                 tree.take_event(0, 0, 'All', key=True)
         
         
-        elif name in ['Shift_L', 'Shift_R', 'Control_L', 'Control_R', 'Caps_Lock', 'Escape', 'Tab', 'Alt_L', 'Alt_R', 'Super_L', 'Multi_key']:
-            pass
+        elif name in _special_keys:
+
+            if name in _dead_keys:
+                self._compose = True
+                # build compositor
+                self._compositor = compose.Composition(name)
         
+        elif self._compose:
+            composite = self._compositor.key_input(name, chr(Gdk.keyval_to_unicode(e.keyval)))
+            if composite:
+                # destroy compositor
+                del self._compositor
+                self._compose = False
+                tree.take_event(0, 0, composite[0], key=True, char = composite[1])
+                
         else:
             tree.take_event(0, 0, name, key=True, char = chr(Gdk.keyval_to_unicode(e.keyval)) )
         self.darea.queue_draw()

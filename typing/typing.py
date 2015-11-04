@@ -7,6 +7,9 @@ from model.text_t import character
 def type_document(name, char, lastpress=[0]):
     if name == 'paragraph':
         meredith.mipsy.tracts[meredith.mipsy.t].insert(['</p>', ['<p>', 'body']])
+        
+        # count words because why not
+        meredith.mipsy.count_words()
     
     elif name in ['BackSpace', 'Delete']:
         
@@ -49,21 +52,33 @@ def type_document(name, char, lastpress=[0]):
         meredith.mipsy.match_cursors()
     elif name == 'Return':
         meredith.mipsy.tracts[meredith.mipsy.t].insert(['<br>'])
+        
+        # count words because why not
+        meredith.mipsy.count_words()
+    
     elif name in ['Home', 'End']:
         li = meredith.mipsy.tracts[meredith.mipsy.t].index_to_line(meredith.mipsy.tracts[meredith.mipsy.t].cursor.cursor)
+        i, j = meredith.mipsy.tracts[meredith.mipsy.t].line_indices(li)
         if name == 'Home':
-            meredith.mipsy.tracts[meredith.mipsy.t].cursor.set_cursor(meredith.mipsy.tracts[meredith.mipsy.t].glyphs[li].startindex, meredith.mipsy.tracts[meredith.mipsy.t].text)
+            meredith.mipsy.tracts[meredith.mipsy.t].cursor.set_cursor(i, meredith.mipsy.tracts[meredith.mipsy.t].text)
             meredith.mipsy.match_cursors()
         else:
-            meredith.mipsy.tracts[meredith.mipsy.t].cursor.set_cursor(meredith.mipsy.tracts[meredith.mipsy.t].glyphs[li].startindex + len(meredith.mipsy.tracts[meredith.mipsy.t].glyphs[li].glyphs), meredith.mipsy.tracts[meredith.mipsy.t].text)
+            meredith.mipsy.tracts[meredith.mipsy.t].cursor.set_cursor(j, meredith.mipsy.tracts[meredith.mipsy.t].text)
             meredith.mipsy.match_cursors()
-            
+        
+        # count words because why not
+        meredith.mipsy.count_words()
+    
     elif name == 'Paste':
         
         if meredith.mipsy.tracts[meredith.mipsy.t].take_selection():
             meredith.mipsy.tracts[meredith.mipsy.t].delete( * meredith.mipsy.selection())
         # char is a LIST in this case
         meredith.mipsy.tracts[meredith.mipsy.t].insert(char)
+        
+        # count words because why not
+        meredith.mipsy.count_words()
+    
     elif name == 'Copy':
         sel = meredith.mipsy.tracts[meredith.mipsy.t].take_selection()
         if sel:
@@ -72,10 +87,17 @@ def type_document(name, char, lastpress=[0]):
         sel = meredith.mipsy.tracts[meredith.mipsy.t].take_selection()
         if sel:
             meredith.mipsy.tracts[meredith.mipsy.t].delete( * meredith.mipsy.selection())
+            
+            # count words because why not
+            meredith.mipsy.count_words()
+        
             return sel
     
     elif name == 'All':
         meredith.mipsy.select_all()
+
+        # count words because why not
+        meredith.mipsy.count_words()
             
     else:
         meredith.mipsy.tracts[meredith.mipsy.t].insert([char])

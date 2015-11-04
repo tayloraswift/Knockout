@@ -70,7 +70,10 @@ def take_event(x, y, event, key=False, char=None, region=['document', 'document'
             if event == 'press':
                 menu.menu.destroy()
                 taylor.becky.press(x, y, char)
-                    
+            
+            if event == 'press2':
+                taylor.becky.dpress()
+            
             elif event == 'press_motion':
                 taylor.becky.press_motion(x, y)
 

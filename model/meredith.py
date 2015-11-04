@@ -48,6 +48,8 @@ class Meredith(object):
                 )
     def select_all(self):
         self.tracts[self.t].expand_cursors()
+    def select_word(self):
+        self.tracts[self.t].expand_cursors_word()
     
     def text(self):
         return self.tracts[self.t].text

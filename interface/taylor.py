@@ -687,6 +687,10 @@ class Document_view(object):
         
         cr.set_font_size(font['fontsize'])
         cr.set_font_face(font['font'])
+
+        if noticeboard.composition_sequence:
+            cr.move_to(130, 40)
+            cr.show_text(' '.join(noticeboard.composition_sequence))
         
         cr.move_to(130, k - 20)
         cr.show_text('{0:g}'.format(self._A*100) + '%')

@@ -1,3 +1,7 @@
+# for typing state
+composition_sequence = []
+
+# for refreshing the ui
 class Refresh_draw(object):
     def __init__(self):
         self.properties_refresh = True

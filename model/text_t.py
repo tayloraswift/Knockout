@@ -219,7 +219,9 @@ class Text(object):
         # create cursor objects
         self.cursor = Cursor(self.text)
         self.select = Cursor(self.text)
-
+        
+        # stats
+        self.count_words()
         
     def _generate_lines(self, l, startindex):
         c = 0
@@ -504,4 +506,10 @@ class Text(object):
                         self.sorted_glyphs[hyphen[3:5]] = []
                         self.sorted_glyphs[hyphen[3:5]].append((hyphen[0], A*(hyphen[1] + mx - cx) + cx, A*(hyphen[2] + my - cy) + cy))
         return self.sorted_glyphs
-        
+    
+    def count_words(self):
+        # OVERCOUNTS TAGS
+        self._S_words = len(kevin.serialize([e for e in self.text if type(e) is str]).split())
+    
+    def word_count(self):
+        return self._S_words

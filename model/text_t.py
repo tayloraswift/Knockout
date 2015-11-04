@@ -10,6 +10,10 @@ from model import errors
 
 hy = pyphen.Pyphen(lang='en_US')
 
+_prose = set('ABCDEFGHIJKLMNOPGRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789&@#$ ')
+# these characters get read as word-breaks in speech
+_breaking_prose = set(('</p>', '<br>', '—', '–', '/', '(', ')', '\\', '|', '=', '+', '_'))
+
 def character(entity):
     if type(entity) is list:
         entity = entity[0]
@@ -459,7 +463,8 @@ class Text(object):
             self.cursor.cursor = self.text_index_location(self.cursor.cursor)[2][1] + 1
     
     def expand_cursors_word(self):
-        _breaking_chars = set((' ', '</p>', '<p>', '<f>', '</f>', '—', ':', '.', ',', ';', '/', '!', '?', '(', ')', '[', ']', '{', '}', '\\', '|', '=', '+', '_', '\'', '"', '‘', '’', '“', '”' ))
+        # NOT the same as prose breaks because of '.', ':', '<f>', etc. *Does not include ''' or '’' because these are found word-internal and when used as quotes, encapsulate single characters*
+        _breaking_chars = set((' ', '</p>', '<p>', '<f>', '</f>', '<br>', '—', '–', ':', '.', ',', ';', '/', '!', '?', '(', ')', '[', ']', '{', '}', '\\', '|', '=', '+', '_', '"', '“', '”' ))
         try:
             I = next(i for i, c in enumerate(self.text[self.select.cursor::-1]) if character(c) in _breaking_chars)
             # so I never overruns length of text
@@ -502,6 +507,9 @@ class Text(object):
         leading = self._glyphs[l].leading
         y = self._glyphs[l].y
         return anchor, stop, leading, y
+    
+    def line_indices(self, l):
+        return self._glyphs[l].startindex, self._glyphs[l].startindex + len(self._glyphs[l].glyphs)
 
     def extract_glyphs(self, mx, my, cx, cy, A, refresh=False):
         if refresh:
@@ -528,7 +536,7 @@ class Text(object):
     
     def count_words(self):
         # OVERCOUNTS TAGS
-        self._S_words = len(kevin.serialize([e for e in self.text if type(e) is str]).split())
+        self._S_words = len(''.join([e if (type(e) is str and e in _prose) else ' ' if (type(e) is str and e in _breaking_prose) else '' for e in self.text ]).split())
     
     def word_count(self):
         return self._S_words

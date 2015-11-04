@@ -39,6 +39,9 @@ class Meredith(object):
                 self.tracts[self.t].text
                 )
         # count words because why not
+        self.count_words()
+    
+    def count_words(self):
         self.tracts[self.t].count_words()
         
     def set_select_xy(self, x, y, c=None):

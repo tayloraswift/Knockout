@@ -5,17 +5,27 @@ def serialize(text):
     for e, entity in enumerate(b):
         if not isinstance(entity, str):
             if entity[0] == '<f>':
-                b[e] = '<f class="' + entity[1] + '">'
-
+                if entity[1] == 'emphasis':
+                    b[e] = '<em>'
+                elif entity[1] == 'strong':
+                    b[e] = '<strong>'
+                else:
+                    b[e] = '<f class="' + entity[1] + '">'
+            
+            elif entity[0] == '</f>':
+                if entity[1] == 'emphasis':
+                    b[e] = '</em>'
+                elif entity[1] == 'strong':
+                    b[e] = '</strong>'
+                else:
+                    b[e] = '</f class="' + entity[1] + '">'
+            
             elif entity[0] == '<p>':
                 if entity[1] != 'body':
                     b[e] = '<p class="' + entity[1] + '">'
                 else:
                     b[e] = '<p>'
             
-            elif entity[0] == '</f>':
-                b[e] = '</f class="' + entity[1] + '">'
-
     return ''.join(b)
 
 def deserialize(string):

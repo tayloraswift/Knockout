@@ -242,24 +242,35 @@ class Document_view(object):
         
         self._stake = None
         
+        self._scroll_notches = [0.1, 0.13, 0.15, 0.2, 0.22, 0.3, 0.4, 0.5, 0.6, 0.8, 0.89, 1, 1.25, 1.5, 1.75, 1.989, 2, 2.5, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20, 30, 40]
+        self._scroll_notch_i = 11
+        
+        # window widths (CURRENTLY UNUSED)
+        self._hw = constants.windowwidth
+        self._kw = constants.windowheight
+        
         # transform parameters
+        self._Hc = (self._hw - constants.propertieswidth - 100) / 2 + 100
+        self._Kc = (self._kw) / 2
+        
         self._H = 200
         self._K = 100
-        
-        self._A = 1
-        self._B = 1
+
+        self._A = self._scroll_notches[self._scroll_notch_i]
     
     # TRANSFORMATION FUNCTIONS
     def _Tx(self, x):
-        return x + self._H
+        return self._A*(x + self._H - self._Hc) + self._Hc
 
     def _Ty(self, y):
-        return y + self._K
+        return self._A*(y + self._K - self._Kc) + self._Kc
     
     def _T_1(self, x, y):
-        x = x - self._H
-        y = y - self._K
+        x = (x - self._Hc) / self._A - self._H + self._Hc
+        y = (y - self._Kc) / self._A - self._K + self._Kc
         return x, y
+    
+    ##############
     
     def _check_region_press(self, x, y):
         if x < 100:
@@ -363,8 +374,8 @@ class Document_view(object):
             meredith.mipsy.rerender()
         # drag
         else:
-            self._H = int(round(x - self._stake[0] + self._stake[2]))
-            self._K = int(round(y - self._stake[1] + self._stake[3]))
+            self._H = int(round( (x - self._stake[0]) / self._A + self._stake[2]))
+            self._K = int(round( (y - self._stake[1]) / self._A + self._stake[3]))
             
             meredith.mipsy.rerender()
 
@@ -378,6 +389,40 @@ class Document_view(object):
             pass
         elif self._region_active == 'switcher':
             pass
+
+    def scroll(self, x, y, mod):
+        if y < 0:
+            y = abs(y)
+            direction = 0
+        else:
+            direction = 1
+        
+        if mod == 'ctrl':
+            # zoom
+            if direction and self._scroll_notch_i > 0:
+                self._scroll_notch_i -= 1
+            elif self._scroll_notch_i < len(self._scroll_notches) - 1:
+                self._scroll_notch_i += 1
+            
+            dhc = x - self._Hc
+            self._Hc += dhc
+            self._H -= int(dhc * (1 - self._A) / self._A)
+            
+            dkc = y - self._Kc
+            self._Kc += dkc
+            self._K -= int(dkc * (1 - self._A) / self._A)
+            
+            self._A = self._scroll_notches[self._scroll_notch_i]
+        
+        else:
+            # scroll
+            if direction:
+                self._K -= int(100 / self._A)
+            else:
+                self._K += int(100 / self._A)
+        
+        meredith.mipsy.rerender()
+        noticeboard.refresh.push_change()
 
     def hover(self, x, y):
         self._check_region_hover(x, y)
@@ -395,16 +440,19 @@ class Document_view(object):
 
     def resize(self, h, k):
         self._mode_switcher.resize(h, k)
+        
+        self._hw = h
+        self._kw = k
 
     def change_mode(self, mode):
         self._mode = mode
     
     
-    def _draw_text(self, cr, mx=0, my=0, refresh=False):
+    def _draw_text(self, cr, mx=0, my=0, cx=765/2, cy=990/2, A=1, refresh=False):
         # prints text
 
         for tract in meredith.mipsy.tracts:
-            classed_glyphs = tract.extract_glyphs(mx, my, refresh)
+            classed_glyphs = tract.extract_glyphs(mx, my, cx, cy, A, refresh)
 
             for name, glyphs in classed_glyphs.items():
                 try:
@@ -417,7 +465,7 @@ class Document_view(object):
                     except AttributeError:
                         font = fonttable.table.get_font('_interface', ())
                 
-                cr.set_font_size(font['fontsize'])
+                cr.set_font_size(font['fontsize'] * A)
                 cr.set_font_face(font['font'])
                     
                 cr.show_glyphs(glyphs)
@@ -437,19 +485,19 @@ class Document_view(object):
                     cr.set_source_rgba(0, 0, 0, 0.4)
                 x = round(self._Tx(x))
                 y = round(self._Ty(y))
-                fontsize = get_fontsize(p[0], f)
+                fontsize = get_fontsize(p[0], f) * self._A
                 
                 cr.move_to(x, y)
                 cr.rel_line_to(0, round(-fontsize))
                 cr.rel_line_to(-3, 0)
                 # sharp edge do not round
-                cr.rel_line_to(-3, round(fontsize)/2)
+                cr.rel_line_to(-(fontsize/5), round(fontsize)/2)
                 cr.line_to(x - 3, y)
                 cr.close_path()
                 cr.fill()
             elif character(meredith.mipsy.text()[i]) == '<br>':
                 x, y, p, f = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(i + 1)
-                fontsize = get_fontsize(p[0], f)
+                fontsize = get_fontsize(p[0], f) * self._A
                 x = round(self._Tx(x))
                 y = round(self._Ty(y))
                 cr.rectangle(x - 6, y - round(fontsize), 3, round(fontsize))
@@ -458,7 +506,7 @@ class Document_view(object):
             
             elif character(meredith.mipsy.text()[i]) == '<f>':
                 x, y, p, f = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(i)
-                fontsize = get_fontsize(p[0], f)
+                fontsize = get_fontsize(p[0], f) * self._A
                 x = round(self._Tx(x))
                 y = round(self._Ty(y))
                 
@@ -471,7 +519,7 @@ class Document_view(object):
 
             elif character(meredith.mipsy.text()[i]) == '</f>':
                 x, y, p, f = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(i)
-                fontsize = get_fontsize(p[0], f)
+                fontsize = get_fontsize(p[0], f) * self._A
                 x = round(self._Tx(x))
                 y = round(self._Ty(y))
                 
@@ -506,8 +554,8 @@ class Document_view(object):
             
             cr.rectangle(round(self._Tx(start)), 
                     round(self._Ty(y - leading)), 
-                    stop - start, 
-                    leading)
+                    (stop - start) * self._A, 
+                    leading * self._A)
             linenumber += 1
 
             if linenumber > lastline:
@@ -519,27 +567,31 @@ class Document_view(object):
         cx, cy, p, f = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(meredith.mipsy.active_cursor())
         leading = fonttable.p_table.get_paragraph(p[0])['leading']
 
-        cr.rectangle(round(self._Tx(cx - 1)), 
-                    round(self._Ty(cy - leading)), 
+        ux = round(self._Tx(cx))
+        uy = round(self._Ty(cy - leading))
+        uh = round(leading * self._A)
+        
+        cr.rectangle(ux - 1, 
+                    uy, 
                     2, 
-                    leading)
+                    uh)
         # special cursor if adjacent to font tag
         if character(meredith.mipsy.at(0)) in ['<f>', '</f>']:
-            cr.rectangle(round(self._Tx(cx - 3)), 
-                    round(self._Ty(cy - leading)), 
+            cr.rectangle(ux - 3, 
+                    uy, 
                     4, 
                     2)
-            cr.rectangle(round(self._Tx(cx - 3)), 
-                    round(self._Ty(cy)), 
+            cr.rectangle(ux - 3, 
+                    uy + uh, 
                     4, 
                     2)
         if character(meredith.mipsy.at(-1)) in ['<f>', '</f>']:
-            cr.rectangle(round(self._Tx(cx - 1)), 
-                    round(self._Ty(cy - leading)), 
+            cr.rectangle(ux - 1, 
+                    uy, 
                     4, 
                     2)
-            cr.rectangle(round(self._Tx(cx - 1)), 
-                    round(self._Tx(cy)), 
+            cr.rectangle(ux - 1, 
+                    uy + uh, 
                     4, 
                     2)
         cr.fill()
@@ -548,27 +600,31 @@ class Document_view(object):
         cx, cy, p, f = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(meredith.mipsy.active_select())
         leading = fonttable.p_table.get_paragraph(p[0])['leading']
         
-        cr.rectangle(round(self._Tx(cx - 1)), 
-                    round(self._Ty(cy - leading)), 
+        ux = round(self._Tx(cx))
+        uy = round(self._Ty(cy - leading))
+        uh = round(leading * self._A)
+        
+        cr.rectangle(ux - 1, 
+                    uy, 
                     2, 
-                    leading)
+                    uh)
         # special cursor if adjacent to font tag
         if character(meredith.mipsy.at_select(0)) in ['<f>', '</f>']:
-            cr.rectangle(round(self._Tx(cx - 3)), 
-                    round(self._Ty(cy - leading)), 
+            cr.rectangle(ux - 3, 
+                    uy, 
                     4, 
                     2)
-            cr.rectangle(round(self._Tx(cx - 3)), 
-                    round(self._Ty(cy)), 
+            cr.rectangle(ux - 3, 
+                    uy + uh, 
                     4, 
                     2)
         if character(meredith.mipsy.at_select(-1)) in ['<f>', '</f>']:
-            cr.rectangle(round(self._Tx(cx - 1)), 
-                    round(self._Ty(cy - leading)), 
+            cr.rectangle(ux - 1, 
+                    uy, 
                     4, 
                     2)
-            cr.rectangle(round(self._Tx(cx - 1)), 
-                    round(self._Tx(cy)), 
+            cr.rectangle(ux - 1, 
+                    uy + uh, 
                     4, 
                     2)
         cr.fill()
@@ -577,25 +633,27 @@ class Document_view(object):
     def render(self, cr, h, k):
         #draw page border
         cr.set_source_rgba(0, 0, 0, 0.2)
-        cr.rectangle(self._H, self._K, 765, 1)
-        cr.rectangle(self._H, self._K, 1, 990)
-        cr.rectangle(self._H + 765, self._K, 1, 990)
-        cr.rectangle(self._H, self._K + 990, 765, 1)
+        px = self._Tx(0)
+        py = self._Ty(0)
+        cr.rectangle(px, py, 765*self._A, 1)
+        cr.rectangle(px, py, 1, 990*self._A)
+        cr.rectangle(px + 765*self._A, py, 1, 990*self._A)
+        cr.rectangle(px, py + 990*self._A, 765*self._A, 1)
         cr.fill()
         
         cr.rectangle(100, 0, 
                 h - 100 - constants.propertieswidth, 
                 k)
         cr.clip()
-        self._draw_text(cr, self._H, self._K, False)
+        self._draw_text(cr, self._H, self._K, self._Hc, self._Kc, self._A, False)
         cr.reset_clip()
         self._draw_annotations(cr)
         
         if self._mode == 'text':
             self._draw_cursors(cr)
-            olivia.dibbles.render(cr, self._H, self._K)
+            olivia.dibbles.render(cr, self._Tx, self._Ty)
         else:
-            olivia.dibbles.render(cr, self._H, self._K, show_rails=True)
+            olivia.dibbles.render(cr, self._Tx, self._Ty, show_rails=True)
         
         self._mode_switcher.render(cr)
         
@@ -608,6 +666,16 @@ class Document_view(object):
         cr.rectangle(100, 0, 2, k)
         cr.set_source_rgb(0.9, 0.9, 0.9)
         cr.fill()
+        
+        # draw stats
+        cr.set_source_rgba(0, 0, 0, 0.8)
+        font = fonttable.table.get_font('_interface', ('strong',))
+        
+        cr.set_font_size(font['fontsize'])
+        cr.set_font_face(font['font'])
+        
+        cr.move_to(130, k - 20)
+        cr.show_text('{0:g}'.format(self._A*100) + '%')
         
 becky = Document_view()
 

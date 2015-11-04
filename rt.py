@@ -36,7 +36,7 @@ class Display(Gtk.Window):
 
         self.darea = Gtk.DrawingArea()
         self.darea.connect("draw", self.on_draw)
-        self.darea.set_events(Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_RELEASE_MASK | Gdk.EventMask.POINTER_MOTION_HINT_MASK | Gdk.EventMask.POINTER_MOTION_MASK)
+        self.darea.set_events(Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_RELEASE_MASK | Gdk.EventMask.POINTER_MOTION_MASK | Gdk.EventMask.SCROLL_MASK)
 #        self.darea.set_events(Gdk.EventMask.BUTTON_RELEASE_MASK) 
         self.add(self.darea)
         
@@ -44,6 +44,7 @@ class Display(Gtk.Window):
         
         self.darea.connect("button-press-event", self.on_button_press)
         self.darea.connect("button-release-event", self.on_button_release)
+        self.darea.connect("scroll-event", self.on_scroll)
         self.darea.connect("motion_notify_event", self.motion_notify_event)
         self.connect("key-press-event", self.on_key_press)
         self.connect("check-resize", self.on_resize)
@@ -145,7 +146,19 @@ class Display(Gtk.Window):
         if noticeboard.refresh.should_refresh():
             self.darea.queue_draw()
 
-    
+    def on_scroll(self, w, e):
+        if e.state & Gdk.ModifierType.CONTROL_MASK:
+            mod = 'ctrl'
+        else:
+            mod = None
+        
+        # direction of scrolling stored as sign
+        tree.take_event(e.x, e.y*(2*e.direction - 1), 'scroll', char=mod, geometry=self.get_size())
+        
+        if noticeboard.refresh.should_refresh():
+            self.darea.queue_draw()
+
+        
     def on_key_press(self, w, e):
         
 #        print (Gdk.keyval_name(e.keyval))

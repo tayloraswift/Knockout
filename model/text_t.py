@@ -10,9 +10,8 @@ from model import errors
 
 hy = pyphen.Pyphen(lang='en_US')
 
-_prose = set('ABCDEFGHIJKLMNOPGRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789&@#$ ')
-# these characters get read as word-breaks in speech
-_breaking_prose = set(('</p>', '<br>', '—', '–', '/', '(', ')', '\\', '|', '=', '+', '_'))
+# NOT the same as prose breaks because of '.', ':', '<f>', etc. *Does not include ''' or '’' because these are found word-internal and when used as quotes, encapsulate single characters*
+_breaking_chars = set((' ', '</p>', '<p>', '<f>', '</f>', '<br>', '—', '–', '-', ':', '.', ',', ';', '/', '!', '?', '(', ')', '[', ']', '{', '}', '\\', '|', '=', '+', '_', '"', '“', '”' ))
 
 def character(entity):
     if type(entity) is list:
@@ -229,9 +228,6 @@ class Text(object):
         # create cursor objects
         self.cursor = Cursor(self.text)
         self.select = Cursor(self.text)
-        
-        # stats
-        self.count_words()
         
     def _generate_lines(self, l, startindex):
         c = 0
@@ -464,8 +460,7 @@ class Text(object):
             self.cursor.cursor = self.text_index_location(self.cursor.cursor)[2][1] + 1
     
     def expand_cursors_word(self):
-        # NOT the same as prose breaks because of '.', ':', '<f>', etc. *Does not include ''' or '’' because these are found word-internal and when used as quotes, encapsulate single characters*
-        _breaking_chars = set((' ', '</p>', '<p>', '<f>', '</f>', '<br>', '—', '–', ':', '.', ',', ';', '/', '!', '?', '(', ')', '[', ']', '{', '}', '\\', '|', '=', '+', '_', '"', '“', '”' ))
+
         try:
             I = next(i for i, c in enumerate(self.text[self.select.cursor::-1]) if character(c) in _breaking_chars)
             # so I never overruns length of text
@@ -543,10 +538,3 @@ class Text(object):
                         self.sorted_glyphs[hyphen[3:5]].append((hyphen[0], A*(hyphen[1] + mx_cx) + cx, A*(hyphen[2] + my_cy) + cy))
             self._transformed_glyphs = self.sorted_glyphs.copy()
         return self._transformed_glyphs
-    
-    def count_words(self):
-        # OVERCOUNTS TAGS
-        self._S_words = len(''.join([e if (type(e) is str and e in _prose) else ' ' if (type(e) is str and e in _breaking_prose) else '' for e in self.text ]).split())
-    
-    def word_count(self):
-        return self._S_words

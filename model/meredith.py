@@ -80,7 +80,13 @@ class Meredith(object):
         self.tracts[self.t].match_cursors()
     
     def hop(self, dl):
-        self.tracts[self.t].cursor.set_cursor(self.tracts[self.t].target_glyph(self.tracts[self.t].text_index_location(self.tracts[self.t].cursor.cursor)[0], 0, (self.tracts[self.t].index_to_line(self.tracts[self.t].cursor.cursor) + dl) % self.tracts[self.t].max_l() ), self.tracts[self.t].text)
+        self.tracts[self.t].cursor.set_cursor(
+                self.tracts[self.t].target_glyph(
+                        self.tracts[self.t].text_index_location(self.tracts[self.t].cursor.cursor)[0], 
+                        0, 
+                        self.tracts[self.t].index_to_line(self.tracts[self.t].cursor.cursor) + dl
+                        ), 
+                self.tracts[self.t].text)
 
     def words(self):
         return self.tracts[self.t].word_count()

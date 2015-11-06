@@ -148,7 +148,7 @@ class Channels_controls(object):
         cr.rectangle(x1, y1, width, 5)
         cr.clip()
         if highlight:
-            for f in range( width//4):
+            for f in range( width//5 + 1):
                 cr.move_to(x1 + 4*f, y1)
 
                 cr.rel_line_to(2, 0)

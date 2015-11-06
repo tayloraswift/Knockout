@@ -9,6 +9,7 @@ from state import constants
 from fonts import fonttable
 
 from model import meredith
+from model import wordprocessor
 from model.text_t import character
 
 from typing import typing
@@ -257,6 +258,9 @@ class Document_view(object):
         self._K = 100
 
         self._A = self._scroll_notches[self._scroll_notch_i]
+        
+        # STATS
+        self._word_count = '—'
     
     # TRANSFORMATION FUNCTIONS
     def _Tx(self, x):
@@ -332,6 +336,9 @@ class Document_view(object):
                 # check if paragraph context changed
                 if paragraph_context_changed():
                     noticeboard.refresh_properties_stack.push_change()
+                
+                # count words
+                self._word_count = wordprocessor.words(meredith.mipsy.tracts[meredith.mipsy.t].text)
             
             # CHANNEL EDITING MODE
             elif self._mode == 'channels':
@@ -450,6 +457,9 @@ class Document_view(object):
             self._toolbar.hover(x, y)
         elif self._region_hover == 'switcher':
             self._mode_switcher.hover(x)
+
+    def idle(self):
+        self._word_count, self._misspellings = wordprocessor.words(meredith.mipsy.tracts[meredith.mipsy.t].text, spell=True)
 
     def resize(self, h, k):
         self._mode_switcher.resize(h, k)
@@ -703,7 +713,7 @@ class Document_view(object):
         cr.show_text('{0:g}'.format(self._A*100) + '%')
         
         cr.move_to(h - constants.propertieswidth - 100, k - 20)
-        cr.show_text(str(meredith.mipsy.words()) + ' words')
+        cr.show_text(str(self._word_count) + ' words')
         
 becky = Document_view()
 

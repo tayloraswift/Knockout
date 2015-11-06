@@ -4,6 +4,9 @@ from interface import karlie
 from interface import taylor
 from interface import menu
 
+def idle():
+    if True:
+        taylor.becky.idle()
 
 def take_event(x, y, event, key=False, char=None, region=['document', 'document'], geometry=None):
 

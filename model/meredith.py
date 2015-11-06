@@ -38,11 +38,6 @@ class Meredith(object):
                 self.tracts[self.t].target_glyph(x, y, c=c),
                 self.tracts[self.t].text
                 )
-        # count words because why not
-        self.count_words()
-    
-    def count_words(self):
-        self.tracts[self.t].count_words()
         
     def set_select_xy(self, x, y, c=None):
         self.tracts[self.t].select.set_cursor(
@@ -87,9 +82,6 @@ class Meredith(object):
                         self.tracts[self.t].index_to_line(self.tracts[self.t].cursor.cursor) + dl
                         ), 
                 self.tracts[self.t].text)
-
-    def words(self):
-        return self.tracts[self.t].word_count()
         
     def add_channel(self):
         self.tracts[self.t].channels.add_channel()

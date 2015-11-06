@@ -69,12 +69,13 @@ class Display(Gtk.Window):
 
     
         self._c_ = 0
-#    def format_for_clipboard(self, clipboard, selectiondata, info, data=None):
-#        if selectiondata.get_target() == "UTF8_STRING":
-#            self.clipboard.set_text(self.clipboard_item.text)
-#       if selectiondata.get_target() == "Local":
-#            data = pickle.dumps(self.clipboard_item)
-#            self.clipboard.set_text(data)
+        
+        self._periodic = GObject.timeout_add(4000, self._on_periodic)
+    
+    def _on_periodic(self):
+        tree.idle()
+        self.darea.queue_draw()
+        return True
 
     def on_draw(self, wid, cr):
         nohints = cairo.FontOptions()

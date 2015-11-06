@@ -380,10 +380,17 @@ class Document_view(object):
             meredith.mipsy.rerender()
         # drag
         else:
+            
             self._H = int(round( (x - self._stake[0]) / self._A + self._stake[2]))
             self._K = int(round( (y - self._stake[1]) / self._A + self._stake[3]))
             
-            meredith.mipsy.rerender()
+            # heaven knows why this expression works, but hey it works
+            dx = (self._H - self._stake[2]) * self._A
+            dy = (self._K - self._stake[3]) * self._A
+            
+            for tract in meredith.mipsy.tracts:
+                tract.transform_glyphs( dx, dy)
+#            meredith.mipsy.rerender()
 
     def release(self, x, y):
         self._toolbar.release(x, y)
@@ -454,11 +461,11 @@ class Document_view(object):
         self._mode = mode
     
     
-    def _draw_text(self, cr, mx=0, my=0, cx=765/2, cy=990/2, A=1, refresh=False):
+    def _draw_text(self, cr, mx_cx=-765/2, my_cy=-990/2, cx=765/2, cy=990/2, A=1, refresh=False):
         # prints text
 
         for tract in meredith.mipsy.tracts:
-            classed_glyphs = tract.extract_glyphs(mx, my, cx, cy, A, refresh)
+            classed_glyphs = tract.extract_glyphs(mx_cx, my_cy, cx, cy, A, refresh)
 
             for name, glyphs in classed_glyphs.items():
                 try:
@@ -657,7 +664,7 @@ class Document_view(object):
         cr.clip()
         
         # text
-        self._draw_text(cr, self._H, self._K, self._Hc, self._Kc, self._A, False)
+        self._draw_text(cr, self._H - self._Hc, self._K - self._Kc, self._Hc, self._Kc, self._A, False)
         cr.reset_clip()
         # annotations
         self._draw_annotations(cr)

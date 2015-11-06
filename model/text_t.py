@@ -372,7 +372,13 @@ class Text(object):
             l = self.target_line(x, y, c)
 
         # find first glyph to the right of click spot
-        glyphindex = bisect.bisect([glyph[1] for glyph in self._glyphs[l].glyphs], x )
+        try:
+            glyphindex = bisect.bisect([glyph[1] for glyph in self._glyphs[l].glyphs], x )
+        except IndexError:
+            # if l is greater than the length of the document
+            l = l % len(self._glyphs)
+            glyphindex = bisect.bisect([glyph[1] for glyph in self._glyphs[l].glyphs], x )
+        
         # determine x position of glyph before it
         glyphx = self._glyphs[l].glyphs[glyphindex - 1][1]
         # if click is closer to it, shift glyph index left one
@@ -380,12 +386,7 @@ class Text(object):
             if abs(x - glyphx) < abs(x - self._glyphs[l].glyphs[glyphindex][1]):
                 glyphindex += -1
         except IndexError:
-            if l + 1 == len(self._glyphs):
-                glyphindex = len(self._glyphs[l].glyphs)
-
-            else:
-                glyphindex = len(self._glyphs[l].glyphs) - 1
-
+            glyphindex = len(self._glyphs[l].glyphs) - 1
             
         return glyphindex + self._glyphs[l].startindex
 
@@ -475,10 +476,13 @@ class Text(object):
             self.select.cursor += J
         except ValueError:
             pass
-        
+
 
     ### FUNCTIONS USEFUL FOR DRAWING AND INTERFACE
-            
+    
+    def line_indices(self, l):
+        return self._glyphs[l].startindex, self._glyphs[l].startindex + len(self._glyphs[l].glyphs)
+
     # get location of specific glyph
     def text_index_location(self, index, ahead=False):
         l = self.index_to_line(index)
@@ -497,9 +501,7 @@ class Text(object):
 #        if ahead:
 #            x += self.Face.advance_width(character(self.text[index]))/1000*self.fontsize
         return (x, y, p, f)
-    
-    def max_l(self):
-        return len(self._glyphs)
+
 
     def line_data(self, l):
         anchor = self._glyphs[l].anchor
@@ -507,20 +509,27 @@ class Text(object):
         leading = self._glyphs[l].leading
         y = self._glyphs[l].y
         return anchor, stop, leading, y
-    
-    def line_indices(self, l):
-        return self._glyphs[l].startindex, self._glyphs[l].startindex + len(self._glyphs[l].glyphs)
 
-    def extract_glyphs(self, mx, my, cx, cy, A, refresh=False):
+    def transform_glyphs(self, dx, dy):
+
+        for style, glyphs in self.sorted_glyphs.items():
+            self._transformed_glyphs[style] = [ (glyph[0], glyph[1] + dx, glyph[2] + dy) for glyph in glyphs]
+
+
+    def extract_glyphs(self, mx_cx, my_cy, cx, cy, A, refresh=False):
+        
         if refresh:
             self.sorted_glyphs = {}
+            self._transformed_glyphs = {}
+
         if not self.sorted_glyphs:
+            
             for line in self._glyphs:
                 p_name = line.glyphs[0][3][0]
                 hyphen = line.hyphen
                 for glyph in line.glyphs:
                     f = glyph[4]
-                    k = (glyph[0], A*(glyph[1] + mx - cx) + cx, A*(glyph[2] + my - cy) + cy)
+                    k = (glyph[0], A*(glyph[1] + mx_cx) + cx, A*(glyph[2] + my_cy) + cy)
                     try:
                         self.sorted_glyphs[(p_name, f)].append(k)
                     except KeyError:
@@ -528,11 +537,12 @@ class Text(object):
                         self.sorted_glyphs[(p_name, f)].append(k)
                 if hyphen is not None:
                     try:
-                        self.sorted_glyphs[hyphen[3:5]].append((hyphen[0], A*(hyphen[1] + mx - cx) + cx, A*(hyphen[2] + my - cy) + cy))
+                        self.sorted_glyphs[hyphen[3:5]].append((hyphen[0], A*(hyphen[1] + mx_cx) + cx, A*(hyphen[2] + my_cy) + cy))
                     except KeyError:
                         self.sorted_glyphs[hyphen[3:5]] = []
-                        self.sorted_glyphs[hyphen[3:5]].append((hyphen[0], A*(hyphen[1] + mx - cx) + cx, A*(hyphen[2] + my - cy) + cy))
-        return self.sorted_glyphs
+                        self.sorted_glyphs[hyphen[3:5]].append((hyphen[0], A*(hyphen[1] + mx_cx) + cx, A*(hyphen[2] + my_cy) + cy))
+            self._transformed_glyphs = self.sorted_glyphs.copy()
+        return self._transformed_glyphs
     
     def count_words(self):
         # OVERCOUNTS TAGS

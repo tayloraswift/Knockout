@@ -7,16 +7,10 @@ from fonts import fonttable
 
 from model import kevin
 from model import errors
+from model.wordprocessor import words, _breaking_chars, character
 
 hy = pyphen.Pyphen(lang='en_US')
 
-# NOT the same as prose breaks because of '.', ':', '<f>', etc. *Does not include ''' or '’' because these are found word-internal and when used as quotes, encapsulate single characters*
-_breaking_chars = set((' ', '</p>', '<p>', '<f>', '</f>', '<br>', '—', '–', '-', ':', '.', ',', ';', '/', '!', '?', '(', ')', '[', ']', '{', '}', '\\', '|', '=', '+', '_', '"', '“', '”' ))
-
-def character(entity):
-    if type(entity) is list:
-        entity = entity[0]
-    return entity
 
 
 def outside_tag(sequence, tags=('<p>', '</p>')):
@@ -229,6 +223,10 @@ class Text(object):
         self.cursor = Cursor(self.text)
         self.select = Cursor(self.text)
         
+        # STATS
+        self.word_count = '—'
+        self.misspellings = []
+        
     def _generate_lines(self, l, startindex):
         c = 0
         
@@ -417,6 +415,8 @@ class Text(object):
 
         if [character(e) for e in self.text[start:end]] == ['</p>', '<p>']:
             del self.text[start:end]
+            
+            offset = start - end
         
         else:
             # delete every PAIRED paragraph block
@@ -426,8 +426,11 @@ class Text(object):
             outside = outside_tag(ptags)
             if outside:
                 self.text[start:start] = outside
-    #            if character(outside) == '<p>':
-    #                start += 1
+
+            offset = start - end + len(outside)
+        
+        # fix spelling lines
+        self.misspellings = [pair if pair[1] < start else (pair[0] + offset, pair[1] + offset) if pair[0] > end else (0, 0) for pair in self.misspellings]
 
         self._recalculate()
         self.cursor.set_cursor(start, self.text)
@@ -438,11 +441,15 @@ class Text(object):
         if self.take_selection():
             self.delete(self.cursor.cursor, self.select.cursor)
             self.cursor.set_cursor( min(self.select.cursor, self.cursor.cursor) , self.text)
-            
+        
+        s = len(segment)
         self.text[self.cursor.cursor:self.cursor.cursor] = segment
         self._recalculate()
-        self.cursor.skip(len(segment), self.text)
+        self.cursor.skip(s, self.text)
         self.select.cursor = self.cursor.cursor
+        
+        # fix spelling lines
+        self.misspellings = [pair if pair[1] < self.cursor.cursor else (pair[0] + s, pair[1] + s) if pair[0] > self.cursor.cursor else (pair[0], pair[1] + s) for pair in self.misspellings]
     
     def match_cursors(self):
         self.select.cursor = self.cursor.cursor
@@ -497,6 +504,11 @@ class Text(object):
 #            x += self.Face.advance_width(character(self.text[index]))/1000*self.fontsize
         return (x, y, p, f)
 
+    def stats(self, spell):
+        if spell:
+            self.word_count, self.misspellings = words(self.text, spell=True)
+        else:
+            self.word_count = words(self.text)
 
     def line_data(self, l):
         anchor = self._glyphs[l].anchor

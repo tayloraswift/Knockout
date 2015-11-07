@@ -70,7 +70,7 @@ class Display(Gtk.Window):
     
         self._c_ = 0
         
-        self._periodic = GObject.timeout_add(4000, self._on_periodic)
+        self._periodic = GObject.timeout_add(3000, self._on_periodic)
     
     def _on_periodic(self):
         tree.idle()
@@ -128,6 +128,9 @@ class Display(Gtk.Window):
             
             elif e.button == MouseButtons.MIDDLE_BUTTON:
                 tree.take_event(e.x, e.y, 'press_mid', geometry=self.get_size())
+            
+            elif e.button == MouseButtons.RIGHT_BUTTON:
+                tree.take_event(e.x, e.y, 'press_right', geometry=self.get_size())
             
             self.darea.queue_draw()
             

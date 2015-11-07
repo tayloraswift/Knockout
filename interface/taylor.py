@@ -16,6 +16,7 @@ from typing import typing
 
 from interface import kookies
 from interface import olivia
+from interface import menu
 
 
 # used in rendering with undefined classes
@@ -234,6 +235,14 @@ class Document_toolbar(object):
         self._hover_memory = (None, None)
         noticeboard.refresh.push_change()
 
+
+def _replace_misspelled(word):
+    if word[0] == '“':
+        wordprocessor.d.add(word[1:-1])
+    else:
+        typing.type_document('Paste', list(word))
+    meredith.mipsy.stats(spell=True)
+
 class Document_view(object):
     def __init__(self):
         self._mode = 'text'
@@ -259,8 +268,7 @@ class Document_view(object):
 
         self._A = self._scroll_notches[self._scroll_notch_i]
         
-        # STATS
-        self._word_count = '—'
+        self.idle()
     
     # TRANSFORMATION FUNCTIONS
     def _Tx(self, x):
@@ -338,7 +346,7 @@ class Document_view(object):
                     noticeboard.refresh_properties_stack.push_change()
                 
                 # count words
-                self._word_count = wordprocessor.words(meredith.mipsy.tracts[meredith.mipsy.t].text)
+                meredith.mipsy.stats()
             
             # CHANNEL EDITING MODE
             elif self._mode == 'channels':
@@ -354,6 +362,38 @@ class Document_view(object):
             # TEXT EDITING MODE
             if self._mode == 'text':
                 meredith.mipsy.select_word()
+    
+    def press_right(self, x, y):
+        if self._region_active == 'view':
+            # TEXT EDITING MODE
+            if self._mode == 'text':
+                try:
+                    t, c = meredith.mipsy.target_channel( * self._T_1(x, y), radius=20)
+                    i = meredith.mipsy.lookup_xy(t, c, * self._T_1(x, y) )
+                    
+                    ms = meredith.mipsy.tracts[meredith.mipsy.t].misspellings
+                    pair_i = bisect.bisect([pair[0] for pair in ms], i) - 1
+                    
+                    print((i, ms[pair_i][0], ms[pair_i][1]))
+                    if ms[pair_i][0] <= i <= ms[pair_i][1]:
+                        if i == ms[pair_i][1]:
+                            i -= 1
+                        meredith.mipsy.set_t(t)
+                        meredith.mipsy.set_cursor(t, i)
+                        meredith.mipsy.match_cursors()
+                        
+                        # used to keep track of ui redraws
+                        self._sel_cursor = meredith.mipsy.selection()[1]
+                        meredith.mipsy.select_word()
+                        menu.menu.create(x, y, 200, ['“' + ms[pair_i][2] + '”'] + wordprocessor.d.suggest(ms[pair_i][2]), _replace_misspelled, () )
+                    
+                except IndexError:
+                    # occurs if an empty channel is selected
+                    pass
+                # check if paragraph context changed
+                if paragraph_context_changed():
+                    noticeboard.refresh_properties_stack.push_change()
+
         
     def press_motion(self, x, y):
         if self._region_active == 'view':
@@ -459,7 +499,7 @@ class Document_view(object):
             self._mode_switcher.hover(x)
 
     def idle(self):
-        self._word_count, self._misspellings = wordprocessor.words(meredith.mipsy.tracts[meredith.mipsy.t].text, spell=True)
+        meredith.mipsy.stats(spell=True)
 
     def resize(self, h, k):
         self._mode_switcher.resize(h, k)
@@ -656,6 +696,37 @@ class Document_view(object):
         
         cr.pop_group_to_source()
         cr.paint_with_alpha(0.65)
+    
+    def _draw_spelling(self, cr):
+        for pair in meredith.mipsy.tracts[meredith.mipsy.t].misspellings:
+            cr.set_source_rgba(1, 0.15, 0.2, 0.8)
+
+            posts = pair
+
+            firstline = meredith.mipsy.tracts[meredith.mipsy.t].index_to_line(posts[0])
+            lastline = meredith.mipsy.tracts[meredith.mipsy.t].index_to_line(posts[1])
+
+            start = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(posts[0])[0]
+            
+            linenumber = firstline
+            while True:
+                # get line dimensions
+                anchor, stop, leading, y = meredith.mipsy.tracts[meredith.mipsy.t].line_data(linenumber)
+                if linenumber != firstline:
+                    start = anchor
+
+                if linenumber == lastline:
+                    stop = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(posts[1])[0]
+                
+                cr.rectangle(round(self._Tx(start)), 
+                        round(self._Ty(y + 2)), 
+                        (stop - start) * self._A, 
+                        1)
+                linenumber += 1
+
+                if linenumber > lastline:
+                    break
+            cr.fill() 
 
     def render(self, cr, h, k):
         #draw page border
@@ -672,6 +743,9 @@ class Document_view(object):
                 h - 100 - constants.propertieswidth, 
                 k)
         cr.clip()
+        
+        # spelling
+        self._draw_spelling(cr)
         
         # text
         self._draw_text(cr, self._H - self._Hc, self._K - self._Kc, self._Hc, self._Kc, self._A, False)
@@ -713,7 +787,7 @@ class Document_view(object):
         cr.show_text('{0:g}'.format(self._A*100) + '%')
         
         cr.move_to(h - constants.propertieswidth - 100, k - 20)
-        cr.show_text(str(self._word_count) + ' words')
+        cr.show_text(str(meredith.mipsy.tracts[meredith.mipsy.t].word_count) + ' words')
         
 becky = Document_view()
 

@@ -32,16 +32,25 @@ class Meredith(object):
     
     def set_t(self, tindex):
         self.t = tindex
+
+    def set_cursor(self, t, i):
+        self.tracts[t].cursor.set_cursor(
+                i,
+                self.tracts[t].text
+                )
+                
+    def lookup_xy(self, t, c, x, y):
+        return self.tracts[t].target_glyph(x, y, c=c)
     
     def set_cursor_xy(self, x, y, c=None):
         self.tracts[self.t].cursor.set_cursor(
-                self.tracts[self.t].target_glyph(x, y, c=c),
+                self.lookup_xy(self.t, c, x, y),
                 self.tracts[self.t].text
                 )
         
     def set_select_xy(self, x, y, c=None):
         self.tracts[self.t].select.set_cursor(
-                self.tracts[self.t].target_glyph(x, y, c=c),
+                self.lookup_xy(self.t, c, x, y),
                 self.tracts[self.t].text
                 )
     def select_all(self):
@@ -98,7 +107,7 @@ class Meredith(object):
     def change_paragraph_class(self, i, po):
         self.tracts[self.t].text[i][1] = po
             
-#    def modify_font(self, p, names):
-#        fonts.paragraph_classes[p].fontclasses[names].update_path(path) 
+    def stats(self, spell=False):
+        self.tracts[self.t].stats(spell)
 
 mipsy = Meredith()

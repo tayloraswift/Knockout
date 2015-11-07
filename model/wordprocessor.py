@@ -54,7 +54,7 @@ def find_word(word, text):
     results=[]
     word_length=len(word)
 
-    for I in [i for i, e in enumerate(text) if e == word[0]]:
+    for I in (i for i, e in enumerate(text) if e == word[0]):
         try:
             J = next(i for i, c in enumerate(text[I:I + word_length + 89]) if character(c) in _breaking_chars) + I
         except StopIteration:

@@ -5,6 +5,7 @@ from model.text_t import character
 
 
 def type_document(name, char, lastpress=[0]):
+
     if name == 'paragraph':
         meredith.mipsy.tracts[meredith.mipsy.t].insert(['</p>', ['<p>', 'body']])
     
@@ -20,6 +21,7 @@ def type_document(name, char, lastpress=[0]):
                 # and that (2) we’re not sliding the cursor
                 if meredith.mipsy.tracts[meredith.mipsy.t].cursor.cursor > 1 and time.time() - lastpress[0] > 0.2:
                     meredith.mipsy.cdelete(-2, 0)
+
             else:
                 meredith.mipsy.tracts[meredith.mipsy.t].delete()
         else:
@@ -63,7 +65,6 @@ def type_document(name, char, lastpress=[0]):
 
     
     elif name == 'Paste':
-        
         if meredith.mipsy.tracts[meredith.mipsy.t].take_selection():
             meredith.mipsy.tracts[meredith.mipsy.t].delete( * meredith.mipsy.selection())
         # char is a LIST in this case

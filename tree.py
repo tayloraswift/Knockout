@@ -74,14 +74,19 @@ def take_event(x, y, event, key=False, char=None, region=['document', 'document'
                 menu.menu.destroy()
                 taylor.becky.press(x, y, char)
             
-            if event == 'press2':
+            elif event == 'press2':
                 taylor.becky.dpress()
             
             elif event == 'press_motion':
                 taylor.becky.press_motion(x, y)
 
             elif event == 'press_mid':
+                menu.menu.destroy()
                 taylor.becky.press_mid(x, y)
+            
+            elif event == 'press_right':
+                menu.menu.destroy()
+                taylor.becky.press_right(x, y)
 
             elif event == 'drag':
                 taylor.becky.drag(x, y)

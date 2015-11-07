@@ -108,6 +108,7 @@ class Menu(Base_kookie):
         # 'centers' menu
         k = constants.window.get_k()
         if self._y > k/2:
+            signals.reverse()
             self.translate(dy = -self._height)
             
         if self._y < 0:

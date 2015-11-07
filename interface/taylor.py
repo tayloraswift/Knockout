@@ -10,7 +10,7 @@ from fonts import fonttable
 
 from model import meredith
 from model import wordprocessor
-from model.text_t import character
+from model.wordprocessor import character
 
 from typing import typing
 

@@ -1,7 +1,7 @@
 import time
 
 from model import meredith
-from model.text_t import character
+from model.wordprocessor import character
 
 
 def type_document(name, char, lastpress=[0]):

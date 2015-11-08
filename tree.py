@@ -23,7 +23,7 @@ def take_event(x, y, event, key=False, char=None, region=['document', 'document'
         if x > geometry[0] - constants.propertieswidth:
             if region[1] != 'properties':
                 region[1] = 'properties'
-            if event in ('press', 'press_mid') and region[0] != 'properties':
+            if event in ('press', 'press_mid', 'press_right') and region[0] != 'properties':
                 region[0] = 'properties'
 
         else:
@@ -33,7 +33,7 @@ def take_event(x, y, event, key=False, char=None, region=['document', 'document'
                 if event == 'motion':
                     karlie.klossy.hover(x, y)
                 region[1] = 'document'
-            if event in ('press', 'press_mid') and region[0] != 'document':
+            if event in ('press', 'press_mid', 'press_right') and region[0] != 'document':
                 # if we're going from properties to document, dump properties
                 if region[0] == 'properties' and event == 'press':
                     karlie.klossy.press(x, y)

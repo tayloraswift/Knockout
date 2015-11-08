@@ -12,20 +12,17 @@ from model.wordprocessor import words, _breaking_chars, character
 hy = pyphen.Pyphen(lang='en_US')
 
 
+def outside_tag(sequence):
+    for i in reversed(range(len(sequence) - 1)):
 
-def outside_tag(sequence, tags=('<p>', '</p>')):
-    for i in reversed(range(len(sequence))):
-        try:
-            if character(sequence[i]) == tags[0] and character(sequence[i + 1]) == tags[1]:
-                del sequence[i:i + 2]
-        except IndexError:
-            pass
+        if (character(sequence[i]), sequence[i + 1]) == ('<p>', '</p>'):
+            del sequence[i:i + 2]
+
     return sequence
 
 def _fail_class(startindex, l, attempt):
     errors.styleerrors.add_style_error(attempt, l)
     return ('_interface', startindex), fonttable.p_table.get_paragraph('_interface')
-
         
 class Textline(object):
     def __init__(self, text, anchor, stop, y, c, l, startindex, paragraph, fontclass, leading):
@@ -332,7 +329,6 @@ class Text(object):
         
         # tally errors
         errors.styleerrors.update(affected)
-            
 
     def deep_recalculate(self):
         # clear sorts
@@ -343,7 +339,8 @@ class Text(object):
         
         # tally errors
         errors.styleerrors.update(0)
-        
+
+
     def target_line(self, x, y, c=None):
         # find which channel is clicked on
         if c is None:
@@ -392,25 +389,19 @@ class Text(object):
         if self.cursor.cursor == self.select.cursor:
             return False
         else:
-            posts = sorted([self.cursor.cursor, self.select.cursor])
+            self._sort_cursors()
 
-            return self.text[posts[0]:posts[1]]
+            return self.text[self.cursor.cursor:self.select.cursor]
 
-    def delete(self, start=None, end=None):
-    
-        # idiotproofing
+    def delete(self, start=None, end=None, da=0, db=0):
+
+        self._sort_cursors()
+
         if start is None:
-            start = self.cursor.cursor - 1
-        elif end is None:
-            end = start + 1
+            start = self.cursor.cursor + da
             
         if end is None:
-            end = self.cursor.cursor
-        elif start is None:
-            start = end - 1
-
-        if start > end:
-            start, end = end, start
+            end = self.select.cursor + db
 
 
         if [character(e) for e in self.text[start:end]] == ['</p>', '<p>']:
@@ -425,6 +416,11 @@ class Text(object):
 
             outside = outside_tag(ptags)
             if outside:
+                if (outside[0], character(outside[1])) == ('</p>', '<p>'):
+                    style = next(c[1] for c in self.text[start::-1] if character(c) == '<p>')
+                    if style == outside[1][1]:
+                        del outside[0:2]
+                        
                 self.text[start:start] = outside
 
             offset = start - end + len(outside)
@@ -436,11 +432,9 @@ class Text(object):
         self.cursor.set_cursor(start, self.text)
         self.select.cursor = self.cursor.cursor
 
-
     def insert(self, segment):
         if self.take_selection():
             self.delete(self.cursor.cursor, self.select.cursor)
-            self.cursor.set_cursor( min(self.select.cursor, self.cursor.cursor) , self.text)
         
         s = len(segment)
         self.text[self.cursor.cursor:self.cursor.cursor] = segment
@@ -450,14 +444,14 @@ class Text(object):
         
         # fix spelling lines
         self.misspellings = [pair if pair[1] < self.cursor.cursor else (pair[0] + s, pair[1] + s) if pair[0] > self.cursor.cursor else (pair[0], pair[1] + s) for pair in self.misspellings]
-    
-    def match_cursors(self):
-        self.select.cursor = self.cursor.cursor
-        
-    def expand_cursors(self):
-        # order
+
+    def _sort_cursors(self):
         if self.cursor.cursor > self.select.cursor:
             self.cursor.cursor, self.select.cursor = self.select.cursor, self.cursor.cursor
+    
+    def expand_cursors(self):
+        # order
+        self._sort_cursors()
         
         if character(self.text[self.cursor.cursor - 1]) == '<p>' and character(self.text[self.select.cursor]) == '</p>':
             self.cursor.cursor = 1
@@ -469,13 +463,34 @@ class Text(object):
     def expand_cursors_word(self):
 
         try:
-            I = next(i for i, c in enumerate(self.text[self.select.cursor::-1]) if character(c) in _breaking_chars)
-            # so I never overruns length of text
-            if I < len(self.text[self.select.cursor:]) - 1:
-                self.cursor.cursor -= I - 1
+            # select block of spaces
+            if self.text[self.select.cursor] == ' ':
+                I = next(i for i, c in enumerate(self.text[self.select.cursor::-1]) if c != ' ') - 1
+                self.cursor.cursor -= I
+                
+                J = next(i for i, c in enumerate(self.text[self.select.cursor:]) if c != ' ')
+                self.select.cursor += J
             
-            J = next(i for i, c in enumerate(self.text[self.select.cursor:]) if character(c) in _breaking_chars)
-            self.select.cursor += J
+            # select block of words
+            elif character(self.text[self.select.cursor]) not in _breaking_chars:
+                I = next(i for i, c in enumerate(self.text[self.select.cursor::-1]) if character(c) in _breaking_chars) - 1
+                self.cursor.cursor -= I
+                
+                J = next(i for i, c in enumerate(self.text[self.select.cursor:]) if character(c) in _breaking_chars)
+                self.select.cursor += J
+            
+            # select block of punctuation
+            else:
+                I = next(i for i, c in enumerate(self.text[self.select.cursor::-1]) if character(c) not in _breaking_chars or c == ' ') - 1
+                self.cursor.cursor -= I
+                
+                # there can be only breaking chars at the end (</p>)
+                try:
+                    J = next(i for i, c in enumerate(self.text[self.select.cursor:]) if character(c) not in _breaking_chars or c == ' ')
+                    self.select.cursor += J
+                except StopIteration:
+                    self.select.cursor = len(self.text) - 1
+
         except ValueError:
             pass
 
@@ -521,7 +536,6 @@ class Text(object):
 
         for style, glyphs in self.sorted_glyphs.items():
             self._transformed_glyphs[style] = [ (glyph[0], glyph[1] + dx, glyph[2] + dy) for glyph in glyphs]
-
 
     def extract_glyphs(self, mx_cx, my_cy, cx, cy, A, refresh=False):
         

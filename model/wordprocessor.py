@@ -46,7 +46,7 @@ def words(text, spell=False):
         for m in misspelled:
             misspelled_indices += find_word(m, text)
         
-        return word_count, misspelled_indices
+        return word_count, sorted(misspelled_indices)
     else:
         return word_count
 
@@ -54,7 +54,7 @@ def find_word(word, text):
     results=[]
     word_length=len(word)
 
-    for I in (i for i, e in enumerate(text) if e == word[0]):
+    for I in (i for i, e in enumerate(text) if e == word[0] and character(text[i - 1]) in _breaking_chars):
         try:
             J = next(i for i, c in enumerate(text[I:I + word_length + 89]) if character(c) in _breaking_chars) + I
         except StopIteration:

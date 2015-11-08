@@ -374,7 +374,6 @@ class Document_view(object):
                     ms = meredith.mipsy.tracts[meredith.mipsy.t].misspellings
                     pair_i = bisect.bisect([pair[0] for pair in ms], i) - 1
                     
-                    print((i, ms[pair_i][0], ms[pair_i][1]))
                     if ms[pair_i][0] <= i <= ms[pair_i][1]:
                         if i == ms[pair_i][1]:
                             i -= 1
@@ -417,7 +416,7 @@ class Document_view(object):
     def press_mid(self, x, y):
         self._stake = (x, y, self._H, self._K)
     
-    def drag(self, x, y):
+    def drag(self, x, y, reference=[0, 0]):
         # release
         if x == -1:
             self._stake = None
@@ -425,6 +424,7 @@ class Document_view(object):
             self._K = int(round(self._K))
             
             meredith.mipsy.rerender()
+            noticeboard.refresh.push_change()
         # drag
         else:
             
@@ -435,9 +435,11 @@ class Document_view(object):
             dx = (self._H - self._stake[2]) * self._A
             dy = (self._K - self._stake[3]) * self._A
             
-            for tract in meredith.mipsy.tracts:
-                tract.transform_glyphs( dx, dy)
-#            meredith.mipsy.rerender()
+            if [dx, dy] != reference:
+                for tract in meredith.mipsy.tracts:
+                    tract.transform_glyphs(dx, dy)
+                reference[:] = [dx, dy]
+                noticeboard.refresh.push_change()
 
     def release(self, x, y):
         self._toolbar.release(x, y)
@@ -629,7 +631,7 @@ class Document_view(object):
 
         # print cursors
         cr.set_source_rgb(1, 0, 0.5)
-        cx, cy, p, f = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(meredith.mipsy.active_cursor())
+        cx, cy, p, f = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(posts[0])
         leading = fonttable.p_table.get_paragraph(p[0])['leading']
 
         ux = round(self._Tx(cx))
@@ -662,7 +664,7 @@ class Document_view(object):
         cr.fill()
 
 
-        cx, cy, p, f = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(meredith.mipsy.active_select())
+        cx, cy, p, f = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(posts[1])
         leading = fonttable.p_table.get_paragraph(p[0])['leading']
         
         ux = round(self._Tx(cx))
@@ -712,6 +714,7 @@ class Document_view(object):
             while True:
                 # get line dimensions
                 anchor, stop, leading, y = meredith.mipsy.tracts[meredith.mipsy.t].line_data(linenumber)
+                
                 if linenumber != firstline:
                     start = anchor
 

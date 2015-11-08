@@ -72,16 +72,8 @@ class Meredith(object):
     def glyph_at(self, relativeindex=0):
         return self.tracts[self.t].text_index_location(self.tracts[self.t].cursor.cursor + relativeindex)
             
-    def cdelete(self, rel1, rel2):
-        return self.tracts[self.t].delete(self.tracts[self.t].cursor.cursor + rel1, self.tracts[self.t].cursor.cursor + rel2)
-    
-    def active_cursor(self):
-        return self.tracts[self.t].cursor.cursor
-    def active_select(self):
-        return self.tracts[self.t].select.cursor
-            
     def match_cursors(self):
-        self.tracts[self.t].match_cursors()
+        self.tracts[self.t].select.cursor = self.tracts[self.t].cursor.cursor
     
     def hop(self, dl):
         self.tracts[self.t].cursor.set_cursor(

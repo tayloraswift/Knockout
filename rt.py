@@ -93,7 +93,17 @@ class Display(Gtk.Window):
 
         print(self._c_)
         self._c_ += 1
-        
+
+    def _draw_errors(self):
+        if errors.styleerrors.new_error():
+            
+            if errors.styleerrors.first != ():
+                self.errorpanel = errors.ErrorPanel(1)
+                self.errorpanel.update_message('Undefined class', ', '.join(errors.styleerrors.first[0]), ', '.join([str(e + 1) for e in errors.styleerrors.first[1]]))
+                GObject.timeout_add(4, self.transition_errorpanel)
+            else:
+                self.errorpanel = None
+    
     def transition_errorpanel(self):
 
         self.darea.queue_draw()
@@ -145,6 +155,8 @@ class Display(Gtk.Window):
                 tree.take_event(-1, -1, 'drag', geometry=self.get_size())
                 
             self.darea.queue_draw()
+            
+            self._draw_errors()
 
     def motion_notify_event(self, widget, event):
 
@@ -222,15 +234,8 @@ class Display(Gtk.Window):
             tree.take_event(0, 0, name, key=True, char = chr(Gdk.keyval_to_unicode(e.keyval)) )
         self.darea.queue_draw()
         
-        #draw errors
-        if errors.styleerrors.new_error():
-            
-            if errors.styleerrors.first != ():
-                self.errorpanel = errors.ErrorPanel(1)
-                self.errorpanel.update_message('Undefined class', ', '.join(errors.styleerrors.first[0]), ', '.join([str(e + 1) for e in errors.styleerrors.first[1]]))
-                GObject.timeout_add(4, self.transition_errorpanel)
-            else:
-                self.errorpanel = None
+        self._draw_errors()
+
         
 def main():
     

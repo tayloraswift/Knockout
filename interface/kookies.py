@@ -11,10 +11,11 @@ from interface import menu
 
 
 class Button(Base_kookie):
-    def __init__(self, x, y, width, height, callback=None, string=''):
+    def __init__(self, x, y, width, height, callback=None, string='', params=() ):
         Base_kookie.__init__(self, x, y, width, height, font=fonttable.table.get_font('_interface', ('strong',) ))
         
         self._callback = callback
+        self._params = params
 #        self._string = string
         
         # set hover function equal to press function
@@ -31,7 +32,7 @@ class Button(Base_kookie):
     def release(self, action=True):
         self._active = None
         if action:
-            self._callback()
+            self._callback( * self._params)
     
     def defocus(self):
         pass

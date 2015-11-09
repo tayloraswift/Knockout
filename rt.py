@@ -70,7 +70,7 @@ class Display(Gtk.Window):
     
         self._c_ = 0
         
-        self._periodic = GObject.timeout_add(3000, self._on_periodic)
+        self._periodic = GObject.timeout_add(2000, self._on_periodic)
     
     def _on_periodic(self):
         tree.idle()
@@ -196,7 +196,12 @@ class Display(Gtk.Window):
             
             elif name == 'a':
                 tree.take_event(0, 0, 'All', key=True)
-        
+
+            elif name == 'i':
+                tree.take_event(0, 0, 'Ctrl_I', key=True)
+            
+            elif name == 'b':
+                tree.take_event(0, 0, 'Ctrl_B', key=True)
         
         elif name in _special_keys:
 

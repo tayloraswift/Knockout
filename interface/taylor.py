@@ -148,7 +148,10 @@ def PDF():
     
     # put text back where it was before
     meredith.mipsy.rerender()
-        
+
+def place_tags(tag):
+    meredith.mipsy.tracts[meredith.mipsy.t].encapsulate(tag)
+
 class Document_toolbar(object):
     def __init__(self):
         self.refresh_class()
@@ -169,7 +172,10 @@ class Document_toolbar(object):
         y += 30
         self._items.append(kookies.Button(5, y, 90, 30, callback=meredith.mipsy.add_tract, string='Add tract'))
 
-
+        y += 50
+        self._items.append(kookies.Button(5, y, 90, 30, callback=place_tags, string='Emphasis', params=('emphasis',) ))
+        y += 30
+        self._items.append(kookies.Button(5, y, 90, 30, callback=place_tags, string='Strong', params=('strong',) ))
 
     def render(self, cr):
         for i, entry in enumerate(self._items):
@@ -643,7 +649,7 @@ class Document_view(object):
                     2, 
                     uh)
         # special cursor if adjacent to font tag
-        if character(meredith.mipsy.at(0)) in ['<f>', '</f>']:
+        if character(meredith.mipsy.at_absolute(posts[0])) in ['<f>', '</f>']:
             cr.rectangle(ux - 3, 
                     uy, 
                     4, 
@@ -652,7 +658,7 @@ class Document_view(object):
                     uy + uh, 
                     4, 
                     2)
-        if character(meredith.mipsy.at(-1)) in ['<f>', '</f>']:
+        if character(meredith.mipsy.at_absolute(posts[0] - 1)) in ['<f>', '</f>']:
             cr.rectangle(ux - 1, 
                     uy, 
                     4, 
@@ -676,7 +682,7 @@ class Document_view(object):
                     2, 
                     uh)
         # special cursor if adjacent to font tag
-        if character(meredith.mipsy.at_select(0)) in ['<f>', '</f>']:
+        if character(meredith.mipsy.at_absolute(posts[1])) in ['<f>', '</f>']:
             cr.rectangle(ux - 3, 
                     uy, 
                     4, 
@@ -685,7 +691,7 @@ class Document_view(object):
                     uy + uh, 
                     4, 
                     2)
-        if character(meredith.mipsy.at_select(-1)) in ['<f>', '</f>']:
+        if character(meredith.mipsy.at_absolute(posts[1] - 1)) in ['<f>', '</f>']:
             cr.rectangle(ux - 1, 
                     uy, 
                     4, 

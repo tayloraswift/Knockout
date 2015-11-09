@@ -5,14 +5,15 @@ from model.wordprocessor import character
 
 
 def type_document(name, char, lastpress=[0]):
-    
+
+    CURSOR = meredith.mipsy.selection()[0]
     # Non replacing
     if name == 'Left':
-        if meredith.mipsy.active_cursor() > 1:
+        if CURSOR > 1:
             meredith.mipsy.tracts[meredith.mipsy.t].cursor.skip(-1, meredith.mipsy.tracts[meredith.mipsy.t].text)
             meredith.mipsy.match_cursors()
     elif name == 'Right':
-        if meredith.mipsy.active_cursor() < len(meredith.mipsy.tracts[meredith.mipsy.t].text):
+        if CURSOR < len(meredith.mipsy.tracts[meredith.mipsy.t].text):
             meredith.mipsy.tracts[meredith.mipsy.t].cursor.skip(1, meredith.mipsy.tracts[meredith.mipsy.t].text)
             meredith.mipsy.match_cursors()
     elif name == 'Up':
@@ -23,7 +24,7 @@ def type_document(name, char, lastpress=[0]):
         meredith.mipsy.match_cursors()
 
     elif name in ['Home', 'End']:
-        li = meredith.mipsy.tracts[meredith.mipsy.t].index_to_line(meredith.mipsy.tracts[meredith.mipsy.t].cursor.cursor)
+        li = meredith.mipsy.tracts[meredith.mipsy.t].index_to_line(CURSOR)
         i, j = meredith.mipsy.tracts[meredith.mipsy.t].line_indices(li)
         if name == 'Home':
             meredith.mipsy.set_cursor(meredith.mipsy.t, i)
@@ -44,17 +45,17 @@ def type_document(name, char, lastpress=[0]):
         elif name == 'BackSpace':
 
             # for deleting paragraphs
-            if character(meredith.mipsy.at(-1)) == '<p>':
+            if character(meredith.mipsy.at_absolute(CURSOR - 1)) == '<p>':
                 # make sure that (1) we’re not trying to delete the first paragraph, 
                 # and that (2) we’re not sliding the cursor
-                if meredith.mipsy.tracts[meredith.mipsy.t].cursor.cursor > 1 and time.time() - lastpress[0] > 0.2:
+                if CURSOR > 1 and time.time() - lastpress[0] > 0.2:
                     meredith.mipsy.tracts[meredith.mipsy.t].delete(da = -2)
 
             else:
                 meredith.mipsy.tracts[meredith.mipsy.t].delete(da = -1)
         else:
             # for deleting paragraphs (forward delete)
-            if character(meredith.mipsy.at()) == '</p>':
+            if character(meredith.mipsy.at_absolute(CURSOR)) == '</p>':
                 if time.time() - lastpress[0] > 0.2:
                     meredith.mipsy.tracts[meredith.mipsy.t].delete(db = 2)
             else:
@@ -87,5 +88,12 @@ def type_document(name, char, lastpress=[0]):
         
             return sel
     
+    # encapsulating
+    elif name == 'Ctrl_I':
+        meredith.mipsy.tracts[meredith.mipsy.t].encapsulate('emphasis')
+    elif name == 'Ctrl_B':
+        meredith.mipsy.tracts[meredith.mipsy.t].encapsulate('strong')
+    
+    # inserting
     else:
         meredith.mipsy.tracts[meredith.mipsy.t].insert([char])

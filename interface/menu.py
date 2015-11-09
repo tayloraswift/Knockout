@@ -8,7 +8,7 @@ class Menu(object):
         self._hovered = None
     
     def create(self, x, y, width, options, callback, callback_parameters):
-        self._menu = base.Menu(x, y, width, 30, options)
+        self._menu = base.Menu(int(round(x)), int(round(y)), int(round(width)), 30, options)
         self._callback = callback
         self._callback_parameters = callback_parameters
         

@@ -63,11 +63,9 @@ class Meredith(object):
     
     def selection(self):
         return self.tracts[self.t].cursor.cursor, self.tracts[self.t].select.cursor
-    
-    def at(self, relativeindex=0):
-        return self.tracts[self.t].text[self.tracts[self.t].cursor.cursor + relativeindex]
-    def at_select(self, relativeindex=0):
-        return self.tracts[self.t].text[self.tracts[self.t].select.cursor + relativeindex]
+
+    def at_absolute(self, i):
+        return self.tracts[self.t].text[i]
     
     def glyph_at(self, relativeindex=0):
         return self.tracts[self.t].text_index_location(self.tracts[self.t].cursor.cursor + relativeindex)
@@ -86,6 +84,7 @@ class Meredith(object):
         
     def add_channel(self):
         self.tracts[self.t].channels.add_channel()
+        self.rerender()
     
     def add_tract(self):
         self.tracts.append( comp.Text('<p>{new}</p>', channels.Channels([self.tracts[-1].channels.generate_channel()]) ) )

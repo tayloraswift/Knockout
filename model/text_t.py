@@ -151,6 +151,7 @@ class Textline(object):
                         word = ''.join([c if type(c) is not list else ' ' for c in self._sorts[i + 1: i + 1 + j] ])
                         for pair in hy.iterate(word):
                             k = len(pair[0])
+                            
 #                            if k < 3 or len(pair[1]) < 3:
 #                                continue
                             
@@ -444,6 +445,57 @@ class Text(object):
         
         # fix spelling lines
         self.misspellings = [pair if pair[1] < self.cursor.cursor else (pair[0] + s, pair[1] + s) if pair[0] > self.cursor.cursor else (pair[0], pair[1] + s) for pair in self.misspellings]
+    
+    def encapsulate(self, tag):
+        if '</p>' not in self.take_selection():
+        
+            # kicks insertion point outside of existing tags
+            if character(self.text[self.cursor.cursor - 1]) == '<f>':
+                existing_j = self.cursor.cursor + next(i for i, c in enumerate(self.text[self.cursor.cursor:]) if c == ['</f>', self.text[self.cursor.cursor - 1][1]])
+                # ...unless the other insertion point is inside the existing tags
+                if self.select.cursor < existing_j:
+                    self.cursor.cursor += next(i for i, c in enumerate(self.text[self.cursor.cursor + 1:]) if character(c) != '<f>')
+                else:
+                    self.cursor.cursor -= next(i for i, c in enumerate(self.text[self.cursor.cursor - 2::-1]) if character(c) != '<f>') + 1
+
+            elif character(self.text[self.cursor.cursor]) == '</f>':
+                self.cursor.cursor += next(i for i, c in enumerate(self.text[self.cursor.cursor + 1:]) if character(c) != '</f>') + 1
+            
+            # ...unless the other insertion point is inside the existing tags
+            elif character(self.text[self.cursor.cursor]) == '<f>':
+                existing_j = self.cursor.cursor + next(i for i, c in enumerate(self.text[self.cursor.cursor + 1:]) if c == ['</f>', self.text[self.cursor.cursor][1]]) + 1
+                if self.select.cursor < existing_j:
+                    self.cursor.cursor += next(i for i, c in enumerate(self.text[self.cursor.cursor + 1:]) if character(c) != '<f>') + 1
+            
+            
+            # kicks insertion point outside of existing tags
+            if character(self.text[self.select.cursor]) == '</f>':
+                existing_i = self.select.cursor - next(i for i, c in enumerate(self.text[self.select.cursor - 1::-1]) if c == ['<f>', self.text[self.select.cursor][1]]) - 1
+                # ...unless the other insertion point is inside the existing tags
+                if self.cursor.cursor > existing_i:
+                    self.select.cursor -= next(i for i, c in enumerate(self.text[self.select.cursor - 1::-1]) if character(c) != '</f>')
+                else:
+                    self.select.cursor += next(i for i, c in enumerate(self.text[self.select.cursor + 1:]) if character(c) != '</f>') + 1
+
+            elif character(self.text[self.select.cursor -1]) == '<f>':
+                self.select.cursor -= next(i for i, c in enumerate(self.text[self.select.cursor - 2::-1]) if character(c) != '<f>') + 1
+            
+            # ...unless the other insertion point is inside the existing tags
+            elif character(self.text[self.select.cursor - 1]) == '</f>':
+                existing_i = self.select.cursor - next(i for i, c in enumerate(self.text[self.select.cursor - 2::-1]) if c == ['<f>', self.text[self.select.cursor - 1][1]]) - 2
+                if self.cursor.cursor > existing_i:
+                    self.select.cursor -= next(i for i, c in enumerate(self.text[self.select.cursor - 2::-1]) if character(c) != '</f>') + 1
+          
+            # not the self.insert() function!
+            self.text.insert(self.select.cursor, ['</f>', tag])
+            self.text.insert(self.cursor.cursor, ['<f>', tag])
+            
+            self.select.cursor += 2
+            
+            self._recalculate()
+
+            # fix spelling lines
+            self.misspellings = [pair if pair[1] < self.cursor.cursor else (pair[0] + 2, pair[1] + 2) if pair[0] > self.select.cursor else (pair[0] + 1, pair[1] + 1) for pair in self.misspellings]
 
     def _sort_cursors(self):
         if self.cursor.cursor > self.select.cursor:

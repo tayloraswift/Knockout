@@ -152,6 +152,9 @@ def PDF():
 def place_tags(tag):
     meredith.mipsy.tracts[meredith.mipsy.t].encapsulate(tag)
 
+def punch_tags(tag):
+    meredith.mipsy.tracts[meredith.mipsy.t].decapsulate(tag)
+
 class Document_toolbar(object):
     def __init__(self):
         self.refresh_class()
@@ -175,7 +178,12 @@ class Document_toolbar(object):
         y += 50
         self._items.append(kookies.Button(5, y, 90, 30, callback=place_tags, string='Emphasis', params=('emphasis',) ))
         y += 30
+        self._items.append(kookies.Button(5, y, 90, 30, callback=punch_tags, string='x Emphasis', params=('emphasis',) ))
+
+        y += 40
         self._items.append(kookies.Button(5, y, 90, 30, callback=place_tags, string='Strong', params=('strong',) ))
+        y += 30
+        self._items.append(kookies.Button(5, y, 90, 30, callback=punch_tags, string='x Strong', params=('strong',) ))
 
     def render(self, cr):
         for i, entry in enumerate(self._items):

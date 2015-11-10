@@ -448,54 +448,75 @@ class Text(object):
     
     def encapsulate(self, tag):
         if '</p>' not in self.take_selection():
-        
-            # kicks insertion point outside of existing tags
-            if character(self.text[self.cursor.cursor - 1]) == '<f>':
-                existing_j = self.cursor.cursor + next(i for i, c in enumerate(self.text[self.cursor.cursor:]) if c == ['</f>', self.text[self.cursor.cursor - 1][1]])
-                # ...unless the other insertion point is inside the existing tags
-                if self.select.cursor < existing_j:
-                    self.cursor.cursor += next(i for i, c in enumerate(self.text[self.cursor.cursor + 1:]) if character(c) != '<f>')
-                else:
-                    self.cursor.cursor -= next(i for i, c in enumerate(self.text[self.cursor.cursor - 2::-1]) if character(c) != '<f>') + 1
+            I = self.cursor.cursor
+            J = self.select.cursor
+            # if selection falls on top of range
+            if character(self.text[I - 1]) == '<f>':
+                I -= next(i for i, c in enumerate(self.text[I - 2::-1]) if character(c) != '<f>') + 1
 
-            elif character(self.text[self.cursor.cursor]) == '</f>':
-                self.cursor.cursor += next(i for i, c in enumerate(self.text[self.cursor.cursor + 1:]) if character(c) != '</f>') + 1
-            
-            # ...unless the other insertion point is inside the existing tags
-            elif character(self.text[self.cursor.cursor]) == '<f>':
-                existing_j = self.cursor.cursor + next(i for i, c in enumerate(self.text[self.cursor.cursor + 1:]) if c == ['</f>', self.text[self.cursor.cursor][1]]) + 1
-                if self.select.cursor < existing_j:
-                    self.cursor.cursor += next(i for i, c in enumerate(self.text[self.cursor.cursor + 1:]) if character(c) != '<f>') + 1
-            
-            
-            # kicks insertion point outside of existing tags
-            if character(self.text[self.select.cursor]) == '</f>':
-                existing_i = self.select.cursor - next(i for i, c in enumerate(self.text[self.select.cursor - 1::-1]) if c == ['<f>', self.text[self.select.cursor][1]]) - 1
-                # ...unless the other insertion point is inside the existing tags
-                if self.cursor.cursor > existing_i:
-                    self.select.cursor -= next(i for i, c in enumerate(self.text[self.select.cursor - 1::-1]) if character(c) != '</f>')
-                else:
-                    self.select.cursor += next(i for i, c in enumerate(self.text[self.select.cursor + 1:]) if character(c) != '</f>') + 1
-
-            elif character(self.text[self.select.cursor -1]) == '<f>':
-                self.select.cursor -= next(i for i, c in enumerate(self.text[self.select.cursor - 2::-1]) if character(c) != '<f>') + 1
-            
-            # ...unless the other insertion point is inside the existing tags
-            elif character(self.text[self.select.cursor - 1]) == '</f>':
-                existing_i = self.select.cursor - next(i for i, c in enumerate(self.text[self.select.cursor - 2::-1]) if c == ['<f>', self.text[self.select.cursor - 1][1]]) - 2
-                if self.cursor.cursor > existing_i:
-                    self.select.cursor -= next(i for i, c in enumerate(self.text[self.select.cursor - 2::-1]) if character(c) != '</f>') + 1
+            if character(self.text[J]) == '</f>':
+                J += next(i for i, c in enumerate(self.text[J + 1:]) if character(c) != '</f>') + 1
           
-            # not the self.insert() function!
-            self.text.insert(self.select.cursor, ['</f>', tag])
-            self.text.insert(self.cursor.cursor, ['<f>', tag])
+            P_1 = I - next(i for i, c in enumerate(self.text[I - 1::-1]) if character(c) == '<p>')
+            P_2 = J + self.text[J + 1:].index('</p>') + 1
+            paragraph = self.text[P_1:P_2]
+
+            ftags = [(i + P_1, e[0]) for i, e in enumerate(paragraph) if e == ['<f>', tag] or e == ['</f>', tag]] + [(None, None)]
             
-            self.select.cursor += 2
+            print(ftags)
+            pairs = []
+            for i in reversed(range(len(ftags) - 2)):
+                if (ftags[i][1], ftags[i + 1][1]) == ('<f>', '</f>'):
+                    pairs.append((ftags[i][0], ftags[i + 1][0]))
+                    del ftags[i:i + 2]
+            print(ftags)
+            print(pairs)
+            
+            instructions = [(I, True, ['<f>', tag]), (J, True, ['</f>', tag])]
+            UN = []
+            drift_i = 0
+            drift_j = 2
+            triangle_a = 2
+            for pair in pairs:
+                # mind the exclusive comparisons
+                if pair[1] < I or pair[0] > J:
+                    pass
+                elif pair[0] >= I and pair[1] <= J:
+                    instructions += [(pair[0], False), (pair[1], False)]
+                    drift_j += -2
+                    triangle_a = 0
+                elif I < pair[1] <= J:
+                    # delete overlap
+                    instructions.append((pair[1], False))
+                    UN.append((I, False))
+                    drift_j += -2
+                    triangle_a = 0
+                elif I <= pair[0] < J:
+                    instructions.append((pair[0], False))
+                    UN.append((J, False))
+                    drift_j += -2
+                    triangle_a = 0
+                elif pair[0] < I and pair[1] > J:
+                    UN += [(I, False), (J, False)]
+                    drift_j += -2
+                    triangle_a = 0
+            
+            instructions += list(set(UN))
+            instructions.sort(reverse=True)
+            print(instructions)
+            
+            for instruction in instructions:
+                if instruction[1]:
+                    self.text.insert(instruction[0], instruction[2])
+                else:
+                    del self.text[instruction[0]]
+            
+            self.cursor.cursor = I + drift_i
+            self.select.cursor = J + drift_j
+
+            self.misspellings = [ tuple(k + triangle_a if k >= J else k + triangle_a//1 if k >= I else k for k in pair[:2]) + pair[2:] for pair in self.misspellings]
             
             self._recalculate()
-
-            # fix spelling lines
-            self.misspellings = [pair if pair[1] < self.cursor.cursor else (pair[0] + 2, pair[1] + 2) if pair[0] > self.select.cursor else (pair[0] + 1, pair[1] + 1) for pair in self.misspellings]
 
     def decapsulate(self, tag):
         if '</p>' not in self.take_selection():
@@ -527,15 +548,17 @@ class Text(object):
             instructions = []
             drift_i = 0
             drift_j = 0
+            triangle_a = 0
             for pair in pairs:
                 if pair[1] <= I or pair[0] >= J:
                     pass
                 elif pair[0] >= I and pair[1] <= J:
                     instructions += [(pair[0], False), (pair[1], False)]
                     drift_j += -2
+                    triangle_a = -2
                 elif I < pair[1] <= J:
                     instructions += [(pair[1], False), (I, True, ['</f>', tag])]
-                    drift_i + 1
+                    drift_i += 1
                 elif I <= pair[0] < J:
                     instructions += [(pair[0], False), (J, True, ['<f>', tag])]
                     drift_j += -1
@@ -543,6 +566,7 @@ class Text(object):
                     instructions += [(I, True, ['</f>', tag]), (J, True, ['<f>', tag])]
                     drift_i += 1
                     drift_j += 1
+                    triangle_a = 2
             instructions.sort(reverse=True)
             print(instructions)
             
@@ -555,8 +579,7 @@ class Text(object):
             self.cursor.cursor = I + drift_i
             self.select.cursor = J + drift_j
 
-            # fix spelling lines
-            self.misspellings = [pair if pair[1] < I else (pair[0] + drift_j, pair[1] + drift_j) if pair[0] > J else (pair[0] + 1, pair[1] + 1) for pair in self.misspellings]
+            self.misspellings = [ tuple(k + triangle_a if k >= J else k + triangle_a//1 if k >= I else k for k in pair[:2]) + pair[2:] for pair in self.misspellings]
             
             self._recalculate()
                 

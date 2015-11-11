@@ -148,7 +148,7 @@ class Textline(object):
                         except ValueError:
                             j = self.startindex
                         
-                        word = ''.join([c if type(c) is not list else ' ' for c in self._sorts[i + 1: i + 1 + j] ])
+                        word = ''.join([c if type(c) is str else ' ' for c in self._sorts[i + 1: i + 1 + j] ])
                         for pair in hy.iterate(word):
                             k = len(pair[0])
                             
@@ -186,22 +186,21 @@ class Textline(object):
 
 
 class Cursor(object):
-    def __init__(self, text):
-        self.cursor = 0
-        self.skip(1, text)
+    def __init__(self, i):
+        self.cursor = i
     
     def skip(self, jump, text):
         self.cursor += jump
         # prevent overruns
         if self.cursor > len(text) - 1:
             self.cursor = len(text) - 1
-        if character(text[self.cursor]) in ['<p>']:
+        if character(text[self.cursor]) == '<p>':
             direction = 1
             if jump < 0:
                 direction = -1
             while True:
                 self.cursor += direction
-                if character(text[self.cursor]) not in ['<p>']:
+                if character(text[self.cursor]) != '<p>':
                     break
 
     def set_cursor(self, index, text):
@@ -209,7 +208,7 @@ class Cursor(object):
         self.skip(0, text)
 
 class Text(object):
-    def __init__(self, text, channels):
+    def __init__(self, text, channels, cursor, select):
         self.text = kevin.deserialize(text)
         self.channels = channels
         
@@ -218,8 +217,8 @@ class Text(object):
         self.sorted_glyphs = {}
         
         # create cursor objects
-        self.cursor = Cursor(self.text)
-        self.select = Cursor(self.text)
+        self.cursor = Cursor(cursor)
+        self.select = Cursor(select)
         
         # STATS
         self.word_count = '—'
@@ -412,7 +411,7 @@ class Text(object):
         
         else:
             # delete every PAIRED paragraph block
-            ptags = [ e for e in self.text[start:end] if character(e) in ['<p>', '</p>'] ]
+            ptags = [ e for e in self.text[start:end] if character(e) in ('<p>', '</p>') ]
             del self.text[start:end]
 
             outside = outside_tag(ptags)
@@ -458,7 +457,7 @@ class Text(object):
             if sign:
                 CAP = ('</f>', '<f>')
                 
-                self.text.insert(P_1, [CAP[0], tag])
+                self.text.insert(P_1, (CAP[0], tag))
                 P_2 += 1
                 I += 1
                 J += 1
@@ -475,9 +474,9 @@ class Text(object):
                 J += next(i for i, c in enumerate(self.text[J + 1:]) if character(c) != CAP[1]) + 1
 
             if sign:
-                ftags = [(i + P_1, e[0]) for i, e in enumerate(paragraph) if e == [CAP[1], tag] or e == [CAP[0], tag]] + [(P_2, CAP[1])] + [(None, None)]
+                ftags = [(i + P_1, e[0]) for i, e in enumerate(paragraph) if e == (CAP[1], tag) or e == (CAP[0], tag)] + [(P_2, CAP[1])] + [(None, None)]
             else:
-                ftags = [(i + P_1, e[0]) for i, e in enumerate(paragraph) if e == [CAP[1], tag] or e == [CAP[0], tag]] + [(None, None)]
+                ftags = [(i + P_1, e[0]) for i, e in enumerate(paragraph) if e == (CAP[1], tag) or e == (CAP[0], tag)] + [(None, None)]
             
             pairs = []
             for i in reversed(range(len(ftags) - 2)):
@@ -492,55 +491,61 @@ class Text(object):
             instructions = []
             drift_i = 0
             drift_j = 0
-            triangle_a = 0
+#            triangle_a = 0
             for pair in pairs:
                 if pair[1] <= I or pair[0] >= J:
                     pass
                 elif pair[0] >= I and pair[1] <= J:
                     instructions += [(pair[0], False), (pair[1], False)]
                     drift_j += -2
-                    triangle_a = -2
+#                    triangle_a = -2
                 elif I < pair[1] <= J:
-                    instructions += [(pair[1], False), (I, True, [CAP[1], tag])]
+                    instructions += [(pair[1], False), (I, True, (CAP[1], tag) )]
                     if not sign:
                         drift_i += 1
                 elif I <= pair[0] < J:
-                    instructions += [(pair[0], False), (J, True, [CAP[0], tag])]
+                    instructions += [(pair[0], False), (J, True, (CAP[0], tag) )]
                     if not sign:
                         drift_j += -1
                 elif pair[0] < I and pair[1] > J:
-                    instructions += [(I, True, [CAP[1], tag]), (J, True, [CAP[0], tag])]
+                    instructions += [(I, True, (CAP[1], tag) ), (J, True, (CAP[0], tag) )]
                     if sign:
                         drift_j += 2
                     else:
                         drift_i += 1
                         drift_j += 1
-                    triangle_a = 2
-            
-            instructions.sort(reverse=True)
-            
-            for instruction in instructions:
-                if instruction[1]:
-                    self.text.insert(instruction[0], instruction[2])
-                else:
-                    del self.text[instruction[0]]
+
+            if instructions:
+                activity = True
+                
+                instructions.sort(reverse=True)
+                for instruction in instructions:
+                    if instruction[1]:
+                        self.text.insert(instruction[0], instruction[2])
+                    else:
+                        del self.text[instruction[0]]
+            else:
+                activity = False
             
             if sign:
-                if self.text[P_1] == [CAP[0], tag]:
+                if self.text[P_1] == (CAP[0], tag):
                     del self.text[P_1]
                     drift_i -= 1
                     drift_j -= 1
                 else:
-                    self.text.insert(P_1, [CAP[1], tag])
+                    self.text.insert(P_1, (CAP[1], tag) )
                     drift_j += 1
-                    triangle_a += 2
+#                    triangle_a += 2
             
-            self.cursor.cursor = I + drift_i
-            self.select.cursor = J + drift_j
-
-            self.misspellings = [ tuple(k + triangle_a if k >= J else k + triangle_a//1 if k >= I else k for k in pair[:2]) + pair[2:] for pair in self.misspellings]
-            
-            self._recalculate()
+            if activity:
+                self.cursor.cursor = I + drift_i
+                self.select.cursor = J + drift_j
+                
+                self._recalculate()
+                
+                return True
+            else:
+                return False
                 
     def _sort_cursors(self):
         if self.cursor.cursor > self.select.cursor:

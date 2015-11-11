@@ -4,7 +4,7 @@ import enchant
 _breaking_chars = set((' ', '</p>', '<p>', '<f>', '</f>', '<br>', '—', '–', '-', ':', '.', ',', ';', '/', '!', '?', '(', ')', '[', ']', '{', '}', '\\', '|', '=', '+', '_', '"', '“', '”' ))
 
 def character(entity):
-    if type(entity) is list:
+    if type(entity) is tuple:
         entity = entity[0]
     return entity
 

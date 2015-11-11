@@ -46,17 +46,17 @@ def deserialize(string):
         entity = ''.join(b[opentag + 1:closetag])
         
         if entity == 'p':
-            entity = ['<p>', 'body']
+            entity = ('<p>', 'body')
         elif entity == '/p':
             entity = '</p>'
         elif entity == 'em':
-            entity = ['<f>', 'emphasis']
+            entity = ('<f>', 'emphasis')
         elif entity == '/em':
-            entity = ['</f>', 'emphasis']
+            entity = ('</f>', 'emphasis')
         elif entity == 'strong':
-            entity = ['<f>', 'strong']
+            entity = ('<f>', 'strong')
         elif entity == '/strong':
-            entity = ['</f>', 'strong']
+            entity = ('</f>', 'strong')
 
         else:
             tag = entity.split()[0]
@@ -68,7 +68,7 @@ def deserialize(string):
                 style = entity[equals + 1:closetag]
                 style = style.partition('"')[-1].rpartition('"')[0]
 
-                entity = ['<' + tag + '>', style]
+                entity = ('<' + tag + '>', style)
             except ValueError:
                 entity = '<' + tag + '>'
         
@@ -91,7 +91,7 @@ def deserialize(string):
             if e == '\u000A':
                 if b[j - 1] != '\u000A':
                     segments.append((False, '</p>'))
-                    segments.append((False, ['<p>', 'body']))
+                    segments.append((False, ('<p>', 'body')))
             else:
                 segments.append((False, e))
 

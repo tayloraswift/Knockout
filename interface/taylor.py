@@ -11,6 +11,7 @@ from fonts import fonttable
 from model import meredith
 from model import wordprocessor
 from model.wordprocessor import character
+from model import un
 
 from typing import typing
 
@@ -150,10 +151,18 @@ def PDF():
     meredith.mipsy.rerender()
 
 def place_tags(tag):
-    meredith.mipsy.tracts[meredith.mipsy.t].bridge(tag, sign=True)
+    un.history.undo_save(3)
+    if meredith.mipsy.tracts[meredith.mipsy.t].bridge(tag, sign=True):
+        meredith.mipsy.stats(spell=True)
+    else:
+        un.history.pop(3)
 
 def punch_tags(tag):
-    meredith.mipsy.tracts[meredith.mipsy.t].bridge(tag, sign=False)
+    un.history.undo_save(3)
+    if meredith.mipsy.tracts[meredith.mipsy.t].bridge(tag, sign=False):
+        meredith.mipsy.stats(spell=True)
+    else:
+        un.history.pop(3)
 
 class Document_toolbar(object):
     def __init__(self):
@@ -170,7 +179,13 @@ class Document_toolbar(object):
         self._items.append(kookies.Button(5, y, 90, 30, callback=sierra.save, string='Save'))
         y += 30
         self._items.append(kookies.Button(5, y, 90, 30, callback=PDF, string='PDF'))
+        
+        y += 40
+        self._items.append(kookies.Button(5, y, 90, 30, callback=un.history.back, string='Undo'))
         y += 30
+        self._items.append(kookies.Button(5, y, 90, 30, callback=un.history.forward, string='Redo'))
+        
+        y += 40
         self._items.append(kookies.Button(5, y, 90, 30, callback=meredith.mipsy.add_channel, string='Add portal'))
         y += 30
         self._items.append(kookies.Button(5, y, 90, 30, callback=meredith.mipsy.add_tract, string='Add tract'))
@@ -345,6 +360,8 @@ class Document_view(object):
             # TEXT EDITING MODE
             if self._mode == 'text':
                 try:
+                    un.history.undo_save(0)
+                    
                     t, c = meredith.mipsy.target_channel( * self._T_1(x, y), radius=20)
                     meredith.mipsy.set_t(t)
                     meredith.mipsy.set_cursor_xy( * self._T_1(x, y) , c=c)
@@ -552,7 +569,7 @@ class Document_view(object):
             del classed_glyphs
 
     def _draw_annotations(self, cr):
-        specials = (i for i, entity in enumerate(meredith.mipsy.text()) if type(entity) is list or entity == '<br>')
+        specials = (i for i, entity in enumerate(meredith.mipsy.text()) if type(entity) is tuple or entity == '<br>')
 
         for i in specials:
             if character(meredith.mipsy.text()[i]) == '<p>':
@@ -657,7 +674,7 @@ class Document_view(object):
                     2, 
                     uh)
         # special cursor if adjacent to font tag
-        if character(meredith.mipsy.at_absolute(posts[0])) in ['<f>', '</f>']:
+        if character(meredith.mipsy.at_absolute(posts[0])) in ('<f>', '</f>'):
             cr.rectangle(ux - 3, 
                     uy, 
                     4, 
@@ -666,7 +683,7 @@ class Document_view(object):
                     uy + uh, 
                     4, 
                     2)
-        if character(meredith.mipsy.at_absolute(posts[0] - 1)) in ['<f>', '</f>']:
+        if character(meredith.mipsy.at_absolute(posts[0] - 1)) in ('<f>', '</f>'):
             cr.rectangle(ux - 1, 
                     uy, 
                     4, 
@@ -690,7 +707,7 @@ class Document_view(object):
                     2, 
                     uh)
         # special cursor if adjacent to font tag
-        if character(meredith.mipsy.at_absolute(posts[1])) in ['<f>', '</f>']:
+        if character(meredith.mipsy.at_absolute(posts[1])) in ('<f>', '</f>'):
             cr.rectangle(ux - 3, 
                     uy, 
                     4, 
@@ -699,7 +716,7 @@ class Document_view(object):
                     uy + uh, 
                     4, 
                     2)
-        if character(meredith.mipsy.at_absolute(posts[1] - 1)) in ['<f>', '</f>']:
+        if character(meredith.mipsy.at_absolute(posts[1] - 1)) in ('<f>', '</f>'):
             cr.rectangle(ux - 1, 
                     uy, 
                     4, 

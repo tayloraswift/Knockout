@@ -404,8 +404,9 @@ class Document_view(object):
                     
                     ms = meredith.mipsy.tracts[meredith.mipsy.t].misspellings
                     pair_i = bisect.bisect([pair[0] for pair in ms], i) - 1
-                    
+
                     if ms[pair_i][0] <= i <= ms[pair_i][1]:
+
                         if i == ms[pair_i][1]:
                             i -= 1
                         meredith.mipsy.set_t(t)
@@ -416,7 +417,7 @@ class Document_view(object):
                         self._sel_cursor = meredith.mipsy.selection()[1]
                         meredith.mipsy.select_word()
                         menu.menu.create(x, y, 200, ['“' + ms[pair_i][2] + '”'] + wordprocessor.d.suggest(ms[pair_i][2]), _replace_misspelled, () )
-                    
+
                 except IndexError:
                     # occurs if an empty channel is selected
                     pass

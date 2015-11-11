@@ -426,7 +426,7 @@ class Text(object):
             offset = start - end + len(outside)
         
         # fix spelling lines
-        self.misspellings = [pair if pair[1] < start else (pair[0] + offset, pair[1] + offset) if pair[0] > end else (0, 0) for pair in self.misspellings]
+        self.misspellings = [pair if pair[1] < start else (pair[0] + offset, pair[1] + offset, pair[2]) if pair[0] > end else (0, 0, None) for pair in self.misspellings]
 
         self._recalculate()
         self.cursor.set_cursor(start, self.text)
@@ -443,7 +443,7 @@ class Text(object):
         self.select.cursor = self.cursor.cursor
         
         # fix spelling lines
-        self.misspellings = [pair if pair[1] < self.cursor.cursor else (pair[0] + s, pair[1] + s) if pair[0] > self.cursor.cursor else (pair[0], pair[1] + s) for pair in self.misspellings]
+        self.misspellings = [pair if pair[1] < self.cursor.cursor else (pair[0] + s, pair[1] + s, pair[2]) if pair[0] > self.cursor.cursor else (pair[0], pair[1] + s, pair[2]) for pair in self.misspellings]
     
     def bridge(self, tag, sign):
         S = self.take_selection()

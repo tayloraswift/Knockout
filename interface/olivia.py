@@ -64,8 +64,9 @@ class Channels_controls(object):
         self._selected_point = (c, r, i)
         self._selected_portal = portal
         
-        self._sel_locale = tuple(meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[r][i][:2])
-        self._release_locale = self._sel_locale
+        if i is not None:
+            self._sel_locale = tuple(meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[r][i][:2])
+            self._release_locale = self._sel_locale
         
         
         print (str(self._selected_point) + ' ' + str(self._selected_portal))
@@ -73,30 +74,31 @@ class Channels_controls(object):
     def press_motion(self, x, y):
         c, r, i = self._selected_point
         
-        # if portal is selected
-        if self._selected_portal is not None:
-            
-            if self._selected_portal[0] == 'entrance':
-                xo, yo = meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[0][0][:2]
-                meredith.mipsy.tracts[meredith.mipsy.t].channels.translate_selection(x - self._selected_portal[1], y - self._selected_portal[2], xo, yo)
+        if i is not None:
+            # if portal is selected
+            if self._selected_portal is not None:
+                
+                if self._selected_portal[0] == 'entrance':
+                    xo, yo = meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[0][0][:2]
+                    meredith.mipsy.tracts[meredith.mipsy.t].channels.translate_selection(x - self._selected_portal[1], y - self._selected_portal[2], xo, yo)
 
-            elif self._selected_portal[0] == 'portal':
-                xo, yo = meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[1][-1][:2]
-                meredith.mipsy.tracts[meredith.mipsy.t].channels.translate_selection(x - self._selected_portal[1], y - self._selected_portal[2], xo, yo)
+                elif self._selected_portal[0] == 'portal':
+                    xo, yo = meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[1][-1][:2]
+                    meredith.mipsy.tracts[meredith.mipsy.t].channels.translate_selection(x - self._selected_portal[1], y - self._selected_portal[2], xo, yo)
 
-        # if point is selected
-        elif self._selected_point[2] is not None:
-            xo, yo = meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[r][i][:2]
-            meredith.mipsy.tracts[meredith.mipsy.t].channels.translate_selection(x, y, xo, yo)
-            
-        if self._sel_locale != tuple(meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[r][i][:2]):
-            self._sel_locale = tuple(meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[r][i][:2])
-            noticeboard.refresh.push_change()
+            # if point is selected
+            elif self._selected_point[2] is not None:
+                xo, yo = meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[r][i][:2]
+                meredith.mipsy.tracts[meredith.mipsy.t].channels.translate_selection(x, y, xo, yo)
+                
+            if self._sel_locale != tuple(meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[r][i][:2]):
+                self._sel_locale = tuple(meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[r][i][:2])
+                noticeboard.refresh.push_change()
 
     def release(self):
         # if point is selected
         c, r, i = self._selected_point
-        if c is not None:
+        if i is not None:
             meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].fix(0)
             meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].fix(1)
         

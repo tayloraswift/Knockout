@@ -1,9 +1,7 @@
 from gi.repository import Gtk, Gdk, GObject
 import cairo
 
-import sierra
 
-sierra.load()
 
 from state import noticeboard
 from state import constants
@@ -55,7 +53,7 @@ class Display(Gtk.Window):
         self.connect("key-press-event", self.on_key_press)
         self.connect("check-resize", self.on_resize)
         
-        self.set_title("Lines")
+        self.set_title(constants.filename)
         self.resize(constants.windowwidth, constants.windowheight)
         
         self._h = constants.window.get_h()
@@ -253,11 +251,6 @@ def main():
     
     app = Display()
     Gtk.main()
-#    gc.collect()
 
-    
-        
-if __name__ == "__main__":    
-    main()
 
 

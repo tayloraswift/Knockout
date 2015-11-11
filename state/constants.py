@@ -1,3 +1,5 @@
+filename = ''
+
 windowwidth = 1300
 windowheight = 800
 

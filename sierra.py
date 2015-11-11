@@ -1,6 +1,9 @@
 import _pickle as pickle
 
 from fonts import fonts
+
+from state import constants
+
 from model.meredith import mipsy
 from model import kevin
 
@@ -18,11 +21,12 @@ def save():
     
     doc = {'kitty': kitty, 'styles': styles}
     
-    with open('doc.txt', 'wb') as fi:
+    with open(constants.filename, 'wb') as fi:
         pickle.dump(doc, fi)
 
-def load():
-    with open('doc.txt', 'rb') as fi:
+def load(name):
+    with open(name, 'rb') as fi:
+        constants.filename = name
         doc = pickle.load(fi)
     fonts.paragraph_classes = doc['styles']
 

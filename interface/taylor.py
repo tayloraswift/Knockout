@@ -150,10 +150,10 @@ def PDF():
     meredith.mipsy.rerender()
 
 def place_tags(tag):
-    meredith.mipsy.tracts[meredith.mipsy.t].encapsulate(tag)
+    meredith.mipsy.tracts[meredith.mipsy.t].bridge(tag, sign=True)
 
 def punch_tags(tag):
-    meredith.mipsy.tracts[meredith.mipsy.t].decapsulate(tag)
+    meredith.mipsy.tracts[meredith.mipsy.t].bridge(tag, sign=False)
 
 class Document_toolbar(object):
     def __init__(self):

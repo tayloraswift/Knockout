@@ -7,10 +7,12 @@ from state import noticeboard
 
 from fonts import fonts
 from fonts import fonttable
+from fonts import fontsetters as fs
 
 from interface import kookies
 
 from model import meredith
+from model import un
 
 
 class _Font_file_Field(kookies.Blank_space):
@@ -30,7 +32,7 @@ class _Font_file_Field(kookies.Blank_space):
 
         fonttable.table.clear()
         
-        fonts.f_set_attribute('path', self.p, self.f, (False, path))
+        fs.f_set_attribute('path', self.p, self.f, (False, path))
         self.broken = not fonttable.table.get_font(self.p, self.f)['path_valid']
         
         meredith.mipsy.rerender()
@@ -49,7 +51,7 @@ class _Font_numeric_Field(kookies.Numeric_field):
     def _push_attribute(self, value):
         fonttable.table.clear()
         
-        fonts.f_set_attribute(self._attribute, self.p, self.f, (False, self._to_number(value)))
+        fs.f_set_attribute(self._attribute, self.p, self.f, (False, self._to_number(value)))
         
         meredith.mipsy.rerender()
     
@@ -66,7 +68,7 @@ class _Paragraph_numeric_Field(kookies.Numeric_field):
     def _push_attribute(self, value):
         fonttable.p_table.clear()
         
-        fonts.p_set_attribute(self._attribute, self.p, (False, self._to_number(value)))
+        fs.p_set_attribute(self._attribute, self.p, (False, self._to_number(value)))
         meredith.mipsy.rerender()
 
 class _Paragraph_checkbox(kookies.Checkbox):
@@ -82,7 +84,7 @@ class _Paragraph_checkbox(kookies.Checkbox):
     def _push_attribute(self, value):
         fonttable.p_table.clear()
         
-        fonts.p_set_attribute(self._attribute, self.p, (False, value))
+        fs.p_set_attribute(self._attribute, self.p, (False, value))
         meredith.mipsy.rerender()
         
         klossy.refresh()
@@ -100,7 +102,7 @@ class _Paragraph_style_menu(kookies.Object_menu):
     def _push_pname(self, name):
         fonttable.p_table.clear()
         
-        fonts.rename_p(self.p, name)
+        fs.rename_p(self.p, name)
         meredith.mipsy.rename_paragraph_class(self.p, name)
         self.p = name
 
@@ -125,7 +127,7 @@ class _Paragraph_style_menu(kookies.Object_menu):
                     break
         else:
             name = p[0] + '.001'
-        fonts.add_paragraph_class(name, p[0])
+        fs.add_paragraph_class(name, p[0])
         meredith.mipsy.change_paragraph_class(p[1], name)
 
         klossy.refresh()
@@ -158,31 +160,31 @@ class _Inheritance_selection_menu(kookies.Selection_menu):
             if self._attribute == '_all':
                 fonts.paragraph_classes[self._p]['fontclasses'][1][self._f] = deepcopy(fonts.f_get_f(self._p, self._f))
             else:
-                fonts.f_set_attribute(self._attribute, self._p, self._f, (False, fonttable.table.get_font(self._p, self._f)[self._attribute]) )
+                fs.f_set_attribute(self._attribute, self._p, self._f, (False, fonttable.table.get_font(self._p, self._f)[self._attribute]) )
         else:
             if self._attribute == '_all':
                 # save old value in case of a disaster
                 v = fonts.f_get_f(self._p, self._f)
                 value = (True, value)
-                fonts.paragraph_classes[self._p]['fontclasses'][1][self._f] = value
+                fs.f_set_attribute('fontclasses', self._p, self._f, value)
 
                 try:
                     fonttable.table.get_font(self._p, self._f)
                 except RuntimeError:
                     fonttable.table.clear()
-                    fonts.paragraph_classes[self._p]['fontclasses'][1][self._f] = v
+                    fs.f_set_attribute('fontclasses', self._p, self._f, v)
                     print('REFERENCE LOOP DETECTED')
             else:
                 # save old value in case of a disaster
                 v = fonts.f_get_attribute(self._attribute, self._p, self._f)
                 value = (True, value)
-                fonts.f_set_attribute(self._attribute, self._p, self._f, value)
+                fs.f_set_attribute(self._attribute, self._p, self._f, value)
 
                 try:
                     fonttable.table.get_font(self._p, self._f)
                 except RuntimeError:
                     fonttable.table.clear()
-                    fonts.f_set_attribute(self._attribute, self._p, self._f, v)
+                    fs.f_set_attribute(self._attribute, self._p, self._f, v)
                     print('REFERENCE LOOP DETECTED')
         
         klossy.refresh()
@@ -206,18 +208,18 @@ class _Paragraph_inheritance_menu(kookies.Selection_menu):
     def _push_inherit(self, value):
         fonttable.p_table.clear()
         if value == 'x':
-            fonts.p_set_attribute(self._attribute, self._p, (False, fonttable.p_table.get_paragraph(self._p)[self._attribute]) )
+            fs.p_set_attribute(self._attribute, self._p, (False, fonttable.p_table.get_paragraph(self._p)[self._attribute]) )
         else:
             # save old value in case of a disaster
             v = fonts.p_get_attribute(self._attribute, self._p)
             value = (True, value)
-            fonts.p_set_attribute(self._attribute, self._p, value)
+            fs.p_set_attribute(self._attribute, self._p, value)
 
             try:
                 fonttable.p_table.get_paragraph(self._p)
             except RuntimeError:
                 fonttable.p_table.clear()
-                fonts.p_set_attribute(self._attribute, self._p, v)
+                fs.p_set_attribute(self._attribute, self._p, v)
                 print('REFERENCE LOOP DETECTED')
         
         klossy.refresh()

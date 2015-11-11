@@ -10,6 +10,7 @@ from state import constants
 
 from model import kevin
 from model import errors
+from model import un
 
 from typing import compose
 
@@ -194,7 +195,12 @@ class Display(Gtk.Window):
                 
         elif e.state & Gdk.ModifierType.CONTROL_MASK:
             
-            if name == 'v':
+            if name == 'z':
+                un.history.back()
+            elif name == 'y':
+                un.history.forward()
+            
+            elif name == 'v':
                 tree.take_event(0, 0, 'Paste', key=True, char = kevin.deserialize(self.clipboard.wait_for_text()) )
 
             elif name in ['c', 'x']:

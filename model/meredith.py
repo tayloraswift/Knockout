@@ -7,7 +7,7 @@ class Meredith(object):
         self.tracts = []
         
     def reinit(self, kitty):
-        self.tracts = [comp.Text(k['text'], channels.Channels([channels.Channel(c[0], c[1]) for c in k['outline']]) ) for k in kitty if k['outline']]
+        self.tracts = [comp.Text(k['text'], channels.Channels([channels.Channel(c[0], c[1]) for c in k['outline']]), * k['cursors'] ) for k in kitty if k['outline']]
         self.t = 0
         self.rerender()
             
@@ -93,10 +93,10 @@ class Meredith(object):
     
     def rename_paragraph_class(self, old, new):
         for tract in self.tracts:
-            tract.text[:] = [['<p>', new] if e == ['<p>', old] else e for e in tract.text]
+            tract.text[:] = [('<p>', new) if e == ('<p>', old) else e for e in tract.text]
 
     def change_paragraph_class(self, i, po):
-        self.tracts[self.t].text[i][1] = po
+        self.tracts[self.t].text[i] = ('<p>', po)
             
     def stats(self, spell=False):
         self.tracts[self.t].stats(spell)

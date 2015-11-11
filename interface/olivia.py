@@ -5,6 +5,7 @@ from state import noticeboard
 
 from model import meredith
 from model import channels
+from model import un
 
 
 class Channels_controls(object):
@@ -17,6 +18,7 @@ class Channels_controls(object):
         self._hover_portal = (None, None)
     
     def press(self, x, y, name):
+        un.history.undo_save(3)
         
         c, r, i = meredith.mipsy.tracts[meredith.mipsy.t].channels.target_point(x, y, 20)
         portal = None
@@ -34,8 +36,6 @@ class Channels_controls(object):
         # perfect case, make point selected
         if i is not None:
             meredith.mipsy.tracts[meredith.mipsy.t].channels.make_selected(c, r, i)
-            
-            self._sel_locale = tuple(meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[r][i][:2])
         
         elif c is None:
             c = meredith.mipsy.tracts[meredith.mipsy.t].channels.target_channel(x, y, 20)
@@ -45,8 +45,6 @@ class Channels_controls(object):
             # insert point if one was not found
 
             i = meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].insert_point(r, y)
-            
-            self._sel_locale = tuple(meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[r][i][:2])
         
         elif r is None and c is not None:
             portal = meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].target_portal(x, y, radius=5)
@@ -55,30 +53,28 @@ class Channels_controls(object):
                 if portal[0] == 'entrance':
                     meredith.mipsy.tracts[meredith.mipsy.t].channels.make_selected(c, 0, 0)
                     meredith.mipsy.tracts[meredith.mipsy.t].channels.make_selected(c, 1, 0)
+                    r = 0
+                    i = 0
                 elif portal[0] == 'portal':
                     meredith.mipsy.tracts[meredith.mipsy.t].channels.make_selected(c, 0, -1)
                     meredith.mipsy.tracts[meredith.mipsy.t].channels.make_selected(c, 1, -1)
+                    r = 1
+                    i = len(meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[1]) - 1
         
         self._selected_point = (c, r, i)
         self._selected_portal = portal
+        
+        self._sel_locale = tuple(meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[r][i][:2])
+        self._release_locale = self._sel_locale
         
         
         print (str(self._selected_point) + ' ' + str(self._selected_portal))
     
     def press_motion(self, x, y):
-        # if point is selected
-        if self._selected_point[2] is not None:
-            c, r, i = self._selected_point
-            xo, yo = meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[r][i][:2]
-            meredith.mipsy.tracts[meredith.mipsy.t].channels.translate_selection(x, y, xo, yo)
-            
-            if self._sel_locale != tuple(meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[r][i][:2]):
-                self._sel_locale = tuple(meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[r][i][:2])
-                noticeboard.refresh.push_change()
+        c, r, i = self._selected_point
         
         # if portal is selected
-        elif self._selected_portal is not None:
-            c = self._selected_point[0]
+        if self._selected_portal is not None:
             
             if self._selected_portal[0] == 'entrance':
                 xo, yo = meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[0][0][:2]
@@ -87,21 +83,35 @@ class Channels_controls(object):
             elif self._selected_portal[0] == 'portal':
                 xo, yo = meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[1][-1][:2]
                 meredith.mipsy.tracts[meredith.mipsy.t].channels.translate_selection(x - self._selected_portal[1], y - self._selected_portal[2], xo, yo)
+
+        # if point is selected
+        elif self._selected_point[2] is not None:
+            xo, yo = meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[r][i][:2]
+            meredith.mipsy.tracts[meredith.mipsy.t].channels.translate_selection(x, y, xo, yo)
             
-            # it’s too hard to determine this
+        if self._sel_locale != tuple(meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[r][i][:2]):
+            self._sel_locale = tuple(meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[r][i][:2])
             noticeboard.refresh.push_change()
 
     def release(self):
         # if point is selected
-        if self._selected_point[0] is not None:
-            meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[self._selected_point[0]].fix(0)
-            meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[self._selected_point[0]].fix(1)
-            meredith.mipsy.tracts[meredith.mipsy.t].deep_recalculate()
+        c, r, i = self._selected_point
+        if c is not None:
+            meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].fix(0)
+            meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].fix(1)
+        
+            if self._release_locale != tuple(meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[r][i][:2]):
+                self._release_locale = tuple(meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[r][i][:2])
+                meredith.mipsy.tracts[meredith.mipsy.t].deep_recalculate()
+            else:
+                un.history.pop()
     
     def key_input(self, name):
 
         if name in ['BackSpace', 'Delete']:
             if self._selected_portal is not None:
+                un.history.undo_save(3)
+                
                 # delete channel
                 del meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[self._selected_point[0]]
                 # wipe out entire tract if it's the last one
@@ -109,7 +119,10 @@ class Channels_controls(object):
                     del meredith.mipsy.tracts[meredith.mipsy.t]
                     meredith.mipsy.set_t(0)
             else:
-                meredith.mipsy.tracts[meredith.mipsy.t].channels.delete_selection()
+                un.history.undo_save(3)
+                if not meredith.mipsy.tracts[meredith.mipsy.t].channels.delete_selection():
+                    un.history.pop()
+            
             meredith.mipsy.tracts[meredith.mipsy.t].deep_recalculate()
         elif name == 'All':
             meredith.mipsy.tracts[meredith.mipsy.t].channels.expand_selection(self._selected_point[0])

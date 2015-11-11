@@ -117,9 +117,15 @@ class Channels(object):
                     point[2] = True
 
     def delete_selection(self):
+        changed = False
         for c in range(len(self.channels)):
             for r, railing in enumerate(self.channels[c].railings):
-                railing[:] = [point for i, point in enumerate(railing) if not point[2] or (i == 0 or i == len(railing) - 1)]
+                remain = [point for i, point in enumerate(railing) if not point[2] or (i == 0 or i == len(railing) - 1)]
+                if len(remain) != len(railing):
+                    railing[:] = remain
+                    if not changed:
+                        changed = True
+        return changed
 
     def translate_selection(self, x, y, xo, yo):
         x, y = 10*round(x/10), 10*round(y/10)

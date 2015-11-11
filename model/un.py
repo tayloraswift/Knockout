@@ -14,7 +14,10 @@ class UN(object):
         self.save()
     
     def save(self):
-        print(len(self._history))
+        if len(self._history) > 989:
+            del self._history[:89]
+            self._i -= 89
+        
         kitty = [{'text': tuple(t.text), 'spelling': t.misspellings[:], 'outline': deepcopy(t.channels.channels), 'cursors': (t.cursor.cursor, t.select.cursor)} for t in mipsy.tracts]
         if len(self._history) > self._i:
             del self._history[self._i:]

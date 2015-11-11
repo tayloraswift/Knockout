@@ -93,6 +93,11 @@ def type_document(name, char, lastpress=[0]):
         meredith.mipsy.tracts[meredith.mipsy.t].bridge('emphasis', True)
     elif name == 'Ctrl_B':
         meredith.mipsy.tracts[meredith.mipsy.t].bridge('strong', True)
+
+    elif name == 'Ctrl_Shift_I':
+        meredith.mipsy.tracts[meredith.mipsy.t].bridge('emphasis', False)
+    elif name == 'Ctrl_Shift_B':
+        meredith.mipsy.tracts[meredith.mipsy.t].bridge('strong', False)
     
     # inserting
     else:

@@ -214,6 +214,12 @@ class Display(Gtk.Window):
             
             elif name == 'b':
                 tree.take_event(0, 0, 'Ctrl_B', key=True)
+
+            elif name == 'I':
+                tree.take_event(0, 0, 'Ctrl_Shift_I', key=True)
+            
+            elif name == 'B':
+                tree.take_event(0, 0, 'Ctrl_Shift_B', key=True)
         
         elif name in _special_keys:
 

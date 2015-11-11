@@ -1,4 +1,5 @@
 from copy import deepcopy
+import html
 
 def serialize(text):
     b = deepcopy(text)
@@ -25,7 +26,12 @@ def serialize(text):
                     b[e] = '<p class="' + entity[1] + '">'
                 else:
                     b[e] = '<p>'
-            
+
+        elif entity == '<':
+            b[e] = '&lt;'
+        elif entity == '>':
+            b[e] = '&gt;'
+
     return ''.join(b)
 
 def deserialize(string):
@@ -66,18 +72,37 @@ def deserialize(string):
             except ValueError:
                 entity = '<' + tag + '>'
         
-        
-        
-        
         del b[opentag:closetag + 1]
         b.insert(opentag, entity)
     
-    d = []
-    for i, e in enumerate(b):
-        if e == '\u000A':
-            if b[i - 1] != '\u000A':
-                d += ['</p>', ['<p>', 'body']]
+    segments = []
+    CH = False
+    i = 0
+    for j, e in enumerate(b):
+        if len(e) == 1 and e != '\u000A':
+            if not CH:
+                i = j
+                CH = True
         else:
-            d += [e]
+            if CH:
+                segments.append((True, ''.join(b[i:j])))
+                CH = False
+            
+            if e == '\u000A':
+                if b[j - 1] != '\u000A':
+                    segments.append((False, '</p>'))
+                    segments.append((False, ['<p>', 'body']))
+            else:
+                segments.append((False, e))
+
+    if len(b[-1]) == 1:
+        segments.append((True, ''.join(b[i:])))
+    
+    d = []
+    for segment in segments:
+        if segment[0]:
+            d += list(html.unescape(segment[1]))
+        else:
+            d.append(segment[1])
 
     return d

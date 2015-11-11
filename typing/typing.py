@@ -90,9 +90,9 @@ def type_document(name, char, lastpress=[0]):
     
     # encapsulating
     elif name == 'Ctrl_I':
-        meredith.mipsy.tracts[meredith.mipsy.t].encapsulate('emphasis')
+        meredith.mipsy.tracts[meredith.mipsy.t].bridge('emphasis', True)
     elif name == 'Ctrl_B':
-        meredith.mipsy.tracts[meredith.mipsy.t].encapsulate('strong')
+        meredith.mipsy.tracts[meredith.mipsy.t].bridge('strong', True)
     
     # inserting
     else:

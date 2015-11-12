@@ -553,7 +553,6 @@ class Document_view(object):
         # x' = Ax + (Am - Ac + c)
         
         # Scale first (on bottom) is significantly faster in cairo
-        
         cr.save()
         cr.translate(A*mx_cx + cx, A*my_cy + cy)
         cr.scale(A, A)

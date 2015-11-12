@@ -634,25 +634,17 @@ class Text(object):
         y = self._glyphs[l].y
         return anchor, stop, leading, y
 
-    def transform_glyphs(self, dx, dy):
-
-        for style, glyphs in self.sorted_glyphs.items():
-            self._transformed_glyphs[style] = [ (glyph[0], glyph[1] + dx, glyph[2] + dy) for glyph in glyphs]
-
-    def extract_glyphs(self, mx_cx, my_cy, cx, cy, A, refresh=False):
-        
+    def extract_glyphs(self, refresh=False):
         if refresh:
             self.sorted_glyphs = {}
-            self._transformed_glyphs = {}
 
         if not self.sorted_glyphs:
-            
             for line in self._glyphs:
                 p_name = line.glyphs[0][3][0]
                 hyphen = line.hyphen
                 for glyph in line.glyphs:
                     f = glyph[4]
-                    k = (glyph[0], A*(glyph[1] + mx_cx) + cx, A*(glyph[2] + my_cy) + cy)
+                    k = glyph[0:3]
                     try:
                         self.sorted_glyphs[(p_name, f)].append(k)
                     except KeyError:
@@ -660,9 +652,9 @@ class Text(object):
                         self.sorted_glyphs[(p_name, f)].append(k)
                 if hyphen is not None:
                     try:
-                        self.sorted_glyphs[hyphen[3:5]].append((hyphen[0], A*(hyphen[1] + mx_cx) + cx, A*(hyphen[2] + my_cy) + cy))
+                        self.sorted_glyphs[hyphen[3:5]].append((hyphen[0:3]))
                     except KeyError:
                         self.sorted_glyphs[hyphen[3:5]] = []
-                        self.sorted_glyphs[hyphen[3:5]].append((hyphen[0], A*(hyphen[1] + mx_cx) + cx, A*(hyphen[2] + my_cy) + cy))
-            self._transformed_glyphs = self.sorted_glyphs.copy()
-        return self._transformed_glyphs
+                        self.sorted_glyphs[hyphen[3:5]].append((hyphen[0:3]))
+
+        return self.sorted_glyphs

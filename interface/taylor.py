@@ -471,8 +471,6 @@ class Document_view(object):
             dy = (self._K - self._stake[3]) * self._A
             
             if [dx, dy] != reference:
-                for tract in meredith.mipsy.tracts:
-                    tract.transform_glyphs(dx, dy)
                 reference[:] = [dx, dy]
                 noticeboard.refresh.push_change()
 
@@ -550,9 +548,13 @@ class Document_view(object):
     
     def _draw_text(self, cr, mx_cx=-765/2, my_cy=-990/2, cx=765/2, cy=990/2, A=1, refresh=False):
         # prints text
-
+        cr.save()
+        cr.translate(cx, cy)
+        cr.scale(A, A)
+        cr.translate(mx_cx, my_cy)
+        
         for tract in meredith.mipsy.tracts:
-            classed_glyphs = tract.extract_glyphs(mx_cx, my_cy, cx, cy, A, refresh)
+            classed_glyphs = tract.extract_glyphs(refresh)
 
             for name, glyphs in classed_glyphs.items():
                 try:
@@ -565,12 +567,13 @@ class Document_view(object):
                     except AttributeError:
                         font = fonttable.table.get_font('_interface', ())
                 
-                cr.set_font_size(font['fontsize'] * A)
+                cr.set_font_size(font['fontsize'])
                 cr.set_font_face(font['font'])
                     
                 cr.show_glyphs(glyphs)
                 
             del classed_glyphs
+        cr.restore()
 
     def _draw_annotations(self, cr):
         specials = (i for i, entity in enumerate(meredith.mipsy.text()) if type(entity) is tuple or entity == '<br>')

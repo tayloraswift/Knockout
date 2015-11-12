@@ -310,7 +310,7 @@ class Text(object):
             del line
 #            if startindex >= len(self.text):
 #                break
-
+        self._line_startindices = [line.startindex for line in self._glyphs]
 
     def _recalculate(self):
         # clear sorts
@@ -383,7 +383,7 @@ class Text(object):
 
     # get line number given character index
     def index_to_line(self, index):
-        return bisect.bisect([line.startindex for line in self._glyphs], index ) - 1
+        return bisect.bisect(self._line_startindices, index) - 1
 
     def take_selection(self):
         if self.cursor.cursor == self.select.cursor:
@@ -612,14 +612,7 @@ class Text(object):
             print ('ahead')
             ahead = True
 
-        y = glyph[2]
-        x = glyph[1]
-        p = glyph[3]
-        f = glyph[4]
-
-#        if ahead:
-#            x += self.Face.advance_width(character(self.text[index]))/1000*self.fontsize
-        return (x, y, p, f)
+        return glyph[1:5]
 
     def stats(self, spell):
         if spell:

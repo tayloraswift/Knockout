@@ -2,9 +2,9 @@ import sys
 
 import sierra
 
-if __name__ == "__main__":
+def main(argv):
     try:
-        sierra.load(sys.argv[1])
+        sierra.load(argv[1])
 
     except IndexError:
         print ('No document file specified!')
@@ -12,3 +12,6 @@ if __name__ == "__main__":
     
     import rt
     rt.main()
+    
+if __name__ == "__main__":
+    main(sys.argv)

@@ -547,11 +547,16 @@ class Document_view(object):
     
     
     def _draw_text(self, cr, mx_cx=-765/2, my_cy=-990/2, cx=765/2, cy=990/2, A=1, refresh=False):
-        # prints text
+        
+        # Transform goes
+        # x' = A (x + m - c) + c
+        # x' = Ax + (Am - Ac + c)
+        
+        # Scale first (on bottom) is significantly faster in cairo
+        
         cr.save()
-        cr.translate(cx, cy)
+        cr.translate(A*mx_cx + cx, A*my_cy + cy)
         cr.scale(A, A)
-        cr.translate(mx_cx, my_cy)
         
         for tract in meredith.mipsy.tracts:
             classed_glyphs = tract.extract_glyphs(refresh)

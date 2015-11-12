@@ -82,7 +82,6 @@ class Display(Gtk.Window):
         cr.set_font_options(nohints)
 
         taylor.becky.render(cr, self._h, self._k)
-
         karlie.klossy.render(cr, self._h, self._k)
         
         menu.menu.render(cr)

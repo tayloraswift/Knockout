@@ -37,6 +37,6 @@ def load(name):
             fonts.paragraph_classes[p]['hyphenate'] = (False, True)
     for t in doc['kitty']:
         if 'cursors' not in t:
-            t['cursors'] = 0, 0
+            t['cursors'] = 1, 1
     
     mipsy.reinit(doc['kitty'])

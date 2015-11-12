@@ -1,6 +1,9 @@
 import bisect
 from math import pi
 
+import os
+import cairo
+
 import sierra
 
 from state import noticeboard
@@ -11,7 +14,7 @@ from fonts import fonttable
 from model import meredith
 from model import wordprocessor
 from model.wordprocessor import character
-from model import un
+from model import un, do
 
 from typing import typing
 
@@ -141,8 +144,8 @@ class Mode_switcher(object):
 
 
 def PDF():
-    import cairo
-    surface = cairo.PDFSurface("PDF.pdf", 765, 990)
+    name = os.path.splitext(constants.filename)[0]
+    surface = cairo.PDFSurface(name + '.pdf', 765, 990)
     cr = cairo.Context(surface)
     becky._draw_text(cr, refresh=True)
     cr.show_page()
@@ -181,9 +184,9 @@ class Document_toolbar(object):
         self._items.append(kookies.Button(5, y, 90, 30, callback=PDF, string='PDF'))
         
         y += 40
-        self._items.append(kookies.Button(5, y, 90, 30, callback=un.history.back, string='Undo'))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=do.undo, string='Undo'))
         y += 30
-        self._items.append(kookies.Button(5, y, 90, 30, callback=un.history.forward, string='Redo'))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=do.redo, string='Redo'))
         
         y += 40
         self._items.append(kookies.Button(5, y, 90, 30, callback=meredith.mipsy.add_channel, string='Add portal'))

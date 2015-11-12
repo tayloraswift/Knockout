@@ -1,8 +1,9 @@
 from copy import deepcopy
 
 from fonts.fonts import GET, REPLACE
-from fonts import fonttable
+
 from model.meredith import mipsy
+
 
 class UN(object):
     def __init__(self):
@@ -37,10 +38,6 @@ class UN(object):
             mipsy.tracts[t].cursor.cursor = self._history[i]['kitty'][t]['cursors'][0]
             mipsy.tracts[t].select.cursor = self._history[i]['kitty'][t]['cursors'][1]
             mipsy.tracts[t].channels.channels = self._history[i]['kitty'][t]['outline']
-        
-        fonttable.table.clear()
-        fonttable.p_table.clear()
-        mipsy.rerender()
     
     def back(self):
         if self._i > 0:

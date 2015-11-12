@@ -33,3 +33,6 @@ googling
 gedit
 app
 scatterplots
+
+collimators
+Inkscape

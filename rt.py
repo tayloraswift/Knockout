@@ -1,8 +1,6 @@
 from gi.repository import Gtk, Gdk, GObject
 import cairo
 
-
-
 from state import noticeboard
 from state import constants
 
@@ -60,7 +58,7 @@ class Display(Gtk.Window):
         self._k = constants.window.get_k()
         
         self.set_position(Gtk.WindowPosition.CENTER)
-        self.connect("delete-event", Gtk.main_quit)
+        self.connect("delete-event", self.quit)
         self.show_all()
         
         self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
@@ -113,8 +111,7 @@ class Display(Gtk.Window):
     def on_resize(self, w):
         self._h, self._k = self.get_size()
         constants.window.resize(self._h, self._k)
-        
-        karlie.klossy.resize(self._h, self._k)
+
         taylor.becky.resize(self._h, self._k)
         
     def on_button_press(self, w, e):
@@ -122,7 +119,7 @@ class Display(Gtk.Window):
         if e.type == Gdk.EventType._2BUTTON_PRESS:
             if e.button == MouseButtons.LEFT_BUTTON:
                 print('double')
-                tree.take_event(e.x, e.y, 'press2', geometry=self.get_size())
+                tree.take_event(e.x, e.y, 'press2', h = self._h, k = self._k )
             self.darea.queue_draw()
         
         elif e.type == Gdk.EventType.BUTTON_PRESS:
@@ -132,13 +129,13 @@ class Display(Gtk.Window):
                 else:
                     mod = None
                         
-                tree.take_event(e.x, e.y, 'press', char=mod, geometry=self.get_size())
+                tree.take_event(e.x, e.y, 'press', char=mod,  h = self._h, k = self._k )
             
             elif e.button == MouseButtons.MIDDLE_BUTTON:
-                tree.take_event(e.x, e.y, 'press_mid', geometry=self.get_size())
+                tree.take_event(e.x, e.y, 'press_mid',  h = self._h, k = self._k )
             
             elif e.button == MouseButtons.RIGHT_BUTTON:
-                tree.take_event(e.x, e.y, 'press_right', geometry=self.get_size())
+                tree.take_event(e.x, e.y, 'press_right',  h = self._h, k = self._k )
             
             self.darea.queue_draw()
             
@@ -147,10 +144,10 @@ class Display(Gtk.Window):
         if e.type == Gdk.EventType.BUTTON_RELEASE:
             if e.button == MouseButtons.LEFT_BUTTON:
 
-                tree.take_event(e.x, e.y, 'release', geometry=self.get_size())
+                tree.take_event(e.x, e.y, 'release',  h = self._h, k = self._k )
             
             elif e.button == MouseButtons.MIDDLE_BUTTON:
-                tree.take_event(-1, -1, 'drag', geometry=self.get_size())
+                tree.take_event(-1, -1, 'drag',  h = self._h, k = self._k )
                 
             self.darea.queue_draw()
             
@@ -159,13 +156,13 @@ class Display(Gtk.Window):
     def motion_notify_event(self, widget, event):
 
         if event.state & Gdk.ModifierType.BUTTON1_MASK:
-            tree.take_event(event.x, event.y, 'press_motion', geometry=self.get_size())
+            tree.take_event(event.x, event.y, 'press_motion',  h = self._h, k = self._k )
 
         elif event.state & Gdk.ModifierType.BUTTON2_MASK:
-            tree.take_event(event.x, event.y, 'drag', geometry=self.get_size())
+            tree.take_event(event.x, event.y, 'drag',  h = self._h, k = self._k )
             
         else:
-            tree.take_event(event.x, event.y, 'motion', geometry=self.get_size())
+            tree.take_event(event.x, event.y, 'motion',  h = self._h, k = self._k )
 
         if noticeboard.refresh.should_refresh():
             self.darea.queue_draw()
@@ -177,7 +174,7 @@ class Display(Gtk.Window):
             mod = None
         
         # direction of scrolling stored as sign
-        tree.take_event(e.x, e.y*(2*e.direction - 1), 'scroll', char=mod, geometry=self.get_size())
+        tree.take_event(e.x, e.y*(2*e.direction - 1), 'scroll', char=mod, h = self._h, k = self._k )
         
         if noticeboard.refresh.should_refresh():
             self.darea.queue_draw()
@@ -245,6 +242,9 @@ class Display(Gtk.Window):
         
         self._draw_errors()
 
+    def quit(self, w, e):
+        GObject.source_remove(self._periodic)
+        Gtk.main_quit()
         
 def main():
     

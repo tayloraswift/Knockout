@@ -12,9 +12,10 @@ from state import constants
 from fonts import fonttable
 
 from model import meredith
-from model import wordprocessor
-from model.wordprocessor import character
+from model import wonder
 from model import un, do
+
+character = wonder.character
 
 from typing import typing
 
@@ -40,8 +41,8 @@ def paragraph_context_changed(previous=[None]):
         return False
 
 class Tabs_round(kookies.Tabs):
-    def __init__(self, x, y, width, height, default=0, callback=None, signals=None, strings=None, longstrings=None):
-        kookies.Tabs.__init__(self, x, y, width, height, default=default, callback=callback, signals=signals, strings=strings)
+    def __init__(self, x, y, width, height, default=0, callback=None, signals=(), longstrings=None):
+        kookies.Tabs.__init__(self, x, y, width, height, default=default, callback=callback, signals=signals)
         
         self._longstrings = longstrings
         self._add_static_text(self._x + self._width//2, self._y_bottom + 20, self._longstrings[default], align=0)
@@ -112,27 +113,29 @@ class Mode_switcher(object):
         self._k = constants.windowheight
         self._hover_j = None
         self._hover_memory = None
-        self._switcher = Tabs_round((self._h - constants.propertieswidth - 100)/2 + 100 - 40, self._k - 70, 80, 30, callback=callback, signals=['text', 'channels'], strings=['T', 'C'], longstrings=['Edit text', 'Edit channels'])
+        self._switcher = Tabs_round( -40, -70, 80, 30, callback=callback, signals=[('text', 'T'), ('channels', 'C')], longstrings=['Edit text', 'Edit channels'])
 
     def is_over(self, x, y):
-        return self._switcher.is_over(x, y)
+        return self._switcher.is_over(x - self._dx, y - self._dy)
 
     def resize(self, h, k):
         # center
-        dx = (h - self._h)/2
-        self._h = h
-        dy = k - self._k
-        self._k = k
-        self._switcher.translate(dx=dx, dy=dy)
+        self._dx = (h - constants.propertieswidth - 100)/2 + 100 
+        self._dy = k
 
-    def render(self, cr):
+    def render(self, cr, h, k):
+        cr.save()
+        cr.translate( self._dx , k)
+        
         self._switcher.draw(cr, hover=(None, self._hover_j))
+        
+        cr.restore()
     
     def press(self, x):
-        self._switcher.focus(x)
+        self._switcher.focus(x - self._dx)
     
     def hover(self, x):
-        self._hover_j = self._switcher.hover(x)
+        self._hover_j = self._switcher.hover(x - self._dx)
         if self._hover_j != self._hover_memory:
             noticeboard.refresh.push_change()
             self._hover_memory = self._hover_j
@@ -270,7 +273,7 @@ class Document_toolbar(object):
 
 def _replace_misspelled(word):
     if word[0] == '“':
-        wordprocessor.d.add(word[1:-1])
+        wonder.struck.add(word[1:-1])
     else:
         typing.type_document('Paste', list(word))
     meredith.mipsy.stats(spell=True)
@@ -419,7 +422,7 @@ class Document_view(object):
                         # used to keep track of ui redraws
                         self._sel_cursor = meredith.mipsy.selection()[1]
                         meredith.mipsy.select_word()
-                        menu.menu.create(x, y, 200, ['“' + ms[pair_i][2] + '”'] + wordprocessor.d.suggest(ms[pair_i][2]), _replace_misspelled, () )
+                        menu.menu.create(x, y, 200, ['“' + ms[pair_i][2] + '”'] + wonder.struck.suggest(ms[pair_i][2]), _replace_misspelled, () )
 
                 except IndexError:
                     # occurs if an empty channel is selected
@@ -494,8 +497,9 @@ class Document_view(object):
         
         if mod == 'ctrl':
             # zoom
-            if direction and self._scroll_notch_i > 0:
-                self._scroll_notch_i -= 1
+            if direction:
+                if self._scroll_notch_i > 0:
+                    self._scroll_notch_i -= 1
             elif self._scroll_notch_i < len(self._scroll_notches) - 1:
                 self._scroll_notch_i += 1
             
@@ -512,9 +516,9 @@ class Document_view(object):
         else:
             # scroll
             if direction:
-                self._K -= int(100 / self._A)
+                self._K -= int(50 / self._A)
             else:
-                self._K += int(100 / self._A)
+                self._K += int(50 / self._A)
         
         meredith.mipsy.rerender()
         noticeboard.refresh.push_change()
@@ -545,7 +549,6 @@ class Document_view(object):
     def change_mode(self, mode):
         self._mode = mode
     
-    
     def _draw_text(self, cr, mx_cx=-765/2, my_cy=-990/2, cx=765/2, cy=990/2, A=1, refresh=False):
         
         # Transform goes
@@ -558,25 +561,25 @@ class Document_view(object):
         cr.scale(A, A)
         
         for tract in meredith.mipsy.tracts:
-            classed_glyphs = tract.extract_glyphs(refresh)
 
-            for name, glyphs in classed_glyphs.items():
-                try:
-                    cr.set_source_rgb(0, 0, 0)
-                    font = fonttable.table.get_font( * name)
-                except KeyError:
-                    cr.set_source_rgb(1, 0.15, 0.2)
+            for page, classed_glyphs in tract.extract_glyphs(refresh).items():
+
+                for name, glyphs in classed_glyphs.items():
                     try:
-                        font = fonttable.table.get_font(name[0], ())
-                    except AttributeError:
-                        font = fonttable.table.get_font('_interface', ())
-                
-                cr.set_font_size(font['fontsize'])
-                cr.set_font_face(font['font'])
+                        cr.set_source_rgb(0, 0, 0)
+                        font = fonttable.table.get_font( * name)
+                    except KeyError:
+                        cr.set_source_rgb(1, 0.15, 0.2)
+                        try:
+                            font = fonttable.table.get_font(name[0], ())
+                        except AttributeError:
+                            font = fonttable.table.get_font('_interface', ())
                     
-                cr.show_glyphs(glyphs)
-                
-            del classed_glyphs
+                    cr.set_font_size(font['fontsize'])
+                    cr.set_font_face(font['font'])
+                        
+                    cr.show_glyphs(glyphs)
+
         cr.restore()
 
     def _draw_annotations(self, cr):
@@ -805,7 +808,7 @@ class Document_view(object):
         else:
             olivia.dibbles.render(cr, self._Tx, self._Ty, show_rails=True)
         
-        self._mode_switcher.render(cr)
+        self._mode_switcher.render(cr, h, k)
         
         # DRAW TOOLBAR BACKGROUND
         cr.rectangle(0, 0, 100, k)

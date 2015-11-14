@@ -1,5 +1,7 @@
 import bisect
 
+from itertools import chain
+
 from pyphen import pyphen
 pyphen.language_fallback('en_US')
 
@@ -7,7 +9,7 @@ from fonts import fonttable
 
 from model import kevin
 from model import errors
-from model.wordprocessor import words, _breaking_chars, character
+from model.wonder import words, _breaking_chars, character
 
 hy = pyphen.Pyphen(lang='en_US')
 
@@ -214,7 +216,11 @@ class Text(object):
         
         self._glyphs = []
         
-        self.sorted_glyphs = {}
+        self._page_intervals = {}
+        # STRUCTURE:
+        # PAGE_INTERVALS = {PAGE: [(a, b) u (c, d) u (e, f)] , PAGE: [(g, h) u (i, j)]}
+        
+        self._sorted_pages = {}
         
         # create cursor objects
         self.cursor = Cursor(cursor)
@@ -223,19 +229,20 @@ class Text(object):
         # STATS
         self.word_count = '—'
         self.misspellings = []
-        
+    
     def _generate_lines(self, l, startindex):
-        c = 0
         
         try:
             # ylevel is the y position of the first line to print
             # here we are removing the last existing line so we can redraw that one as well
             li = self._glyphs.pop(-1)
-            y = li.y - li.leading
             c = li.c
+            y = li.y - li.leading
             
         except IndexError:
             # which happens if nothing has yet been rendered
+            c = 0
+            y = self.channels.channels[c].railings[0][0][1]
             p = (self.text[0][1], 0)
             f = []
             try:
@@ -244,8 +251,10 @@ class Text(object):
                 # happens if requested style is not defined
                 p, paragraphclass = _fail_class(startindex, l, (p[0],))
                 
-            
-            y = self.channels.channels[c].railings[0][0][1]
+        
+        page = self.channels.channels[c].page
+        page_start_l = l
+        
         while True:
             # check for paragraph change
             try:
@@ -262,7 +271,6 @@ class Text(object):
                 except KeyError:
                     # happens if requested style is not defined
                     p, paragraphclass = _fail_class(startindex, l, (p[0],))
-
                     
             except IndexError:
                 pass
@@ -273,8 +281,25 @@ class Text(object):
             # see if the lines have overrun the portals
             if y > self.channels.channels[c].railings[1][-1][1] and c < len(self.channels.channels) - 1:
                 c += 1
-                # shift to below entrance
+                # jump to new entrance
                 y = self.channels.channels[c].railings[0][0][1] + paragraphclass['leading']
+                
+                # PAGINATION
+                page_new = self.channels.channels[c].page
+                if page_new != page:
+                    if page not in self._page_intervals:
+                        self._page_intervals[page] = [ (page_start_l, l) ]
+                        
+                    elif type(self._page_intervals[page][-1]) is int:
+                        print('partial')
+                        self._page_intervals[page][-1] = (self._page_intervals[page][-1], l)
+                        
+                    else:
+                        self._page_intervals[page].append( (page_start_l, l) )
+                    
+                    page = page_new
+                    page_start_l = l
+                #############
 
             # generate line objects
             line = Textline(self.text, 
@@ -310,16 +335,34 @@ class Text(object):
             del line
 #            if startindex >= len(self.text):
 #                break
+
+        if page not in self._page_intervals:
+            self._page_intervals[page] = [ (page_start_l, l + 1) ]
+            
+        elif type(self._page_intervals[page][-1]) is int:
+            print('partial ' + str(page_start_l))
+            self._page_intervals[page][-1] = (self._page_intervals[page][-1], l + 1)
+            
+        else:
+            self._page_intervals[page].append( (page_start_l, l + 1) )
+
+
         self._line_startindices = [line.startindex for line in self._glyphs]
 
     def _recalculate(self):
         # clear sorts
-        self.sorted_glyphs = {}
+        self._sorted_pages = {}
+        
         # avoid recalculating lines that weren't affected
         try:
             affected = self.index_to_line( min(self.select.cursor, self.cursor.cursor) ) - 1
             if affected < 0:
                 affected = 0
+            
+            self._page_intervals = { page: [I for I in 
+                    [ interval if interval[1] <= affected else interval[0] if interval[0] <= affected else None for interval in intervals]
+                    if I is not None] for page, intervals in self._page_intervals.items()}    
+            
             startindex = self._glyphs[affected].startindex
             self._glyphs = self._glyphs[:affected + 1]
             #        i = affected
@@ -333,7 +376,8 @@ class Text(object):
     def deep_recalculate(self):
         # clear sorts
         self._glyphs = []
-        self.sorted_glyphs = {}
+        self._sorted_pages = {}
+        self._page_intervals = {}
         
         self._generate_lines(0, 0)
         
@@ -341,7 +385,7 @@ class Text(object):
         errors.styleerrors.update(0)
 
 
-    def target_line(self, x, y, c=None):
+    def _target_line(self, x, y, c=None):
         # find which channel is clicked on
         if c is None:
             c = self.channels.target_channel(x, y, 20)
@@ -360,7 +404,7 @@ class Text(object):
         if c is None:
             c = self.channels.target_channel(x, y, 20)
         if l is None:
-            l = self.target_line(x, y, c)
+            l = self._target_line(x, y, c)
 
         # find first glyph to the right of click spot
         try:
@@ -628,26 +672,34 @@ class Text(object):
         return anchor, stop, leading, y
 
     def extract_glyphs(self, refresh=False):
+
         if refresh:
-            self.sorted_glyphs = {}
+            self._sorted_pages = {}
 
-        if not self.sorted_glyphs:
-            for line in self._glyphs:
-                p_name = line.glyphs[0][3][0]
-                hyphen = line.hyphen
-                for glyph in line.glyphs:
-                    f = glyph[4]
-                    k = glyph[0:3]
-                    try:
-                        self.sorted_glyphs[(p_name, f)].append(k)
-                    except KeyError:
-                        self.sorted_glyphs[(p_name, f)] = []
-                        self.sorted_glyphs[(p_name, f)].append(k)
-                if hyphen is not None:
-                    try:
-                        self.sorted_glyphs[hyphen[3:5]].append((hyphen[0:3]))
-                    except KeyError:
-                        self.sorted_glyphs[hyphen[3:5]] = []
-                        self.sorted_glyphs[hyphen[3:5]].append((hyphen[0:3]))
+        if not self._sorted_pages:
 
-        return self.sorted_glyphs
+            for page in self._page_intervals:
+            
+                sorted_page = {}
+                
+                for line in chain.from_iterable([ self._glyphs[slice( * interval)] for interval in self._page_intervals[page] ]):
+                    p_name = line.glyphs[0][3][0]
+                    hyphen = line.hyphen
+                    for glyph in line.glyphs:
+                        f = glyph[4]
+                        K = glyph[0:3]
+                        try:
+                            sorted_page[(p_name, f)].append(K)
+                        except KeyError:
+                            sorted_page[(p_name, f)] = []
+                            sorted_page[(p_name, f)].append(K)
+                    if hyphen is not None:
+                        try:
+                            sorted_page[hyphen[3:5]].append((hyphen[0:3]))
+                        except KeyError:
+                            sorted_page[hyphen[3:5]] = []
+                            sorted_page[hyphen[3:5]].append((hyphen[0:3]))
+                
+                self._sorted_pages[page] = sorted_page
+
+        return self._sorted_pages

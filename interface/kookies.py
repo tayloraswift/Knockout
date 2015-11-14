@@ -114,12 +114,11 @@ class Checkbox(Button):
 
 
 class Tabs(Base_kookie):
-    def __init__(self, x, y, width, height, default=0, callback=None, signals=None, strings=None):
+    def __init__(self, x, y, width, height, default=0, callback=None, signals=() ):
 
         Base_kookie.__init__(self, x, y, width, height, font=fonttable.table.get_font('_interface', ('strong',) ))
         
-        self._signals = signals
-        self._strings = strings
+        self._signals, self._strings = zip( * signals )
         
         self._callback = callback
         
@@ -138,11 +137,7 @@ class Tabs(Base_kookie):
             self._add_static_text(xo + self._button_width/2, self._y_bottom - self._height/2 + 5, string, align=0)
             self._x_left.append(int(round(xo)))
             xo += self._button_width
-    
-    def _translate_other(self, dx, dy):
-        if dx != 0:
-            self._x_left[:] = [x + dx for x in self._x_left]
-    
+
     def _target(self, x):
         return bisect.bisect(self._x_left, x) - 1
 
@@ -158,10 +153,6 @@ class Tabs(Base_kookie):
 
     def hover(self, x):
         return self._target(x)
-
-    # used only when initializing panel
-    def active_name(self):
-        return self._signals[self._active]
 
     def draw(self, cr, hover=(None, None)):
         self._render_fonts(cr)
@@ -248,26 +239,12 @@ class Blank_space(Base_kookie):
         self._broken_active_text_color = (1, 0.15, 0.2, 1)
         
         self._template = []
-        self._glyphs = []
+        self._scroll = 0
         
         self._stamp_glyphs(self._text)
-        self._reset_scroll()
         
     def _stamp_glyphs(self, text):
         self._template = self._build_line(self._x, self._y + self.font['fontsize'] + 5, text, self.font)
-
-    def _reset_scroll(self):
-        self._glyphs[:] = self._template[:]
-
-    # translates stuff that was missed
-    def _translate_other(self, dx, dy):
-        if dy != 0 and dx != 0:
-            self._template[:] = [(g[0], g[1] + dx, g[2] + dy) for g in self._template]
-        elif dx != 0:
-            self._template[:] = [(g[0], g[1] + dx, g[2]) for g in self._template]
-        else:
-            self._template[:] = [(g[0], g[1], g[2] + dy) for g in self._template]
-        self._reset_scroll()
         
     def is_over(self, x, y):
         if self._y <= y <= self._y_bottom and self._x - 10 <= x <= self._x_right + 10:
@@ -278,28 +255,18 @@ class Blank_space(Base_kookie):
     def _entry(self):
         return ''.join(self._text[:-1])
 
-    # scrolling functions
-    def _anchor_x(self, x):
-        dx = x - self._x
-        self._glyphs[:] = [(g[0], g[1] + dx, g[2]) for g in self._template]
+    def _domain(self, entry):
+        return entry
     
-    def _anchor(self, i, x):
-        dx = self._template[i][1] - self._x - x
-        self._glyphs[:] = [(g[0], g[1] - dx, g[2]) for g in self._template]
-
-    def _center_x(self, x):
-        relative_position = x - self._x
-        if relative_position > self._width and self._glyphs[self._j][1] - self._x > self._width:
-            self._anchor(self._j, self._width)
-        elif relative_position < 0 and self._glyphs[self._j][1] - self._x < 0:
-            self._anchor(self._j, 0)
+    # scrolling function
             
     def _center_j(self):
-        _relative_position = self._glyphs[self._j][1] - self._x
-        if _relative_position > self._width:
-            self._anchor(self._j, self._width)
-        elif _relative_position < 0:
-            self._anchor(self._j, 0)
+        position = self._template[self._j][1] - self._x
+        print(position + self._scroll)
+        if position + self._scroll > self._width:
+            self._scroll = -(position - self._width)
+        elif position + self._scroll < 0:
+            self._scroll = -(position)
 
     # typing
     def type_box(self, name, char):
@@ -395,15 +362,17 @@ class Blank_space(Base_kookie):
         
         if changed:
             self._stamp_glyphs(self._text)
-            self._anchor_x(self._glyphs[0][1])
+        
         self._center_j()
         
         return output
 
     # target glyph index
     def _target(self, x):
-        i = bisect.bisect([g[1] for g in self._glyphs[:-1]], x)
-        if i > 0 and x - self._glyphs[i - 1][1] < self._glyphs[i][1] - x:
+        x -= self._scroll
+        
+        i = bisect.bisect([g[1] for g in self._template[:-1]], x)
+        if i > 0 and x - self._template[i - 1][1] < self._template[i][1] - x:
             i -= 1
         return i
 
@@ -415,18 +384,18 @@ class Blank_space(Base_kookie):
         if x < self._x:
             self._i = self._target(self._x)
             # inch left or right
-            if self._glyphs[self._i][1] > self._x:
+            if self._template[self._i][1] > self._x:
                 self._i -= 1
         elif x > self._x + self._width:
             self._i = self._target(self._x + self._width)
             
-            if self._glyphs[self._i][1] < self._x + self._width:
+            if self._template[self._i][1] < self._x + self._width:
                 self._i += 1
         else:
             self._i = self._target(x)
         self._j = self._i
         
-        self._center_x(self._glyphs[self._j][1])
+        self._center_j()
 
     def focus_drag(self, x):
         j = self._target(x)
@@ -434,21 +403,20 @@ class Blank_space(Base_kookie):
         # force redraw if cursor moves
         if self._j != j:
             self._j = j
+            self._center_j()
             noticeboard.refresh.push_change()
-        
-        self._center_x(x)
 
     def defocus(self):
         self._active = None
         self._dropdown_active = False
         self._text = list(self._entry()) + [None]
         self._stamp_glyphs(self._text)
-        self._reset_scroll()
+        self._scroll = 0
         # dump entry
         out = self._entry()
         if out != self._previous:
             self._previous = out
-            self._callback(out)
+            self._callback(self._domain(out))
         else:
             return False
         return True
@@ -485,14 +453,17 @@ class Blank_space(Base_kookie):
         
         cr.rectangle(self._x - 1, self._y, self._width + 2, self._height)
         cr.clip()
+        cr.save()
+        cr.translate(round(self._scroll), 0)
+        
         if self._active:
             # print cursors
             cr.set_source_rgb(1, 0.2, 0.6)
-            cr.rectangle(round(self._glyphs[self._i][1] - 1), 
+            cr.rectangle(round(self._template[self._i][1] - 1), 
                         self._y + 5, 
                         2, 
                         fontsize)
-            cr.rectangle(round(self._glyphs[self._j][1] - 1), 
+            cr.rectangle(round(self._template[self._j][1] - 1), 
                         self._y + 5, 
                         2, 
                         fontsize)
@@ -503,12 +474,12 @@ class Blank_space(Base_kookie):
                 cr.set_source_rgba(0, 0, 0, 0.1)
                 # find leftmost
                 if self._i <= self._j:
-                    root = self._glyphs[self._i][1]
+                    root = self._template[self._i][1]
                 else:
-                    root = self._glyphs[self._j][1]
+                    root = self._template[self._j][1]
                 cr.rectangle(root, 
                         self._y + 5,
-                        abs(self._glyphs[self._i][1] - self._glyphs[self._j][1]),
+                        abs(self._template[self._i][1] - self._template[self._j][1]),
                         fontsize)
                 cr.fill()
                 
@@ -517,7 +488,9 @@ class Blank_space(Base_kookie):
         else:
             cr.set_source_rgba( * resting_text_color)
         # don't print the cap glyph
-        cr.show_glyphs(self._glyphs[:-1])
+        cr.show_glyphs(self._template[:-1])
+        
+        cr.restore()
         cr.reset_clip()
                 
         if self._name is not None:
@@ -553,6 +526,24 @@ class Numeric_field(Blank_space):
         else:
             number = int(string)
         return number
+
+    def _stamp_glyphs(self, text):
+        self._template = self._build_line(self._x, self._y + self.font['fontsize'] + 5, text, self.font, sub_minus=True)
+
+class Integer_field(Blank_space):
+    def __init__(self, x, y, width, default, callback, name=None):
+    
+        Blank_space.__init__(self, x, y, width, default, callback, name)
+
+        self.broken = False
+        
+    def _entry(self):
+        num = ''.join([c for c in self._text[:-1] if c in '1234567890-'])
+
+        return num
+    
+    def domain(self, entry):
+        return int(entry)
 
     def _stamp_glyphs(self, text):
         self._template = self._build_line(self._x, self._y + self.font['fontsize'] + 5, text, self.font, sub_minus=True)
@@ -616,7 +607,7 @@ class Object_menu(Blank_space):
             self._i = self._target(x)
             self._j = self._i
             
-            self._center_x(self._glyphs[self._j][1])
+            self._center_x(self._template[self._j][1])
         else:
             self.defocus()
             if x < self._x + self._width - 20:

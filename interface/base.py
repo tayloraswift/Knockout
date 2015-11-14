@@ -24,32 +24,6 @@ class Base_kookie(object):
         self._y_bottom = y + height
         
         self.y = self._y_bottom
-    
-    def translate(self, dx=0, dy=0):
-        if dy != 0 and dx != 0:
-            self._x += dx
-            self._x_right += dx
-            self._y += dy
-            self._y_bottom += dy
-            self.y += dy
-            for glyphs in self._texts:
-                glyphs[:] = [(g[0], g[1] + dx, g[2] + dy) for g in glyphs]
-        elif dx != 0:
-            self._x += dx
-            self._x_right += dx
-            for glyphs in self._texts:
-                glyphs[:] = [(g[0], g[1] + dx, g[2]) for g in glyphs]
-        else:
-            self._y += dy
-            self._y_bottom += dy
-            self.y += dy
-            for glyphs in self._texts:
-                glyphs[:] = [(g[0], g[1], g[2] + dy) for g in glyphs]
-        
-        self._translate_other(dx, dy)
-    
-    def _translate_other(self, dx, dy):
-        pass
 
     def _build_line(self, x, y, text, font, fontsize=None, align=1, sub_minus=False):
         if fontsize is None:

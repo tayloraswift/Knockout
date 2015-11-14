@@ -1,9 +1,13 @@
 import bisect
 
 class Channel(object):
-    def __init__(self, left, right):
+    def __init__(self, left, right, page=0):
         # create two railings, the borders
         self.railings = [left, right]
+        self.page = page
+    
+    def set_page(self, page):
+        self.page = page
     
     def _is_outside(self, y):
         location = True

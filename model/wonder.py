@@ -8,7 +8,7 @@ def character(entity):
         entity = entity[0]
     return entity
 
-d = enchant.DictWithPWL("en_US","model/localdict.txt")
+struck = enchant.DictWithPWL("en_US","model/localdict.txt")
 
 _prose = set('ABCDEFGHIJKLMNOPGRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789&@#$\'’- ')
 # these characters get read as word-breaks in speech
@@ -17,9 +17,9 @@ _breaking_prose = set(('</p>', '<br>', '—', '–', '/', '(', ')', '\\', '|', '
 def check_spelling(word):
     if word.isalpha():
         if word.islower():
-            return d.check(word)
+            return struck.check(word)
         elif word.lower().capitalize() == word:
-                return d.check(word)
+                return struck.check(word)
 
     return True
 

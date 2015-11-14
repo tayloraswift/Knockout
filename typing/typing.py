@@ -1,7 +1,7 @@
 import time
 
 from model import meredith
-from model.wordprocessor import character
+from model.wonder import character
 
 from model import un
             

@@ -89,7 +89,6 @@ class _Paragraph_checkbox(kookies.Checkbox):
         
         klossy.refresh()
 
-
 class _Paragraph_style_menu(kookies.Object_menu):
     def __init__(self, x, y, width, p, name=None):
         kookies.Object_menu.__init__(self, x, y, width, p, callback=self._push_pname, addition_callback=self._add_paragraph_class, menu_callback=self._menu_select_class, menu_options=sorted(fonts.paragraph_classes.keys()), name=name)
@@ -241,99 +240,40 @@ class _preview(kookies.Heading):
         cr.set_font_face(self.font['font'])
         cr.show_glyphs(self._texts[0])
 
-class Properties_Panel(object):
-    def __init__(self):
+# do not instantiate directly, requires a _reconstruct
+class _Properties_panel(object):
+    def __init__(self, tabs = (), default=0 ):
         self._h = constants.windowwidth
         self._k = constants.windowheight
-        
-        self._tabstrip = kookies.Tabs(self._h - constants.propertieswidth/2 - 50 , 50, 100, 30, callback=self._tab_switch, signals=['paragraph', 'font', '?'], strings=['P', 'F', '?'])
-        self._tab = self._tabstrip.active_name()
-        
-        self.refresh_class(meredith.mipsy.glyph_at()[2])
 
-    
-    def refresh_class(self, p):
+        width = 100
+        self._tabstrip = kookies.Tabs( -(constants.propertieswidth + width)//2 , 50, width, 30, default=default, callback=self._tab_switch, signals=tabs)
+        self._tab = tabs[default][0]
         
-        self._items = [self._tabstrip]
-        self._active_box_i = None
-        self._hover_box_ij = (None, None)
-        
-        y = 145
-        
-        self._items.append(kookies.Heading(self._h - constants.propertieswidth + 15, 90, 250, 30, p[0], upper=True))
+        self._reconstruct()
 
-        if self._tab == 'font':
+    def _tab_switch(self, name):
+        if self._tab != name:
+            self._tab = name
+            self._reconstruct()
         
-            for key, item in sorted(fonts.get_fontclasses(p[0]).items()):
-                if key:
-                    classname = 'Class: ' + ', '.join(key)
-                else:
-                    classname = 'Class: none'
-                
-                self._items.append(_preview(self._h - constants.propertieswidth + 16, y, 250, 0, classname, p, key ))
-                
-                if fonts.f_read_f(p[0], key)[0]:
-                    self._items.append(_Inheritance_selection_menu(self._h - constants.propertieswidth + 200, y + 20, callback=None, p=p[0], f=key, attribute='_all'))
-                    y += 50
-                else:
-                    self._items.append(_Inheritance_selection_menu(self._h - constants.propertieswidth + 200, y + 3, callback=None, p=p[0], f=key, attribute='_all'))
-                    y += 30
-                    
-                    self._items.append(_Font_file_Field(self._h - constants.propertieswidth + 15, y, 250, p[0], key, name='FONT FILE' ))
-                    y += 30
-                    self._items.append(_Inheritance_selection_menu(self._h - constants.propertieswidth + 200, y, callback=None, p=p[0], f=key, attribute='path'))
-                    y += 15
-                    
-                    self._items.append(_Font_numeric_Field(self._h - constants.propertieswidth + 15, y, 250, p[0], key, attribute='fontsize', name='FONT SIZE' ))
-                    y += 30
-                    self._items.append(_Inheritance_selection_menu(self._h - constants.propertieswidth + 200, y, callback=None, p=p[0], f=key, attribute='fontsize'))
-                    y += 15
-                    
-                    self._items.append(_Font_numeric_Field(self._h - constants.propertieswidth + 15, y, 250, p[0], key, attribute='tracking', name='TRACKING' ))
-                    y += 30
-                    self._items.append(_Inheritance_selection_menu(self._h - constants.propertieswidth + 200, y, callback=None, p=p[0], f=key, attribute='tracking'))
-                    y += 30
-                        
-        elif self._tab == 'paragraph':
-            self._items.append(_Paragraph_style_menu(self._h - constants.propertieswidth + 15, y, 250, p[0], name='RENAME CLASS'))
-            y += 45
-            
-            self._items.append(_Paragraph_numeric_Field(self._h - constants.propertieswidth + 15, y, 250, p[0], attribute='leading', name='LEADING' ))
-            y += 30
-            self._items.append(_Paragraph_inheritance_menu(self._h - constants.propertieswidth + 200, y, callback=None, p=p[0], attribute='leading'))
-            y += 15
-            
-            self._items.append(_Paragraph_numeric_Field(self._h - constants.propertieswidth + 15, y, 250, p[0], attribute='margin_bottom', name='BOTTOM MARGIN' ))
-            y += 30
-            self._items.append(_Paragraph_inheritance_menu(self._h - constants.propertieswidth + 200, y, callback=None, p=p[0], attribute='margin_bottom'))
-            y += 15
+    def _stack(self):
+        self._rows = [item.y for item in self._items]
 
-            self._items.append(_Paragraph_checkbox(self._h - constants.propertieswidth + 15, y + 15, 100, p[0], attribute='hyphenate', name='HYPHENATE' ))
-            y += 30
-            self._items.append(_Paragraph_inheritance_menu(self._h - constants.propertieswidth + 200, y, callback=None, p=p[0], attribute='hyphenate'))
-            y += 15
-            
-        self._stack()
+    def _stack_bisect(self, y):
+        return bisect.bisect(self._rows, y)
 
     def refresh(self):
         meredith.mipsy.rerender() # must come before because it rewrites all the paragraph styles
-        self.refresh_class(meredith.mipsy.glyph_at()[2])
-
-    def _tab_switch(self, name):
-        self._tab = name
-        self.refresh_class(meredith.mipsy.glyph_at()[2])
-        print(self._tab)
-        
-    def resize(self, h, k):
-        dx = h - self._h
-        self._h = h
-
-        for entry in self._items:
-            entry.translate(dx=dx)
+        self._reconstruct()
     
     def render(self, cr, h, k):
+    
+        cr.save()
+        cr.translate(h, 0)
+        
         # DRAW BACKGROUND
-        cr.rectangle(h - constants.propertieswidth, 0, 
+        cr.rectangle( - constants.propertieswidth, 0, 
                 300, 
                 k)
         cr.set_source_rgb(1, 1, 1)
@@ -341,7 +281,7 @@ class Properties_Panel(object):
         
         # check if entries need restacking
         if noticeboard.refresh_properties_stack.should_refresh():
-            self.refresh_class(meredith.mipsy.glyph_at()[2])
+            self._reconstruct()
         
         for i, entry in enumerate(self._items):
             if i == self._hover_box_ij[0]:
@@ -350,28 +290,24 @@ class Properties_Panel(object):
                 entry.draw(cr)
         
         # DRAW SEPARATOR
-        cr.rectangle(h - constants.propertieswidth, 0, 
+        cr.rectangle( - constants.propertieswidth, 0, 
                 2, 
                 k)
         cr.set_source_rgb(0.9, 0.9, 0.9)
         cr.fill()
+        
+        cr.restore()
     
     def key_input(self, name, char):
         if self._active_box_i is not None:
             if name == 'Return':
                 if self._items[self._active_box_i].defocus():
                     print('UPDATE PANEL')
-                    self.refresh_class(meredith.mipsy.glyph_at()[2])
+                    self._reconstruct()
                 
                 self._active_box_i = None
             else:
                 return self._items[self._active_box_i].type_box(name, char)
-    
-    def _stack(self):
-        self._rows = [item.y for item in self._items]
-
-    def _stack_bisect(self, y):
-        return bisect.bisect(self._rows, y)
     
     def press(self, x, y):
 
@@ -392,7 +328,7 @@ class Properties_Panel(object):
                 if self._items[self._active_box_i].defocus():
 
                     print('UPDATE PANEL')
-                    self.refresh_class(meredith.mipsy.glyph_at()[2])
+                    self._reconstruct()
                     
             self._active_box_i = b
 
@@ -418,5 +354,72 @@ class Properties_Panel(object):
             hovered[0] = self._hover_box_ij
             noticeboard.refresh.push_change()
 
-klossy = Properties_Panel()
+class Text_properties(_Properties_panel):
+
+    def _reconstruct(self):
+        # ALWAYS REQUIRES CALL TO _stack()
+        p = meredith.mipsy.glyph_at()[2]
+        
+        self._items = [self._tabstrip]
+        self._active_box_i = None
+        self._hover_box_ij = (None, None)
+        
+        y = 145
+        
+        self._items.append(kookies.Heading( - constants.propertieswidth + 15, 90, 250, 30, p[0], upper=True))
+        
+        if self._tab == 'font':
+        
+            for key, item in sorted(fonts.get_fontclasses(p[0]).items()):
+                if key:
+                    classname = 'Class: ' + ', '.join(key)
+                else:
+                    classname = 'Class: none'
+                
+                self._items.append(_preview( - constants.propertieswidth + 16, y, 250, 0, classname, p, key ))
+                
+                if fonts.f_read_f(p[0], key)[0]:
+                    self._items.append(_Inheritance_selection_menu( - constants.propertieswidth + 200, y + 20, callback=None, p=p[0], f=key, attribute='_all'))
+                    y += 50
+                else:
+                    self._items.append(_Inheritance_selection_menu( - constants.propertieswidth + 200, y + 3, callback=None, p=p[0], f=key, attribute='_all'))
+                    y += 30
+                    
+                    self._items.append(_Font_file_Field( - constants.propertieswidth + 15, y, 250, p[0], key, name='FONT FILE' ))
+                    y += 30
+                    self._items.append(_Inheritance_selection_menu( - constants.propertieswidth + 200, y, callback=None, p=p[0], f=key, attribute='path'))
+                    y += 15
+                    
+                    self._items.append(_Font_numeric_Field( - constants.propertieswidth + 15, y, 250, p[0], key, attribute='fontsize', name='FONT SIZE' ))
+                    y += 30
+                    self._items.append(_Inheritance_selection_menu( - constants.propertieswidth + 200, y, callback=None, p=p[0], f=key, attribute='fontsize'))
+                    y += 15
+                    
+                    self._items.append(_Font_numeric_Field( - constants.propertieswidth + 15, y, 250, p[0], key, attribute='tracking', name='TRACKING' ))
+                    y += 30
+                    self._items.append(_Inheritance_selection_menu( - constants.propertieswidth + 200, y, callback=None, p=p[0], f=key, attribute='tracking'))
+                    y += 30
+                        
+        elif self._tab == 'paragraph':
+            self._items.append(_Paragraph_style_menu( - constants.propertieswidth + 15, y, 250, p[0], name='RENAME CLASS'))
+            y += 45
+            
+            self._items.append(_Paragraph_numeric_Field( - constants.propertieswidth + 15, y, 250, p[0], attribute='leading', name='LEADING' ))
+            y += 30
+            self._items.append(_Paragraph_inheritance_menu( - constants.propertieswidth + 200, y, callback=None, p=p[0], attribute='leading'))
+            y += 15
+            
+            self._items.append(_Paragraph_numeric_Field( - constants.propertieswidth + 15, y, 250, p[0], attribute='margin_bottom', name='BOTTOM MARGIN' ))
+            y += 30
+            self._items.append(_Paragraph_inheritance_menu( - constants.propertieswidth + 200, y, callback=None, p=p[0], attribute='margin_bottom'))
+            y += 15
+
+            self._items.append(_Paragraph_checkbox( - constants.propertieswidth + 15, y + 15, 100, p[0], attribute='hyphenate', name='HYPHENATE' ))
+            y += 30
+            self._items.append(_Paragraph_inheritance_menu( - constants.propertieswidth + 200, y, callback=None, p=p[0], attribute='hyphenate'))
+            y += 15
+            
+        self._stack()
+
+klossy = Text_properties(tabs = (('paragraph', 'P'), ('font', 'F'), ('', '?')) )
 

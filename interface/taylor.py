@@ -109,8 +109,6 @@ class Tabs_round(kookies.Tabs):
 
 class Mode_switcher(object):
     def __init__(self, callback):
-        self._h = constants.windowwidth
-        self._k = constants.windowheight
         self._hover_j = None
         self._hover_memory = None
         self._switcher = Tabs_round( -40, -70, 80, 30, callback=callback, signals=[('text', 'T'), ('channels', 'C')], longstrings=['Edit text', 'Edit channels'])
@@ -120,7 +118,7 @@ class Mode_switcher(object):
 
     def resize(self, h, k):
         # center
-        self._dx = (h - constants.propertieswidth - 100)/2 + 100 
+        self._dx = (constants.UI[1] - 100)/2 + 100 
         self._dy = k
 
     def render(self, cr, h, k):
@@ -295,7 +293,7 @@ class Document_view(object):
         self._kw = constants.windowheight
         
         # transform parameters
-        self._Hc = (self._hw - constants.propertieswidth - 100) / 2 + 100
+        self._Hc = (constants.UI[1] - 100) / 2 + 100
         self._Kc = (self._kw) / 2
         
         self._H = 200
@@ -788,7 +786,7 @@ class Document_view(object):
         cr.fill()
         
         cr.rectangle(100, 0, 
-                h - 100 - constants.propertieswidth, 
+                constants.UI[1] - 100, 
                 k)
         cr.clip()
         
@@ -834,7 +832,7 @@ class Document_view(object):
         cr.move_to(130, k - 20)
         cr.show_text('{0:g}'.format(self._A*100) + '%')
         
-        cr.move_to(h - constants.propertieswidth - 100, k - 20)
+        cr.move_to(constants.UI[1] - 100, k - 20)
         cr.show_text(str(meredith.mipsy.tracts[meredith.mipsy.t].word_count) + ' words')
         
 becky = Document_view()

@@ -85,7 +85,7 @@ class Display(Gtk.Window):
         menu.menu.render(cr)
 
         if self.errorpanel is not None:
-            self.errorpanel.draw(cr, self._h - constants.propertieswidth)
+            self.errorpanel.draw(cr, constants.UI[1])
 
         print(self._c_)
         self._c_ += 1
@@ -111,7 +111,8 @@ class Display(Gtk.Window):
     def on_resize(self, w):
         self._h, self._k = self.get_size()
         constants.window.resize(self._h, self._k)
-
+    
+        constants.UI[1] = self._h - 300
         taylor.becky.resize(self._h, self._k)
         
     def on_button_press(self, w, e):

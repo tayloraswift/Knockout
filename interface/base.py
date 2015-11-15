@@ -77,18 +77,19 @@ class Base_kookie(object):
 class Menu(Base_kookie):
     def __init__(self, x, y, width, item_height, signals=None):
 
-        Base_kookie.__init__(self, x, y, width, item_height*len(signals))
-        
         # 'centers' menu
+        ht = item_height*len(signals)
         k = constants.window.get_k()
-        if self._y > k/2:
+        if y > k/2:
             signals.reverse()
-            self.translate(dy = -self._height)
+            y -= ht
             
-        if self._y < 0:
-            self.translate(dy = -self._y)
-        elif self._y_bottom > k:
-            self.translate(dy = k - self._y_bottom)
+        if y < 0:
+            y = 0
+        elif y + ht > k:
+            y = k - ht
+
+        Base_kookie.__init__(self, x, y, width, ht)
 
         self._item_height = item_height
         self._signals = signals

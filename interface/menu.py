@@ -1,4 +1,4 @@
-from state import noticeboard
+from state import noticeboard, constants
 
 from interface import base
 
@@ -7,8 +7,8 @@ class Menu(object):
         self._menu = None
         self._hovered = None
     
-    def create(self, x, y, width, options, callback, callback_parameters):
-        self._menu = base.Menu(int(round(x)), int(round(y)), int(round(width)), 30, options)
+    def create(self, x, y, width, options, callback, callback_parameters, source = 0):
+        self._menu = base.Menu(int(round(x)) + constants.UI[source], int(round(y)), int(round(width)), 30, options)
         self._callback = callback
         self._callback_parameters = callback_parameters
         

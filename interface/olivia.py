@@ -17,6 +17,9 @@ class Channels_controls(object):
         self._hover_point = (None, None, None)
         self._hover_portal = (None, None)
     
+    def c_at(self):
+        return self._selected_point
+    
     def press(self, x, y, name):
         un.history.undo_save(3)
         

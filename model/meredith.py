@@ -98,7 +98,7 @@ class Meredith(object):
     def change_paragraph_class(self, i, po):
         self.tracts[self.t].text[i] = ('<p>', po)
     
-    def change_channel_page(self, c, page):
+    def change_channel_page(self, page, c):
         self.tracts[self.t].channels[c].set_page(page)
             
     def stats(self, spell=False):

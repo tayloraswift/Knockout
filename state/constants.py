@@ -3,7 +3,7 @@ filename = ''
 windowwidth = 1300
 windowheight = 800
 
-propertieswidth = 300
+UI = [0, 1000]
 
 class Window(object):
     def __init__(self, h, k):

@@ -206,7 +206,7 @@ class Heading(Base_kookie):
 
 
 class Blank_space(Base_kookie):
-    def __init__(self, x, y, width, default, callback, name=None):
+    def __init__(self, x, y, width, default, callback, params = (), name=None):
         
         Base_kookie.__init__(self, x, y, width, 28)
         
@@ -215,6 +215,7 @@ class Blank_space(Base_kookie):
         self._previous = ''.join(default)
 
         self._callback = callback
+        self._params = params
         self._name = name
         
         self.broken = False
@@ -416,7 +417,7 @@ class Blank_space(Base_kookie):
         out = self._entry()
         if out != self._previous:
             self._previous = out
-            self._callback(self._domain(out))
+            self._callback(self._domain(out), * self._params)
         else:
             return False
         return True
@@ -453,8 +454,17 @@ class Blank_space(Base_kookie):
         
         cr.rectangle(self._x - 1, self._y, self._width + 2, self._height)
         cr.clip()
+        
+        if self._active:
+            cr.set_source_rgba( * active_text_color)
+        else:
+            cr.set_source_rgba( * resting_text_color)
+        
         cr.save()
         cr.translate(round(self._scroll), 0)
+        
+        # don't print the cap glyph
+        cr.show_glyphs(self._template[:-1])
         
         if self._active:
             # print cursors
@@ -482,13 +492,6 @@ class Blank_space(Base_kookie):
                         abs(self._template[self._i][1] - self._template[self._j][1]),
                         fontsize)
                 cr.fill()
-                
-        if self._active:
-            cr.set_source_rgba( * active_text_color)
-        else:
-            cr.set_source_rgba( * resting_text_color)
-        # don't print the cap glyph
-        cr.show_glyphs(self._template[:-1])
         
         cr.restore()
         cr.reset_clip()
@@ -509,9 +512,9 @@ class Blank_space(Base_kookie):
 
 
 class Numeric_field(Blank_space):
-    def __init__(self, x, y, width, default, callback, name=None):
+    def __init__(self, x, y, width, default, callback, params=(), name=None):
     
-        Blank_space.__init__(self, x, y, width, default, callback, name)
+        Blank_space.__init__(self, x, y, width, default, callback, params, name)
 
         self.broken = False
         
@@ -531,9 +534,9 @@ class Numeric_field(Blank_space):
         self._template = self._build_line(self._x, self._y + self.font['fontsize'] + 5, text, self.font, sub_minus=True)
 
 class Integer_field(Blank_space):
-    def __init__(self, x, y, width, default, callback, name=None):
+    def __init__(self, x, y, width, default, callback, params=(), name=None):
     
-        Blank_space.__init__(self, x, y, width, default, callback, name)
+        Blank_space.__init__(self, x, y, width, default, callback, params, name)
 
         self.broken = False
         
@@ -550,7 +553,7 @@ class Integer_field(Blank_space):
 
 #########
 class Selection_menu(Base_kookie):
-    def __init__(self, x, y, width, height, callback, menu_callback, menu_options, default):
+    def __init__(self, x, y, width, height, callback, menu_callback, menu_options, default, source):
         Base_kookie.__init__(self, x, y, width, height, font=fonttable.table.get_font('_interface', ('strong',) ))
         
         self._callback = callback
@@ -562,10 +565,12 @@ class Selection_menu(Base_kookie):
         # set hover function equal to press function
         self.is_over_hover = self.is_over
         
+        self._source = source
+        
         self._add_static_text(self._x_right, self._y_bottom - self._height/2 + 5, str(default), align=-1)
     
     def focus(self, x):
-        menu.menu.create(self._x_right - 170, self._y_bottom - 5, 200, self._menu_options, self._menu_callback, () )
+        menu.menu.create(self._x_right - 170, self._y_bottom - 5, 200, self._menu_options, self._menu_callback, (), source=self._source )
         self._active = True
         self._dropdown_active = True
         print('DROPDOWN')
@@ -591,14 +596,16 @@ class Selection_menu(Base_kookie):
 #########
 
 class Object_menu(Blank_space):
-    def __init__(self, x, y, width, default, callback, addition_callback, menu_callback, menu_options, name=None):
-        Blank_space.__init__(self, x, y, width, default, callback, name)
+    def __init__(self, x, y, width, default, callback, addition_callback, menu_callback, menu_options, name=None, source=0):
+        Blank_space.__init__(self, x, y, width, default, callback, (), name)
 
         self._addition_callback = addition_callback
         self._menu_callback = menu_callback
         self._menu_options = menu_options
         self.broken = False
         self._dropdown_active = False
+        
+        self._source = source
     
     def focus(self, x):
         if x < self._x + self._width - 40:
@@ -613,7 +620,7 @@ class Object_menu(Blank_space):
             if x < self._x + self._width - 20:
                 self._addition_callback()
             else:
-                menu.menu.create(self._x_right - 170, self._y_bottom - 5, 170, self._menu_options, self._menu_callback, () )
+                menu.menu.create(self._x_right - 170, self._y_bottom - 5, 170, self._menu_options, self._menu_callback, (), source=self._source )
                 self._active = True
                 self._dropdown_active = True
                 print('DROPDOWN')

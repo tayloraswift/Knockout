@@ -20,7 +20,7 @@ def take_event(x, y, event, key=False, char=None, region=['document', 'document'
     else:
         # Changing regions
         
-        if x > h - constants.propertieswidth:
+        if x > constants.UI[1]:
             if region[1] != 'properties':
                 region[1] = 'properties'
             if event in ('press', 'press_mid', 'press_right') and region[0] != 'properties':
@@ -31,12 +31,12 @@ def take_event(x, y, event, key=False, char=None, region=['document', 'document'
 #                noticeboard.refresh.push_change()
 
                 if event == 'motion':
-                    karlie.klossy.hover(x - h, y)
+                    karlie.klossy.hover(x - constants.UI[1], y)
                 region[1] = 'document'
             if event in ('press', 'press_mid', 'press_right') and region[0] != 'document':
                 # if we're going from properties to document, dump properties
                 if region[0] == 'properties' and event == 'press':
-                    karlie.klossy.press(x - h, y)
+                    karlie.klossy.press(x - constants.UI[1], y)
                 region[0] = 'document'
 
 
@@ -58,7 +58,7 @@ def take_event(x, y, event, key=False, char=None, region=['document', 'document'
         if event == 'motion':
 
             if region[1] == 'properties':
-                karlie.klossy.hover(x - h, y)
+                karlie.klossy.hover(x - constants.UI[1], y)
             elif region[1] == 'document':
                 taylor.becky.hover(x, y)
         
@@ -97,7 +97,7 @@ def take_event(x, y, event, key=False, char=None, region=['document', 'document'
         elif region[0] == 'properties':
             if event == 'press':
                 menu.menu.destroy()
-                karlie.klossy.press(x - h, y)
+                karlie.klossy.press(x - constants.UI[1], y)
             
             elif event == 'press_motion':
-                karlie.klossy.press_motion(x - h)
+                karlie.klossy.press_motion(x - constants.UI[1])

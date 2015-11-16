@@ -12,6 +12,8 @@ class Channels_controls(object):
     def __init__(self):
         self._selected_point = (None, None, None)
         self._selected_portal = None
+        
+        self._page = None
 
         # these are stateful
         self._hover_point = (None, None, None)
@@ -20,10 +22,14 @@ class Channels_controls(object):
     def c_at(self):
         return self._selected_point
     
-    def press(self, x, y, name):
+    def press(self, x, y, page, name):
         un.history.undo_save(3)
         
-        c, r, i = meredith.mipsy.tracts[meredith.mipsy.t].channels.target_point(x, y, 20)
+        if page != self._page:
+            self._page = page
+            noticeboard.refresh_properties_stack.push_change()
+        
+        c, r, i = meredith.mipsy.tracts[meredith.mipsy.t].channels.target_point(x, y, page, 20)
         portal = None
         
         #clear selection
@@ -33,7 +39,7 @@ class Channels_controls(object):
         # switch
         if c is None:
             # target tract
-            t, c = meredith.mipsy.target_channel(x, y, 20)
+            t, c = meredith.mipsy.target_channel(x, y, page, 20)
             meredith.mipsy.set_t(t)
         
         # perfect case, make point selected
@@ -41,7 +47,7 @@ class Channels_controls(object):
             meredith.mipsy.tracts[meredith.mipsy.t].channels.make_selected(c, r, i)
         
         elif c is None:
-            c = meredith.mipsy.tracts[meredith.mipsy.t].channels.target_channel(x, y, 20)
+            c = meredith.mipsy.tracts[meredith.mipsy.t].channels.target_channel(x, y, page, 20)
 
         # an r of 0 evaluates to 'false' so we need None
         if r is not None and i is None:
@@ -63,6 +69,9 @@ class Channels_controls(object):
                     meredith.mipsy.tracts[meredith.mipsy.t].channels.make_selected(c, 1, -1)
                     r = 1
                     i = len(meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[1]) - 1
+        
+        if c != self._selected_point[0]:
+            noticeboard.refresh_properties_stack.push_change()
         
         self._selected_point = (c, r, i)
         self._selected_portal = portal
@@ -133,12 +142,12 @@ class Channels_controls(object):
             meredith.mipsy.tracts[meredith.mipsy.t].channels.expand_selection(self._selected_point[0])
             
     
-    def hover(self, x, y, hovered=[None, None]):
+    def hover(self, x, y, page, hovered=[None, None]):
         
-        c, r, i = meredith.mipsy.tracts[meredith.mipsy.t].channels.target_point(x, y, 20)
+        c, r, i = meredith.mipsy.tracts[meredith.mipsy.t].channels.target_point(x, y, page, 20)
         portal = None
         if c is None:
-            c = meredith.mipsy.tracts[meredith.mipsy.t].channels.target_channel(x, y, 20)
+            c = meredith.mipsy.tracts[meredith.mipsy.t].channels.target_channel(x, y, page, 20)
 
         self._hover_point = (c, r, i)
         
@@ -149,8 +158,6 @@ class Channels_controls(object):
                 self._hover_portal = (c, portal[0])
             else:
                 self._hover_portal = (None, None)
-
-            
 
         if self._hover_point != hovered[0]:
             noticeboard.refresh.push_change()
@@ -181,16 +188,19 @@ class Channels_controls(object):
         
         cr.set_dash([], 0)
 
-    def render(self, cr, Tx, Ty, show_rails=False):
+    def render(self, cr, Tx, Ty, pageheight, show_rails=False):
 
         for c, channel in enumerate(meredith.mipsy.tracts[meredith.mipsy.t].channels.channels):
+            
+            offset = channel.page * pageheight
+            
             color = (0.3, 0.3, 0.3, 0.5)
             if (c, 'entrance') == self._hover_portal:
                 color = (0.3, 0.3, 0.3, 1)
             # draw portals            
             self._draw_broken_bar(cr,
                     round( Tx(channel.railings[0][0][0]) ), 
-                    round( Ty(channel.railings[0][0][1]) ),
+                    round( Ty(channel.railings[0][0][1] + offset) ),
                     round( Tx(channel.railings[1][0][0]) ),
                     color,
                     top = 1
@@ -201,41 +211,46 @@ class Channels_controls(object):
                 color = (1, 0, 0.1, 0.5)
             self._draw_broken_bar(cr,
                     round( Tx(channel.railings[0][-1][0]) ), 
-                    round( Ty(channel.railings[1][-1][1]) ),
+                    round( Ty(channel.railings[1][-1][1] + offset) ),
                     round( Tx(channel.railings[1][-1][0]) ),
                     color,
                     top = 0
                     )
             
             # draw railings
-            if c == self._hover_point[0]:
+            if c == self._selected_point[0]:
                 cr.set_source_rgba(1, 0.2, 0.6, 1)
+                w = 2
+            elif c == self._hover_point[0]:
+                cr.set_source_rgba(1, 0.2, 0.6, 0.7)
+                w = 1
             else:
                 cr.set_source_rgba(1, 0.2, 0.6, 0.5)
+                w = 1
             
             if show_rails:
                 for r, railing in enumerate(channel.railings):
-                    pts = [( Tx(p[0]), Ty(p[1]) ) for p in railing]
+                    pts = [( Tx(p[0]), Ty(p[1] + offset) ) for p in railing]
                     
                     cr.move_to(pts[0][0], pts[0][1])
 
                     for point in pts[1:]:
                         cr.line_to(point[0], point[1])
 
-                    cr.set_line_width(2)
+                    cr.set_line_width(w)
                     cr.stroke()
 
                     # draw selections
                     for i, p in enumerate(railing):
-                        cr.arc( Tx(p[0]), Ty(p[1]), 3, 0, 2*pi)
+                        cr.arc( Tx(p[0]), Ty(p[1] + offset), 3, 0, 2*pi)
                         if (c, r, i) == self._hover_point:
                             cr.set_source_rgba(1, 0.2, 0.6, 0.5)
                             cr.fill()
-                            cr.set_source_rgba(1, 0.2, 0.6, 1)
+                            cr.set_source_rgba(1, 0.2, 0.6, 0.7)
                         else:
                             cr.fill()
                         if p[2]:
-                            cr.arc( Tx(p[0]), Ty(p[1]), 5, 0, 2*pi)
+                            cr.arc( Tx(p[0]), Ty(p[1] + offset), 5, 0, 2*pi)
                             cr.set_line_width(1)
                             cr.stroke()
 

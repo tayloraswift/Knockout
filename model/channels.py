@@ -66,24 +66,26 @@ class Channels(object):
     def __init__(self, ic):
         self.channels = ic
  #####################   
-    def target_channel(self, x, y, radius):
+    def target_channel(self, x, y, page, radius):
         for c, channel in enumerate(self.channels):
-            if y >= channel.railings[0][0][1] - radius and y <= channel.railings[1][-1][1] + radius:
-                if x >= channel.edge(0, y)[0] - radius and x <= channel.edge(1, y)[0] + radius:
-                    return c
+            if channel.page == page:
+                if y >= channel.railings[0][0][1] - radius and y <= channel.railings[1][-1][1] + radius:
+                    if x >= channel.edge(0, y)[0] - radius and x <= channel.edge(1, y)[0] + radius:
+                        return c
         return None
 #######################
-    def target_point(self, x, y, radius):
+    def target_point(self, x, y, page, radius):
         cc, rr, ii = None, None, None
-        for c in range(len(self.channels)):
-            for r in range(len(self.channels[c].railings)):
-                for i, point in enumerate(self.channels[c].railings[r]):
-                    if abs(x - point[0]) + abs(y - point[1]) < radius:
+        for c, channel in enumerate(self.channels):
+            if channel.page == page:
+                for r in range(len(channel.railings)):
+                    for i, point in enumerate(channel.railings[r]):
+                        if abs(x - point[0]) + abs(y - point[1]) < radius:
 
-                        return c, r, i
-                # if that fails, take a railing, if possible
-                if not self.channels[c]._is_outside(y) and abs(x - self.channels[c].edge(r, y)[0]) <= radius:
-                    cc, rr, ii = c, r, None
+                            return c, r, i
+                    # if that fails, take a railing, if possible
+                    if not channel._is_outside(y) and abs(x - channel.edge(r, y)[0]) <= radius:
+                        cc, rr, ii = c, r, None
         return cc, rr, ii
     
     def is_selected(self, c, r, i):
@@ -160,7 +162,7 @@ class Channels(object):
 
     def generate_channel(self):
         x1, y1, x2 = self.channels[-1].railings[0][-1][0], self.channels[-1].railings[0][-1][1] + 40, self.channels[-1].railings[1][-1][0]
-        return Channel( [[x1, y1, False], [x1, y1 + 40, False]], [[x2, y1, False], [x2, y1 + 40, False]] )
+        return Channel( [[x1, y1, False], [x1, y1 + 40, False]], [[x2, y1, False], [x2, y1 + 40, False]], self.channels[-1].page )
     
     def add_channel(self):
         self.channels.append(self.generate_channel())

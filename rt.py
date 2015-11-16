@@ -1,5 +1,6 @@
 from gi.repository import Gtk, Gdk, GObject
 import cairo
+from time import time
 
 from state import noticeboard
 from state import constants
@@ -17,7 +18,7 @@ from interface import menu
 import tree
 
 _dead_keys = set(('dead_tilde', 'dead_acute', 'dead_grave', 'dead_circumflex', 'dead_abovering', 'dead_macron', 'dead_breve', 'dead_abovedot', 'dead_diaeresis', 'dead_doubleacute', 'dead_caron', 'dead_cedilla', 'dead_ogonek', 'dead_iota', 'Multi_key'))
-_special_keys = set(('Shift_L', 'Shift_R', 'Control_L', 'Control_R', 'Caps_Lock', 'Escape', 'Tab', 'Alt_L', 'Alt_R', 'Super_L')) ^ _dead_keys
+_special_keys = set(('Shift_L', 'Shift_R', 'Control_L', 'Control_R', 'Caps_Lock', 'Escape', 'Tab', 'Alt_L', 'Alt_R', 'Super_L')) | _dead_keys
 
 class MouseButtons:
     
@@ -52,10 +53,11 @@ class Display(Gtk.Window):
         self.connect("check-resize", self.on_resize)
         
         self.set_title(constants.filename)
-        self.resize(constants.windowwidth, constants.windowheight)
-        
+
         self._h = constants.window.get_h()
         self._k = constants.window.get_k()
+        
+        self.resize(self._h, self._k)
         
         self.set_position(Gtk.WindowPosition.CENTER)
         self.connect("delete-event", self.quit)
@@ -79,8 +81,14 @@ class Display(Gtk.Window):
         nohints.set_hint_style(cairo.HINT_STYLE_NONE)
         cr.set_font_options(nohints)
 
+        cr.save()
+        cr.translate(constants.UI[0], 0)
         taylor.becky.render(cr, self._h, self._k)
+        cr.restore()
+        cr.save()
+        cr.translate(constants.UI[1], 0)
         karlie.klossy.render(cr, self._h, self._k)
+        cr.restore()
         
         menu.menu.render(cr)
 
@@ -109,10 +117,12 @@ class Display(Gtk.Window):
         return True
     
     def on_resize(self, w):
+        h_old = self._h
         self._h, self._k = self.get_size()
+        constants.UI[1] += self._h - h_old
+        
         constants.window.resize(self._h, self._k)
     
-        constants.UI[1] = self._h - 300
         taylor.becky.resize(self._h, self._k)
         
     def on_button_press(self, w, e):
@@ -120,7 +130,7 @@ class Display(Gtk.Window):
         if e.type == Gdk.EventType._2BUTTON_PRESS:
             if e.button == MouseButtons.LEFT_BUTTON:
                 print('double')
-                tree.take_event(e.x, e.y, 'press2', h = self._h, k = self._k )
+                tree.take_event(e.x, e.y, 'press2' )
             self.darea.queue_draw()
         
         elif e.type == Gdk.EventType.BUTTON_PRESS:
@@ -130,13 +140,13 @@ class Display(Gtk.Window):
                 else:
                     mod = None
                         
-                tree.take_event(e.x, e.y, 'press', char=mod,  h = self._h, k = self._k )
+                tree.take_event(e.x, e.y, 'press', char=mod )
             
             elif e.button == MouseButtons.MIDDLE_BUTTON:
-                tree.take_event(e.x, e.y, 'press_mid',  h = self._h, k = self._k )
+                tree.take_event(e.x, e.y, 'press_mid' )
             
             elif e.button == MouseButtons.RIGHT_BUTTON:
-                tree.take_event(e.x, e.y, 'press_right',  h = self._h, k = self._k )
+                tree.take_event(e.x, e.y, 'press_right' )
             
             self.darea.queue_draw()
             
@@ -145,10 +155,10 @@ class Display(Gtk.Window):
         if e.type == Gdk.EventType.BUTTON_RELEASE:
             if e.button == MouseButtons.LEFT_BUTTON:
 
-                tree.take_event(e.x, e.y, 'release',  h = self._h, k = self._k )
+                tree.take_event(e.x, e.y, 'release' )
             
             elif e.button == MouseButtons.MIDDLE_BUTTON:
-                tree.take_event(-1, -1, 'drag',  h = self._h, k = self._k )
+                tree.take_event(-1, -1, 'drag' )
                 
             self.darea.queue_draw()
             
@@ -157,13 +167,13 @@ class Display(Gtk.Window):
     def motion_notify_event(self, widget, event):
 
         if event.state & Gdk.ModifierType.BUTTON1_MASK:
-            tree.take_event(event.x, event.y, 'press_motion',  h = self._h, k = self._k )
+            tree.take_event(event.x, event.y, 'press_motion' )
 
         elif event.state & Gdk.ModifierType.BUTTON2_MASK:
-            tree.take_event(event.x, event.y, 'drag',  h = self._h, k = self._k )
+            tree.take_event(event.x, event.y, 'drag' )
             
         else:
-            tree.take_event(event.x, event.y, 'motion',  h = self._h, k = self._k )
+            tree.take_event(event.x, event.y, 'motion' )
 
         if noticeboard.refresh.should_refresh():
             self.darea.queue_draw()
@@ -175,7 +185,7 @@ class Display(Gtk.Window):
             mod = None
         
         # direction of scrolling stored as sign
-        tree.take_event(e.x, e.y*(2*e.direction - 1), 'scroll', char=mod, h = self._h, k = self._k )
+        tree.take_event(e.x, e.y*(2*e.direction - 1), 'scroll', char=mod )
         
         if noticeboard.refresh.should_refresh():
             self.darea.queue_draw()

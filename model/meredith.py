@@ -7,7 +7,7 @@ class Meredith(object):
         self.tracts = []
         
     def reinit(self, kitty):
-        self.tracts = [comp.Text(k['text'], channels.Channels([channels.Channel(c[0], c[1]) for c in k['outline']]), * k['cursors'] ) for k in kitty if k['outline']]
+        self.tracts = [comp.Text(k['text'], channels.Channels([channels.Channel( * c ) for c in k['outline']]), * k['cursors'] ) for k in kitty if k['outline']]
         self.t = 0
         self.rerender()
             
@@ -16,15 +16,15 @@ class Meredith(object):
             tr.deep_recalculate()
 
     
-    def target_channel(self, x, y, radius):
+    def target_channel(self, x, y, page, radius):
         # try local
         t = self.t
-        c = self.tracts[t].channels.target_channel(x, y, radius)
+        c = self.tracts[t].channels.target_channel(x, y, page, radius)
         
         if c is None:
             print('None')
             for t, tract in enumerate(self.tracts):
-                c = tract.channels.target_channel(x, y, radius)
+                c = tract.channels.target_channel(x, y, page, radius)
                 if c is not None:
                     return t, c
 
@@ -99,7 +99,8 @@ class Meredith(object):
         self.tracts[self.t].text[i] = ('<p>', po)
     
     def change_channel_page(self, page, c):
-        self.tracts[self.t].channels[c].set_page(page)
+        self.tracts[self.t].channels.channels[c].set_page(page)
+        self.rerender()
             
     def stats(self, spell=False):
         self.tracts[self.t].stats(spell)

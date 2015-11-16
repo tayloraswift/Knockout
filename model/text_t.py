@@ -7,6 +7,8 @@ pyphen.language_fallback('en_US')
 
 from fonts import fonttable
 
+from state import noticeboard
+
 from model import kevin
 from model import errors
 from model.wonder import words, _breaking_chars, character
@@ -355,23 +357,23 @@ class Text(object):
         
         # avoid recalculating lines that weren't affected
         try:
-            affected = self.index_to_line( min(self.select.cursor, self.cursor.cursor) ) - 1
-            if affected < 0:
-                affected = 0
+            l = self.index_to_line( min(self.select.cursor, self.cursor.cursor) ) - 1
+            if l < 0:
+                l = 0
             
             self._page_intervals = { page: [I for I in 
-                    [ interval if interval[1] <= affected else interval[0] if interval[0] <= affected else None for interval in intervals]
-                    if I is not None] for page, intervals in self._page_intervals.items()}    
+                    [ interval if interval[1] <= l else interval[0] if interval[0] <= l else None for interval in intervals]
+                    if I is not None] for page, intervals in self._page_intervals.items() if intervals[0][0] < l}    
             
-            startindex = self._glyphs[affected].startindex
-            self._glyphs = self._glyphs[:affected + 1]
+            startindex = self._glyphs[l].startindex
+            self._glyphs = self._glyphs[:l + 1]
             #        i = affected
-            self._generate_lines(affected, startindex)
+            self._generate_lines(l, startindex)
         except AttributeError:
             self.deep_recalculate()
         
         # tally errors
-        errors.styleerrors.update(affected)
+        errors.styleerrors.update(l)
 
     def deep_recalculate(self):
         # clear sorts
@@ -388,21 +390,21 @@ class Text(object):
     def _target_line(self, x, y, c=None):
         # find which channel is clicked on
         if c is None:
-            c = self.channels.target_channel(x, y, 20)
+            c = 0
         # get all y values
-        yy = [textline for textline in self._glyphs if textline.c == c]
+        clines = [(textline.y, textline.l) for textline in self._glyphs if textline.c == c]
+        yy, ll = zip( * clines)
         # find the clicked line
         lineindex = None
-        if y >= yy[-1].y:
+        if y >= yy[-1]:
             lineindex = len(yy) - 1
         else:
-            lineindex = bisect.bisect([textline.y for textline in yy], y )
+            lineindex = bisect.bisect(yy, y)
 
-        return yy[lineindex].l
+        return ll[lineindex]
     
     def target_glyph(self, x, y, l=None, c=None):
-        if c is None:
-            c = self.channels.target_channel(x, y, 20)
+
         if l is None:
             l = self._target_line(x, y, c)
 
@@ -678,21 +680,35 @@ class Text(object):
 
         if not self._sorted_pages:
 
-            for page in self._page_intervals:
-            
-                sorted_page = {}
+            for page, intervals in self._page_intervals.items():
+                sorted_page = {'_annot': [], '_intervals': intervals}
                 
-                for line in chain.from_iterable([ self._glyphs[slice( * interval)] for interval in self._page_intervals[page] ]):
+                for line in chain.from_iterable(self._glyphs[slice( * interval)] for interval in intervals):
+#                        [ 
+#                            [ (ll + interval[0], glyphline) for ll, glyphline in enumerate(self._glyphs[slice( * interval)]) ] 
+#                        for interval in intervals ]
+#                        ):
                     p_name = line.glyphs[0][3][0]
                     hyphen = line.hyphen
+                    
+                    # line data
+#                    sorted_page['_lines'][l] = line.anchor, line.stop, line.leading, line.y
+                    
                     for glyph in line.glyphs:
-                        f = glyph[4]
-                        K = glyph[0:3]
-                        try:
-                            sorted_page[(p_name, f)].append(K)
-                        except KeyError:
-                            sorted_page[(p_name, f)] = []
-                            sorted_page[(p_name, f)].append(K)
+                        
+                        if glyph[0] < 0:
+                            if glyph[0] == -2:
+                                sorted_page['_annot'].append( (glyph[0], line.anchor, line.y + line.leading) + glyph[3:])
+                            else:
+                                sorted_page['_annot'].append(glyph)
+                        else:
+                            K = glyph[0:3]
+                            f = glyph[4]
+                            try:
+                                sorted_page[(p_name, f)].append(K)
+                            except KeyError:
+                                sorted_page[(p_name, f)] = []
+                                sorted_page[(p_name, f)].append(K)
                     if hyphen is not None:
                         try:
                             sorted_page[hyphen[3:5]].append((hyphen[0:3]))

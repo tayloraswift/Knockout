@@ -1,45 +1,40 @@
+from bisect import bisect
+
 from state import constants
 
 from interface import karlie
 from interface import taylor
 from interface import menu
 
+UI_CELLS = [taylor.becky, karlie.klossy]
+
 def idle():
     if True:
         taylor.becky.idle()
 
-def take_event(x, y, event, key=False, char=None, region=['document', 'document'], h=0, k=0):
+#                                                         click | hover
+def take_event(x, y, event, key=False, char=None, region=[  0,      0  ]):
 
     if key:
-        if region[0] == 'document':
-            return taylor.becky.key_input(event, char)
-                
-        elif region[0] == 'properties':
-            return karlie.klossy.key_input(event, char)
+        return UI_CELLS[region[0]].key_input(event, char)
+
                 
     else:
         # Changing regions
+        OVER = bisect(constants.UI, x) - 1
+
+        if region[1] != OVER:
+            UI_CELLS[region[1]].hover(-1, -1)
+            region[1] = OVER
         
-        if x > constants.UI[1]:
-            if region[1] != 'properties':
-                region[1] = 'properties'
-            if event in ('press', 'press_mid', 'press_right') and region[0] != 'properties':
-                region[0] = 'properties'
-
-        else:
-            if region[1] != 'document':
-#                noticeboard.refresh.push_change()
-
-                if event == 'motion':
-                    karlie.klossy.hover(x - constants.UI[1], y)
-                region[1] = 'document'
-            if event in ('press', 'press_mid', 'press_right') and region[0] != 'document':
-                # if we're going from properties to document, dump properties
-                if region[0] == 'properties' and event == 'press':
-                    karlie.klossy.press(x - constants.UI[1], y)
-                region[0] = 'document'
+        if event in ('press', 'press_mid', 'press_right') and region[0] != OVER:
+            # if we're going from properties to document, dump properties
+            if isinstance(UI_CELLS[region[0]], karlie._Properties_panel):
+                UI_CELLS[region[0]].press(-1, -1, None)
+            region[0] = OVER
 
 
+        # MENU
         if menu.menu.menu():
             if menu.menu.in_bounds(x, y):
                 if event == 'motion':
@@ -56,48 +51,38 @@ def take_event(x, y, event, key=False, char=None, region=['document', 'document'
         
         # motion and scrolling operates under the hover context
         if event == 'motion':
-
-            if region[1] == 'properties':
-                karlie.klossy.hover(x - constants.UI[1], y)
-            elif region[1] == 'document':
-                taylor.becky.hover(x, y)
+            x -= constants.UI[region[1]]
+            UI_CELLS[region[1]].hover(x, y)
         
         elif event == 'scroll':
-            if region[1] == 'properties':
-                pass
-            elif region[1] == 'document':
-                taylor.becky.scroll(x, y, char)
+            x -= constants.UI[region[1]]
+            UI_CELLS[region[1]].scroll(x, y, char)
 
-        # other operate under the click context
-        elif region[0] == 'document':
+        # others operate under the click context
+        else:
+            x -= constants.UI[region[0]]
+            
             if event == 'press':
                 menu.menu.destroy()
-                taylor.becky.press(x, y, char)
+                UI_CELLS[region[0]].press(x, y, char)
             
             elif event == 'press2':
-                taylor.becky.dpress()
+                UI_CELLS[region[0]].dpress()
             
             elif event == 'press_motion':
-                taylor.becky.press_motion(x, y)
+                UI_CELLS[region[0]].press_motion(x, y)
 
             elif event == 'press_mid':
                 menu.menu.destroy()
-                taylor.becky.press_mid(x, y)
+                UI_CELLS[region[0]].press_mid(x, y)
             
             elif event == 'press_right':
                 menu.menu.destroy()
-                taylor.becky.press_right(x, y)
+                UI_CELLS[region[0]].press_right(x, y)
 
             elif event == 'drag':
-                taylor.becky.drag(x, y)
+                UI_CELLS[region[0]].drag(x, y)
 
             elif event == 'release':
-                taylor.becky.release(x, y)
+                UI_CELLS[region[0]].release(x, y)
             
-        elif region[0] == 'properties':
-            if event == 'press':
-                menu.menu.destroy()
-                karlie.klossy.press(x - constants.UI[1], y)
-            
-            elif event == 'press_motion':
-                karlie.klossy.press_motion(x - constants.UI[1])

@@ -94,8 +94,11 @@ class Channels(object):
         except TypeError:
             return False
     
-    def make_selected(self, c, r, i):
-        self.channels[c].railings[r][i][2] = True
+    def make_selected(self, c, r, i, mod):
+        if mod == 'ctrl':
+            self.channels[c].railings[r][i][2] = not self.channels[c].railings[r][i][2]
+        else:
+            self.channels[c].railings[r][i][2] = True
         
     def clear_selection(self):
         for c in range(len(self.channels)):
@@ -153,12 +156,23 @@ class Channels(object):
                     for i, point in enumerate(self.channels[c].railings[r]):
                         if point[2]:
                             self.channels[c].railings[r][i] = [point[0] + x - xo, point[1] + y - yo, True]
+
                 # check y alignment
                 if self.channels[c].railings[0][0] [1] != self.channels[c].railings[1][0] [1]:
-                    self.channels[c].railings[1][0] [1] = self.channels[c].railings[0][0] [1]
+                    # determine which should move
+                    if self.channels[c].railings[0][0][2]:
+                        flip = 1
+                    else:
+                        flip = 0
+                    self.channels[c].railings[flip][0] [1] = self.channels[c].railings[not flip][0] [1]
 
                 if self.channels[c].railings[0][-1] [1] != self.channels[c].railings[1][-1] [1]:
-                    self.channels[c].railings[0][-1] [1] = self.channels[c].railings[1][-1] [1]
+                    # determine which should move
+                    if self.channels[c].railings[0][-1][2]:
+                        flip = 1
+                    else:
+                        flip = 0
+                    self.channels[c].railings[not flip][-1] [1] = self.channels[c].railings[flip][-1] [1]
 
     def generate_channel(self):
         x1, y1, x2 = self.channels[-1].railings[0][-1][0], self.channels[-1].railings[0][-1][1] + 40, self.channels[-1].railings[1][-1][0]

@@ -44,7 +44,7 @@ class Channels_controls(object):
         
         # perfect case, make point selected
         if i is not None:
-            meredith.mipsy.tracts[meredith.mipsy.t].channels.make_selected(c, r, i)
+            meredith.mipsy.tracts[meredith.mipsy.t].channels.make_selected(c, r, i, name)
         
         elif c is None:
             c = meredith.mipsy.tracts[meredith.mipsy.t].channels.target_channel(x, y, page, 20)
@@ -60,13 +60,13 @@ class Channels_controls(object):
             # select multiple points
             if portal is not None:
                 if portal[0] == 'entrance':
-                    meredith.mipsy.tracts[meredith.mipsy.t].channels.make_selected(c, 0, 0)
-                    meredith.mipsy.tracts[meredith.mipsy.t].channels.make_selected(c, 1, 0)
+                    meredith.mipsy.tracts[meredith.mipsy.t].channels.make_selected(c, 0, 0, name)
+                    meredith.mipsy.tracts[meredith.mipsy.t].channels.make_selected(c, 1, 0, name)
                     r = 0
                     i = 0
                 elif portal[0] == 'portal':
-                    meredith.mipsy.tracts[meredith.mipsy.t].channels.make_selected(c, 0, -1)
-                    meredith.mipsy.tracts[meredith.mipsy.t].channels.make_selected(c, 1, -1)
+                    meredith.mipsy.tracts[meredith.mipsy.t].channels.make_selected(c, 0, -1, name)
+                    meredith.mipsy.tracts[meredith.mipsy.t].channels.make_selected(c, 1, -1, name)
                     r = 1
                     i = len(meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[1]) - 1
         

@@ -699,14 +699,14 @@ class Document_view(ui.Cell):
             x, y = self._GRID(cr, x, y)
             
             fontsize = round(get_fontsize(p[0], f) * self._A) / self._A
-                
+
+            if p[1] == meredith.mipsy.glyph_at(0)[2][1]:
+                cr.set_source_rgba(1, 0.2, 0.6, 0.7)
+            else:
+                cr.set_source_rgba(0, 0, 0, 0.4)
+            
             #         '<p>'
             if a[0] == -3:
-                # coloration works because '<p>' always comes first
-                if p[1] == meredith.mipsy.glyph_at(0)[2][1]:
-                    cr.set_source_rgba(1, 0.2, 0.6, 0.7)
-                else:
-                    cr.set_source_rgba(0, 0, 0, 0.4)
                 
                 cr.move_to(x, y)
                 cr.rel_line_to(0, -fontsize)

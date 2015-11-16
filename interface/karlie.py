@@ -9,7 +9,7 @@ from fonts import fonts
 from fonts import fonttable
 from fonts import fontsetters as fs
 
-from interface import kookies, olivia
+from interface import kookies, olivia, ui
 
 from model import meredith
 from model import un
@@ -241,15 +241,13 @@ class _preview(kookies.Heading):
         cr.show_glyphs(self._texts[0])
 
 # do not instantiate directly, requires a _reconstruct
-class _Properties_panel(object):
+class _Properties_panel(ui.Cell):
     def __init__(self, tabs = (), default=0, partition=1 ):
-        self._h = constants.windowwidth
-        self._k = constants.windowheight
         
         self._partition = partition
 
         width = 100
-        self._tabstrip = kookies.Tabs( (self._h - constants.UI[partition] - width)//2 , 50, width, 30, default=default, callback=self._tab_switch, signals=tabs)
+        self._tabstrip = kookies.Tabs( (constants.window.get_h() - constants.UI[partition] - width)//2 , 50, width, 30, default=default, callback=self._tab_switch, signals=tabs)
         self._tab = tabs[default][0]
         
         self._reconstruct()
@@ -270,20 +268,21 @@ class _Properties_panel(object):
         self._reconstruct()
     
     def render(self, cr, h, k):
-    
-        cr.save()
-        cr.translate(constants.UI[self._partition], 0)
         
         # DRAW BACKGROUND
         cr.rectangle(0, 0, 
-                300, 
+                h - constants.UI[self._partition], 
                 k)
         cr.set_source_rgb(1, 1, 1)
         cr.fill()
         
         # check if entries need restacking
         if noticeboard.refresh_properties_stack.should_refresh():
-            self._reconstruct()
+            mode = noticeboard.refresh_properties_type.should_refresh()
+            if mode[0]:
+                self._swap_reconstruct(mode[1])
+            else:
+                self._reconstruct()
         
         for i, entry in enumerate(self._items):
             if i == self._hover_box_ij[0]:
@@ -297,8 +296,6 @@ class _Properties_panel(object):
                 k)
         cr.set_source_rgb(0.9, 0.9, 0.9)
         cr.fill()
-        
-        cr.restore()
     
     def key_input(self, name, char):
         if self._active_box_i is not None:
@@ -311,7 +308,7 @@ class _Properties_panel(object):
             else:
                 return self._items[self._active_box_i].type_box(name, char)
     
-    def press(self, x, y):
+    def press(self, x, y, char):
 
         b = None
 
@@ -335,7 +332,7 @@ class _Properties_panel(object):
             self._active_box_i = b
 
             
-    def press_motion(self, x):
+    def press_motion(self, x, y):
         if self._active_box_i is not None:
             self._items[self._active_box_i].focus_drag(x)
     
@@ -356,9 +353,13 @@ class _Properties_panel(object):
             hovered[0] = self._hover_box_ij
             noticeboard.refresh.push_change()
 
-class Text_properties(_Properties_panel):
+class Properties(_Properties_panel):
+    def __init__(self, tabs = (), default=0, partition=1 ):
+        self._reconstruct = self._reconstruct_text_properties
+        
+        _Properties_panel.__init__(self, tabs = tabs, default=default, partition=partition) 
 
-    def _reconstruct(self):
+    def _reconstruct_text_properties(self):
         # ALWAYS REQUIRES CALL TO _stack()
         p = meredith.mipsy.glyph_at()[2]
         
@@ -387,7 +388,7 @@ class Text_properties(_Properties_panel):
                     self._items.append(_Inheritance_selection_menu( 200, y + 3, callback=None, p=p[0], f=key, attribute='_all', source=self._partition))
                     y += 30
                     
-                    self._items.append(_Font_file_Field( 15, y, 250, p[0], key, name='FONT FILE', source=self._partition ))
+                    self._items.append(_Font_file_Field( 15, y, 250, p[0], key, name='FONT FILE' ))
                     y += 30
                     self._items.append(_Inheritance_selection_menu( 200, y, callback=None, p=p[0], f=key, attribute='path', source=self._partition))
                     y += 15
@@ -423,9 +424,7 @@ class Text_properties(_Properties_panel):
             
         self._stack()
 
-class Channel_properties(_Properties_panel):
-
-    def _reconstruct(self):
+    def _reconstruct_channel_properties(self):
         # ALWAYS REQUIRES CALL TO _stack()
         c = olivia.dibbles.c_at()[0]
         
@@ -438,16 +437,35 @@ class Channel_properties(_Properties_panel):
         self._items.append(kookies.Heading( 15, 90, 250, 30, 'Channel ' + str(c), upper=True))
         
         if self._tab == 'channels':
-
-            self._items.append(kookies.Integer_field( 15, y, 250, 
-                    meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].page, 
-                    callback = meredith.mipsy.change_channel_page, 
-                    params = (c,),
-                    name = 'PAGE' ))
-            y += 30
-
+            if c is not None:
+                self._items.append(kookies.Integer_field( 15, y, 250, 
+                        str(meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].page), 
+                        callback = meredith.mipsy.change_channel_page, 
+                        params = (c,),
+                        name = 'PAGE' ))
+                y += 30
             
         self._stack()
+        
+    def _swap_reconstruct(self, to):
+        width = 100
 
-klossy = Text_properties(tabs = (('paragraph', 'P'), ('font', 'F'), ('', '?')), partition=1 )
+        if to == 'text':
+            tabs = (('paragraph', 'P'), ('font', 'F'), ('', '?'))
+            default = 1
+            self._tabstrip = kookies.Tabs( (constants.window.get_h() - constants.UI[self._partition] - width)//2 , 50, width, 30, default=default, callback=self._tab_switch, signals=tabs)
+            self._tab = tabs[default][0]
+            self._reconstruct = self._reconstruct_text_properties
+
+        elif to == 'channels':
+            tabs = (('channels', 'C'), ('', '?'))
+            default = 0
+            self._tabstrip = kookies.Tabs( (constants.window.get_h() - constants.UI[self._partition] - width)//2 , 50, width, 30, default=default, callback=self._tab_switch, signals=tabs)
+            self._tab = tabs[default][0]
+            self._reconstruct = self._reconstruct_channel_properties
+        
+        self._reconstruct()
+
+
+klossy = Properties(tabs = (('paragraph', 'P'), ('font', 'F'), ('', '?')), partition=1 )
 

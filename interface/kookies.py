@@ -545,7 +545,7 @@ class Integer_field(Blank_space):
 
         return num
     
-    def domain(self, entry):
+    def _domain(self, entry):
         return int(entry)
 
     def _stamp_glyphs(self, text):
@@ -614,7 +614,7 @@ class Object_menu(Blank_space):
             self._i = self._target(x)
             self._j = self._i
             
-            self._center_x(self._template[self._j][1])
+            self._center_j()
         else:
             self.defocus()
             if x < self._x + self._width - 20:

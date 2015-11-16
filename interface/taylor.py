@@ -1,6 +1,8 @@
 import bisect
 from math import pi
 
+from copy import deepcopy
+
 import os
 import cairo
 
@@ -21,7 +23,7 @@ from typing import typing
 
 from interface import kookies
 from interface import olivia
-from interface import menu
+from interface import menu, ui
 
 
 # used in rendering with undefined classes
@@ -148,8 +150,15 @@ def PDF():
     name = os.path.splitext(constants.filename)[0]
     surface = cairo.PDFSurface(name + '.pdf', 765, 990)
     cr = cairo.Context(surface)
-    becky._draw_text(cr, refresh=True)
-    cr.show_page()
+    
+    classes = becky.page_classes()
+    max_page = max(classes.keys())
+    for p in range(max_page + 1):
+        try:
+            becky.print_page(cr, p, classes)
+        except KeyError:
+            pass
+        cr.show_page()
     
     # put text back where it was before
     meredith.mipsy.rerender()
@@ -276,7 +285,7 @@ def _replace_misspelled(word):
         typing.type_document('Paste', list(word))
     meredith.mipsy.stats(spell=True)
 
-class Document_view(object):
+class Document_view(ui.Cell):
     def __init__(self):
         self._mode = 'text'
         self._region_active, self._region_hover = 'view', 'view'
@@ -288,13 +297,9 @@ class Document_view(object):
         self._scroll_notches = [0.1, 0.13, 0.15, 0.2, 0.22, 0.3, 0.4, 0.5, 0.6, 0.8, 0.89, 1, 1.25, 1.5, 1.75, 1.989, 2, 2.5, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20, 30, 40]
         self._scroll_notch_i = 11
         
-        # window widths (CURRENTLY UNUSED)
-        self._hw = constants.windowwidth
-        self._kw = constants.windowheight
-        
         # transform parameters
         self._Hc = (constants.UI[1] - 100) / 2 + 100
-        self._Kc = (self._kw) / 2
+        self._Kc = (constants.window.get_k()) / 2
         
         self._H = 200
         self._K = 100
@@ -361,18 +366,24 @@ class Document_view(object):
         self._check_region_press(x, y)
         
         if self._region_active == 'view':
+            # what page
+            xo, yo = self._T_1(x, y)
+            page = int(yo//1100)
+            yo -= page*1100
+
             # TEXT EDITING MODE
             if self._mode == 'text':
                 try:
                     un.history.undo_save(0)
                     
-                    t, c = meredith.mipsy.target_channel( * self._T_1(x, y), radius=20)
-                    meredith.mipsy.set_t(t)
-                    meredith.mipsy.set_cursor_xy( * self._T_1(x, y) , c=c)
-                    meredith.mipsy.match_cursors()
-                    
-                    # used to keep track of ui redraws
-                    self._sel_cursor = meredith.mipsy.selection()[1]
+                    t, c = meredith.mipsy.target_channel( xo, yo, page, radius=20)
+                    if c is not None:
+                        meredith.mipsy.set_t(t)
+                        meredith.mipsy.set_cursor_xy(xo, yo, c)
+                        meredith.mipsy.match_cursors()
+                        
+                        # used to keep track of ui redraws
+                        self._sel_cursor = meredith.mipsy.selection()[1]
                 except IndexError:
                     # occurs if an empty channel is selected
                     pass
@@ -385,7 +396,7 @@ class Document_view(object):
             
             # CHANNEL EDITING MODE
             elif self._mode == 'channels':
-                olivia.dibbles.press( * self._T_1(x, y) , name=name)
+                olivia.dibbles.press( xo, yo, page, name=name)
 
         elif self._region_active == 'toolbar':
             self._toolbar.press(x, y)
@@ -400,11 +411,16 @@ class Document_view(object):
     
     def press_right(self, x, y):
         if self._region_active == 'view':
+            # what page
+            xo, yo = self._T_1(x, y)
+            page = int(yo//1100)
+            yo -= page*1100
+            
             # TEXT EDITING MODE
             if self._mode == 'text':
                 try:
-                    t, c = meredith.mipsy.target_channel( * self._T_1(x, y), radius=20)
-                    i = meredith.mipsy.lookup_xy(t, c, * self._T_1(x, y) )
+                    t, c = meredith.mipsy.target_channel(xo, yo, page, radius=20)
+                    i = meredith.mipsy.lookup_xy(t, c, xo, yo )
                     
                     ms = meredith.mipsy.tracts[meredith.mipsy.t].misspellings
                     pair_i = bisect.bisect([pair[0] for pair in ms], i) - 1
@@ -432,9 +448,15 @@ class Document_view(object):
         
     def press_motion(self, x, y):
         if self._region_active == 'view':
+            # what page
+            xo, yo = self._T_1(x, y)
+            page = int(yo//1100)
+            yo -= page*1100
+            
             if self._mode == 'text':
+                c = meredith.mipsy.tracts[meredith.mipsy.t].channels.target_channel(xo, yo, page, 20)
                 try:
-                    meredith.mipsy.set_select_xy( * self._T_1(x, y) )
+                    meredith.mipsy.set_select_xy( xo, yo, c=c )
                     if meredith.mipsy.selection()[1] != self._sel_cursor:
                         self._sel_cursor = meredith.mipsy.selection()[1]
                         noticeboard.refresh.push_change()
@@ -443,7 +465,7 @@ class Document_view(object):
                     pass
 
             elif self._mode == 'channels':
-                olivia.dibbles.press_motion( * self._T_1(x, y) )
+                olivia.dibbles.press_motion(xo, yo)
         elif self._region_active == 'toolbar':
             pass
         elif self._region_active == 'switcher':
@@ -529,7 +551,13 @@ class Document_view(object):
                 pass
 
             elif self._mode == 'channels':
-                olivia.dibbles.hover( * self._T_1(x, y) )
+                # what page
+                xo, yo = self._T_1(x, y)
+                page = int(yo//1100)
+                yo -= page*1100
+                
+                olivia.dibbles.hover( xo, yo, page )
+                
         elif self._region_hover == 'toolbar':
             self._toolbar.hover(x, y)
         elif self._region_hover == 'switcher':
@@ -540,271 +568,296 @@ class Document_view(object):
 
     def resize(self, h, k):
         self._mode_switcher.resize(h, k)
-        
-        self._hw = h
-        self._kw = k
 
     def change_mode(self, mode):
         self._mode = mode
+        noticeboard.refresh_properties_stack.push_change()
+        noticeboard.refresh_properties_type.push_change(mode)
     
-    def _draw_text(self, cr, mx_cx=-765/2, my_cy=-990/2, cx=765/2, cy=990/2, A=1, refresh=False):
-        
-        # Transform goes
-        # x' = A (x + m - c) + c
-        # x' = Ax + (Am - Ac + c)
-        
-        # Scale first (on bottom) is significantly faster in cairo
-        cr.save()
-        cr.translate(A*mx_cx + cx, A*my_cy + cy)
-        cr.scale(A, A)
-        
-        for tract in meredith.mipsy.tracts:
+    def _print_sorted(self, cr, classed_glyphs):
+        for name, glyphs in classed_glyphs.items():
+            try:
+                cr.set_source_rgb(0, 0, 0)
+                font = fonttable.table.get_font( * name)
+            except TypeError:
+                # happens on '_annot'
+                continue
+            except KeyError:
+                cr.set_source_rgb(1, 0.15, 0.2)
+                try:
+                    font = fonttable.table.get_font(name[0], ())
+                except AttributeError:
+                    font = fonttable.table.get_font('_interface', ())
+            
+            cr.set_font_size(font['fontsize'])
+            cr.set_font_face(font['font'])
+                
+            cr.show_glyphs(glyphs)
+    
+    def page_classes(self):
+        classed_pages = {}
 
-            for page, classed_glyphs in tract.extract_glyphs(refresh).items():
+        jumbled_pages = [tract.extract_glyphs() for tract in meredith.mipsy.tracts]
 
-                for name, glyphs in classed_glyphs.items():
-                    try:
-                        cr.set_source_rgb(0, 0, 0)
-                        font = fonttable.table.get_font( * name)
-                    except KeyError:
-                        cr.set_source_rgb(1, 0.15, 0.2)
-                        try:
-                            font = fonttable.table.get_font(name[0], ())
-                        except AttributeError:
-                            font = fonttable.table.get_font('_interface', ())
+        for dictionary in jumbled_pages:
+            for page, sorted_glyphs in dictionary.items():
+                if page in classed_pages:
+                    for style, glyphs in sorted_glyphs.items():
+                        classed_pages[page].setdefault(style, []).extend(glyphs)
+                else:
+                    classed_pages[page] = deepcopy(sorted_glyphs)
+        
+        return classed_pages
+    
+    def print_page(self, cr, p, classed_pages):
+        self._print_sorted(cr, classed_pages[p])
+            
+    def _draw_by_page(self, cr, mx_cx=-765/2, my_cy=-990/2, cx=765/2, cy=990/2, A=1, refresh=False):
+        max_page = 0
+
+        for t, tract in enumerate(meredith.mipsy.tracts):
+            # highlights
+            if t == meredith.mipsy.t and self._mode == 'text':
+                i, j = sorted(list(meredith.mipsy.selection()))
+
+                l1 = meredith.mipsy.tracts[meredith.mipsy.t].index_to_line(i)
+                l2 = meredith.mipsy.tracts[meredith.mipsy.t].index_to_line(j)
+
+                start = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(i)[0]
+                stop = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(j)[0]
+            
+                # spelling
+                annoying_red_lines = []
+                for pair in tract.misspellings:
+
+                    u, v = pair[:2]
+
+                    u_l = meredith.mipsy.tracts[meredith.mipsy.t].index_to_line(u)
+                    v_l = meredith.mipsy.tracts[meredith.mipsy.t].index_to_line(v)
+
+                    u_x = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(u)[0]
+                    v_x = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(v)[0]
                     
-                    cr.set_font_size(font['fontsize'])
-                    cr.set_font_face(font['font'])
-                        
-                    cr.show_glyphs(glyphs)
+                    annoying_red_lines.append((u_x, v_x, u_l, v_l, u, v))
+        
+            for page, sorted_glyphs in tract.extract_glyphs(refresh).items():
+                if page > max_page:
+                    max_page = page
 
-        cr.restore()
+                # Transform goes
+                # x' = A (x + m - c) + c
+                # x' = Ax + (Am - Ac + c)
+                
+                # Scale first (on bottom) is significantly faster in cairo
+                cr.save()
+                cr.translate(A*mx_cx + cx, A*(my_cy + page * 1100) + cy)
+                cr.scale(A, A)
 
-    def _draw_annotations(self, cr):
-        specials = (i for i, entity in enumerate(meredith.mipsy.text()) if type(entity) is tuple or entity == '<br>')
+                self._print_sorted(cr, sorted_glyphs)
+                
+                # only annotate active tract
+                if t == meredith.mipsy.t and self._mode == 'text':
+                    print(sorted_glyphs['_intervals'])
+                    self._draw_annotations(cr, sorted_glyphs['_annot'])
+                    
+                    self._highlight(cr, sorted_glyphs['_intervals'], self._selection_highlight, 0.75, start, stop, l1, l2, i, j)
+                
+                    for red_line in annoying_red_lines:
+                        self._highlight(cr, sorted_glyphs['_intervals'], self._spelling_highlight, 1, * red_line)
+                
+                cr.restore()
 
-        for i in specials:
-            if character(meredith.mipsy.text()[i]) == '<p>':
-                x, y, p, f = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(i)
-                # this works because paragraph always comes first
-                if i == meredith.mipsy.glyph_at(0)[2][1]:
+        
+        for pp in range(max_page + 1):
+            #draw page border
+            cr.set_source_rgba(0, 0, 0, 0.2)
+            px = int(round(self._Tx(0)))
+            py = int(round(self._Ty(pp * 1100)))
+            cr.rectangle(px, py, int(round(765*self._A)), 1)
+            cr.rectangle(px, py, 1, int(round(990*self._A)))
+            cr.rectangle(px + int(round(765*self._A)), py, 1, int(round(990*self._A)))
+            cr.rectangle(px, py + int(round(990*self._A)), int(round(765*self._A)), 1)
+            cr.fill()
+
+    def _GRID(self, cr, x, y):
+        x, y = cr.user_to_device(x, y)
+        return cr.device_to_user(int(x), int(y))
+
+    def _draw_annotations(self, cr, annot):
+
+        # constant numbers
+        _1_ = 1/self._A
+        _3_ = 3/self._A
+        _4_ = 4/self._A
+        _6_ = 6/self._A
+        _10_ = 10/self._A
+
+        for a in annot:
+        
+            x, y, p, f = a[1:5]
+            
+            x, y = self._GRID(cr, x, y)
+            
+            fontsize = round(get_fontsize(p[0], f) * self._A) / self._A
+                
+            #         '<p>'
+            if a[0] == -3:
+                # coloration works because '<p>' always comes first
+                if p[1] == meredith.mipsy.glyph_at(0)[2][1]:
                     cr.set_source_rgba(1, 0.2, 0.6, 0.7)
                 else:
                     cr.set_source_rgba(0, 0, 0, 0.4)
-                x = round(self._Tx(x))
-                y = round(self._Ty(y))
-                fontsize = get_fontsize(p[0], f) * self._A
                 
                 cr.move_to(x, y)
-                cr.rel_line_to(0, round(-fontsize))
-                cr.rel_line_to(-3, 0)
+                cr.rel_line_to(0, -fontsize)
+                cr.rel_line_to(-_3_, 0)
                 # sharp edge do not round
-                cr.rel_line_to(-(fontsize/5), round(fontsize)/2)
-                cr.line_to(x - 3, y)
+                cr.rel_line_to(-fontsize/5, fontsize/2)
+                cr.line_to(x - _3_, y)
                 cr.close_path()
                 cr.fill()
-            elif character(meredith.mipsy.text()[i]) == '<br>':
-                x, y, p, f = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(i + 1)
-                fontsize = get_fontsize(p[0], f) * self._A
-                x = round(self._Tx(x))
-                y = round(self._Ty(y))
-                cr.rectangle(x - 6, y - round(fontsize), 3, round(fontsize))
-                cr.rectangle(x - 10, y - 3, 4, 3)
+
+            #        '<br>' +1
+            if a[0] == -2:
+                
+                fontsize = round(get_fontsize(p[0], f) * self._A) / self._A
+                
+                cr.rectangle(x - _6_, y - round(fontsize), _3_, round(fontsize))
+                cr.rectangle(x - _10_, y - _3_, _4_, _3_)
+                cr.fill()
+
+            #           '<f>'
+            elif a[0] == -5:
+                cr.move_to(x, y - fontsize)
+                cr.rel_line_to(0, _6_)
+                cr.rel_line_to(-_1_, 0)
+                cr.rel_line_to(-_3_, -_6_)
+                cr.close_path()
                 cr.fill()
             
-            elif character(meredith.mipsy.text()[i]) == '<f>':
-                x, y, p, f = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(i)
-                fontsize = get_fontsize(p[0], f) * self._A
-                x = round(self._Tx(x))
-                y = round(self._Ty(y))
-                
+            #          '</f>'
+            elif a[0] == -6:
                 cr.move_to(x, y - fontsize)
-                cr.rel_line_to(0, 6)
-                cr.rel_line_to(-1, 0)
-                cr.rel_line_to(-3, -6)
+                cr.rel_line_to(0, _6_)
+                cr.rel_line_to(_1_, 0)
+                cr.rel_line_to(_3_, -_6_)
                 cr.close_path()
                 cr.fill()
 
-            elif character(meredith.mipsy.text()[i]) == '</f>':
-                x, y, p, f = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(i)
-                fontsize = get_fontsize(p[0], f) * self._A
-                x = round(self._Tx(x))
-                y = round(self._Ty(y))
-                
-                cr.move_to(x, y - fontsize)
-                cr.rel_line_to(0, 6)
-                cr.rel_line_to(1, 0)
-                cr.rel_line_to(3, -6)
-                cr.close_path()
-                cr.fill()
-
-    def _draw_cursors(self, cr):
-        cr.push_group()
+    def _spelling_highlight(self, cr, x1, x2, y, height, I=None, J=None):
+        # constant numbers
+        _1_ = 1/self._A
         
-        # print highlights
+        cr.set_source_rgba(1, 0.15, 0.2, 0.8)
+        
+        cr.rectangle(x1, y + int(2 * self._A) / self._A, x2 - x1, _1_)
+        cr.fill()
+        
+    def _selection_highlight(self, cr, x1, x2, y, height, I=None, J=None):
+        cr.set_source_rgba(0, 0, 0, 0.1)
+        
+        cr.rectangle(x1, y - height, x2 - x1, height)
+        cr.fill()
+        # print cursor
+        if I is not None:
+            self._draw_cursor(cr, I)
+        if J is not None:
+            self._draw_cursor(cr, J)
 
+
+    def _highlight(self, cr, intervals, highlighting_engine, alpha, start_x, stop_x, l1, l2, I, J):
+        if alpha != 1:
+            cr.push_group()
+        
+        # find overlaps
+        operant = []
+        for interval in intervals:
+            if l1 < interval[1] and l2 >= interval[0]:
+                rng = sorted((max(l1, interval[0]), min(l2, interval[1] - 1)))
+                operant += range(rng[0], rng[1] + 1)
+        
         cr.set_source_rgba(0, 0, 0, 0.1)
 
-        posts = sorted(list(meredith.mipsy.selection()))
-
-        firstline = meredith.mipsy.tracts[meredith.mipsy.t].index_to_line(posts[0])
-        lastline = meredith.mipsy.tracts[meredith.mipsy.t].index_to_line(posts[1])
-
-        start = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(posts[0])[0]
-        
-        linenumber = firstline
-        while True:
+        for l in operant:
             # get line dimensions
-            anchor, stop, leading, y = meredith.mipsy.tracts[meredith.mipsy.t].line_data(linenumber)
-            if linenumber != firstline:
-                start = anchor
-
-            if linenumber == lastline:
-                stop = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(posts[1])[0]
+            start, stop, leading, y = meredith.mipsy.tracts[meredith.mipsy.t].line_data(l)
+            start = self._GRID(cr, start, 0)[0]
+            stop, y = self._GRID(cr, stop, y)
+            leading = int(leading * self._A) / self._A
             
-            cr.rectangle(round(self._Tx(start)), 
-                    round(self._Ty(y - leading)), 
-                    (stop - start) * self._A, 
-                    leading * self._A)
-            linenumber += 1
+            if l == l1 == l2:
+                highlighting_engine(cr, start_x, stop_x, y, leading, I, J)
 
-            if linenumber > lastline:
-                break
-        cr.fill() 
+            elif l == l1:
+                highlighting_engine(cr, start_x, stop, y, leading, I, None)
 
-        # print cursors
-        cr.set_source_rgb(1, 0, 0.5)
-        cx, cy, p, f = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(posts[0])
-        leading = fonttable.p_table.get_paragraph(p[0])['leading']
+            elif l == l2:
+                highlighting_engine(cr, start, stop_x, y, leading, None, J)
 
-        ux = round(self._Tx(cx))
-        uy = round(self._Ty(cy - leading))
-        uh = round(leading * self._A)
+            else:
+                highlighting_engine(cr, start, stop, y, leading, None, None)
         
-        cr.rectangle(ux - 1, 
-                    uy, 
-                    2, 
-                    uh)
-        # special cursor if adjacent to font tag
-        if character(meredith.mipsy.at_absolute(posts[0])) in ('<f>', '</f>'):
-            cr.rectangle(ux - 3, 
-                    uy, 
-                    4, 
-                    2)
-            cr.rectangle(ux - 3, 
-                    uy + uh, 
-                    4, 
-                    2)
-        if character(meredith.mipsy.at_absolute(posts[0] - 1)) in ('<f>', '</f>'):
-            cr.rectangle(ux - 1, 
-                    uy, 
-                    4, 
-                    2)
-            cr.rectangle(ux - 1, 
-                    uy + uh, 
-                    4, 
-                    2)
-        cr.fill()
-
-
-        cx, cy, p, f = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(posts[1])
-        leading = fonttable.p_table.get_paragraph(p[0])['leading']
-        
-        ux = round(self._Tx(cx))
-        uy = round(self._Ty(cy - leading))
-        uh = round(leading * self._A)
-        
-        cr.rectangle(ux - 1, 
-                    uy, 
-                    2, 
-                    uh)
-        # special cursor if adjacent to font tag
-        if character(meredith.mipsy.at_absolute(posts[1])) in ('<f>', '</f>'):
-            cr.rectangle(ux - 3, 
-                    uy, 
-                    4, 
-                    2)
-            cr.rectangle(ux - 3, 
-                    uy + uh, 
-                    4, 
-                    2)
-        if character(meredith.mipsy.at_absolute(posts[1] - 1)) in ('<f>', '</f>'):
-            cr.rectangle(ux - 1, 
-                    uy, 
-                    4, 
-                    2)
-            cr.rectangle(ux - 1, 
-                    uy + uh, 
-                    4, 
-                    2)
-        cr.fill()
-        
-        cr.pop_group_to_source()
-        cr.paint_with_alpha(0.65)
+        if alpha != 1:
+            cr.pop_group_to_source()
+            cr.paint_with_alpha(alpha)
     
-    def _draw_spelling(self, cr):
-        for pair in meredith.mipsy.tracts[meredith.mipsy.t].misspellings:
-            cr.set_source_rgba(1, 0.15, 0.2, 0.8)
+    def _draw_cursor(self, cr, i):
+        # constant numbers
+        _1_ = 1/self._A
+        _2_ = 2/self._A
+        _3_ = 3/self._A
+        _4_ = 4/self._A
+        
+        cr.set_source_rgb(1, 0, 0.5)
+        cx, cy, p, f = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(i)
+        
+        cx, cy = self._GRID(cr, cx, cy)
+        leading = int(fonttable.p_table.get_paragraph(p[0])['leading'] * self._A) / self._A
 
-            posts = pair
+        ux = cx
+        uy = cy - leading
+        uh = leading
+        
+        cr.rectangle(ux - _1_, 
+                    uy, 
+                    _2_, 
+                    uh)
+        # special cursor if adjacent to font tag
+        if character(meredith.mipsy.at_absolute(i)) in ('<f>', '</f>'):
+            cr.rectangle(ux - _3_, 
+                    uy, 
+                    _4_, 
+                    _2_)
+            cr.rectangle(ux - _3_, 
+                    uy + uh, 
+                    _4_, 
+                    _2_)
+        if character(meredith.mipsy.at_absolute(i - 1)) in ('<f>', '</f>'):
+            cr.rectangle(ux - _1_, 
+                    uy, 
+                    _4_, 
+                    _2_)
+            cr.rectangle(ux - _1_, 
+                    uy + uh, 
+                    _4_, 
+                    _2_)
+        cr.fill()
 
-            firstline = meredith.mipsy.tracts[meredith.mipsy.t].index_to_line(posts[0])
-            lastline = meredith.mipsy.tracts[meredith.mipsy.t].index_to_line(posts[1])
-
-            start = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(posts[0])[0]
-            
-            linenumber = firstline
-            while True:
-                # get line dimensions
-                anchor, stop, leading, y = meredith.mipsy.tracts[meredith.mipsy.t].line_data(linenumber)
-                
-                if linenumber != firstline:
-                    start = anchor
-
-                if linenumber == lastline:
-                    stop = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(posts[1])[0]
-                
-                cr.rectangle(round(self._Tx(start)), 
-                        round(self._Ty(y + 2)), 
-                        (stop - start) * self._A, 
-                        1)
-                linenumber += 1
-
-                if linenumber > lastline:
-                    break
-            cr.fill() 
 
     def render(self, cr, h, k):
-        #draw page border
-        cr.set_source_rgba(0, 0, 0, 0.2)
-        px = self._Tx(0)
-        py = self._Ty(0)
-        cr.rectangle(px, py, 765*self._A, 1)
-        cr.rectangle(px, py, 1, 990*self._A)
-        cr.rectangle(px + 765*self._A, py, 1, 990*self._A)
-        cr.rectangle(px, py + 990*self._A, 765*self._A, 1)
-        cr.fill()
-        
-        cr.rectangle(100, 0, 
-                constants.UI[1] - 100, 
+        cr.rectangle(0, 0, 
+                constants.UI[1], 
                 k)
         cr.clip()
         
-        # spelling
-        self._draw_spelling(cr)
-        
         # text
-        self._draw_text(cr, self._H - self._Hc, self._K - self._Kc, self._Hc, self._Kc, self._A, False)
-        cr.reset_clip()
-        # annotations
-        self._draw_annotations(cr)
+        self._draw_by_page(cr, self._H - self._Hc, self._K - self._Kc, self._Hc, self._Kc, self._A, False)
         
-        # cursors
+        # channels
         if self._mode == 'text':
-            self._draw_cursors(cr)
-            olivia.dibbles.render(cr, self._Tx, self._Ty)
+            olivia.dibbles.render(cr, self._Tx, self._Ty, pageheight=1100)
         else:
-            olivia.dibbles.render(cr, self._Tx, self._Ty, show_rails=True)
+            olivia.dibbles.render(cr, self._Tx, self._Ty, pageheight=1100, show_rails=True)
         
         self._mode_switcher.render(cr, h, k)
         
@@ -835,5 +888,7 @@ class Document_view(object):
         cr.move_to(constants.UI[1] - 100, k - 20)
         cr.show_text(str(meredith.mipsy.tracts[meredith.mipsy.t].word_count) + ' words')
         
+        cr.reset_clip()
+
 becky = Document_view()
 

@@ -165,16 +165,12 @@ def PDF():
 
 def place_tags(tag):
     un.history.undo_save(3)
-    if meredith.mipsy.tracts[meredith.mipsy.t].bridge(tag, sign=True):
-        meredith.mipsy.stats(spell=False)
-    else:
+    if not meredith.mipsy.tracts[meredith.mipsy.t].bridge(tag, sign=True):
         un.history.pop()
 
 def punch_tags(tag):
     un.history.undo_save(3)
-    if meredith.mipsy.tracts[meredith.mipsy.t].bridge(tag, sign=False):
-        meredith.mipsy.stats(spell=False)
-    else:
+    if not meredith.mipsy.tracts[meredith.mipsy.t].bridge(tag, sign=False):
         un.history.pop()
 
 class Document_toolbar(object):

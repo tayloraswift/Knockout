@@ -586,13 +586,13 @@ class Text(object):
                     
                     drift_i -= 1
                     drift_j -= 1
-                    P_2 -= 1
+
                 else:
                     self.text.insert(P_1, (CAP[1], tag) )
                     DA += 1
                     
                     drift_j += 1
-                    P_2 += 1
+
             
             if activity:
                 self.cursor.cursor = I + drift_i
@@ -605,7 +605,7 @@ class Text(object):
                         (pair[0] + DA, pair[1] + DA, pair[2]) if pair[0] > P_2 else
                         (0, 0, 0) for pair in self.misspellings ]
                 # paragraph has changed
-                self.misspellings += words(self.text[P_1:P_2], startindex=P_1, spell=True)[1]
+                self.misspellings += words(self.text[P_1:P_2 + DA] + ['</p>'], startindex=P_1, spell=True)[1]
                 
                 return True
             else:

@@ -186,7 +186,6 @@ class Textline(object):
                 
         # n changes
         return self.startindex + len(self.glyphs)
-        
 
 
 class Cursor(object):
@@ -342,7 +341,6 @@ class Text(object):
             self._page_intervals[page] = [ (page_start_l, l + 1) ]
             
         elif type(self._page_intervals[page][-1]) is int:
-            print('partial ' + str(page_start_l))
             self._page_intervals[page][-1] = (self._page_intervals[page][-1], l + 1)
             
         else:
@@ -684,15 +682,9 @@ class Text(object):
                 sorted_page = {'_annot': [], '_intervals': intervals}
                 
                 for line in chain.from_iterable(self._glyphs[slice( * interval)] for interval in intervals):
-#                        [ 
-#                            [ (ll + interval[0], glyphline) for ll, glyphline in enumerate(self._glyphs[slice( * interval)]) ] 
-#                        for interval in intervals ]
-#                        ):
+
                     p_name = line.glyphs[0][3][0]
                     hyphen = line.hyphen
-                    
-                    # line data
-#                    sorted_page['_lines'][l] = line.anchor, line.stop, line.leading, line.y
                     
                     for glyph in line.glyphs:
                         

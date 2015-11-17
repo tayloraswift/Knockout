@@ -10,9 +10,9 @@ def character(entity):
 
 struck = enchant.DictWithPWL("en_US","model/localdict.txt")
 
-_prose = set('ABCDEFGHIJKLMNOPGRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789&@#$\'’- ')
+_prose = set('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789&@#$\'’-')
 # these characters get read as word-breaks in speech
-_breaking_prose = set(('</p>', '<br>', '—', '–', '/', '(', ')', '\\', '|', '=', '+', '_'))
+_breaking_prose = set(('</p>', '<br>', '—', '–', '/', '(', ')', '\\', '|', '=', '+', '_', ' '))
 
 def check_spelling(word):
     if word.isalpha():
@@ -20,47 +20,57 @@ def check_spelling(word):
             return struck.check(word)
         elif word.lower().capitalize() == word:
                 return struck.check(word)
-
+    else:
+        if word[-2:] in ('’s', '\'s'):
+            word = word[:-2]
+            if word.islower():
+                return struck.check(word)
+            elif word.lower().capitalize() == word:
+                return struck.check(word)
     return True
 
 def words(text, spell=False):
-    words = ''.join([e if (type(e) is str and e in _prose) else ' ' if (type(e) is str and e in _breaking_prose) else '' for e in text ]).split()
-    word_count = len(words)
-    
-    if spell:
-        misspelled = []
-        for word in words:
-            hyphens = word.count('-')
-            if hyphens == 0:
-                if not check_spelling(word):
-                    misspelled.append(word)
 
-            elif hyphens == 1:
-                fragments = word.split('-')
-                if not check_spelling(fragments[0]):
-                    misspelled.append(fragments[0])
-                if not check_spelling(fragments[1]):
-                    misspelled.append(fragments[1])
-        
+    if spell:
+        word_count = 0
         misspelled_indices = []
-        for m in misspelled:
-            misspelled_indices += find_word(m, text)
         
-        return word_count, sorted(misspelled_indices)
+        previous = 0
+        for i in (i for i, e in enumerate(text) if e in _breaking_prose):
+            if i - previous > 0:
+                selection = text[previous:i]
+                word = ''.join([e for e in selection if e in _prose])
+                
+                if word:
+                    word_count += 1
+                    if len(word) == len(selection):
+                        start = previous
+                        end = i
+                    else:
+                        start = previous + next(i for i, a in enumerate(selection) if a in _prose)
+                        end = i - next(i for i, a in enumerate(reversed(selection)) if a in _prose)
+                    
+                    if '-' in word:
+                        fragments = word.split('-')
+                        if not check_spelling(fragments[0]):
+                            misspelled_indices.append((start, end, fragments[0]))
+                        if not check_spelling(fragments[1]):
+                            misspelled_indices.append((start, end, fragments[1]))
+                    else:
+                        if not check_spelling(word):
+                            misspelled_indices.append((start, end, word))
+                
+            previous = i + 1
+
+        return word_count, misspelled_indices
+    
     else:
+        word_count = 0
+        previous = 0
+        for i in (i for i, e in enumerate(text) if e in _breaking_prose):
+            if i - previous > 0:
+                word_count += 1
+            previous = i + 1
+
         return word_count
 
-def find_word(word, text):
-    results=[]
-    word_length=len(word)
-
-    for I in (i for i, e in enumerate(text) if e == word[0] and character(text[i - 1]) in _breaking_chars):
-        try:
-            J = next(i for i, c in enumerate(text[I:I + word_length + 89]) if character(c) in _breaking_chars) + I
-        except StopIteration:
-            continue
-
-        if ''.join([a for a in text[I:J] if type(a) is str and len(a) == 1]) == word:
-            results.append((I, J, word))
-
-    return results

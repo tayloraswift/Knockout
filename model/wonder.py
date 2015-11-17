@@ -29,7 +29,7 @@ def check_spelling(word):
                 return struck.check(word)
     return True
 
-def words(text, spell=False):
+def words(text, startindex=0, spell=False):
 
     if spell:
         word_count = 0
@@ -52,13 +52,14 @@ def words(text, spell=False):
                     
                     if '-' in word:
                         fragments = word.split('-')
+                        hy = word.index('-')
                         if not check_spelling(fragments[0]):
-                            misspelled_indices.append((start, end, fragments[0]))
+                            misspelled_indices.append((start + startindex, start + hy + startindex, fragments[0]))
                         if not check_spelling(fragments[1]):
-                            misspelled_indices.append((start, end, fragments[1]))
+                            misspelled_indices.append((start + hy + 1 + startindex, end + startindex, fragments[1]))
                     else:
                         if not check_spelling(word):
-                            misspelled_indices.append((start, end, word))
+                            misspelled_indices.append((start + startindex, end + startindex, word))
                 
             previous = i + 1
 

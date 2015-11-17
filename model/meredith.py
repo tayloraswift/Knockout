@@ -5,6 +5,7 @@ from model import channels
 class Meredith(object):
     def __init__(self):
         self.tracts = []
+        self.page_context = 0
         
     def reinit(self, kitty):
         self.tracts = [comp.Text(k['text'], channels.Channels([channels.Channel( * c ) for c in k['outline']]), * k['cursors'] ) for k in kitty if k['outline']]
@@ -15,20 +16,29 @@ class Meredith(object):
         for tr in self.tracts:
             tr.deep_recalculate()
 
+    def set_page_context(self, y):
+        self.page_context = int(y//1100)
     
-    def target_channel(self, x, y, page, radius):
+    def Y(self, y):
+        return y - self.page_context*1100
+    
+    def target_channel(self, x, y, radius):
+            
         # try local
         t = self.t
-        c = self.tracts[t].channels.target_channel(x, y, page, radius)
+        c = self.tracts[t].channels.target_channel(x, y, self.page_context, radius)
         
         if c is None:
             print('None')
             for t, tract in enumerate(self.tracts):
-                c = tract.channels.target_channel(x, y, page, radius)
+                c = tract.channels.target_channel(x, y, self.page_context, radius)
                 if c is not None:
                     return t, c
 
         return t, c
+    
+    def target_channel_c(self, x, y, radius):
+        return self.tracts[self.t].channels.target_channel(x, y, self.page_context, radius)
     
     def set_t(self, tindex):
         self.t = tindex
@@ -38,10 +48,10 @@ class Meredith(object):
                 i,
                 self.tracts[t].text
                 )
-                
+
     def lookup_xy(self, t, c, x, y):
         return self.tracts[t].target_glyph(x, y, c=c)
-    
+            
     def set_cursor_xy(self, x, y, c=None):
         self.tracts[self.t].cursor.set_cursor(
                 self.lookup_xy(self.t, c, x, y),
@@ -53,6 +63,7 @@ class Meredith(object):
                 self.lookup_xy(self.t, c, x, y),
                 self.tracts[self.t].text
                 )
+    
     def select_all(self):
         self.tracts[self.t].expand_cursors()
     def select_word(self):

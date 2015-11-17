@@ -492,6 +492,9 @@ class Text(object):
     def bridge(self, tag, sign):
         S = self.take_selection()
         if S and '</p>' not in S:
+            
+            DA = 0
+            
             I = self.cursor.cursor
             J = self.select.cursor
 
@@ -502,6 +505,8 @@ class Text(object):
                 CAP = ('</f>', '<f>')
                 
                 self.text.insert(P_1, (CAP[0], tag))
+                DA += 1
+                
                 P_2 += 1
                 I += 1
                 J += 1
@@ -535,14 +540,15 @@ class Text(object):
             instructions = []
             drift_i = 0
             drift_j = 0
-#            triangle_a = 0
+
             for pair in pairs:
                 if pair[1] <= I or pair[0] >= J:
                     pass
                 elif pair[0] >= I and pair[1] <= J:
                     instructions += [(pair[0], False), (pair[1], False)]
+                    DA -= 2
+                    
                     drift_j += -2
-#                    triangle_a = -2
                 elif I < pair[1] <= J:
                     instructions += [(pair[1], False), (I, True, (CAP[1], tag) )]
                     if not sign:
@@ -553,6 +559,8 @@ class Text(object):
                         drift_j += -1
                 elif pair[0] < I and pair[1] > J:
                     instructions += [(I, True, (CAP[1], tag) ), (J, True, (CAP[0], tag) )]
+                    DA += 2
+                    
                     if sign:
                         drift_j += 2
                     else:
@@ -574,18 +582,30 @@ class Text(object):
             if sign:
                 if self.text[P_1] == (CAP[0], tag):
                     del self.text[P_1]
+                    DA -= 1
+                    
                     drift_i -= 1
                     drift_j -= 1
+                    P_2 -= 1
                 else:
                     self.text.insert(P_1, (CAP[1], tag) )
+                    DA += 1
+                    
                     drift_j += 1
-#                    triangle_a += 2
+                    P_2 += 1
             
             if activity:
                 self.cursor.cursor = I + drift_i
                 self.select.cursor = J + drift_j
                 
                 self._recalculate()
+                
+                # redo spelling for this paragraph
+                self.misspellings = [pair if pair[1] < P_1 else
+                        (pair[0] + DA, pair[1] + DA, pair[2]) if pair[0] > P_2 else
+                        (0, 0, 0) for pair in self.misspellings ]
+                # paragraph has changed
+                self.misspellings += words(self.text[P_1:P_2], startindex=P_1, spell=True)[1]
                 
                 return True
             else:

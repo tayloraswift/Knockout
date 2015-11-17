@@ -536,7 +536,7 @@ class Document_view(ui.Cell):
             else:
                 self._K += int(50 / self._A)
         
-        meredith.mipsy.rerender()
+#        meredith.mipsy.rerender()
         noticeboard.refresh.push_change()
 
     def hover(self, x, y):

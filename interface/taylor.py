@@ -1,5 +1,5 @@
 import bisect
-from math import pi
+from math import pi, sqrt
 
 from copy import deepcopy
 
@@ -362,17 +362,18 @@ class Document_view(ui.Cell):
         self._check_region_press(x, y)
         
         if self._region_active == 'view':
-            # what page
+
             xo, yo = self._T_1(x, y)
-            page = int(yo//1100)
-            yo -= page*1100
 
             # TEXT EDITING MODE
             if self._mode == 'text':
                 try:
+                    meredith.mipsy.set_page_context(yo)
+                    yo = meredith.mipsy.Y(yo)
+                    
                     un.history.undo_save(0)
                     
-                    t, c = meredith.mipsy.target_channel( xo, yo, page, radius=20)
+                    t, c = meredith.mipsy.target_channel( xo, yo, radius=20)
                     if c is not None:
                         meredith.mipsy.set_t(t)
                         meredith.mipsy.set_cursor_xy(xo, yo, c)
@@ -392,7 +393,10 @@ class Document_view(ui.Cell):
             
             # CHANNEL EDITING MODE
             elif self._mode == 'channels':
-                olivia.dibbles.press( xo, yo, page, name=name)
+                if not olivia.dibbles.press( xo, meredith.mipsy.Y(yo), name=name):
+                    meredith.mipsy.set_page_context(yo)
+                    olivia.dibbles.press( xo, meredith.mipsy.Y(yo), name=name)
+                    noticeboard.refresh_properties_stack.push_change()
 
         elif self._region_active == 'toolbar':
             self._toolbar.press(x, y)
@@ -407,15 +411,15 @@ class Document_view(ui.Cell):
     
     def press_right(self, x, y):
         if self._region_active == 'view':
-            # what page
+
             xo, yo = self._T_1(x, y)
-            page = int(yo//1100)
-            yo -= page*1100
+            meredith.mipsy.set_page_context(yo)
+            yo = meredith.mipsy.Y(yo)
             
             # TEXT EDITING MODE
             if self._mode == 'text':
                 try:
-                    t, c = meredith.mipsy.target_channel(xo, yo, page, radius=20)
+                    t, c = meredith.mipsy.target_channel(xo, yo, radius=20)
                     i = meredith.mipsy.lookup_xy(t, c, xo, yo )
                     
                     ms = meredith.mipsy.tracts[meredith.mipsy.t].misspellings
@@ -444,13 +448,12 @@ class Document_view(ui.Cell):
         
     def press_motion(self, x, y):
         if self._region_active == 'view':
-            # what page
+
             xo, yo = self._T_1(x, y)
-            page = int(yo//1100)
-            yo -= page*1100
+            yo = meredith.mipsy.Y(yo)
             
             if self._mode == 'text':
-                c = meredith.mipsy.tracts[meredith.mipsy.t].channels.target_channel(xo, yo, page, 20)
+                c = meredith.mipsy.target_channel_c(xo, yo, 20)
                 try:
                     meredith.mipsy.set_select_xy( xo, yo, c=c )
                     if meredith.mipsy.selection()[1] != self._sel_cursor:
@@ -477,7 +480,6 @@ class Document_view(ui.Cell):
             self._H = int(round(self._H))
             self._K = int(round(self._K))
             
-            meredith.mipsy.rerender()
             noticeboard.refresh.push_change()
         # drag
         else:
@@ -532,11 +534,10 @@ class Document_view(ui.Cell):
         else:
             # scroll
             if direction:
-                self._K -= int(50 / self._A)
+                self._K -= int(50 / sqrt(self._A))
             else:
-                self._K += int(50 / self._A)
+                self._K += int(50 / sqrt(self._A))
         
-#        meredith.mipsy.rerender()
         noticeboard.refresh.push_change()
 
     def hover(self, x, y):
@@ -635,7 +636,7 @@ class Document_view(ui.Cell):
                     v_x = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(v)[0]
                     
                     annoying_red_lines.append((u_x, v_x, u_l, v_l, u, v))
-        
+            
             for page, sorted_glyphs in tract.extract_glyphs(refresh).items():
                 if page > max_page:
                     max_page = page
@@ -656,8 +657,10 @@ class Document_view(ui.Cell):
                     print(sorted_glyphs['_intervals'])
                     self._draw_annotations(cr, sorted_glyphs['_annot'])
                     
-                    self._highlight(cr, sorted_glyphs['_intervals'], self._selection_highlight, 0.75, start, stop, l1, l2, i, j)
-                
+                    # this is how we know what page the cursor is on
+                    if self._highlight(cr, sorted_glyphs['_intervals'], self._selection_highlight, 0.75, start, stop, l1, l2, i, j):
+                        meredith.mipsy.page_context = page
+                    
                     for red_line in annoying_red_lines:
                         self._highlight(cr, sorted_glyphs['_intervals'], self._spelling_highlight, 1, * red_line)
                 
@@ -666,7 +669,10 @@ class Document_view(ui.Cell):
         
         for pp in range(max_page + 1):
             #draw page border
-            cr.set_source_rgba(0, 0, 0, 0.2)
+            if pp == meredith.mipsy.page_context:
+                cr.set_source_rgba(1, 0.2, 0.6, 0.7)
+            else:
+                cr.set_source_rgba(0, 0, 0, 0.2)
             px = int(round(self._Tx(0)))
             py = int(round(self._Ty(pp * 1100)))
             cr.rectangle(px, py, int(round(765*self._A)), 1)
@@ -762,6 +768,9 @@ class Document_view(ui.Cell):
 
 
     def _highlight(self, cr, intervals, highlighting_engine, alpha, start_x, stop_x, l1, l2, I, J):
+        
+        START_RENDERED = False
+        
         if alpha != 1:
             cr.push_group()
         
@@ -783,9 +792,11 @@ class Document_view(ui.Cell):
             
             if l == l1 == l2:
                 highlighting_engine(cr, start_x, stop_x, y, leading, I, J)
+                START_RENDERED = True
 
             elif l == l1:
                 highlighting_engine(cr, start_x, stop, y, leading, I, None)
+                START_RENDERED = True
 
             elif l == l2:
                 highlighting_engine(cr, start, stop_x, y, leading, None, J)
@@ -796,6 +807,8 @@ class Document_view(ui.Cell):
         if alpha != 1:
             cr.pop_group_to_source()
             cr.paint_with_alpha(alpha)
+        
+        return START_RENDERED
     
     def _draw_cursor(self, cr, i):
         # constant numbers
@@ -881,8 +894,8 @@ class Document_view(ui.Cell):
         cr.move_to(130, k - 20)
         cr.show_text('{0:g}'.format(self._A*100) + '%')
         
-        cr.move_to(constants.UI[1] - 100, k - 20)
-        cr.show_text(str(meredith.mipsy.tracts[meredith.mipsy.t].word_count) + ' words')
+        cr.move_to(constants.UI[1] - 150, k - 20)
+        cr.show_text(str(meredith.mipsy.tracts[meredith.mipsy.t].word_count) + ' words · page ' + str(meredith.mipsy.page_context))
         
         cr.reset_clip()
 

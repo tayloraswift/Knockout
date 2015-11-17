@@ -12,8 +12,6 @@ class Channels_controls(object):
     def __init__(self):
         self._selected_point = (None, None, None)
         self._selected_portal = None
-        
-        self._page = None
 
         # these are stateful
         self._hover_point = (None, None, None)
@@ -22,14 +20,11 @@ class Channels_controls(object):
     def c_at(self):
         return self._selected_point
     
-    def press(self, x, y, page, name):
+    def press(self, x, y, name):
         un.history.undo_save(3)
         
-        if page != self._page:
-            self._page = page
-            noticeboard.refresh_properties_stack.push_change()
         
-        c, r, i = meredith.mipsy.tracts[meredith.mipsy.t].channels.target_point(x, y, page, 20)
+        c, r, i = meredith.mipsy.tracts[meredith.mipsy.t].channels.target_point(x, y, meredith.mipsy.page_context, 20)
         portal = None
         
         #clear selection
@@ -39,7 +34,7 @@ class Channels_controls(object):
         # switch
         if c is None:
             # target tract
-            t, c = meredith.mipsy.target_channel(x, y, page, 20)
+            t, c = meredith.mipsy.target_channel(x, y, 20)
             meredith.mipsy.set_t(t)
         
         # perfect case, make point selected
@@ -47,7 +42,7 @@ class Channels_controls(object):
             meredith.mipsy.tracts[meredith.mipsy.t].channels.make_selected(c, r, i, name)
         
         elif c is None:
-            c = meredith.mipsy.tracts[meredith.mipsy.t].channels.target_channel(x, y, page, 20)
+            c = meredith.mipsy.target_channel_c(x, y, 20)
 
         # an r of 0 evaluates to 'false' so we need None
         if r is not None and i is None:
@@ -82,6 +77,11 @@ class Channels_controls(object):
         
         
         print (str(self._selected_point) + ' ' + str(self._selected_portal))
+        
+        if c is None:
+            return False
+        else:
+            return True
     
     def press_motion(self, x, y):
         c, r, i = self._selected_point
@@ -147,7 +147,7 @@ class Channels_controls(object):
         c, r, i = meredith.mipsy.tracts[meredith.mipsy.t].channels.target_point(x, y, page, 20)
         portal = None
         if c is None:
-            c = meredith.mipsy.tracts[meredith.mipsy.t].channels.target_channel(x, y, page, 20)
+            c = meredith.mipsy.target_channel_c(x, y, 20)
 
         self._hover_point = (c, r, i)
         

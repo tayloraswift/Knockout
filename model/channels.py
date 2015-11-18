@@ -172,7 +172,7 @@ class Channels(object):
                         flip = 1
                     else:
                         flip = 0
-                    self.channels[c].railings[not flip][-1] [1] = self.channels[c].railings[flip][-1] [1]
+                    self.channels[c].railings[flip][-1] [1] = self.channels[c].railings[not flip][-1] [1]
 
     def generate_channel(self):
         x1, y1, x2 = self.channels[-1].railings[0][-1][0], self.channels[-1].railings[0][-1][1] + 40, self.channels[-1].railings[1][-1][0]

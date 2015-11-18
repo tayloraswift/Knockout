@@ -23,7 +23,6 @@ class Channels_controls(object):
     def press(self, x, y, name):
         un.history.undo_save(3)
         
-        
         c, r, i = meredith.mipsy.tracts[meredith.mipsy.t].channels.target_point(x, y, meredith.mipsy.page_context, 20)
         portal = None
         
@@ -142,12 +141,12 @@ class Channels_controls(object):
             meredith.mipsy.tracts[meredith.mipsy.t].channels.expand_selection(self._selected_point[0])
             
     
-    def hover(self, x, y, page, hovered=[None, None]):
+    def hover(self, x, y, hovered=[None, None]):
         
-        c, r, i = meredith.mipsy.tracts[meredith.mipsy.t].channels.target_point(x, y, page, 20)
+        c, r, i = meredith.mipsy.tracts[meredith.mipsy.t].channels.target_point(x, y, meredith.mipsy.hover_page_context, 20)
         portal = None
         if c is None:
-            c = meredith.mipsy.target_channel_c(x, y, 20)
+            c = meredith.mipsy.tracts[meredith.mipsy.t].channels.target_channel(x, y, meredith.mipsy.hover_page_context, 20)
 
         self._hover_point = (c, r, i)
         

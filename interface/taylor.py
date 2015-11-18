@@ -364,6 +364,7 @@ class Document_view(ui.Cell):
         if self._region_active == 'view':
 
             xo, yo = self._T_1(x, y)
+            meredith.mipsy.page_grid.clear_selection()
 
             # TEXT EDITING MODE
             if self._mode == 'text':
@@ -373,7 +374,7 @@ class Document_view(ui.Cell):
                     
                     un.history.undo_save(0)
                     
-                    t, c = meredith.mipsy.target_channel( xo, yo, radius=20)
+                    t, c = meredith.mipsy.target_channel(xo, yo, radius=20)
                     if c is not None:
                         meredith.mipsy.set_t(t)
                         meredith.mipsy.set_cursor_xy(xo, yo, c)
@@ -381,6 +382,19 @@ class Document_view(ui.Cell):
                         
                         # used to keep track of ui redraws
                         self._sel_cursor = meredith.mipsy.selection()[1]
+                    else:
+                        if -20 <= yo <= -10 or 990 - 10 >= yo >= 990 + 10:
+                            if meredith.mipsy.page_grid.target_grid('x', xo):
+                                pass
+                            elif -5 < xo < 765 + 5:
+                               meredith.mipsy.page_grid.add_grid('x', xo)
+                            
+                        elif -20 <= xo <= -10 or 765 - 10 >= xo >= 765 + 10:
+                            if meredith.mipsy.page_grid.target_grid('y', yo):
+                                pass
+                            elif -5 < xo < 765 + 5:
+                               meredith.mipsy.page_grid.add_grid('y', yo)
+                    
                 except IndexError:
                     # occurs if an empty channel is selected
                     pass
@@ -449,22 +463,33 @@ class Document_view(ui.Cell):
     def press_motion(self, x, y):
         if self._region_active == 'view':
 
-            xo, yo = self._T_1(x, y)
-            yo = meredith.mipsy.Y(yo)
+            if y < 0:
+                self._K += int(10 / sqrt(self._A))
+                noticeboard.refresh.push_change()
+            elif y > constants.window.get_k():
+                self._K -= int(10 / sqrt(self._A))
+                noticeboard.refresh.push_change()
+
+            x, y = self._T_1(x, y)
+            y_p = meredith.mipsy.Y(y)
             
             if self._mode == 'text':
-                c = meredith.mipsy.target_channel_c(xo, yo, 20)
+                if not -50 < y_p < 990 + 50:
+                    meredith.mipsy.set_page_context(y)
+                    y_p = meredith.mipsy.Y(y)
+                
+                c = meredith.mipsy.target_channel_c(x, y_p, 20)
                 try:
-                    meredith.mipsy.set_select_xy( xo, yo, c=c )
+                    meredith.mipsy.set_select_xy( x, y_p, c=c )
                     if meredith.mipsy.selection()[1] != self._sel_cursor:
                         self._sel_cursor = meredith.mipsy.selection()[1]
                         noticeboard.refresh.push_change()
-                except IndexError:
-                    # occurs if an empty channel is selected
+
+                except ValueError:
                     pass
 
             elif self._mode == 'channels':
-                olivia.dibbles.press_motion(xo, yo)
+                olivia.dibbles.press_motion(x, y_p)
         elif self._region_active == 'toolbar':
             pass
         elif self._region_active == 'switcher':
@@ -550,10 +575,9 @@ class Document_view(ui.Cell):
             elif self._mode == 'channels':
                 # what page
                 xo, yo = self._T_1(x, y)
-                page = int(yo//1100)
-                yo -= page*1100
+                meredith.mipsy.set_hover_page_context(yo)
                 
-                olivia.dibbles.hover( xo, yo, page )
+                olivia.dibbles.hover(xo, meredith.mipsy.Y_hover(yo))
                 
         elif self._region_hover == 'toolbar':
             self._toolbar.hover(x, y)
@@ -654,7 +678,6 @@ class Document_view(ui.Cell):
                 
                 # only annotate active tract
                 if t == meredith.mipsy.t and self._mode == 'text':
-                    print(sorted_glyphs['_intervals'])
                     self._draw_annotations(cr, sorted_glyphs['_annot'])
                     
                     # this is how we know what page the cursor is on
@@ -676,14 +699,33 @@ class Document_view(ui.Cell):
             px = int(round(self._Tx(0)))
             py = int(round(self._Ty(pp * 1100)))
             cr.rectangle(px, py, int(round(765*self._A)), 1)
+            
+            cr.rectangle(px - int(round(20*self._A)), py, int(round(10*self._A)), 1)
+            cr.rectangle(px + int(round((765 + 10)*self._A)), py, int(round(10*self._A)), 1)
+            
+            
             cr.rectangle(px, py, 1, int(round(990*self._A)))
-            cr.rectangle(px + int(round(765*self._A)), py, 1, int(round(990*self._A)))
-            cr.rectangle(px, py + int(round(990*self._A)), int(round(765*self._A)), 1)
+            
+            cr.rectangle(px, py - int(round(20*self._A)), 1, int(round(10*self._A)))
+            cr.rectangle(px, py + int(round((990 + 10)*self._A)), 1, int(round(10*self._A)))
+            
+            
+            cr.rectangle(px + int(round(765*self._A)), py, 1, int(round(990*self._A)) + 1)
+            
+            cr.rectangle(px + int(round(765*self._A)), py - int(round(20*self._A)), 1, int(round(10*self._A)))
+            cr.rectangle(px + int(round(765*self._A)), py + int(round((990 + 10)*self._A)), 1, int(round(10*self._A)))
+            
+            
+            cr.rectangle(px, py + int(round(990*self._A)), int(round(765*self._A)) + 1, 1)
+            
+            cr.rectangle(px - int(round(20*self._A)), py + int(round(990*self._A)), int(round(10*self._A)), 1)
+            cr.rectangle(px + int(round((765 + 10)*self._A)), py + int(round(990*self._A)), int(round(10*self._A)), 1)
+            
             cr.fill()
 
     def _GRID(self, cr, x, y):
         x, y = cr.user_to_device(x, y)
-        return cr.device_to_user(int(x), int(y))
+        return cr.device_to_user(int(round(x)), int(round(y)))
 
     def _draw_annotations(self, cr, annot):
 
@@ -770,6 +812,7 @@ class Document_view(ui.Cell):
     def _highlight(self, cr, intervals, highlighting_engine, alpha, start_x, stop_x, l1, l2, I, J):
         
         START_RENDERED = False
+        STOP_RENDERED = False
         
         if alpha != 1:
             cr.push_group()
@@ -788,11 +831,12 @@ class Document_view(ui.Cell):
             start, stop, leading, y = meredith.mipsy.tracts[meredith.mipsy.t].line_data(l)
             start = self._GRID(cr, start, 0)[0]
             stop, y = self._GRID(cr, stop, y)
-            leading = int(leading * self._A) / self._A
+            leading = int(round(leading * self._A)) / self._A
             
             if l == l1 == l2:
                 highlighting_engine(cr, start_x, stop_x, y, leading, I, J)
                 START_RENDERED = True
+                STOP_RENDERED = True
 
             elif l == l1:
                 highlighting_engine(cr, start_x, stop, y, leading, I, None)
@@ -800,6 +844,7 @@ class Document_view(ui.Cell):
 
             elif l == l2:
                 highlighting_engine(cr, start, stop_x, y, leading, None, J)
+                STOP_RENDERED = True
 
             else:
                 highlighting_engine(cr, start, stop, y, leading, None, None)
@@ -808,7 +853,7 @@ class Document_view(ui.Cell):
             cr.pop_group_to_source()
             cr.paint_with_alpha(alpha)
         
-        return START_RENDERED
+        return START_RENDERED and STOP_RENDERED
     
     def _draw_cursor(self, cr, i):
         # constant numbers

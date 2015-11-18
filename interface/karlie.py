@@ -161,30 +161,21 @@ class _Inheritance_selection_menu(kookies.Selection_menu):
             else:
                 fs.f_set_attribute(self._attribute, self._p, self._f, (False, fonttable.table.get_font(self._p, self._f)[self._attribute]) )
         else:
+            # save old value in case of a disaster
             if self._attribute == '_all':
-                # save old value in case of a disaster
                 v = fonts.f_get_f(self._p, self._f)
-                value = (True, value)
-                fs.f_set_attribute('fontclasses', self._p, self._f, value)
-
-                try:
-                    fonttable.table.get_font(self._p, self._f)
-                except RuntimeError:
-                    fonttable.table.clear()
-                    fs.f_set_attribute('fontclasses', self._p, self._f, v)
-                    print('REFERENCE LOOP DETECTED')
             else:
-                # save old value in case of a disaster
                 v = fonts.f_get_attribute(self._attribute, self._p, self._f)
-                value = (True, value)
-                fs.f_set_attribute(self._attribute, self._p, self._f, value)
+            
+            value = (True, value)
+            fs.f_set_attribute(self._attribute, self._p, self._f, value)
 
-                try:
-                    fonttable.table.get_font(self._p, self._f)
-                except RuntimeError:
-                    fonttable.table.clear()
-                    fs.f_set_attribute(self._attribute, self._p, self._f, v)
-                    print('REFERENCE LOOP DETECTED')
+            try:
+                fonttable.table.get_font(self._p, self._f)
+            except RuntimeError:
+                fonttable.table.clear()
+                fs.f_set_attribute(self._attribute, self._p, self._f, v)
+                print('REFERENCE LOOP DETECTED')
         
         klossy.refresh()
 

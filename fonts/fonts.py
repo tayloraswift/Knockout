@@ -53,8 +53,8 @@ def get_fontclass(p, f):
 
 def _get_root_p_fontclass(p):
     # returns pclass name
-
     c = paragraph_classes[p]['fontclasses']
+
     if not c[0]:
         return p
     else:
@@ -64,12 +64,16 @@ def _trace_fontclass_to_root(p, f):
     # assumes p is root
     fontclass = get_fontclass(p, f)
 
+    search = []
     while True:
         if fontclass[0]:
-            
-            p = fontclass[1][0]
-            f = fontclass[1][1]
-            fontclass = get_fontclass(p, f)
+            if fontclass[1] not in search:
+                search.append(fontclass[1])
+                p = fontclass[1][0]
+                f = fontclass[1][1]
+                fontclass = get_fontclass(p, f)
+            else:
+                raise RuntimeError('FONT CLASS REFERENCE LOOP')
         else:
             break
 

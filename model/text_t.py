@@ -292,7 +292,6 @@ class Text(object):
                         self._page_intervals[page] = [ (page_start_l, l) ]
                         
                     elif type(self._page_intervals[page][-1]) is int:
-                        print('partial')
                         self._page_intervals[page][-1] = (self._page_intervals[page][-1], l)
                         
                     else:
@@ -386,11 +385,10 @@ class Text(object):
 
 
     def _target_line(self, x, y, c=None):
-        # find which channel is clicked on
-        if c is None:
-            c = 0
+
         # get all y values
         clines = [(textline.y, textline.l) for textline in self._glyphs if textline.c == c]
+        
         yy, ll = zip( * clines)
         # find the clicked line
         lineindex = None

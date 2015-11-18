@@ -36,17 +36,21 @@ def take_event(x, y, event, key=False, char=None, region=[  0,      0  ]):
 
         # MENU
         if menu.menu.menu():
-            if menu.menu.in_bounds(x, y):
+            if event == 'scroll':
+                if menu.menu.in_bounds(x, abs(y)):
+                    menu.menu.scroll(y)
+                    menu.menu.test_change()
+                    return
+                
+            elif menu.menu.in_bounds(x, y):
                 if event == 'motion':
                     menu.menu.hover(y)
-                    x, y = -1, -1
-                    
-                if event == 'press':
+                    menu.menu.test_change()
+                
+                elif event == 'press':
                     menu.menu.press(y)
-                    return
             
-            menu.menu.test_change()
-
+                return
         #############
         
         # motion and scrolling operates under the hover context

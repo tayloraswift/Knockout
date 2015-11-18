@@ -6,7 +6,10 @@ from copy import deepcopy
 def f_set_attribute(attribute, p, f, value):
     un.history.undo_save(3)
     # assumes root p and f
-    GET()[p]['fontclasses'][1][f][1][attribute] = value
+    if attribute == '_all':
+        GET()[p]['fontclasses'][1][f] = value
+    else:
+        GET()[p]['fontclasses'][1][f][1][attribute] = value
 
 
 def p_set_attribute(attribute, p, value):

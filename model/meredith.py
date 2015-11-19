@@ -1,61 +1,5 @@
-import bisect
-
-from model import text_t as comp
-from model import channels
-
-class Moon_Man(object):
-    def __init__(self):
-        self.grid = [[], []]
-        self._grid_selected = (None, None)
-    
-    def clear_selection(self):
-        self._grid_selected = (None, None)
-        
-    def add_grid(self, axis, value):
-        if axis == 'x':
-            a = 0
-        elif axis == 'y':
-            a = 1
-        
-        bisect.insort(self.grid[a], 10*int(round(value/10)))
-    
-    def target_grid(self, axis, value):
-        if axis == 'x':
-            a = 0
-        elif axis == 'y':
-            a = 1
-            
-        g_closest = bisect.bisect(self.grid[a], 10*int(round(value/10)) - 5)
-        try:
-            g = self.grid[a][g_closest]
-        except IndexError:
-            self._grid_selected = (None, None)
-            return False
-        
-        if abs(value - g) < 5:
-            self._grid_selected = (a, g_closest)
-            return True
-        else:
-            self._grid_selected = (None, None)
-            return False
-    
-    def move_grid(self, axis, value):
-        if axis == 'x':
-            a = 0
-        elif axis == 'y':
-            a = 1
-        
-        if a == self._grid_selected[0]:
-            value = 10*int(round(value/10))
-            
-            if value not in self.grid[a]:
-                self.grid[a][self._grid_selected[1]] = value
-        
-    def del_grid(self):
-        try:
-            del self.grid[self._grid_selected[0]][self._grid_selected[1]]
-        except IndexError:
-            print ('Error deleting grid')
+from model import olivia
+from model import george
 
 class Meredith(object):
     def __init__(self):
@@ -63,10 +7,10 @@ class Meredith(object):
         self.page_context = 0
         self.hover_page_context = 0
         
-        self.page_grid = Moon_Man()
+        self.page_grid = [[], []]
         
     def reinit(self, kitty):
-        self.tracts = [comp.Text(k['text'], channels.Channels([channels.Channel( * c ) for c in k['outline']]), * k['cursors'] ) for k in kitty if k['outline']]
+        self.tracts = [olivia.Text(k['text'], george.Washington([george.Swimming_pool( * c ) for c in k['outline']]), * k['cursors'] ) for k in kitty if k['outline']]
         self.t = 0
         self.rerender()
             

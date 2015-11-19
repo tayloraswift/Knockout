@@ -11,10 +11,12 @@ from state import noticeboard
 
 from model import kevin
 from model import errors
-from model.wonder import words, _breaking_chars, character
+from model.wonder import words, character
 
 hy = pyphen.Pyphen(lang='en_US')
 
+# NOT the same as prose breaks because of '.', ':', '<f>', etc. *Does not include ''' or '’' because these are found word-internal and when used as quotes, encapsulate single characters*
+_breaking_chars = set((' ', '</p>', '<p>', '<f>', '</f>', '<br>', '—', '–', '-', ':', '.', ',', ';', '/', '!', '?', '(', ')', '[', ']', '{', '}', '\\', '|', '=', '+', '_', '"', '“', '”' ))
 
 def outside_tag(sequence):
     for i in reversed(range(len(sequence) - 1)):

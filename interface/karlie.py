@@ -9,7 +9,7 @@ from fonts import fonts
 from fonts import fonttable
 from fonts import fontsetters as fs
 
-from interface import kookies, olivia, ui
+from interface import kookies, caramel, ui
 
 from model import meredith
 from model import un
@@ -417,7 +417,7 @@ class Properties(_Properties_panel):
 
     def _reconstruct_channel_properties(self):
         # ALWAYS REQUIRES CALL TO _stack()
-        c = olivia.dibbles.c_at()[0]
+        c = caramel.delight.c_at()[0]
         
         self._items = [self._tabstrip]
         self._active_box_i = None

@@ -1,6 +1,6 @@
 import bisect
 
-class Channel(object):
+class Swimming_pool(object):
     def __init__(self, left, right, page=0):
         # create two railings, the borders
         self.railings = [left, right]
@@ -62,7 +62,7 @@ class Channel(object):
         return portal
     
     
-class Channels(object):
+class Washington(object):
     def __init__(self, ic):
         self.channels = ic
  #####################   

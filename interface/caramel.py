@@ -4,7 +4,6 @@ from state import constants
 from state import noticeboard
 
 from model import meredith
-from model import channels
 from model import un
 
 
@@ -253,4 +252,4 @@ class Channels_controls(object):
                             cr.set_line_width(1)
                             cr.stroke()
 
-dibbles = Channels_controls()
+delight = Channels_controls()

@@ -22,8 +22,9 @@ character = wonder.character
 from typing import typing
 
 from interface import kookies
-from interface import olivia
+from interface import caramel
 from interface import menu, ui
+from interface import poptarts
 
 
 # used in rendering with undefined classes
@@ -348,15 +349,21 @@ class Document_view(ui.Cell):
 
     def key_input(self, name, char):
         if self._mode == 'text':
-            clipboard = typing.type_document(name, char)
-            # check if paragraph context changed
-            if paragraph_context_changed():
-                noticeboard.refresh_properties_stack.push_change()
+            # delete grid lines
+            if poptarts.sprinkles.grid_selected[0] is not None:
+                if name in ('Delete', 'BackSpace'):
+                    poptarts.sprinkles.del_grid()
+                clipboard = None
+            else:
+                clipboard = typing.type_document(name, char)
+                # check if paragraph context changed
+                if paragraph_context_changed():
+                    noticeboard.refresh_properties_stack.push_change()
             
             return clipboard
             
         elif self._mode == 'channels':
-            olivia.dibbles.key_input(name)
+            caramel.delight.key_input(name)
             
     def press(self, x, y, name):
         self._check_region_press(x, y)
@@ -364,7 +371,7 @@ class Document_view(ui.Cell):
         if self._region_active == 'view':
 
             xo, yo = self._T_1(x, y)
-            meredith.mipsy.page_grid.clear_selection()
+            poptarts.sprinkles.clear_selection()
 
             # TEXT EDITING MODE
             if self._mode == 'text':
@@ -383,19 +390,9 @@ class Document_view(ui.Cell):
                         # used to keep track of ui redraws
                         self._sel_cursor = meredith.mipsy.selection()[1]
                     else:
-                        if -20 <= yo <= -10 or 990 - 10 >= yo >= 990 + 10:
-                            if meredith.mipsy.page_grid.target_grid('x', xo):
-                                pass
-                            elif -5 < xo < 765 + 5:
-                               meredith.mipsy.page_grid.add_grid('x', xo)
-                            
-                        elif -20 <= xo <= -10 or 765 - 10 >= xo >= 765 + 10:
-                            if meredith.mipsy.page_grid.target_grid('y', yo):
-                                pass
-                            elif -5 < xo < 765 + 5:
-                               meredith.mipsy.page_grid.add_grid('y', yo)
+                        poptarts.sprinkles.press(xo, yo)
                     
-                except IndexError:
+                except ValueError:
                     # occurs if an empty channel is selected
                     pass
                 # check if paragraph context changed
@@ -407,9 +404,9 @@ class Document_view(ui.Cell):
             
             # CHANNEL EDITING MODE
             elif self._mode == 'channels':
-                if not olivia.dibbles.press( xo, meredith.mipsy.Y(yo), name=name):
+                if not caramel.delight.press( xo, meredith.mipsy.Y(yo), name=name):
                     meredith.mipsy.set_page_context(yo)
-                    olivia.dibbles.press( xo, meredith.mipsy.Y(yo), name=name)
+                    caramel.delight.press( xo, meredith.mipsy.Y(yo), name=name)
                     noticeboard.refresh_properties_stack.push_change()
 
         elif self._region_active == 'toolbar':
@@ -473,7 +470,13 @@ class Document_view(ui.Cell):
             x, y = self._T_1(x, y)
             y_p = meredith.mipsy.Y(y)
             
-            if self._mode == 'text':
+            # translate grid lines
+            if poptarts.sprinkles.grid_selected[0] is not None:
+                meredith.mipsy.set_page_context(y)
+                y_p = meredith.mipsy.Y(y)
+                poptarts.sprinkles.move_grid(x, y_p)
+            
+            elif self._mode == 'text':
                 if not -50 < y_p < 990 + 50:
                     meredith.mipsy.set_page_context(y)
                     y_p = meredith.mipsy.Y(y)
@@ -489,7 +492,7 @@ class Document_view(ui.Cell):
                     pass
 
             elif self._mode == 'channels':
-                olivia.dibbles.press_motion(x, y_p)
+                caramel.delight.press_motion(x, y_p)
         elif self._region_active == 'toolbar':
             pass
         elif self._region_active == 'switcher':
@@ -522,10 +525,11 @@ class Document_view(ui.Cell):
 
     def release(self, x, y):
         self._toolbar.release(x, y)
+        poptarts.sprinkles.release()
 
         if self._region_active == 'view':
             if self._mode == 'channels':
-                olivia.dibbles.release()
+                caramel.delight.release()
         elif self._region_active == 'toolbar':
             pass
         elif self._region_active == 'switcher':
@@ -577,7 +581,7 @@ class Document_view(ui.Cell):
                 xo, yo = self._T_1(x, y)
                 meredith.mipsy.set_hover_page_context(yo)
                 
-                olivia.dibbles.hover(xo, meredith.mipsy.Y_hover(yo))
+                caramel.delight.hover(xo, meredith.mipsy.Y_hover(yo))
                 
         elif self._region_hover == 'toolbar':
             self._toolbar.hover(x, y)
@@ -677,7 +681,7 @@ class Document_view(ui.Cell):
                 self._print_sorted(cr, sorted_glyphs)
                 
                 # only annotate active tract
-                if t == meredith.mipsy.t and self._mode == 'text':
+                if t == meredith.mipsy.t and self._mode == 'text' and poptarts.sprinkles.grid_selected[0] is None:
                     self._draw_annotations(cr, sorted_glyphs['_annot'])
                     
                     # this is how we know what page the cursor is on
@@ -709,7 +713,6 @@ class Document_view(ui.Cell):
             cr.rectangle(px, py - int(round(20*self._A)), 1, int(round(10*self._A)))
             cr.rectangle(px, py + int(round((990 + 10)*self._A)), 1, int(round(10*self._A)))
             
-            
             cr.rectangle(px + int(round(765*self._A)), py, 1, int(round(990*self._A)) + 1)
             
             cr.rectangle(px + int(round(765*self._A)), py - int(round(20*self._A)), 1, int(round(10*self._A)))
@@ -722,6 +725,8 @@ class Document_view(ui.Cell):
             cr.rectangle(px + int(round((765 + 10)*self._A)), py + int(round(990*self._A)), int(round(10*self._A)), 1)
             
             cr.fill()
+            
+            poptarts.sprinkles.render(cr, px, py, 765, 990, self._A)
 
     def _GRID(self, cr, x, y):
         x, y = cr.user_to_device(x, y)
@@ -909,9 +914,9 @@ class Document_view(ui.Cell):
         
         # channels
         if self._mode == 'text':
-            olivia.dibbles.render(cr, self._Tx, self._Ty, pageheight=1100)
+            caramel.delight.render(cr, self._Tx, self._Ty, pageheight=1100)
         else:
-            olivia.dibbles.render(cr, self._Tx, self._Ty, pageheight=1100, show_rails=True)
+            caramel.delight.render(cr, self._Tx, self._Ty, pageheight=1100, show_rails=True)
         
         self._mode_switcher.render(cr, h, k)
         

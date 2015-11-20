@@ -19,62 +19,61 @@ class Channels_controls(object):
     def c_at(self):
         return self._selected_point
     
+    def _select(self, x, y):
+        c, r, i = meredith.mipsy.tracts[meredith.mipsy.t].channels.target_point(x, y, meredith.mipsy.page_context, 20)
+        portal = None
+        
+        if c is not None:
+            if r is None:
+                portal = meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].target_portal(x, y, radius=5)
+            elif i is None:
+                # insert point if one was not found
+                i = meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].insert_point(r, y)
+        
+        return c, r, i, portal
+    
     def press(self, x, y, name):
         un.history.undo_save(3)
         
-        c, r, i = meredith.mipsy.tracts[meredith.mipsy.t].channels.target_point(x, y, meredith.mipsy.page_context, 20)
-        portal = None
+        c, r, i, portal = self._select(x, y)
         
         #clear selection
         if name != 'ctrl' and not meredith.mipsy.tracts[meredith.mipsy.t].channels.is_selected(c, r, i):
             meredith.mipsy.tracts[meredith.mipsy.t].channels.clear_selection()
-            
-        # switch
-        if c is None:
-            # target tract
-            t, c = meredith.mipsy.target_channel(x, y, 20)
-            meredith.mipsy.set_t(t)
         
-        # perfect case, make point selected
+        # MAKE SELECTIONS
         if i is not None:
             meredith.mipsy.tracts[meredith.mipsy.t].channels.make_selected(c, r, i, name)
+
+        elif portal is not None:
+            if portal[0] == 'entrance':
+                meredith.mipsy.tracts[meredith.mipsy.t].channels.make_selected(c, 0, 0, name)
+                meredith.mipsy.tracts[meredith.mipsy.t].channels.make_selected(c, 1, 0, name)
+                r = 0
+                i = 0
+            elif portal[0] == 'portal':
+                meredith.mipsy.tracts[meredith.mipsy.t].channels.make_selected(c, 0, -1, name)
+                meredith.mipsy.tracts[meredith.mipsy.t].channels.make_selected(c, 1, -1, name)
+                r = 1
+                i = len(meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[1]) - 1
+
+        if i is not None:
+            self._sel_locale = tuple(meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[r][i][:2])
+            self._release_locale = self._sel_locale
         
+        # If we selected another tract
         elif c is None:
-            c = meredith.mipsy.target_channel_c(x, y, 20)
-
-        # an r of 0 evaluates to 'false' so we need None
-        if r is not None and i is None:
-            # insert point if one was not found
-
-            i = meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].insert_point(r, y)
-        
-        elif r is None and c is not None:
-            portal = meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].target_portal(x, y, radius=5)
-            # select multiple points
-            if portal is not None:
-                if portal[0] == 'entrance':
-                    meredith.mipsy.tracts[meredith.mipsy.t].channels.make_selected(c, 0, 0, name)
-                    meredith.mipsy.tracts[meredith.mipsy.t].channels.make_selected(c, 1, 0, name)
-                    r = 0
-                    i = 0
-                elif portal[0] == 'portal':
-                    meredith.mipsy.tracts[meredith.mipsy.t].channels.make_selected(c, 0, -1, name)
-                    meredith.mipsy.tracts[meredith.mipsy.t].channels.make_selected(c, 1, -1, name)
-                    r = 1
-                    i = len(meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[1]) - 1
+            t, c = meredith.mipsy.target_channel(x, y, 20)
+            if t != meredith.mipsy.t:
+                meredith.mipsy.set_t(t)
+                noticeboard.refresh_properties_stack.push_change()
         
         if c != self._selected_point[0]:
             noticeboard.refresh_properties_stack.push_change()
         
         self._selected_point = (c, r, i)
         self._selected_portal = portal
-        
-        if i is not None:
-            self._sel_locale = tuple(meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].railings[r][i][:2])
-            self._release_locale = self._sel_locale
-        
-        
-        print (str(self._selected_point) + ' ' + str(self._selected_portal))
+
         
         if c is None:
             return False

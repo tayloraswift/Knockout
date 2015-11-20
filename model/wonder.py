@@ -67,7 +67,9 @@ def words(text, startindex=0, spell=False):
         previous = 0
         for i in (i for i, e in enumerate(text) if e in _breaking_prose):
             if i - previous > 0:
-                word_count += 1
+                if any(True for e in text[previous:i] if e in _prose):
+                    word_count += 1
+                
             previous = i + 1
 
         return word_count

@@ -10,10 +10,10 @@ class Swimming_pool(object):
         self.page = page
     
     def _is_outside(self, y):
-        location = True
         if ( self.railings[0][0][1] <= y <= self.railings[1][-1][1] ):
-            location = False
-        return location
+            return False
+        else:
+            return True
                     
     def edge(self, r, y):
         i = bisect.bisect([point[1] for point in self.railings[r]], y)
@@ -33,7 +33,7 @@ class Swimming_pool(object):
         if not self._is_outside(y):
             x, i = self.edge(r, y)
             x = 10*round(x/10)
-            self.railings[r].insert(i, [x, y, True])
+            self.railings[r].insert(i, [x, y, False])
             return i
         else:
             return None
@@ -75,7 +75,7 @@ class Washington(object):
         return None
 #######################
     def target_point(self, x, y, page, radius):
-        cc, rr, ii = None, None, None
+        C, R = None, None
         for c, channel in enumerate(self.channels):
             if channel.page == page:
                 for r in range(len(channel.railings)):
@@ -85,8 +85,10 @@ class Washington(object):
                             return c, r, i
                     # if that fails, take a railing, if possible
                     if not channel._is_outside(y) and abs(x - channel.edge(r, y)[0]) <= radius:
-                        cc, rr, ii = c, r, None
-        return cc, rr, ii
+                        C, R = c, r
+        if C is None:
+            C = self.target_channel(x, y, page, radius)
+        return C, R, None
     
     def is_selected(self, c, r, i):
         try:

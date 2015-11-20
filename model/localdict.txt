@@ -42,3 +42,4 @@ playbook
 Lorde
 Haim
 mixtape
+apps

@@ -35,7 +35,7 @@ class _Font_file_Field(kookies.Blank_space):
         fs.f_set_attribute('path', self.p, self.f, (False, path))
         self.broken = not fonttable.table.get_font(self.p, self.f)['path_valid']
         
-        meredith.mipsy.rerender()
+        meredith.mipsy.recalculate_all()
 
 class _Font_numeric_Field(kookies.Numeric_field):
     def __init__(self, x, y, width, p, f, attribute, name=None):
@@ -53,7 +53,7 @@ class _Font_numeric_Field(kookies.Numeric_field):
         
         fs.f_set_attribute(self._attribute, self.p, self.f, (False, self._to_number(value)))
         
-        meredith.mipsy.rerender()
+        meredith.mipsy.recalculate_all()
     
 class _Paragraph_numeric_Field(kookies.Numeric_field):
     def __init__(self, x, y, width, p, attribute, name=None):
@@ -69,7 +69,7 @@ class _Paragraph_numeric_Field(kookies.Numeric_field):
         fonttable.p_table.clear()
         
         fs.p_set_attribute(self._attribute, self.p, (False, self._to_number(value)))
-        meredith.mipsy.rerender()
+        meredith.mipsy.recalculate_all()
 
 class _Paragraph_checkbox(kookies.Checkbox):
     def __init__(self, x, y, width, p, attribute, name=None):
@@ -85,7 +85,7 @@ class _Paragraph_checkbox(kookies.Checkbox):
         fonttable.p_table.clear()
         
         fs.p_set_attribute(self._attribute, self.p, (False, value))
-        meredith.mipsy.rerender()
+        meredith.mipsy.recalculate_all()
         
         klossy.refresh()
 
@@ -105,7 +105,7 @@ class _Paragraph_style_menu(kookies.Object_menu):
         meredith.mipsy.rename_paragraph_class(self.p, name)
         self.p = name
 
-        meredith.mipsy.rerender()
+        meredith.mipsy.recalculate_all()
 
     def _menu_select_class(self, name):
         p = meredith.mipsy.glyph_at()[2]
@@ -255,7 +255,7 @@ class _Properties_panel(ui.Cell):
         return bisect.bisect(self._rows, y)
 
     def refresh(self):
-        meredith.mipsy.rerender() # must come before because it rewrites all the paragraph styles
+        meredith.mipsy.recalculate_all() # must come before because it rewrites all the paragraph styles
         self._reconstruct()
     
     def render(self, cr, h, k):
@@ -417,7 +417,7 @@ class Properties(_Properties_panel):
 
     def _reconstruct_channel_properties(self):
         # ALWAYS REQUIRES CALL TO _stack()
-        c = caramel.delight.c_at()[0]
+        c = meredith.mipsy.C()
         
         self._items = [self._tabstrip]
         self._active_box_i = None
@@ -430,7 +430,7 @@ class Properties(_Properties_panel):
         if self._tab == 'channels':
             if c is not None:
                 self._items.append(kookies.Integer_field( 15, y, 250, 
-                        str(meredith.mipsy.tracts[meredith.mipsy.t].channels.channels[c].page), 
+                        str(meredith.mipsy.tracts[0].channels.channels[c].page), 
                         callback = meredith.mipsy.change_channel_page, 
                         params = (c,),
                         name = 'PAGE' ))

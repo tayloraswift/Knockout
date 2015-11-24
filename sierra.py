@@ -4,7 +4,7 @@ from fonts import fonts
 
 from state import constants
 
-from model.meredith import mipsy
+from model import meredith
 from model import kevin
 
 
@@ -15,11 +15,13 @@ def save():
             'outline': [c.railings + [c.page] for c in t.channels.channels], 
             'cursors': (t.cursor.cursor, t.select.cursor)
             } 
-            for t in mipsy.tracts]
+            for t in meredith.mipsy.tracts]
     
     styles = fonts.paragraph_classes
+    grid = meredith.mipsy.page_grid
+    contexts = {'c': meredith.mipsy.C(), 'p': meredith.mipsy.page_context}
     
-    doc = {'kitty': kitty, 'styles': styles}
+    doc = {'kitty': kitty, 'grid': grid, 'contexts': contexts, 'styles': styles}
     
     with open(constants.filename, 'wb') as fi:
         pickle.dump(doc, fi)
@@ -39,4 +41,4 @@ def load(name):
         if 'cursors' not in t:
             t['cursors'] = 1, 1
     
-    mipsy.reinit(doc['kitty'])
+    meredith.mipsy = meredith.Meredith(doc['kitty'], grid=doc['grid'], contexts=doc['contexts'])

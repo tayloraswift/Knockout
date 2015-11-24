@@ -16,7 +16,7 @@ from model.wonder import words, character
 hy = pyphen.Pyphen(lang='en_US')
 
 # NOT the same as prose breaks because of '.', ':', '<f>', etc. *Does not include ''' or '’' because these are found word-internal and when used as quotes, encapsulate single characters*
-_breaking_chars = set((' ', '</p>', '<p>', '<f>', '</f>', '<br>', '—', '–', '-', ':', '.', ',', ';', '/', '!', '?', '(', ')', '[', ']', '{', '}', '\\', '|', '=', '+', '_', '"', '“', '”' ))
+_breaking_chars = set((' ', '</p>', '<p>', '<br>', '—', '–', '-', ':', '.', ',', ';', '/', '!', '?', '(', ')', '[', ']', '{', '}', '\\', '|', '=', '+', '_', '"', '“', '”' ))
 
 def outside_tag(sequence):
     for i in reversed(range(len(sequence) - 1)):
@@ -141,11 +141,11 @@ class Textline(object):
             
             # work out line breaks
             if x > self.stop:
-                if glyph == ' ':
-                    pass
+                if glyph in _breaking_chars:
+                    continue
                 
-                elif ' ' in self._sorts[:n] or '-' in self._sorts[:n]:
-                    i = next(i for i,v in zip(range(len(self._sorts[:n]) - 1, 0, -1), reversed(self._sorts[:n])) if v == ' ' or v == '-')
+                elif any(True for e in self._sorts[:n] if e in _breaking_chars):
+                    i = next(i for i,v in zip(range(len(self._sorts[:n]) - 1, 0, -1), reversed(self._sorts[:n])) if v in _breaking_chars)
                     
                     ### AUTO HYPHENATION
                     if hyphenate:
@@ -187,6 +187,7 @@ class Textline(object):
                 break
                 
         # n changes
+        print('LINE')
         return self.startindex + len(self.glyphs)
 
 
@@ -499,7 +500,7 @@ class Text(object):
             J = self.select.cursor
 
             P_1 = I - next(i for i, c in enumerate(self.text[I - 1::-1]) if character(c) == '<p>')
-            P_2 = J + self.text[J + 1:].index('</p>') + 1
+            P_2 = J + self.text[J:].index('</p>') + 1
 
             if sign:
                 CAP = ('</f>', '<f>')

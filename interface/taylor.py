@@ -17,14 +17,11 @@ from model import meredith
 from model import wonder
 from model import un, do
 
-character = wonder.character
-
 from typing import typing
 
 from interface import kookies
 from interface import caramel
 from interface import menu, ui
-from interface import poptarts
 
 
 # used in rendering with undefined classes
@@ -36,7 +33,7 @@ def get_fontsize(p, f):
     return fontsize
 
 def paragraph_context_changed(previous=[None]):
-    p = meredith.mipsy.glyph_at(0)[2]
+    p = meredith.mipsy.glyph_at()[2]
     if p != previous[0]:
         previous[0] = p
         return True
@@ -160,18 +157,15 @@ def PDF():
         except KeyError:
             pass
         cr.show_page()
-    
-    # put text back where it was before
-    meredith.mipsy.rerender()
 
 def place_tags(tag):
     un.history.undo_save(3)
-    if not meredith.mipsy.tracts[meredith.mipsy.t].bridge(tag, sign=True):
+    if not meredith.mipsy.tracts[0].bridge(tag, sign=True):
         un.history.pop()
 
 def punch_tags(tag):
     un.history.undo_save(3)
-    if not meredith.mipsy.tracts[meredith.mipsy.t].bridge(tag, sign=False):
+    if not meredith.mipsy.tracts[0].bridge(tag, sign=False):
         un.history.pop()
 
 class Document_toolbar(object):
@@ -349,16 +343,10 @@ class Document_view(ui.Cell):
 
     def key_input(self, name, char):
         if self._mode == 'text':
-            # delete grid lines
-            if poptarts.sprinkles.grid_selected[0] is not None:
-                if name in ('Delete', 'BackSpace'):
-                    poptarts.sprinkles.del_grid()
-                clipboard = None
-            else:
-                clipboard = typing.type_document(name, char)
-                # check if paragraph context changed
-                if paragraph_context_changed():
-                    noticeboard.refresh_properties_stack.push_change()
+            clipboard = typing.type_document(name, char)
+            # check if paragraph context changed
+            if paragraph_context_changed():
+                noticeboard.refresh_properties_stack.push_change()
             
             return clipboard
             
@@ -371,7 +359,6 @@ class Document_view(ui.Cell):
         if self._region_active == 'view':
 
             xo, yo = self._T_1(x, y)
-            poptarts.sprinkles.clear_selection()
 
             # TEXT EDITING MODE
             if self._mode == 'text':
@@ -381,16 +368,12 @@ class Document_view(ui.Cell):
                     
                     un.history.undo_save(0)
                     
-                    t, c = meredith.mipsy.target_channel(xo, yo, radius=20)
-                    if c is not None:
-                        meredith.mipsy.set_t(t)
-                        meredith.mipsy.set_cursor_xy(xo, yo, c)
-                        meredith.mipsy.match_cursors()
-                        
-                        # used to keep track of ui redraws
-                        self._sel_cursor = meredith.mipsy.selection()[1]
-                    else:
-                        poptarts.sprinkles.press(xo, yo)
+                    meredith.mipsy.channel_select(xo, yo, radius=20, search_all=True)
+                    meredith.mipsy.set_cursor_xy(xo, yo)
+                    meredith.mipsy.match_cursors()
+                    
+                    # used to keep track of ui redraws
+                    self._sel_cursor = meredith.mipsy.tracts[0].select.cursor
                     
                 except ValueError:
                     # occurs if an empty channel is selected
@@ -407,7 +390,6 @@ class Document_view(ui.Cell):
                 if not caramel.delight.press( xo, meredith.mipsy.Y(yo), name=name):
                     meredith.mipsy.set_page_context(yo)
                     caramel.delight.press( xo, meredith.mipsy.Y(yo), name=name)
-                    noticeboard.refresh_properties_stack.push_change()
 
         elif self._region_active == 'toolbar':
             self._toolbar.press(x, y)
@@ -418,35 +400,35 @@ class Document_view(ui.Cell):
         if self._region_active == 'view':
             # TEXT EDITING MODE
             if self._mode == 'text':
-                meredith.mipsy.select_word()
+                meredith.mipsy.tracts[0].expand_cursors_word()
     
     def press_right(self, x, y):
         if self._region_active == 'view':
 
             xo, yo = self._T_1(x, y)
-            meredith.mipsy.set_page_context(yo)
-            yo = meredith.mipsy.Y(yo)
             
             # TEXT EDITING MODE
             if self._mode == 'text':
                 try:
-                    t, c = meredith.mipsy.target_channel(xo, yo, radius=20)
-                    i = meredith.mipsy.lookup_xy(t, c, xo, yo )
+                    meredith.mipsy.set_page_context(yo)
+                    yo = meredith.mipsy.Y(yo)
                     
-                    ms = meredith.mipsy.tracts[meredith.mipsy.t].misspellings
+                    meredith.mipsy.channel_select(xo, yo, radius=20, search_all=True)
+                    i = meredith.mipsy.lookup_xy(xo, yo)
+                    
+                    ms = meredith.mipsy.tracts[0].misspellings
                     pair_i = bisect.bisect([pair[0] for pair in ms], i) - 1
 
                     if ms[pair_i][0] <= i <= ms[pair_i][1]:
 
                         if i == ms[pair_i][1]:
                             i -= 1
-                        meredith.mipsy.set_t(t)
-                        meredith.mipsy.set_cursor(t, i)
+                        meredith.mipsy.set_cursor(i)
                         meredith.mipsy.match_cursors()
                         
                         # used to keep track of ui redraws
-                        self._sel_cursor = meredith.mipsy.selection()[1]
-                        meredith.mipsy.select_word()
+                        self._sel_cursor = meredith.mipsy.tracts[0].select.cursor
+                        meredith.mipsy.tracts[0].expand_cursors_word()
                         menu.menu.create(x, y, 200, ['“' + ms[pair_i][2] + '”'] + wonder.struck.suggest(ms[pair_i][2]), _replace_misspelled, () )
 
                 except IndexError:
@@ -469,27 +451,18 @@ class Document_view(ui.Cell):
 
             x, y = self._T_1(x, y)
             y_p = meredith.mipsy.Y(y)
-            
-            # translate grid lines
-            if poptarts.sprinkles.grid_selected[0] is not None:
-                meredith.mipsy.set_page_context(y)
-                y_p = meredith.mipsy.Y(y)
-                poptarts.sprinkles.move_grid(x, y_p)
-            
-            elif self._mode == 'text':
+
+            if self._mode == 'text':
                 if not -50 < y_p < 990 + 50:
                     meredith.mipsy.set_page_context(y)
                     y_p = meredith.mipsy.Y(y)
                 
-                c = meredith.mipsy.target_channel_c(x, y_p, 20)
-                try:
-                    meredith.mipsy.set_select_xy( x, y_p, c=c )
-                    if meredith.mipsy.selection()[1] != self._sel_cursor:
-                        self._sel_cursor = meredith.mipsy.selection()[1]
-                        noticeboard.refresh.push_change()
-
-                except ValueError:
-                    pass
+                meredith.mipsy.channel_select(x, y_p, radius=20)
+                meredith.mipsy.set_select_xy(x, y_p)
+                # if redraw needed
+                if meredith.mipsy.tracts[0].select.cursor != self._sel_cursor:
+                    self._sel_cursor = meredith.mipsy.tracts[0].select.cursor
+                    noticeboard.refresh.push_change()
 
             elif self._mode == 'channels':
                 caramel.delight.press_motion(x, y_p)
@@ -525,7 +498,6 @@ class Document_view(ui.Cell):
 
     def release(self, x, y):
         self._toolbar.release(x, y)
-        poptarts.sprinkles.release()
 
         if self._region_active == 'view':
             if self._mode == 'channels':
@@ -642,14 +614,14 @@ class Document_view(ui.Cell):
 
         for t, tract in enumerate(meredith.mipsy.tracts):
             # highlights
-            if t == meredith.mipsy.t and self._mode == 'text':
-                i, j = sorted(list(meredith.mipsy.selection()))
+            if t == 0 and self._mode == 'text':
+                i, j = sorted((meredith.mipsy.tracts[0].cursor.cursor, meredith.mipsy.tracts[0].select.cursor))
 
-                l1 = meredith.mipsy.tracts[meredith.mipsy.t].index_to_line(i)
-                l2 = meredith.mipsy.tracts[meredith.mipsy.t].index_to_line(j)
+                l1 = meredith.mipsy.tracts[0].index_to_line(i)
+                l2 = meredith.mipsy.tracts[0].index_to_line(j)
 
-                start = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(i)[0]
-                stop = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(j)[0]
+                start = meredith.mipsy.tracts[0].text_index_location(i)[0]
+                stop = meredith.mipsy.tracts[0].text_index_location(j)[0]
             
                 # spelling
                 annoying_red_lines = []
@@ -657,11 +629,11 @@ class Document_view(ui.Cell):
 
                     u, v = pair[:2]
 
-                    u_l = meredith.mipsy.tracts[meredith.mipsy.t].index_to_line(u)
-                    v_l = meredith.mipsy.tracts[meredith.mipsy.t].index_to_line(v)
+                    u_l = meredith.mipsy.tracts[0].index_to_line(u)
+                    v_l = meredith.mipsy.tracts[0].index_to_line(v)
 
-                    u_x = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(u)[0]
-                    v_x = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(v)[0]
+                    u_x = meredith.mipsy.tracts[0].text_index_location(u)[0]
+                    v_x = meredith.mipsy.tracts[0].text_index_location(v)[0]
                     
                     annoying_red_lines.append((u_x, v_x, u_l, v_l, u, v))
             
@@ -681,7 +653,7 @@ class Document_view(ui.Cell):
                 self._print_sorted(cr, sorted_glyphs)
                 
                 # only annotate active tract
-                if t == meredith.mipsy.t and self._mode == 'text' and poptarts.sprinkles.grid_selected[0] is None:
+                if t == 0 and self._mode == 'text':
                     self._draw_annotations(cr, sorted_glyphs['_annot'])
                     
                     # this is how we know what page the cursor is on
@@ -726,7 +698,8 @@ class Document_view(ui.Cell):
             
             cr.fill()
             
-            poptarts.sprinkles.render(cr, px, py, 765, 990, self._A)
+            if self._mode == 'channels':
+                caramel.delight.render_grid(cr, px, py, 765, 990, self._A)
 
     def _GRID(self, cr, x, y):
         x, y = cr.user_to_device(x, y)
@@ -749,7 +722,7 @@ class Document_view(ui.Cell):
             
             fontsize = round(get_fontsize(p[0], f) * self._A) / self._A
 
-            if p[1] == meredith.mipsy.glyph_at(0)[2][1]:
+            if p[1] == meredith.mipsy.glyph_at()[2][1]:
                 cr.set_source_rgba(1, 0.2, 0.6, 0.7)
             else:
                 cr.set_source_rgba(0, 0, 0, 0.4)
@@ -833,7 +806,7 @@ class Document_view(ui.Cell):
 
         for l in operant:
             # get line dimensions
-            start, stop, leading, y = meredith.mipsy.tracts[meredith.mipsy.t].line_data(l)
+            start, stop, leading, y = meredith.mipsy.tracts[0].line_data(l)
             start = self._GRID(cr, start, 0)[0]
             stop, y = self._GRID(cr, stop, y)
             leading = int(round(leading * self._A)) / self._A
@@ -868,7 +841,7 @@ class Document_view(ui.Cell):
         _4_ = 4/self._A
         
         cr.set_source_rgb(1, 0, 0.5)
-        cx, cy, p, f = meredith.mipsy.tracts[meredith.mipsy.t].text_index_location(i)
+        cx, cy, p, f = meredith.mipsy.tracts[0].text_index_location(i)
         
         cx, cy = self._GRID(cr, cx, cy)
         leading = int(fonttable.p_table.get_paragraph(p[0])['leading'] * self._A) / self._A
@@ -882,7 +855,7 @@ class Document_view(ui.Cell):
                     _2_, 
                     uh)
         # special cursor if adjacent to font tag
-        if character(meredith.mipsy.at_absolute(i)) in ('<f>', '</f>'):
+        if meredith.mipsy.at_absolute(i) in ('<f>', '</f>'):
             cr.rectangle(ux - _3_, 
                     uy, 
                     _4_, 
@@ -891,7 +864,7 @@ class Document_view(ui.Cell):
                     uy + uh, 
                     _4_, 
                     _2_)
-        if character(meredith.mipsy.at_absolute(i - 1)) in ('<f>', '</f>'):
+        if meredith.mipsy.at_absolute(i - 1) in ('<f>', '</f>'):
             cr.rectangle(ux - _1_, 
                     uy, 
                     _4_, 
@@ -945,7 +918,7 @@ class Document_view(ui.Cell):
         cr.show_text('{0:g}'.format(self._A*100) + '%')
         
         cr.move_to(constants.UI[1] - 150, k - 20)
-        cr.show_text(str(meredith.mipsy.tracts[meredith.mipsy.t].word_count) + ' words · page ' + str(meredith.mipsy.page_context))
+        cr.show_text(str(meredith.mipsy.tracts[0].word_count) + ' words · page ' + str(meredith.mipsy.page_context))
         
         cr.reset_clip()
 

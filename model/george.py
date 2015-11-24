@@ -178,7 +178,7 @@ class Washington(object):
 
     def generate_channel(self):
         x1, y1, x2 = self.channels[-1].railings[0][-1][0], self.channels[-1].railings[0][-1][1] + 40, self.channels[-1].railings[1][-1][0]
-        return Channel( [[x1, y1, False], [x1, y1 + 40, False]], [[x2, y1, False], [x2, y1 + 40, False]], self.channels[-1].page )
+        return Swimming_pool( [[x1, y1, False], [x1, y1 + 40, False]], [[x2, y1, False], [x2, y1 + 40, False]], self.channels[-1].page )
     
     def add_channel(self):
         self.channels.append(self.generate_channel())

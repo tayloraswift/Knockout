@@ -442,10 +442,10 @@ class Document_view(ui.Cell):
     def press_motion(self, x, y):
         if self._region_active == 'view':
 
-            if y < 0:
+            if y <= 5:
                 self._K += int(10 / sqrt(self._A))
                 noticeboard.refresh.push_change()
-            elif y > constants.window.get_k():
+            elif y >= constants.window.get_k() - 5:
                 self._K -= int(10 / sqrt(self._A))
                 noticeboard.refresh.push_change()
 
@@ -454,10 +454,12 @@ class Document_view(ui.Cell):
 
             if self._mode == 'text':
                 if not -50 < y_p < 990 + 50:
-                    meredith.mipsy.set_page_context(y)
+                    meredith.mipsy.positive_page_context(x, y, radius=20, search_all=False)
                     y_p = meredith.mipsy.Y(y)
                 
-                meredith.mipsy.channel_select(x, y_p, radius=20)
+                else:
+                    meredith.mipsy.channel_select(x, y_p, radius=20)
+                
                 try:
                     meredith.mipsy.set_select_xy(x, y_p)
                     # if redraw needed

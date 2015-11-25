@@ -116,7 +116,7 @@ class Sprinkles(object):
             cr.fill()
             
             cr.set_line_width(1)
-            cr.set_dash([2, 8], 0)
+#            cr.set_dash([2, 8], 0)
             cr.move_to(px + int(round(notch*A)) + 0.5, py)
             cr.rel_line_to(0, p_k*A)
             
@@ -144,7 +144,7 @@ class Sprinkles(object):
             cr.fill()
 
             cr.set_line_width(1)
-            cr.set_dash([2, 8], 0)
+#            cr.set_dash([2, 8], 0)
             cr.move_to(px, py + int(round(notch*A)) + 0.5)
             cr.rel_line_to(p_h*A, 0)
             

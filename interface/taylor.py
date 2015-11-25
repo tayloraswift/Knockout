@@ -728,7 +728,7 @@ class Document_view(ui.Cell):
                 cr.set_source_rgba(0, 0, 0, 0.4)
             
             #         '<p>'
-            if a[0] == -3:
+            if a[0] == -2:
                 
                 cr.move_to(x, y)
                 cr.rel_line_to(0, -fontsize)
@@ -740,7 +740,7 @@ class Document_view(ui.Cell):
                 cr.fill()
 
             #        '<br>' +1
-            if a[0] == -2:
+            elif a[0] == -6:
                 
                 fontsize = round(get_fontsize(p[0], f) * self._A) / self._A
                 
@@ -749,7 +749,7 @@ class Document_view(ui.Cell):
                 cr.fill()
 
             #           '<f>'
-            elif a[0] == -5:
+            elif a[0] == -4:
                 cr.move_to(x, y - fontsize)
                 cr.rel_line_to(0, _6_)
                 cr.rel_line_to(-_1_, 0)
@@ -758,7 +758,7 @@ class Document_view(ui.Cell):
                 cr.fill()
             
             #          '</f>'
-            elif a[0] == -6:
+            elif a[0] == -5:
                 cr.move_to(x, y - fontsize)
                 cr.rel_line_to(0, _6_)
                 cr.rel_line_to(_1_, 0)

@@ -18,6 +18,14 @@ hy = pyphen.Pyphen(lang='en_US')
 # NOT the same as prose breaks because of '.', ':', etc. *Does not include ''' or '’' because these are found word-internal and when used as quotes, encapsulate single characters*
 _breaking_chars = set((' ', '</p>', '<p>', '<br>', '—', '–', '-', ':', '.', ',', ';', '/', '!', '?', '(', ')', '[', ']', '{', '}', '\\', '|', '=', '+', '_', '"', '“', '”' ))
 
+# linebreaking characters
+_BREAK_WHITESPACE = set(' ')
+_BREAK_ONLY_AFTER = set('-')
+_BREAK_AFTER_ELSE_BEFORE = set('–—')
+
+_BREAK = _BREAK_WHITESPACE | _BREAK_ONLY_AFTER | _BREAK_AFTER_ELSE_BEFORE
+
+
 def outside_tag(sequence):
     for i in reversed(range(len(sequence) - 1)):
 
@@ -139,57 +147,60 @@ def _assemble_line(text, startindex, c, l, anchor, stop, y, leading, PP, F, hyph
 
             
             x += glyphwidth
-            
+
             # work out line breaks
             if x > stop:
-                n = len(GLYPHS)
-                LN = letters[:n]
-                if CHAR == ' ':
-                    pass
+                if CHAR not in _BREAK_WHITESPACE:
                 
-                elif ' ' in LN or '-' in LN:
-                    i = next(i for i, v in zip(range(len(LN) - 1, 0, -1), reversed(LN)) if v == ' ' or v == '-')
+                    n = len(GLYPHS)
+                    LN = letters[:n]
+                    
+                    try:
+                        if CHAR in _BREAK_ONLY_AFTER:
+                            i = next(i + 1 for i, v in zip(range(n - 2, 0, -1), reversed(LN[:-1])) if v in _BREAK)
+                        elif CHAR in _BREAK_AFTER_ELSE_BEFORE:
+                            i = len(LN) - 1
+                        else:
+                            i = next(i + 1 for i, v in zip(range(n - 1, 0, -1), reversed(LN)) if v in _BREAK)
+                    
+                    except StopIteration:
+                        del GLYPHS[-1]
+                        i = startindex
                     
                     ### AUTO HYPHENATION
                     if hyphenate:
-                        try:
-                            j = letters[i + 1:].index(' ')
-                        except ValueError:
-                            j = startindex
+                        j = next(i for i, v in enumerate(letters[i:]) if v in _breaking_chars)
                         
-                        word = ''.join([c if type(c) is str else ' ' for c in letters[i + 1: i + 1 + j] ])
+                        word = ''.join([c if len(c) == 1 and c.isalpha() else ' ' for c in letters[i : i + j] ])
                         for pair in hy.iterate(word):
                             k = len(pair[0])
-
+                            # no sense checking hyphenations that don’t fit
+                            if k >= n - i:
+                                continue
                             # prevent too-short hyphenations
-                            if len(pair[0].replace(' ', '')) < 2 or len(pair[1].replace(' ', '')) < 2:
+                            elif len(pair[0].replace(' ', '')) < 2 or len(pair[1].replace(' ', '')) < 2:
                                 continue
                             
-                            try:
-                                h_P = GLYPHS[i + k][3][0]
-                                h_F = GLYPHS[i + k][4]
-                                HFS = _retrieve_fontclass(h_P, h_F, l)
-                                    
-                                if GLYPHS[i + k][5] + HFS['fontmetrics'].advance_pixel_width('-') * HFS['fontsize'] < stop:
-                                    i = i + k
-                                    if letters[i] != '-':
-                                        LINE['hyphen'] = (
-                                                HFS['fontmetrics'].character_index('-'), 
-                                                GLYPHS[i][5], # x
-                                                GLYPHS[i][2], # y
-                                                h_P,
-                                                h_F
-                                                )
-                                    break
-                            
-                            except IndexError:
-                                pass
-                    ####################
-                    
-                    del GLYPHS[i + 1:]
+                            # check if the hyphen overflows
 
-                else:
-                    del GLYPHS[-1]
+                            h_P = GLYPHS[i - 1 + k][3][0]
+                            h_F = GLYPHS[i - 1 + k][4]
+                            HFS = _retrieve_fontclass(h_P, h_F, l)
+                                
+                            if GLYPHS[i - 1 + k][5] + HFS['fontmetrics'].advance_pixel_width('-') * HFS['fontsize'] < stop:
+                                i = i + k
+
+                                LINE['hyphen'] = (
+                                        HFS['fontmetrics'].character_index('-'), 
+                                        GLYPHS[i - 1][5], # x
+                                        GLYPHS[i - 1][2], # y
+                                        h_P,
+                                        h_F
+                                        )
+                                break
+                    ####################
+                    del GLYPHS[i:]
+
                 break
                 
             else:

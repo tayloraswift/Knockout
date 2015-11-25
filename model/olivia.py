@@ -25,6 +25,8 @@ _BREAK_AFTER_ELSE_BEFORE = set('–—')
 
 _BREAK = _BREAK_WHITESPACE | _BREAK_ONLY_AFTER | _BREAK_AFTER_ELSE_BEFORE
 
+_BREAK_P = _BREAK | set(('</p>',))
+
 
 def outside_tag(sequence):
     for i in reversed(range(len(sequence) - 1)):
@@ -159,7 +161,7 @@ def _assemble_line(text, startindex, c, l, anchor, stop, y, leading, PP, F, hyph
                 
                     n = len(GLYPHS)
                     LN = letters[:n]
-                    
+
                     try:
                         if CHAR in _BREAK_ONLY_AFTER:
                             i = next(i + 1 for i, v in zip(range(n - 2, 0, -1), reversed(LN[:-1])) if v in _BREAK)
@@ -174,11 +176,14 @@ def _assemble_line(text, startindex, c, l, anchor, stop, y, leading, PP, F, hyph
                     
                     ### AUTO HYPHENATION
                     if hyphenate:
-                        j = next(i for i, v in enumerate(letters[i:]) if v in _breaking_chars)
+                        j = i + next(i for i, v in enumerate(letters[i:]) if v in _BREAK_P)
                         
-                        word = ''.join([c if len(c) == 1 and c.isalpha() else ' ' for c in letters[i : i + j] ])
-                        for pair in hy.iterate(word):
-                            k = len(pair[0])
+                        word = ''.join([c if len(c) == 1 and c.isalpha() else ' ' for c in letters[i:j] ])
+
+                        leading_spaces = len(word) - len(word.lstrip(' '))
+
+                        for pair in hy.iterate(word.strip(' ')):
+                            k = len(pair[0]) + leading_spaces
                             # no sense checking hyphenations that don’t fit
                             if k >= n - i:
                                 continue

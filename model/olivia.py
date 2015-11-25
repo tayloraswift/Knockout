@@ -15,7 +15,7 @@ from model.wonder import words, character
 
 hy = pyphen.Pyphen(lang='en_US')
 
-# NOT the same as prose breaks because of '.', ':', '<f>', etc. *Does not include ''' or '’' because these are found word-internal and when used as quotes, encapsulate single characters*
+# NOT the same as prose breaks because of '.', ':', etc. *Does not include ''' or '’' because these are found word-internal and when used as quotes, encapsulate single characters*
 _breaking_chars = set((' ', '</p>', '<p>', '<br>', '—', '–', '-', ':', '.', ',', ';', '/', '!', '?', '(', ')', '[', ']', '{', '}', '\\', '|', '=', '+', '_', '"', '“', '”' ))
 
 def outside_tag(sequence):
@@ -141,11 +141,11 @@ class Textline(object):
             
             # work out line breaks
             if x > self.stop:
-                if glyph in _breaking_chars:
-                    continue
+                if glyph == ' ':
+                    pass
                 
-                elif any(True for e in self._sorts[:n] if e in _breaking_chars):
-                    i = next(i for i,v in zip(range(len(self._sorts[:n]) - 1, 0, -1), reversed(self._sorts[:n])) if v in _breaking_chars)
+                elif ' ' in self._sorts[:n] or '-' in self._sorts[:n]:
+                    i = next(i for i,v in zip(range(len(self._sorts[:n]) - 1, 0, -1), reversed(self._sorts[:n])) if v == ' ' or v == '-')
                     
                     ### AUTO HYPHENATION
                     if hyphenate:
@@ -157,9 +157,9 @@ class Textline(object):
                         word = ''.join([c if type(c) is str else ' ' for c in self._sorts[i + 1: i + 1 + j] ])
                         for pair in hy.iterate(word):
                             k = len(pair[0])
-                            
-#                            if k < 3 or len(pair[1]) < 3:
-#                                continue
+
+                            if len(pair[0].replace(' ', '')) < 2 or len(pair[1].replace(' ', '')) < 2:
+                                continue
                             
                             try:
                                 pf = (self.glyphs[i + k][3][0], self.glyphs[i + k][4])
@@ -187,7 +187,6 @@ class Textline(object):
                 break
                 
         # n changes
-        print('LINE')
         return self.startindex + len(self.glyphs)
 
 

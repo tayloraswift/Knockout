@@ -34,9 +34,15 @@ def outside_tag(sequence):
 
     return sequence
 
-def _fail_class(startindex, l, attempt):
-    errors.styleerrors.add_style_error(attempt, l)
-    return ('_interface', startindex), fonttable.p_table.get_paragraph('_interface')
+def _retrieve_paragraphclass(P, l):
+    try:
+        PSTYLE = fonttable.p_table.get_paragraph(P)
+    except KeyError:
+        # happens if requested style is not defined
+        errors.styleerrors.add_style_error((P,), l)
+        PSTYLE = fonttable.p_table.get_paragraph('_interface')
+    
+    return PSTYLE
 
 def _retrieve_fontclass(P, F, l):
     try:
@@ -74,7 +80,6 @@ def _assemble_line(text, startindex, c, l, anchor, stop, y, leading, PP, F, hyph
     
     # start on the anchor
     x = anchor
-    n = 0
 
     # retrieve font style
     FSTYLE = _retrieve_fontclass(P, F, l)
@@ -260,22 +265,19 @@ class Text(object):
         try:
             # ylevel is the y position of the first line to print
             # here we are removing the last existing line so we can redraw that one as well
-            li = self._glyphs.pop(-1)
-            c = li['c']
-            y = li['y'] - li['leading']
+            LASTLINE = self._glyphs.pop(-1)
+            c = LASTLINE['c']
+            y = LASTLINE['y'] - LASTLINE['leading']
             
         except IndexError:
             # which happens if nothing has yet been rendered
             c = 0
             y = self.channels.channels[c].railings[0][0][1]
-            p = (self.text[0][1], 0)
-            f = []
-            try:
-                paragraphclass = fonttable.p_table.get_paragraph(p[0])
-            except KeyError:
-                # happens if requested style is not defined
-                p, paragraphclass = _fail_class(startindex, l, (p[0],))
-                
+            P = self.text[0][1]
+            P_i = 0
+            F = []
+            
+            PSTYLE = _retrieve_paragraphclass(P, l)
         
         page = self.channels.channels[c].page
         page_start_l = l
@@ -285,29 +287,26 @@ class Text(object):
             try:
                 if character(self.text[startindex]) != '<p>':
                     # extract last used style
-                    f = list(self._glyphs[-1]['GLYPHS'][-1][4])
-                    p = self._glyphs[-1]['GLYPHS'][-1][3]
+                    F = list(self._glyphs[-1]['GLYPHS'][-1][4])
+                    P, P_i = self._glyphs[-1]['GLYPHS'][-1][3]
                 else:
-                    f = []
-                    p = (self.text[startindex][1], startindex)
+                    F = []
+                    P = self.text[startindex][1]
+                    P_i = startindex
                     
-                try:
-                    paragraphclass = fonttable.p_table.get_paragraph(p[0])
-                except KeyError:
-                    # happens if requested style is not defined
-                    p, paragraphclass = _fail_class(startindex, l, (p[0],))
+                PSTYLE = _retrieve_paragraphclass(P, l)
                     
             except IndexError:
                 pass
 
             # move down
-            y += paragraphclass['leading']
+            y += PSTYLE['leading']
             
             # see if the lines have overrun the portals
             if y > self.channels.channels[c].railings[1][-1][1] and c < len(self.channels.channels) - 1:
                 c += 1
                 # jump to new entrance
-                y = self.channels.channels[c].railings[0][0][1] + paragraphclass['leading']
+                y = self.channels.channels[c].railings[0][0][1] + PSTYLE['leading']
                 
                 # PAGINATION
                 page_new = self.channels.channels[c].page
@@ -335,12 +334,12 @@ class Text(object):
                     self.channels.channels[c].edge(0, y)[0], 
                     self.channels.channels[c].edge(1, y)[0], 
                     y, 
-                    paragraphclass['leading'], 
+                    PSTYLE['leading'], 
                     
-                    p, 
-                    f, 
+                    (P, P_i), 
+                    F, 
                     
-                    hyphenate = paragraphclass['hyphenate']
+                    hyphenate = PSTYLE['hyphenate']
                     )
             
             # get the index of the last glyph printed so we know where to start next time
@@ -348,7 +347,7 @@ class Text(object):
             # check for paragraph break (which returns a negative version of startindex)
             if LINE['P_BREAK']:
 
-                y += paragraphclass['margin_bottom']
+                y += PSTYLE['margin_bottom']
                 
                 if startindex > len(self.text) - 1:
                     self._glyphs.append(LINE)

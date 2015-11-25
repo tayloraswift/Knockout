@@ -458,11 +458,14 @@ class Document_view(ui.Cell):
                     y_p = meredith.mipsy.Y(y)
                 
                 meredith.mipsy.channel_select(x, y_p, radius=20)
-                meredith.mipsy.set_select_xy(x, y_p)
-                # if redraw needed
-                if meredith.mipsy.tracts[0].select.cursor != self._sel_cursor:
-                    self._sel_cursor = meredith.mipsy.tracts[0].select.cursor
-                    noticeboard.refresh.push_change()
+                try:
+                    meredith.mipsy.set_select_xy(x, y_p)
+                    # if redraw needed
+                    if meredith.mipsy.tracts[0].select.cursor != self._sel_cursor:
+                        self._sel_cursor = meredith.mipsy.tracts[0].select.cursor
+                        noticeboard.refresh.push_change()
+                except ValueError:
+                    pass
 
             elif self._mode == 'channels':
                 caramel.delight.press_motion(x, y_p)

@@ -41,4 +41,7 @@ def load(name):
         if 'cursors' not in t:
             t['cursors'] = 1, 1
     
+#    doc['grid'] = [[], []]
+#    doc['contexts'] = {'p': 0, 'c': 0}
+    
     meredith.mipsy = meredith.Meredith(doc['kitty'], grid=doc['grid'], contexts=doc['contexts'])

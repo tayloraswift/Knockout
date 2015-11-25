@@ -24,9 +24,17 @@ class Meredith(object):
     def recalculate_all(self):
         for tract in self.tracts:
             tract.deep_recalculate()
-    
+
+    def positive_page_context(self, x, y, radius, search_all=False):
+        if not self.channel_select(x, y, radius, search_all):
+            old_pg = self.page_context
+            self.page_context = int((y + 50)//1100)
+            if not self.channel_select(x, self.Y(y), radius, search_all):
+                self.page_context = old_pg
+                
     def set_page_context(self, y):
         self.page_context = int((y + 50)//1100)
+            
     def set_hover_page_context(self, y):
         self.hover_page_context = int((y + 50)//1100)
     

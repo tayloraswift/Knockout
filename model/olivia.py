@@ -29,165 +29,161 @@ def outside_tag(sequence):
 def _fail_class(startindex, l, attempt):
     errors.styleerrors.add_style_error(attempt, l)
     return ('_interface', startindex), fonttable.p_table.get_paragraph('_interface')
-        
-class Textline(object):
-    def __init__(self, text, anchor, stop, y, c, l, startindex, paragraph, fontclass, leading):
-        self._p = paragraph
-        self._f = fontclass
 
+def _retrieve_fontclass(P, F, l):
+    try:
+        FSTYLE = fonttable.table.get_font(P, tuple(F))
+    except KeyError:
+        # happens if requested style is not defined
+        errors.styleerrors.add_style_error(tuple(F), l)
         try:
-            self._fontclass = fonttable.table.get_font(paragraph[0], tuple(fontclass))
-        except KeyError:
-            self._fontclass = fonttable.table.get_font(paragraph[0], () )
-
-        # takes 1,989 characters starting from startindex
-        self._sorts = text[startindex:startindex + 1989]
-        
-        # character index to start with
-        self.startindex = startindex
-        self.leading = leading
-        
-        # x positions
-        self.anchor = anchor
-        self.stop = stop
-        
-        # line y position
-        self.y = y
-        self.c = c
-        self.l = l
-        
-        # terminal hyphen
-        self.hyphen = None
-
-    def build_line(self, hyphenate):
-        
-        p, p_i = self._p
-        
-        # go by syllable until you reach the end
-        index = self.startindex
-        
-        # lists that contain glyphs and specials
-        self.glyphs = []
-#        self.special = []
-        
-        # start on the anchor
-        x = self.anchor
-        n = 0
-
-        for entity in self._sorts:
-            glyph = character(entity)
-            glyphanchor = x
+            FSTYLE = fonttable.table.get_font(P, () )
+        except AttributeError:
+            FSTYLE = fonttable.table.get_font('_interface', () )
+    
+    return FSTYLE
             
-            if glyph == '<p>':
-                if n > 0:
-                    break
-                else:
-                
-                    # we don’t load the style because the outer function takes care of that
-                    # retract x position
-                    glyphanchor -= self._fontclass['fontsize']
-                    glyphwidth = 0
-                    x -= self._fontclass['tracking']
+def _assemble_line(text, startindex, c, l, anchor, stop, y, leading, PP, F, hyphenate=False):
+    P = PP[0]
+    
+    LINE = {
+            'c': c,
+            'l': l,
+            'i': startindex,
+            
+            'anchor': anchor,
+            'stop': stop,
+            'y': y,
+            'leading': leading,
+            
+            'hyphen': None,
+            
+            'P_BREAK': False
+            }
+    
+    # list that contains glyphs
+    GLYPHS = []
+    
+    # start on the anchor
+    x = anchor
+    n = 0
 
-            elif glyph == '</p>':
-                self.glyphs.append((self._fontclass['fontmetrics'].character_index(glyph), x, self.y, self._p, tuple(self._f)))
-                # paragraph breaks are signaled by a negative index
-                return (self.startindex + len(self.glyphs))*-1 - 1
+    # retrieve font style
+    FSTYLE = _retrieve_fontclass(P, F, l)
+
+    # takes 1,989 characters starting from startindex
+    letters = text[startindex:startindex + 1989]
+
+    for letter in letters:
+        CHAR = character(letter)
+        glyphanchor = x
+        
+        if CHAR == '<p>':
+            if n > 0:
                 break
+            else:
+                # we don’t load the style because the outer function takes care of that
+                # retract x position
+                glyphanchor -= FSTYLE['fontsize']
+#                glyphwidth = 0
+                x -= FSTYLE['tracking']
 
-            elif glyph == '<f>':
+        elif CHAR == '</p>':
+            LINE['P_BREAK'] = True
 
-                # look for negative classes
-                if '~' + entity[1] in self._f:
-                    self._f.remove('~' + entity[1])
-                else:
-                    self._f.append(entity[1])
-                    self._f.sort()
-                    
-                try:
-                    self._fontclass = fonttable.table.get_font(p, tuple(self._f))
-                except KeyError:
-                    # happens if requested style is not defined
-                    errors.styleerrors.add_style_error(tuple(self._f), self.l)
-                    try:
-                        self._fontclass = fonttable.table.get_font(p, () )
-                    except AttributeError:
-                        self._fontclass = fonttable.table.get_font('_interface', () )
-            elif glyph == '</f>':
-
-                try:
-                    self._f.remove(entity[1])
-                    self._fontclass = fonttable.table.get_font(p, tuple(self._f))
-                except (ValueError, KeyError):
-                    # happens if the tag didn't exist
-                    self._f.append('~' + entity[1])
-                    self._f.sort()
-                    errors.styleerrors.add_style_error(tuple(self._f), self.l)
-                    try:
-                        self._fontclass = fonttable.table.get_font(p, () )
-                    except AttributeError:
-                        self._fontclass = fonttable.table.get_font('_interface', () )
-
-            glyphwidth = self._fontclass['fontmetrics'].advance_pixel_width(glyph)*self._fontclass['fontsize']
-            self.glyphs.append((self._fontclass['fontmetrics'].character_index(glyph), glyphanchor, self.y, self._p, tuple(self._f), glyphanchor + glyphwidth))
-            
-            
-            if glyph == '<br>':
-                x -= self._fontclass['tracking']
-                break
-            
-            x += glyphwidth + self._fontclass['tracking']
-            n = len(self.glyphs)
-            
-            # work out line breaks
-            if x > self.stop:
-                if glyph == ' ':
-                    pass
+        elif CHAR == '<f>':
+            # look for negative classes
+            if '~' + letter[1] in F:
+                F.remove('~' + letter[1])
+            else:
+                F.append(letter[1])
+                F.sort()
                 
-                elif ' ' in self._sorts[:n] or '-' in self._sorts[:n]:
-                    i = next(i for i,v in zip(range(len(self._sorts[:n]) - 1, 0, -1), reversed(self._sorts[:n])) if v == ' ' or v == '-')
+            FSTYLE = _retrieve_fontclass(P, F, l)
+            
+        elif CHAR == '</f>':
+            try:
+                F.remove(letter[1])
+            except ValueError:
+                F.append('~' + letter[1])
+                F.sort()
+            
+            FSTYLE = _retrieve_fontclass(P, F, l)
+        
+
+        glyphwidth = FSTYLE['fontmetrics'].advance_pixel_width(CHAR) * FSTYLE['fontsize']
+        GLYPHS.append((
+                FSTYLE['fontmetrics'].character_index(CHAR),    # 0
+                glyphanchor,                                    # 1
+                y,                                              # 2
+                
+                PP,                                             # 3
+                tuple(F),                                       # 4
+                glyphanchor + glyphwidth                        # 5
+                ))
+        
+        
+        if CHAR == '<br>':
+            break
+        
+        x += glyphwidth + FSTYLE['tracking']
+        n = len(GLYPHS)
+        
+        # work out line breaks
+        if x > stop:
+            if CHAR == ' ':
+                pass
+            
+            elif ' ' in letters[:n] or '-' in letters[:n]:
+                i = next(i for i, v in zip(range(len(letters[:n]) - 1, 0, -1), reversed(letters[:n])) if v == ' ' or v == '-')
+                
+                ### AUTO HYPHENATION
+                if hyphenate:
+                    try:
+                        j = letters[i + 1:].index(' ')
+                    except ValueError:
+                        j = startindex
                     
-                    ### AUTO HYPHENATION
-                    if hyphenate:
-                        try:
-                            j = self._sorts[i + 1:].index(' ')
-                        except ValueError:
-                            j = self.startindex
+                    word = ''.join([c if type(c) is str else ' ' for c in letters[i + 1: i + 1 + j] ])
+                    for pair in hy.iterate(word):
+                        k = len(pair[0])
+
+                        # prevent too-short hyphenations
+                        if len(pair[0].replace(' ', '')) < 2 or len(pair[1].replace(' ', '')) < 2:
+                            continue
                         
-                        word = ''.join([c if type(c) is str else ' ' for c in self._sorts[i + 1: i + 1 + j] ])
-                        for pair in hy.iterate(word):
-                            k = len(pair[0])
-
-                            if len(pair[0].replace(' ', '')) < 2 or len(pair[1].replace(' ', '')) < 2:
-                                continue
-                            
-                            try:
-                                pf = (self.glyphs[i + k][3][0], self.glyphs[i + k][4])
-                                try:
-                                    fc = fonttable.table.get_font( * pf )
-                                except KeyError:
-                                    try:
-                                        fc = fonttable.table.get_font(p, () )
-                                    except AttributeError:
-                                        fc = fonttable.table.get_font('_interface', () )
-                                    
-                                if self.glyphs[i + k][5] + fc['fontmetrics'].advance_pixel_width('-')*fc['fontsize'] < self.stop:
-                                    i = i + k
-                                    if self._sorts[i] != '-':
-                                        self.hyphen = (fc['fontmetrics'].character_index('-'), ) + (self.glyphs[i][5], self.glyphs[i][2]) + pf
-                                    break
-                            except IndexError:
-                                pass
-                    ####################
-                    
-                    del self.glyphs[i + 1:]
-
-                else:
-                    del self.glyphs[-1]
-                break
+                        try:
+                            h_P = GLYPHS[i + k][3][0]
+                            h_F = GLYPHS[i + k][4]
+                            HFS = _retrieve_fontclass(h_P, h_F, l)
+                                
+                            if GLYPHS[i + k][5] + HFS['fontmetrics'].advance_pixel_width('-') * HFS['fontsize'] < stop:
+                                i = i + k
+                                if letters[i] != '-':
+                                    LINE['hyphen'] = (
+                                            HFS['fontmetrics'].character_index('-'), 
+                                            GLYPHS[i][5], # x
+                                            GLYPHS[i][2], # y
+                                            h_P,
+                                            h_F
+                                            )
+                                break
+                        
+                        except IndexError:
+                            pass
+                ####################
                 
-        # n changes
-        return self.startindex + len(self.glyphs)
+                del GLYPHS[i + 1:]
+
+            else:
+                del GLYPHS[-1]
+            break
+            
+    # n changes
+    LINE['j'] = startindex + len(GLYPHS)
+    LINE['GLYPHS'] = GLYPHS
+    
+    return LINE
 
 
 class Cursor(object):
@@ -239,8 +235,8 @@ class Text(object):
             # ylevel is the y position of the first line to print
             # here we are removing the last existing line so we can redraw that one as well
             li = self._glyphs.pop(-1)
-            c = li.c
-            y = li.y - li.leading
+            c = li['c']
+            y = li['y'] - li['leading']
             
         except IndexError:
             # which happens if nothing has yet been rendered
@@ -263,8 +259,8 @@ class Text(object):
             try:
                 if character(self.text[startindex]) != '<p>':
                     # extract last used style
-                    f = list(self._glyphs[-1].glyphs[-1][4])
-                    p = self._glyphs[-1].glyphs[-1][3]
+                    f = list(self._glyphs[-1]['GLYPHS'][-1][4])
+                    p = self._glyphs[-1]['GLYPHS'][-1][3]
                 else:
                     f = []
                     p = (self.text[startindex][1], startindex)
@@ -304,39 +300,41 @@ class Text(object):
                 #############
 
             # generate line objects
-            line = Textline(self.text, 
+            LINE = _assemble_line(
+                    self.text, 
+                    startindex, 
+                    c, 
+                    l, 
+                    
                     self.channels.channels[c].edge(0, y)[0], 
                     self.channels.channels[c].edge(1, y)[0], 
                     y, 
-                    c,
-                    l,
-                    startindex,
+                    paragraphclass['leading'], 
+                    
                     p, 
-                    f,
-                    paragraphclass['leading']
+                    f, 
+                    
+                    hyphenate = paragraphclass['hyphenate']
                     )
             
-            # get the index of the last glyph printed (while printing said line) so we know where to start next time
-            startindex = line.build_line(paragraphclass['hyphenate'])
+            # get the index of the last glyph printed so we know where to start next time
+            startindex = LINE['j']
             # check for paragraph break (which returns a negative version of startindex)
-            if startindex < 0:
+            if LINE['P_BREAK']:
 
-                startindex = abs(startindex) - 1
                 y += paragraphclass['margin_bottom']
                 
                 if startindex > len(self.text) - 1:
-                    self._glyphs.append(line)
-                    del line
+                    self._glyphs.append(LINE)
+                    del LINE
                     # this is the end of the document
                     break
             else:
                 pass
             l += 1
 
-            self._glyphs.append(line)
-            del line
-#            if startindex >= len(self.text):
-#                break
+            self._glyphs.append(LINE)
+            del LINE
 
         if page not in self._page_intervals:
             self._page_intervals[page] = [ (page_start_l, l + 1) ]
@@ -348,7 +346,7 @@ class Text(object):
             self._page_intervals[page].append( (page_start_l, l + 1) )
 
 
-        self._line_startindices = [line.startindex for line in self._glyphs]
+        self._line_startindices = [line['i'] for line in self._glyphs]
 
     def _recalculate(self):
         # clear sorts
@@ -364,7 +362,7 @@ class Text(object):
                     [ interval if interval[1] <= l else interval[0] if interval[0] <= l else None for interval in intervals]
                     if I is not None] for page, intervals in self._page_intervals.items() if intervals[0][0] < l}    
             
-            startindex = self._glyphs[l].startindex
+            startindex = self._glyphs[l]['i']
             self._glyphs = self._glyphs[:l + 1]
             #        i = affected
             self._generate_lines(l, startindex)
@@ -389,7 +387,7 @@ class Text(object):
     def _target_line(self, x, y, c=None):
 
         # get all y values
-        clines = [(textline.y, textline.l) for textline in self._glyphs if textline.c == c]
+        clines = [(LINE['y'], LINE['l']) for LINE in self._glyphs if LINE['c'] == c]
         
         yy, ll = zip( * clines)
         # find the clicked line
@@ -408,22 +406,22 @@ class Text(object):
 
         # find first glyph to the right of click spot
         try:
-            glyphindex = bisect.bisect([glyph[1] for glyph in self._glyphs[l].glyphs], x )
+            glyphindex = bisect.bisect([glyph[1] for glyph in self._glyphs[l]['GLYPHS']], x )
         except IndexError:
             # if l is greater than the length of the document
             l = l % len(self._glyphs)
-            glyphindex = bisect.bisect([glyph[1] for glyph in self._glyphs[l].glyphs], x )
+            glyphindex = bisect.bisect([glyph[1] for glyph in self._glyphs[l]['GLYPHS']], x )
         
         # determine x position of glyph before it
-        glyphx = self._glyphs[l].glyphs[glyphindex - 1][1]
+        glyphx = self._glyphs[l]['GLYPHS'][glyphindex - 1][1]
         # if click is closer to it, shift glyph index left one
         try:
-            if abs(x - glyphx) < abs(x - self._glyphs[l].glyphs[glyphindex][1]):
+            if abs(x - glyphx) < abs(x - self._glyphs[l]['GLYPHS'][glyphindex][1]):
                 glyphindex += -1
         except IndexError:
-            glyphindex = len(self._glyphs[l].glyphs) - 1
+            glyphindex = len(self._glyphs[l]['GLYPHS']) - 1
             
-        return glyphindex + self._glyphs[l].startindex
+        return glyphindex + self._glyphs[l]['i']
 
     # get line number given character index
     def index_to_line(self, index):
@@ -664,15 +662,15 @@ class Text(object):
     ### FUNCTIONS USEFUL FOR DRAWING AND INTERFACE
     
     def line_indices(self, l):
-        return self._glyphs[l].startindex, self._glyphs[l].startindex + len(self._glyphs[l].glyphs)
+        return self._glyphs[l]['i'], self._glyphs[l]['j']
 
     # get location of specific glyph
     def text_index_location(self, index, ahead=False):
         l = self.index_to_line(index)
         try:
-            glyph = self._glyphs[l].glyphs[index - self._glyphs[l].startindex]
+            glyph = self._glyphs[l]['GLYPHS'][index - self._glyphs[l]['i']]
         except IndexError:
-            glyph = self._glyphs[l].glyphs[-1]
+            glyph = self._glyphs[l]['GLYPHS'][-1]
             print ('ahead')
             ahead = True
 
@@ -685,10 +683,10 @@ class Text(object):
             self.word_count = words(self.text)
 
     def line_data(self, l):
-        anchor = self._glyphs[l].anchor
-        stop = self._glyphs[l].stop
-        leading = self._glyphs[l].leading
-        y = self._glyphs[l].y
+        anchor = self._glyphs[l]['anchor']
+        stop = self._glyphs[l]['stop']
+        leading = self._glyphs[l]['leading']
+        y = self._glyphs[l]['y']
         return anchor, stop, leading, y
 
     def extract_glyphs(self, refresh=False):
@@ -703,14 +701,14 @@ class Text(object):
                 
                 for line in chain.from_iterable(self._glyphs[slice( * interval)] for interval in intervals):
 
-                    p_name = line.glyphs[0][3][0]
-                    hyphen = line.hyphen
+                    p_name = line['GLYPHS'][0][3][0]
+                    hyphen = line['hyphen']
                     
-                    for glyph in line.glyphs:
+                    for glyph in line['GLYPHS']:
                         
                         if glyph[0] < 0:
                             if glyph[0] == -2:
-                                sorted_page['_annot'].append( (glyph[0], line.anchor, line.y + line.leading) + glyph[3:])
+                                sorted_page['_annot'].append( (glyph[0], line['anchor'], line['y'] + line['leading']) + glyph[3:])
                             else:
                                 sorted_page['_annot'].append(glyph)
                         else:

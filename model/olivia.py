@@ -76,22 +76,8 @@ def _assemble_line(text, startindex, c, l, anchor, stop, y, leading, PP, F, hyph
 
     for letter in letters:
         CHAR = character(letter)
-        glyphanchor = x
-        
-        if CHAR == '<p>':
-            if n > 0:
-                break
-            else:
-                # we don’t load the style because the outer function takes care of that
-                # retract x position
-                glyphanchor -= FSTYLE['fontsize']
-#                glyphwidth = 0
-                x -= FSTYLE['tracking']
 
-        elif CHAR == '</p>':
-            LINE['P_BREAK'] = True
-
-        elif CHAR == '<f>':
+        if CHAR == '<f>':
             # look for negative classes
             if '~' + letter[1] in F:
                 F.remove('~' + letter[1])
@@ -101,6 +87,8 @@ def _assemble_line(text, startindex, c, l, anchor, stop, y, leading, PP, F, hyph
                 
             FSTYLE = _retrieve_fontclass(P, F, l)
             
+            GLYPHS.append((-4, x, y,  PP, tuple(F), x))
+            
         elif CHAR == '</f>':
             try:
                 F.remove(letter[1])
@@ -109,76 +97,103 @@ def _assemble_line(text, startindex, c, l, anchor, stop, y, leading, PP, F, hyph
                 F.sort()
             
             FSTYLE = _retrieve_fontclass(P, F, l)
-        
 
-        glyphwidth = FSTYLE['fontmetrics'].advance_pixel_width(CHAR) * FSTYLE['fontsize']
-        GLYPHS.append((
-                FSTYLE['fontmetrics'].character_index(CHAR),    # 0
-                glyphanchor,                                    # 1
-                y,                                              # 2
-                
-                PP,                                             # 3
-                tuple(F),                                       # 4
-                glyphanchor + glyphwidth                        # 5
-                ))
-        
-        
-        if CHAR == '<br>':
-            break
-        
-        x += glyphwidth + FSTYLE['tracking']
-        n = len(GLYPHS)
-        
-        # work out line breaks
-        if x > stop:
-            if CHAR == ' ':
-                pass
+            GLYPHS.append((-5, x, y,  PP, tuple(F), x))
             
-            elif ' ' in letters[:n] or '-' in letters[:n]:
-                i = next(i for i, v in zip(range(len(letters[:n]) - 1, 0, -1), reversed(letters[:n])) if v == ' ' or v == '-')
-                
-                ### AUTO HYPHENATION
-                if hyphenate:
-                    try:
-                        j = letters[i + 1:].index(' ')
-                    except ValueError:
-                        j = startindex
-                    
-                    word = ''.join([c if type(c) is str else ' ' for c in letters[i + 1: i + 1 + j] ])
-                    for pair in hy.iterate(word):
-                        k = len(pair[0])
-
-                        # prevent too-short hyphenations
-                        if len(pair[0].replace(' ', '')) < 2 or len(pair[1].replace(' ', '')) < 2:
-                            continue
-                        
-                        try:
-                            h_P = GLYPHS[i + k][3][0]
-                            h_F = GLYPHS[i + k][4]
-                            HFS = _retrieve_fontclass(h_P, h_F, l)
-                                
-                            if GLYPHS[i + k][5] + HFS['fontmetrics'].advance_pixel_width('-') * HFS['fontsize'] < stop:
-                                i = i + k
-                                if letters[i] != '-':
-                                    LINE['hyphen'] = (
-                                            HFS['fontmetrics'].character_index('-'), 
-                                            GLYPHS[i][5], # x
-                                            GLYPHS[i][2], # y
-                                            h_P,
-                                            h_F
-                                            )
-                                break
-                        
-                        except IndexError:
-                            pass
-                ####################
-                
-                del GLYPHS[i + 1:]
-
+        elif CHAR == '<p>':
+            if GLYPHS:
+                break
             else:
-                del GLYPHS[-1]
+                # we don’t load the style because the outer function takes care of that
+                GLYPHS.append((
+                        -2,                     # 0
+                        x - FSTYLE['fontsize'], # 1
+                        y,                      # 2
+                        
+                        PP,                     # 3
+                        tuple(F),               # 4
+                        x - FSTYLE['fontsize']  # 5
+                        ))
+        
+        elif CHAR == '</p>':
+            LINE['P_BREAK'] = True
+            GLYPHS.append((-3, x, y,  PP, tuple(F), x))
             break
+        
+        elif CHAR == '<br>':
+            GLYPHS.append((-6, x, y,  PP, tuple(F), x))
+            break
+        
+        else:
+            glyphwidth = FSTYLE['fontmetrics'].advance_pixel_width(CHAR) * FSTYLE['fontsize']
             
+            GLYPHS.append((
+                    FSTYLE['fontmetrics'].character_index(CHAR),    # 0
+                    x,                                              # 1
+                    y,                                              # 2
+                    
+                    PP,                                             # 3
+                    tuple(F),                                       # 4
+                    x + glyphwidth                                  # 5
+                    ))
+
+            
+            x += glyphwidth
+            
+            # work out line breaks
+            if x > stop:
+                n = len(GLYPHS)
+                LN = letters[:n]
+                if CHAR == ' ':
+                    pass
+                
+                elif ' ' in LN or '-' in LN:
+                    i = next(i for i, v in zip(range(len(LN) - 1, 0, -1), reversed(LN)) if v == ' ' or v == '-')
+                    
+                    ### AUTO HYPHENATION
+                    if hyphenate:
+                        try:
+                            j = letters[i + 1:].index(' ')
+                        except ValueError:
+                            j = startindex
+                        
+                        word = ''.join([c if type(c) is str else ' ' for c in letters[i + 1: i + 1 + j] ])
+                        for pair in hy.iterate(word):
+                            k = len(pair[0])
+
+                            # prevent too-short hyphenations
+                            if len(pair[0].replace(' ', '')) < 2 or len(pair[1].replace(' ', '')) < 2:
+                                continue
+                            
+                            try:
+                                h_P = GLYPHS[i + k][3][0]
+                                h_F = GLYPHS[i + k][4]
+                                HFS = _retrieve_fontclass(h_P, h_F, l)
+                                    
+                                if GLYPHS[i + k][5] + HFS['fontmetrics'].advance_pixel_width('-') * HFS['fontsize'] < stop:
+                                    i = i + k
+                                    if letters[i] != '-':
+                                        LINE['hyphen'] = (
+                                                HFS['fontmetrics'].character_index('-'), 
+                                                GLYPHS[i][5], # x
+                                                GLYPHS[i][2], # y
+                                                h_P,
+                                                h_F
+                                                )
+                                    break
+                            
+                            except IndexError:
+                                pass
+                    ####################
+                    
+                    del GLYPHS[i + 1:]
+
+                else:
+                    del GLYPHS[-1]
+                break
+                
+            else:
+                x += FSTYLE['tracking']
     # n changes
     LINE['j'] = startindex + len(GLYPHS)
     LINE['GLYPHS'] = GLYPHS
@@ -707,7 +722,7 @@ class Text(object):
                     for glyph in line['GLYPHS']:
                         
                         if glyph[0] < 0:
-                            if glyph[0] == -2:
+                            if glyph[0] == -6:
                                 sorted_page['_annot'].append( (glyph[0], line['anchor'], line['y'] + line['leading']) + glyph[3:])
                             else:
                                 sorted_page['_annot'].append(glyph)

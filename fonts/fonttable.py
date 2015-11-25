@@ -19,22 +19,10 @@ class _FFace(freetype.Face):
         freetype.Face.__init__(self, path)
         
         self._widths = {
-                '<br>': 0,
-                '<p>': 0,
-                '</p>' : 0,
-                '<f>': 0,
-                '</f>': 0,
                 None: 0
                 }
         
         self._ordinals = {
-                'other': -1,
-                '<br>': -2,
-                '<p>': -3,
-                '</p>': -4,
-                
-                '<f>': -5,
-                '</f>': -6
                 }
     
     def advance_pixel_width(self, character):

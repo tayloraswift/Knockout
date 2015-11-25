@@ -11,12 +11,9 @@ from state import noticeboard
 
 from model import kevin
 from model import errors
-from model.wonder import words, character
+from model.wonder import words, character, _breaking_chars
 
 hy = pyphen.Pyphen(lang='en_US')
-
-# NOT the same as prose breaks because of '.', ':', etc. *Does not include ''' or '’' because these are found word-internal and when used as quotes, encapsulate single characters*
-_breaking_chars = set((' ', '</p>', '<p>', '<br>', '—', '–', '-', ':', '.', ',', ';', '/', '!', '?', '(', ')', '[', ']', '{', '}', '\\', '|', '=', '+', '_', '"', '“', '”' ))
 
 # linebreaking characters
 _BREAK_WHITESPACE = set(' ')

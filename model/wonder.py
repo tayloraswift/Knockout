@@ -11,6 +11,9 @@ _prose = set('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789&@#$
 # these characters get read as word-breaks in speech
 _breaking_prose = set(('</p>', '<br>', '—', '–', '/', '(', ')', '\\', '|', '=', '+', '_', ' '))
 
+# NOT the same as prose breaks because of '.', ':', etc. *Does not include ''' or '’' because these are found word-internal and when used as quotes, encapsulate single characters*
+_breaking_chars = set((' ', '</p>', '<p>', '<br>', '—', '–', '-', ':', '.', ',', ';', '/', '!', '?', '(', ')', '[', ']', '{', '}', '\\', '|', '=', '+', '_', '"', '“', '”' ))
+
 def check_spelling(word):
     if word.isalpha():
         if word.islower():
@@ -36,27 +39,18 @@ def words(text, startindex=0, spell=False):
         for i in (i for i, e in enumerate(text) if e in _breaking_prose):
             if i - previous > 0:
                 selection = text[previous:i]
-                word = ''.join([e for e in selection if e in _prose])
                 
-                if word:
+                if any(e in _prose for e in selection):
                     word_count += 1
-                    if len(word) == len(selection):
-                        start = previous
-                        end = i
-                    else:
-                        start = previous + next(i for i, a in enumerate(selection) if a in _prose)
-                        end = i - next(i for i, a in enumerate(reversed(selection)) if a in _prose)
                     
-                    if '-' in word:
-                        fragments = word.split('-')
-                        hy = word.index('-')
-                        if not check_spelling(fragments[0]):
-                            misspelled_indices.append((start + startindex, start + hy + startindex, fragments[0]))
-                        if not check_spelling(fragments[1]):
-                            misspelled_indices.append((start + hy + 1 + startindex, end + startindex, fragments[1]))
-                    else:
-                        if not check_spelling(word):
-                            misspelled_indices.append((start + startindex, end + startindex, word))
+                    iprevious = 0
+                    for ii in (ii for ii, e in enumerate(selection + [' ']) if e in _breaking_chars):
+                        if ii - iprevious > 0:
+                            W = ''.join([v for v in selection[iprevious:ii] if len(v) == 1])
+                            if len(W) > 1 and not check_spelling(W):
+                                misspelled_indices.append((startindex + previous + iprevious, startindex + previous + ii, W))
+                        
+                        iprevious = ii + 1
                 
             previous = i + 1
 
@@ -73,4 +67,3 @@ def words(text, startindex=0, spell=False):
             previous = i + 1
 
         return word_count
-

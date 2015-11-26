@@ -15,7 +15,7 @@ from fonts import fonttable
 
 from model import meredith
 from model import wonder
-from model import un, do
+from model import un, do, penclick
 
 from typing import typing
 
@@ -146,7 +146,7 @@ class Mode_switcher(object):
 
 def PDF():
     name = os.path.splitext(constants.filename)[0]
-    surface = cairo.PDFSurface(name + '.pdf', 765, 990)
+    surface = cairo.PDFSurface(name + '.pdf', penclick.page.WIDTH, penclick.page.HEIGHT)
     cr = cairo.Context(surface)
     
     classes = becky.page_classes()
@@ -453,7 +453,7 @@ class Document_view(ui.Cell):
             y_p = meredith.mipsy.Y(y)
 
             if self._mode == 'text':
-                if not -50 < y_p < 990 + 50:
+                if not penclick.page.inside_y(y_p):
                     meredith.mipsy.positive_page_context(x, y, radius=20, search_all=False)
                     y_p = meredith.mipsy.Y(y)
                 
@@ -614,7 +614,10 @@ class Document_view(ui.Cell):
     def print_page(self, cr, p, classed_pages):
         self._print_sorted(cr, classed_pages[p])
             
-    def _draw_by_page(self, cr, mx_cx=-765/2, my_cy=-990/2, cx=765/2, cy=990/2, A=1, refresh=False):
+    def _draw_by_page(self, cr, mx_cx, my_cy, cx, cy, A=1, refresh=False):
+        PHEIGHT = penclick.page.HEIGHT
+        PWIDTH = penclick.page.WIDTH
+        
         max_page = 0
 
         for t, tract in enumerate(meredith.mipsy.tracts):
@@ -652,7 +655,7 @@ class Document_view(ui.Cell):
                 
                 # Scale first (on bottom) is significantly faster in cairo
                 cr.save()
-                cr.translate(A*mx_cx + cx, A*(my_cy + page * 1100) + cy)
+                cr.translate(A*mx_cx + cx, A*penclick.page.normalize_Y(my_cy, -page) + cy)
                 cr.scale(A, A)
 
                 self._print_sorted(cr, sorted_glyphs)
@@ -678,33 +681,33 @@ class Document_view(ui.Cell):
             else:
                 cr.set_source_rgba(0, 0, 0, 0.2)
             px = int(round(self._Tx(0)))
-            py = int(round(self._Ty(pp * 1100)))
-            cr.rectangle(px, py, int(round(765*self._A)), 1)
+            py = int(round(self._Ty(penclick.page.normalize_Y(0, -pp))))
+            cr.rectangle(px, py, int(round(PWIDTH*self._A)), 1)
             
             cr.rectangle(px - int(round(20*self._A)), py, int(round(10*self._A)), 1)
-            cr.rectangle(px + int(round((765 + 10)*self._A)), py, int(round(10*self._A)), 1)
+            cr.rectangle(px + int(round((PWIDTH + 10)*self._A)), py, int(round(10*self._A)), 1)
             
             
-            cr.rectangle(px, py, 1, int(round(990*self._A)))
+            cr.rectangle(px, py, 1, int(round(PHEIGHT*self._A)))
             
             cr.rectangle(px, py - int(round(20*self._A)), 1, int(round(10*self._A)))
-            cr.rectangle(px, py + int(round((990 + 10)*self._A)), 1, int(round(10*self._A)))
+            cr.rectangle(px, py + int(round((PHEIGHT + 10)*self._A)), 1, int(round(10*self._A)))
             
-            cr.rectangle(px + int(round(765*self._A)), py, 1, int(round(990*self._A)) + 1)
+            cr.rectangle(px + int(round(PWIDTH*self._A)), py, 1, int(round(PHEIGHT*self._A)) + 1)
             
-            cr.rectangle(px + int(round(765*self._A)), py - int(round(20*self._A)), 1, int(round(10*self._A)))
-            cr.rectangle(px + int(round(765*self._A)), py + int(round((990 + 10)*self._A)), 1, int(round(10*self._A)))
+            cr.rectangle(px + int(round(PWIDTH*self._A)), py - int(round(20*self._A)), 1, int(round(10*self._A)))
+            cr.rectangle(px + int(round(PWIDTH*self._A)), py + int(round((PHEIGHT + 10)*self._A)), 1, int(round(10*self._A)))
             
             
-            cr.rectangle(px, py + int(round(990*self._A)), int(round(765*self._A)) + 1, 1)
+            cr.rectangle(px, py + int(round(PHEIGHT*self._A)), int(round(PWIDTH*self._A)) + 1, 1)
             
-            cr.rectangle(px - int(round(20*self._A)), py + int(round(990*self._A)), int(round(10*self._A)), 1)
-            cr.rectangle(px + int(round((765 + 10)*self._A)), py + int(round(990*self._A)), int(round(10*self._A)), 1)
+            cr.rectangle(px - int(round(20*self._A)), py + int(round(PHEIGHT*self._A)), int(round(10*self._A)), 1)
+            cr.rectangle(px + int(round((PWIDTH + 10)*self._A)), py + int(round(PHEIGHT*self._A)), int(round(10*self._A)), 1)
             
             cr.fill()
             
             if self._mode == 'channels':
-                caramel.delight.render_grid(cr, px, py, 765, 990, self._A)
+                caramel.delight.render_grid(cr, px, py, PWIDTH, PHEIGHT, self._A)
 
     def _GRID(self, cr, x, y):
         x, y = cr.user_to_device(x, y)
@@ -892,9 +895,9 @@ class Document_view(ui.Cell):
         
         # channels
         if self._mode == 'text':
-            caramel.delight.render(cr, self._Tx, self._Ty, pageheight=1100)
+            caramel.delight.render(cr, self._Tx, self._Ty)
         else:
-            caramel.delight.render(cr, self._Tx, self._Ty, pageheight=1100, show_rails=True)
+            caramel.delight.render(cr, self._Tx, self._Ty, show_rails=True)
         
         self._mode_switcher.render(cr, h, k)
         

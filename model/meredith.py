@@ -1,6 +1,6 @@
 from model import olivia
 from model import george
-
+from model import penclick
 from model.wonder import character
 
 from state import noticeboard
@@ -28,20 +28,20 @@ class Meredith(object):
     def positive_page_context(self, x, y, radius, search_all=False):
         if not self.channel_select(x, y, radius, search_all):
             old_pg = self.page_context
-            self.page_context = int((y + 50)//1100)
+            self.page_context = penclick.page.Y_to_page(y)
             if not self.channel_select(x, self.Y(y), radius, search_all):
                 self.page_context = old_pg
                 
     def set_page_context(self, y):
-        self.page_context = int((y + 50)//1100)
+        self.page_context = penclick.page.Y_to_page(y)
             
     def set_hover_page_context(self, y):
-        self.hover_page_context = int((y + 50)//1100)
+        self.hover_page_context = penclick.page.Y_to_page(y)
     
     def Y(self, y):
-        return y - self.page_context*1100
+        return penclick.page.normalize_Y(y, self.page_context)
     def Y_hover(self, y):
-        return y - self.hover_page_context*1100
+        return penclick.page.normalize_Y(y, self.hover_page_context)
 
     def channel_select(self, x, y, radius, search_all=False):
         # try local

@@ -2,7 +2,7 @@ import bisect
 
 from state import noticeboard
 
-from model import meredith
+from model import meredith, penclick
 
 class Sprinkles(object):
     def __init__(self):
@@ -14,19 +14,15 @@ class Sprinkles(object):
 
     def press(self, x, y):
         print(y)
-        if -20 <= y <= -10 or 990 + 10 <= y <= 990 + 20:
-            if self._target_grid('x', x):
-                return True
-            elif -5 < x < 765 + 5:
+        if penclick.page.gutter_horizontal(x, y):
+            if not self._target_grid('x', x):
                 self._add_grid('x', x)
-                return True
+            return True
             
-        elif -20 <= x <= -10 or 765 + 10 <= x <= 765 + 20:
-            if self._target_grid('y', y):
-                return True
-            elif -5 < y < 990 + 5:
+        elif penclick.page.gutter_vertical(x, y):
+            if not self._target_grid('y', y):
                 self._add_grid('y', y)
-                return True
+            return True
         return False
 
     def _add_grid(self, axis, value):
@@ -64,12 +60,12 @@ class Sprinkles(object):
     def move_grid(self, x, y):
         if self.grid_selected[0] is not None:
             if self.grid_selected[0] == 0:
-                if 0 < x < 765:
+                if 0 < x < penclick.page.WIDTH:
                     value = x
                 else:
                     return False
             else:
-                if 0 < y < 990:
+                if 0 < y < penclick.page.HEIGHT:
                     value = y
                 else:
                     return False

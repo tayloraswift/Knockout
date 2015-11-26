@@ -6,7 +6,7 @@ from state import noticeboard
 
 from interface import poptarts
 
-from model import meredith
+from model import meredith, penclick
 from model import un
 
 
@@ -185,11 +185,11 @@ class Channels_controls(object):
             noticeboard.refresh.push_change()
             hovered[1] = self._hover_portal
 
-    def render(self, cr, Tx, Ty, pageheight, show_rails=False):            
+    def render(self, cr, Tx, Ty, show_rails=False):            
             
         if show_rails:
             for c, channel in enumerate(meredith.mipsy.tracts[0].channels.channels):
-                offset = channel.page * pageheight
+                offset = penclick.page.normalize_Y(0, -channel.page)
                 color = (0.3, 0.3, 0.3, 0.5)
                 if (c, 'entrance') == self._hover_portal:
                     color = (0.3, 0.3, 0.3, 1)
@@ -250,7 +250,7 @@ class Channels_controls(object):
     
             for channel in chain.from_iterable(tract.channels.channels for tract in meredith.mipsy.tracts[1:]):
 
-                offset = channel.page * pageheight
+                offset = penclick.page.normalize_Y(0, -channel.page)
                 cr.set_source_rgba(0.3, 0.3, 0.3, 0.3)
                 
                 pts = [( Tx(p[0]), Ty(p[1] + offset) ) for p in channel.railings[0] + list(reversed(channel.railings[1]))]
@@ -264,7 +264,7 @@ class Channels_controls(object):
 
         else:
             for c, channel in enumerate(meredith.mipsy.tracts[0].channels.channels):
-                offset = channel.page * pageheight
+                offset = penclick.page.normalize_Y(0, -channel.page)
                 color = (0.3, 0.3, 0.3, 0.5)
                 if (c, 'entrance') == self._hover_portal:
                     color = (0.3, 0.3, 0.3, 1)

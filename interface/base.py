@@ -25,6 +25,9 @@ class Base_kookie(object):
         
         self.y = self._y_bottom
 
+    def _SYNCHRONIZE(self):
+        pass
+
     def _build_line(self, x, y, text, font, fontsize=None, align=1, sub_minus=False):
         if fontsize is None:
             fontsize = font['fontsize']

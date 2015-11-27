@@ -17,59 +17,65 @@ from model import un
 
 class _Font_file_Field(kookies.Blank_space):
     def __init__(self, x, y, width, p, f, name=None):
-    
-        kookies.Blank_space.__init__(self, x, y, width, fonttable.table.get_font(p, f)['path'], callback=self._push_fontname, name=name)
-
         self.p = p
         self.f = f
 
-        if not fonttable.table.get_font(self.p, self.f)['path_valid']:
-            self.broken = True
-        else:
-            self.broken = False
+        kookies.Blank_space.__init__(self, x, y, width, callback=self._push_fontname, value_acquire=self._value_acquire, name=name)
+
+    def _value_acquire(self):
+        self.broken = not fonttable.table.get_font(self.p, self.f)['path_valid']
+        return fonttable.table.get_font(self.p, self.f)['path']
 
     def _push_fontname(self, path):
 
         fonttable.table.clear()
         
         fs.f_set_attribute('path', self.p, self.f, (False, path))
-        self.broken = not fonttable.table.get_font(self.p, self.f)['path_valid']
         
         meredith.mipsy.recalculate_all()
+        klossy.synchronize()
 
 class _Font_numeric_Field(kookies.Numeric_field):
     def __init__(self, x, y, width, p, f, attribute, name=None):
-        kookies.Numeric_field.__init__(self, x, y, width, 
-                str(fonttable.table.get_font(p, f)[attribute]), 
-                callback=self._push_attribute, 
-                name=name)
-        
         self.p = p
         self.f = f
         self._attribute = attribute
         
+        kookies.Numeric_field.__init__(self, x, y, width, 
+                callback=self._push_attribute, 
+                value_acquire=self._value_acquire,
+                name=name)
+
+    def _value_acquire(self):
+        return str(fonttable.table.get_font(self.p, self.f)[self._attribute])
+        
     def _push_attribute(self, value):
         fonttable.table.clear()
         
-        fs.f_set_attribute(self._attribute, self.p, self.f, (False, self._to_number(value)))
+        fs.f_set_attribute(self._attribute, self.p, self.f, (False, value))
         
         meredith.mipsy.recalculate_all()
+        klossy.synchronize()
     
 class _Paragraph_numeric_Field(kookies.Numeric_field):
     def __init__(self, x, y, width, p, attribute, name=None):
-        kookies.Numeric_field.__init__(self, x, y, width, 
-                str(fonttable.p_table.get_paragraph(p)[attribute]), 
-                callback=self._push_attribute, 
-                name=name)
-        
         self.p = p
         self._attribute = attribute
 
+        kookies.Numeric_field.__init__(self, x, y, width,
+                callback=self._push_attribute, 
+                value_acquire=self._value_acquire,
+                name=name)
+                
+    def _value_acquire(self):
+        return str(fonttable.p_table.get_paragraph(self.p)[self._attribute])
+        
     def _push_attribute(self, value):
         fonttable.p_table.clear()
         
-        fs.p_set_attribute(self._attribute, self.p, (False, self._to_number(value)))
+        fs.p_set_attribute(self._attribute, self.p, (False, value))
         meredith.mipsy.recalculate_all()
+        klossy.synchronize()
 
 class _Paragraph_checkbox(kookies.Checkbox):
     def __init__(self, x, y, width, p, attribute, name=None):
@@ -89,17 +95,17 @@ class _Paragraph_checkbox(kookies.Checkbox):
         
         fs.p_set_attribute(self._attribute, self.p, (False, value))
         meredith.mipsy.recalculate_all()
-        
-#        klossy.refresh()
+        klossy.synchronize()
 
 class _Paragraph_style_menu(kookies.Object_menu):
     def __init__(self, x, y, width, p, name=None, source=0):
         entries = sorted(fonts.paragraph_classes.keys())
         entries = list(zip(entries, [str(v) for v in entries]))
-        kookies.Object_menu.__init__(self, x, y, width, p, callback=self._push_pname, addition_callback=self._add_paragraph_class, menu_callback=self._menu_select_class, menu_options=entries, name=name, source=source)
         
         self.p = p
-
+        self._value_acquire = lambda: self.p
+        
+        kookies.Object_menu.__init__(self, x, y, width, callback=self._push_pname, addition_callback=self._add_paragraph_class, menu_callback=self._menu_select_class, menu_options=entries, value_acquire=self._value_acquire, name=name, source=source)
 
     def _push_pname(self, name):
         fonttable.p_table.clear()
@@ -109,6 +115,7 @@ class _Paragraph_style_menu(kookies.Object_menu):
         self.p = name
 
         meredith.mipsy.recalculate_all()
+        klossy.synchronize()
 
     def _menu_select_class(self, name):
         p = meredith.mipsy.glyph_at()[2]
@@ -233,7 +240,6 @@ class _preview(kookies.Heading):
         self.p = p
         self.f = f
 
-        
     def draw(self, cr, hover=(None, None)):
         cr.set_source_rgb(0,0,0)
         
@@ -268,6 +274,10 @@ class _Properties_panel(ui.Cell):
         meredith.mipsy.recalculate_all() # must come before because it rewrites all the paragraph styles
         self._reconstruct()
     
+    def synchronize(self):
+        for item in self._items:
+            item._SYNCHRONIZE()
+    
     def render(self, cr, h, k):
         
         # DRAW BACKGROUND
@@ -301,10 +311,7 @@ class _Properties_panel(ui.Cell):
     def key_input(self, name, char):
         if self._active_box_i is not None:
             if name == 'Return':
-                if self._items[self._active_box_i].defocus():
-                    print('UPDATE PANEL')
-                    self._reconstruct()
-                
+                self._items[self._active_box_i].defocus()
                 self._active_box_i = None
             else:
                 return self._items[self._active_box_i].type_box(name, char)
@@ -312,7 +319,6 @@ class _Properties_panel(ui.Cell):
     def press(self, x, y, char):
 
         b = None
-
         bb = self._stack_bisect(y)
 
         try:
@@ -325,13 +331,8 @@ class _Properties_panel(ui.Cell):
         # defocus the other box, if applicable
         if b is None or b != self._active_box_i:
             if self._active_box_i is not None:
-                if self._items[self._active_box_i].defocus():
-
-                    print('UPDATE PANEL')
-                    self._reconstruct()
-                    
+                self._items[self._active_box_i].defocus()
             self._active_box_i = b
-
             
     def press_motion(self, x, y):
         if self._active_box_i is not None:
@@ -362,6 +363,8 @@ class Properties(_Properties_panel):
 
     def _reconstruct_text_properties(self):
         # ALWAYS REQUIRES CALL TO _stack()
+        print('reconstruct')
+
         p = meredith.mipsy.glyph_at()[2]
         
         self._items = [self._tabstrip]
@@ -425,14 +428,14 @@ class Properties(_Properties_panel):
 
         elif self._tab == 'page':
             self._items.append(kookies.Integer_field( 15, y, 250, 
-                        str(penclick.page.WIDTH), 
                         callback = penclick.page.set_width,
+                        value_acquire = lambda: str(penclick.page.WIDTH),
                         name = 'WIDTH' ))
             
             y += 45
-            self._items.append(kookies.Integer_field( 15, y, 250, 
-                        str(penclick.page.HEIGHT), 
+            self._items.append(kookies.Integer_field( 15, y, 250,
                         callback = penclick.page.set_height,
+                        value_acquire = lambda: str(penclick.page.HEIGHT),
                         name = 'HEIGHT' ))
 
         self._stack()
@@ -452,9 +455,9 @@ class Properties(_Properties_panel):
         if self._tab == 'channels':
             if c is not None:
                 self._items.append(kookies.Integer_field( 15, y, 250, 
-                        str(meredith.mipsy.tracts[0].channels.channels[c].page), 
                         callback = meredith.mipsy.change_channel_page, 
                         params = (c,),
+                        value_acquire = lambda: str(meredith.mipsy.tracts[0].channels.channels[c].page),
                         name = 'PAGE' ))
                 y += 30
             

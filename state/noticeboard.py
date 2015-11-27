@@ -32,25 +32,7 @@ class Refresh_with_param(object):
         else:
             return False, False
 
-class Selection_menus(object):
-    def __init__(self):
-        self._menus = {}
-    
-    def add_menu(self, ID):
-        self._menus[ID] = False
-    
-    def push_refresh(self, ID):
-        self._menus[ID] = True
-    
-    def should_refresh(self, ID):
-        if self._menus[ID]:
-            self._menus[ID] = False
-            return True
-        else:
-            return False
-
 refresh = Refresh_draw()
+refresh_properties_values = Refresh_draw()
 refresh_properties_stack = Refresh_draw()
 refresh_properties_type = Refresh_with_param()
-
-menus = Selection_menus()

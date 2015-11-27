@@ -138,15 +138,16 @@ class Channels_controls(object):
 
         if name in ['BackSpace', 'Delete']:
             if self._mode == 'outlines':
-                if self._selected_portal is not None:
+                c, r, i = self._selected_point
+                if self._selected_portal is not None or (c is not None and i is None):
                     un.history.undo_save(3)
                     
                     # delete channel
-                    del meredith.mipsy.tracts[0].channels.channels[self._selected_point[0]]
+                    del meredith.mipsy.tracts[0].channels.channels[c]
                     # wipe out entire tract if it's the last one
                     if not meredith.mipsy.tracts[0].channels.channels:
                         del meredith.mipsy.tracts[0]
-                        meredith.mipsy.set_t(0)
+
                 else:
                     un.history.undo_save(3)
                     if not meredith.mipsy.tracts[0].channels.delete_selection():

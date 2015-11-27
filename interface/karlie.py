@@ -115,7 +115,7 @@ class _Paragraph_style_menu(kookies.Object_menu):
         self.p = name
 
         meredith.mipsy.recalculate_all()
-        klossy.synchronize()
+        klossy.refresh() # all the self.p’s have changed
 
     def _menu_select_class(self, name):
         p = meredith.mipsy.glyph_at()[2]
@@ -143,14 +143,14 @@ class _Paragraph_style_menu(kookies.Object_menu):
         
 
 def _P_options_acquire_filtered():
-    PPP = ['x'] + sorted(list( key for key in fonts.paragraph_classes.keys() if not fonts.paragraph_classes[key]['fontclasses'][0] ))
+    PPP = ['—'] + sorted(list( key for key in fonts.paragraph_classes.keys() if not fonts.paragraph_classes[key]['fontclasses'][0] ))
     return list(zip(PPP, [str(v) for v in PPP]))
     
 def _F_options_acquire(P):
-    if P != 'x':
-        return (('x', 'x'), ) + tuple( sorted(((P, ff), '{ ' + ', '.join(ff) + ' }') for ff in fonts.paragraph_classes[P]['fontclasses'][1].keys()) )
+    if P != '—':
+        return (('—', '—'), ) + tuple( sorted(((P, ff), '{ ' + ', '.join(ff) + ' }') for ff in fonts.paragraph_classes[P]['fontclasses'][1].keys()) )
     else:
-        return (('x', 'x'), )
+        return (('—', '—'), )
     
 class _Inheritance_selection_menu(kookies.Double_selection_menu):
     def __init__(self, x, y, p, f, attribute, source=0):
@@ -169,11 +169,11 @@ class _Inheritance_selection_menu(kookies.Double_selection_menu):
         if current[0]:
             return (current[1][0], tuple(current[1]))
         else:
-            return ('x', 'x')
+            return ('—', '—')
     
     def _push_inherit(self, value):
         fonttable.table.clear()
-        if value == 'x':
+        if value == '—':
             if self._attribute == '_all':
                 fonts.paragraph_classes[self._p]['fontclasses'][1][self._f] = deepcopy(fonts.f_get_f(self._p, self._f))
             else:
@@ -194,11 +194,14 @@ class _Inheritance_selection_menu(kookies.Double_selection_menu):
                 fonttable.table.clear()
                 fs.f_set_attribute(self._attribute, self._p, self._f, v)
                 print('REFERENCE LOOP DETECTED')
-
-        klossy.refresh()
+        
+        if self._attribute == '_all':
+            klossy.refresh()
+        else:
+            klossy.synchronize()
 
 def _P_options_acquire():
-    PPP = ['x'] + list(fonts.paragraph_classes.keys())
+    PPP = ['—'] + list(fonts.paragraph_classes.keys())
     return list(zip(PPP, [str(v) for v in PPP]))
     
 class _Paragraph_inheritance_menu(kookies.Selection_menu):
@@ -213,11 +216,11 @@ class _Paragraph_inheritance_menu(kookies.Selection_menu):
         if current[0]:
             return current[1]
         else:
-            return 'x'
+            return '—'
     
     def _push_inherit(self, value):
         fonttable.p_table.clear()
-        if value == 'x':
+        if value == '—':
             fs.p_set_attribute(self._attribute, self._p, (False, fonttable.p_table.get_paragraph(self._p)[self._attribute]) )
         else:
             # save old value in case of a disaster

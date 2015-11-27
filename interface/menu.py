@@ -17,6 +17,8 @@ class Menu(object):
         
         self._extend = extend_life
         
+        self.test_change()
+        
     def destroy(self):
         self._menu = None
         self._hovered = None
@@ -61,6 +63,7 @@ class Menu(object):
     
     def _clear_hover(self):
         self._hovered = None
+        self.test_change()
     
     def render(self, cr):
         if self._menu is not None:

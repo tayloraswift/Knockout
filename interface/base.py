@@ -99,8 +99,8 @@ class Menu(Base_kookie):
     def _construct(self):
         # build menu
         y = self._y
-        for signal in self._signals:
-            self._add_static_text(self._x + 10, y + self._item_height - 11, str(signal) )
+        for signal, text in self._signals:
+            self._add_static_text(self._x + 10, y + self._item_height - 11, text )
             y += self._item_height
 
     def _target(self, y):
@@ -109,7 +109,7 @@ class Menu(Base_kookie):
             
     def press(self, y):
         i = self._target(y)
-        return self._signals[i]
+        return self._signals[i][0]
 
     def hover(self, y):
         return self._target(y)

@@ -71,6 +71,7 @@ class Checkbox(Button):
         
         self._get_value = value_acquire
         self._ACQUIRE_REPRESENT()
+        self._SYNCHRONIZE = self._ACQUIRE_REPRESENT
         
         self._callback = callback
         self._callback_parameters = callback_parameters
@@ -202,24 +203,25 @@ class Heading(Base_kookie):
 
 
 class Blank_space(Base_kookie):
-    def __init__(self, x, y, width, default, callback, params = (), name=None):
+    def __init__(self, x, y, width, callback, value_acquire, params = (), name=''):
+        self.broken = False
         
         Base_kookie.__init__(self, x, y, width, 28)
-        
-        # must be list
-        self._text = list(default) + [None]
-        self._previous = ''.join(default)
 
         self._callback = callback
-        self._params = params
-        self._name = name
+        self._value_acquire = value_acquire
         
-        self.broken = False
+        self._SYNCHRONIZE()
+        
+        self._params = params
+        
+        self._domain = lambda k: k
+        self._name = name
         
         self.is_over_hover = self.is_over
         
         # cursors
-        self._i = len(self._text) - 1
+        self._i = len(self._LIST) - 1
         self._j = self._i
         
         # build static texts
@@ -235,28 +237,27 @@ class Blank_space(Base_kookie):
         self._broken_resting_text_color = (1, 0.15, 0.2, 0.8)
         self._broken_active_text_color = (1, 0.15, 0.2, 1)
         
-        self._template = []
         self._scroll = 0
-        
-        self._stamp_glyphs(self._text)
-        
-    def _stamp_glyphs(self, text):
-        self._template = self._build_line(self._x, self._y + self.font['fontsize'] + 5, text, self.font)
+
+    def _ACQUIRE_REPRESENT(self):
+        self._VALUE = self._value_acquire()
+        self._LIST = list(self._VALUE) + [None]
+        self._stamp_glyphs(self._LIST)
+
+    def _SYNCHRONIZE(self):
+        self._ACQUIRE_REPRESENT()
+        self._PREV_VALUE = self._VALUE
+
+    def _stamp_glyphs(self, glyphs):
+        self._template = self._build_line(self._x, self._y + self.font['fontsize'] + 5, glyphs, self.font)
         
     def is_over(self, x, y):
-        if self._y <= y <= self._y_bottom and self._x - 10 <= x <= self._x_right + 10:
-            return True
-        else:
-            return False
+        return self._y <= y <= self._y_bottom and self._x - 10 <= x <= self._x_right + 10
 
     def _entry(self):
-        return ''.join(self._text[:-1])
-
-    def _domain(self, entry):
-        return entry
+        return ''.join(self._LIST[:-1])
     
     # scrolling function
-            
     def _center_j(self):
         position = self._template[self._j][1] - self._x
         print(position + self._scroll)
@@ -276,19 +277,19 @@ class Blank_space(Base_kookie):
                 # sort
                 if self._i > self._j:
                     self._i, self._j = self._j, self._i
-                del self._text[self._i : self._j]
+                del self._LIST[self._i : self._j]
                 changed = True
                 self._j = self._i
                 
             elif name == 'BackSpace':
                 if self._i > 0:
-                    del self._text[self._i - 1]
+                    del self._LIST[self._i - 1]
                     changed = True
                     self._i -= 1
                     self._j -= 1
             else:
-                if self._i < len(self._text) - 2:
-                    del self._text[self._i]
+                if self._i < len(self._LIST) - 2:
+                    del self._LIST[self._i]
                     changed = True
 
         elif name == 'Left':
@@ -296,15 +297,15 @@ class Blank_space(Base_kookie):
                 self._i -= 1
                 self._j = self._i
         elif name == 'Right':
-            if self._i < len(self._text) - 1:
+            if self._i < len(self._LIST) - 1:
                 self._i += 1
                 self._j = self._i
         elif name == 'Home':
             self._i = 0
             self._j = 0
         elif name == 'End':
-            self._i = len(self._text) - 1
-            self._j = len(self._text) - 1
+            self._i = len(self._LIST) - 1
+            self._j = len(self._LIST) - 1
         
         elif name == 'Paste':
             # check to make sure string contains no dangerous entities
@@ -314,10 +315,10 @@ class Blank_space(Base_kookie):
                     # sort
                     if self._i > self._j:
                         self._i, self._j = self._j, self._i
-                    del self._text[self._i : self._j]
+                    del self._LIST[self._i : self._j]
                     self._j = self._i
                 # take note that char is a LIST now
-                self._text[self._i:self._i] = char
+                self._LIST[self._i:self._i] = char
                 changed = True
                 self._i += len(char)
                 self._j = self._i
@@ -330,7 +331,7 @@ class Blank_space(Base_kookie):
                 if self._i > self._j:
                     self._i, self._j = self._j, self._i
                 
-                output = self._text[self._i : self._j]
+                output = self._LIST[self._i : self._j]
         
         elif name == 'Cut':
             # delete selection
@@ -338,8 +339,8 @@ class Blank_space(Base_kookie):
                 # sort
                 if self._i > self._j:
                     self._i, self._j = self._j, self._i
-                output = self._text[self._i : self._j]
-                del self._text[self._i : self._j]
+                output = self._LIST[self._i : self._j]
+                del self._LIST[self._i : self._j]
                 changed = True
                 self._j = self._i
             
@@ -350,15 +351,15 @@ class Blank_space(Base_kookie):
                 # sort
                 if self._i > self._j:
                     self._i, self._j = self._j, self._i
-                del self._text[self._i : self._j]
+                del self._LIST[self._i : self._j]
                 self._j = self._i
-            self._text[self._i:self._i] = [char]
+            self._LIST[self._i:self._i] = [char]
             changed = True
             self._i += 1
             self._j += 1
         
         if changed:
-            self._stamp_glyphs(self._text)
+            self._stamp_glyphs(self._LIST)
         
         self._center_j()
         
@@ -406,14 +407,12 @@ class Blank_space(Base_kookie):
     def defocus(self):
         self._active = None
         self._dropdown_active = False
-        self._text = list(self._entry()) + [None]
-        self._stamp_glyphs(self._text)
         self._scroll = 0
         # dump entry
-        out = self._entry()
-        if out != self._previous:
-            self._previous = out
-            self._callback(self._domain(out), * self._params)
+        self._VALUE = self._entry()
+        if self._VALUE != self._PREV_VALUE:            
+            self._callback(self._domain(self._VALUE), * self._params)
+            self._SYNCHRONIZE()
         else:
             return False
         return True
@@ -508,44 +507,22 @@ class Blank_space(Base_kookie):
 
 
 class Numeric_field(Blank_space):
-    def __init__(self, x, y, width, default, callback, params=(), name=None):
+    def __init__(self, x, y, width, callback, value_acquire, params=(), name=None):
     
-        Blank_space.__init__(self, x, y, width, default, callback, params, name)
-
-        self.broken = False
+        Blank_space.__init__(self, x, y, width, callback, value_acquire, params, name)
         
-    def _entry(self):
-        num = ''.join([c for c in self._text[:-1] if c in '1234567890.-'])
-
-        return num
-    
-    def _to_number(self, string):
-        if '.' in string:
-            number = float(string)
-        else:
-            number = int(string)
-        return number
+        self._digits = lambda k: ''.join([c for c in k if c in '1234567890.-'])
+        self._domain = lambda k: float(self._digits(k)) if '.' in k else int(self._digits(k))
 
     def _stamp_glyphs(self, text):
         self._template = self._build_line(self._x, self._y + self.font['fontsize'] + 5, text, self.font, sub_minus=True)
 
-class Integer_field(Blank_space):
-    def __init__(self, x, y, width, default, callback, params=(), name=None):
+class Integer_field(Numeric_field):
+    def __init__(self, x, y, width, callback, value_acquire, params=(), name=None):
     
-        Blank_space.__init__(self, x, y, width, default, callback, params, name)
+        Numeric_field.__init__(self, x, y, width, callback, value_acquire, params, name)
 
-        self.broken = False
-        
-    def _entry(self):
-        num = ''.join([c for c in self._text[:-1] if c in '1234567890-'])
-
-        return num
-    
-    def _domain(self, entry):
-        return int(entry)
-
-    def _stamp_glyphs(self, text):
-        self._template = self._build_line(self._x, self._y + self.font['fontsize'] + 5, text, self.font, sub_minus=True)
+        self._domain = lambda k: int(float(self._digits(k)))
 
 #########
 class Selection_menu(Base_kookie):
@@ -556,9 +533,6 @@ class Selection_menu(Base_kookie):
         self._get_options = options_acquire
         
         self._menu_callback = menu_callback
-        
-        # register menu
-        noticeboard.menus.add_menu(id(self))
 
         self._dropdown_active = False
         
@@ -567,8 +541,7 @@ class Selection_menu(Base_kookie):
         
         self._source = source
         
-        self._ACQUIRE_OPTIONS()
-        self._ACQUIRE_REPRESENT()
+        self._SYNCHRONIZE()
 
     def _ACQUIRE_OPTIONS(self):
         self._menu_options = self._get_options()
@@ -578,10 +551,14 @@ class Selection_menu(Base_kookie):
         label = self._lookup_label[self._get_value()]
         self._texts = []
         self._add_static_text(self._x_right, self._y_bottom - self._height/2 + 5, label, align=-1)
+
+    def _SYNCHRONIZE(self):
+        self._ACQUIRE_OPTIONS()
+        self._ACQUIRE_REPRESENT()
     
     def _MENU_PUSH(self, * args):
         self._menu_callback( * args)
-        noticeboard.menus.push_refresh(id(self))
+        self._SYNCHRONIZE()
     
     def release(self, action=True):
         pass
@@ -603,11 +580,6 @@ class Selection_menu(Base_kookie):
     
     def draw(self, cr, hover=(None, None)):
         
-        if noticeboard.menus.should_refresh(id(self)):
-            print('reacquire')
-            self._ACQUIRE_OPTIONS()
-            self._ACQUIRE_REPRESENT()
-        
         self._render_fonts(cr)
         
         if hover[1] == 1:
@@ -619,8 +591,8 @@ class Selection_menu(Base_kookie):
 #########
 
 class Object_menu(Blank_space):
-    def __init__(self, x, y, width, default, callback, addition_callback, menu_callback, menu_options, name=None, source=0):
-        Blank_space.__init__(self, x, y, width, default, callback, (), name)
+    def __init__(self, x, y, width, callback, addition_callback, menu_callback, menu_options, value_acquire, name=None, source=0):
+        Blank_space.__init__(self, x, y, width, callback, value_acquire, (), name)
 
         self._addition_callback = addition_callback
         self._menu_callback = menu_callback

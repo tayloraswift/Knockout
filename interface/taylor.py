@@ -204,6 +204,12 @@ class Document_toolbar(object):
         y += 30
         self._items.append(kookies.Button(5, y, 90, 30, callback=punch_tags, string='x Strong', params=('strong',) ))
 
+        y += 50
+        self._items.append(kookies.Checkbox(15, y, 80, callback=penclick.page.toggle_dual, value_acquire=lambda: penclick.page.dual, string='Dual'.upper()))
+        
+        y += 50
+        self._items.append(kookies.Selection_menu(5, y, 90, 30, menu_callback=constants.HINTS.set_hint_style, options_acquire=constants.default_hints, value_acquire=constants.HINTS.get_hint_style, source=0))
+        
     def render(self, cr):
         for i, entry in enumerate(self._items):
             if i == self._hover_box_ij[0]:
@@ -277,8 +283,8 @@ def _replace_misspelled(word):
     meredith.mipsy.stats(spell=True)
 
 class Document_view(ui.Cell):
-    def __init__(self):
-        self._mode = 'text'
+    def __init__(self, state={'mode': 'text', 'Hc': 0, 'Kc': 0, 'H': 0, 'K': 0, 'Zoom': 11}):
+        self._mode = state['mode']
         self._region_active, self._region_hover = 'view', 'view'
         self._toolbar = Document_toolbar()
         self._mode_switcher = Mode_switcher(self.change_mode)
@@ -286,25 +292,35 @@ class Document_view(ui.Cell):
         self._stake = None
         
         self._scroll_notches = [0.1, 0.13, 0.15, 0.2, 0.22, 0.3, 0.4, 0.5, 0.6, 0.8, 0.89, 1, 1.25, 1.5, 1.75, 1.989, 2, 2.5, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20, 30, 40]
-        self._scroll_notch_i = 11
+        self._scroll_notch_i = state['Zoom']
         
         # transform parameters
-        self._Hc = (constants.UI[1] - 100) / 2 + 100
-        self._Kc = (constants.window.get_k()) / 2
+        self._Hc = state['Hc']
+        self._Kc = state['Kc']
         
-        self._H = 200
-        self._K = 100
+        self._H = state['H']
+        self._K = state['K']
 
         self._A = self._scroll_notches[self._scroll_notch_i]
         
         self.idle()
     
+    def read_display_state(self):
+        return {
+            'mode': self._mode,
+            'Hc': self._Hc,
+            'Kc': self._Kc,
+            'H': self._H,
+            'K': self._K,
+            'Zoom': self._scroll_notch_i
+            }
+    
     # TRANSFORMATION FUNCTIONS
-    def _Tx(self, x):
-        return self._A*(x + self._H - self._Hc) + self._Hc
+    def _X_to_screen(self, x, pp):
+        return int(self._A * (penclick.page.map_X(x, pp) + self._H - self._Hc) + self._Hc)
 
-    def _Ty(self, y):
-        return self._A*(y + self._K - self._Kc) + self._Kc
+    def _Y_to_screen(self, y, pp):
+        return int(self._A * (penclick.page.map_Y(y, pp) + self._K - self._Kc) + self._Kc)
     
     def _T_1(self, x, y):
         x = (x - self._Hc) / self._A - self._H + self._Hc
@@ -358,18 +374,18 @@ class Document_view(ui.Cell):
         
         if self._region_active == 'view':
 
-            xo, yo = self._T_1(x, y)
+            x, y = self._T_1(x, y)
 
             # TEXT EDITING MODE
             if self._mode == 'text':
                 try:
-                    meredith.mipsy.set_page_context(yo)
-                    yo = meredith.mipsy.Y(yo)
+                    x, y = meredith.mipsy.set_page_context(x, y)
                     
                     un.history.undo_save(0)
                     
-                    meredith.mipsy.channel_select(xo, yo, radius=20, search_all=True)
-                    meredith.mipsy.set_cursor_xy(xo, yo)
+                    meredith.mipsy.channel_select(x, y, search_all=True)
+                    
+                    meredith.mipsy.set_cursor_xy(x, y)
                     meredith.mipsy.match_cursors()
                     
                     # used to keep track of ui redraws
@@ -387,9 +403,10 @@ class Document_view(ui.Cell):
             
             # CHANNEL EDITING MODE
             elif self._mode == 'channels':
-                if not caramel.delight.press( xo, meredith.mipsy.Y(yo), name=name):
-                    meredith.mipsy.set_page_context(yo)
-                    caramel.delight.press( xo, meredith.mipsy.Y(yo), name=name)
+                xp, yp = meredith.mipsy.XY(x, y)
+                if not caramel.delight.press(xp, yp, name=name):
+                    x, y = meredith.mipsy.set_page_context(x, y)
+                    caramel.delight.press(x, y, name=name)
 
         elif self._region_active == 'toolbar':
             self._toolbar.press(x, y)
@@ -410,10 +427,9 @@ class Document_view(ui.Cell):
             # TEXT EDITING MODE
             if self._mode == 'text':
                 try:
-                    meredith.mipsy.set_page_context(yo)
-                    yo = meredith.mipsy.Y(yo)
+                    xo, yo = meredith.mipsy.set_page_context(xo, yo)
                     
-                    meredith.mipsy.channel_select(xo, yo, radius=20, search_all=True)
+                    meredith.mipsy.channel_select(xo, yo, search_all=True)
                     i = meredith.mipsy.lookup_xy(xo, yo)
                     
                     ms = meredith.mipsy.tracts[0].misspellings
@@ -429,7 +445,9 @@ class Document_view(ui.Cell):
                         # used to keep track of ui redraws
                         self._sel_cursor = meredith.mipsy.tracts[0].select.cursor
                         meredith.mipsy.tracts[0].expand_cursors_word()
-                        menu.menu.create(x, y, 200, ['“' + ms[pair_i][2] + '”'] + wonder.struck.suggest(ms[pair_i][2]), _replace_misspelled, () )
+                        suggestions = ['“' + ms[pair_i][2] + '”'] + wonder.struck.suggest(ms[pair_i][2])
+                        suggestions = list(zip(suggestions, [str(v) for v in suggestions]))
+                        menu.menu.create(x, y, 200, suggestions, _replace_misspelled, () )
 
                 except IndexError:
                     # occurs if an empty channel is selected
@@ -450,18 +468,16 @@ class Document_view(ui.Cell):
                 noticeboard.refresh.push_change()
 
             x, y = self._T_1(x, y)
-            y_p = meredith.mipsy.Y(y)
+            xp, yp = meredith.mipsy.XY(x, y)
 
             if self._mode == 'text':
-                if not penclick.page.inside_y(y_p):
-                    meredith.mipsy.positive_page_context(x, y, radius=20, search_all=False)
-                    y_p = meredith.mipsy.Y(y)
-                
+                if not penclick.page.inside(xp, yp):
+                    xp, yp = meredith.mipsy.positive_page_context(x, y)
                 else:
-                    meredith.mipsy.channel_select(x, y_p, radius=20)
+                    meredith.mipsy.channel_select(xp, yp)
                 
                 try:
-                    meredith.mipsy.set_select_xy(x, y_p)
+                    meredith.mipsy.set_select_xy(xp, yp)
                     # if redraw needed
                     if meredith.mipsy.tracts[0].select.cursor != self._sel_cursor:
                         self._sel_cursor = meredith.mipsy.tracts[0].select.cursor
@@ -470,7 +486,7 @@ class Document_view(ui.Cell):
                     pass
 
             elif self._mode == 'channels':
-                caramel.delight.press_motion(x, y_p)
+                caramel.delight.press_motion(xp, yp)
         elif self._region_active == 'toolbar':
             pass
         elif self._region_active == 'switcher':
@@ -554,11 +570,7 @@ class Document_view(ui.Cell):
                 pass
 
             elif self._mode == 'channels':
-                # what page
-                xo, yo = self._T_1(x, y)
-                meredith.mipsy.set_hover_page_context(yo)
-                
-                caramel.delight.hover(xo, meredith.mipsy.Y_hover(yo))
+                caramel.delight.hover( * meredith.mipsy.set_hover_page_context( * self._T_1(x, y)) )
                 
         elif self._region_hover == 'toolbar':
             self._toolbar.hover(x, y)
@@ -655,33 +667,34 @@ class Document_view(ui.Cell):
                 
                 # Scale first (on bottom) is significantly faster in cairo
                 cr.save()
-                cr.translate(A*mx_cx + cx, A*penclick.page.normalize_Y(my_cy, -page) + cy)
+                cr.translate(A*penclick.page.map_X(mx_cx, page) + cx, A*penclick.page.map_Y(my_cy, page) + cy)
                 cr.scale(A, A)
 
                 self._print_sorted(cr, sorted_glyphs)
+
+                cr.restore()
                 
                 # only annotate active tract
                 if t == 0 and self._mode == 'text':
-                    self._draw_annotations(cr, sorted_glyphs['_annot'])
+                    self._draw_annotations(cr, sorted_glyphs['_annot'], page)
                     
                     # this is how we know what page the cursor is on
-                    if self._highlight(cr, sorted_glyphs['_intervals'], self._selection_highlight, 0.75, start, stop, l1, l2, i, j):
+                    if self._highlight(cr, sorted_glyphs['_intervals'], page, self._selection_highlight, 0.75, start, stop, l1, l2, i, j):
                         meredith.mipsy.page_context = page
                     
                     for red_line in annoying_red_lines:
-                        self._highlight(cr, sorted_glyphs['_intervals'], self._spelling_highlight, 1, * red_line)
-                
-                cr.restore()
+                        self._highlight(cr, sorted_glyphs['_intervals'], page, self._spelling_highlight, 1, * red_line)
 
-        
         for pp in range(max_page + 1):
             #draw page border
             if pp == meredith.mipsy.page_context:
                 cr.set_source_rgba(1, 0.2, 0.6, 0.7)
             else:
                 cr.set_source_rgba(0, 0, 0, 0.2)
-            px = int(round(self._Tx(0)))
-            py = int(round(self._Ty(penclick.page.normalize_Y(0, -pp))))
+
+            px = self._X_to_screen(0, pp)
+            py = self._Y_to_screen(0, pp)
+            
             cr.rectangle(px, py, int(round(PWIDTH*self._A)), 1)
             
             cr.rectangle(px - int(round(20*self._A)), py, int(round(10*self._A)), 1)
@@ -709,26 +722,16 @@ class Document_view(ui.Cell):
             if self._mode == 'channels':
                 caramel.delight.render_grid(cr, px, py, PWIDTH, PHEIGHT, self._A)
 
-    def _GRID(self, cr, x, y):
-        x, y = cr.user_to_device(x, y)
-        return cr.device_to_user(int(round(x)), int(round(y)))
-
-    def _draw_annotations(self, cr, annot):
-
-        # constant numbers
-        _1_ = 1/self._A
-        _3_ = 3/self._A
-        _4_ = 4/self._A
-        _6_ = 6/self._A
-        _10_ = 10/self._A
+    def _draw_annotations(self, cr, annot, page):
 
         for a in annot:
         
             x, y, p, f = a[1:5]
             
-            x, y = self._GRID(cr, x, y)
+            x = self._X_to_screen(x, page)
+            y = self._Y_to_screen(y, page)
             
-            fontsize = round(get_fontsize(p[0], f) * self._A) / self._A
+            fontsize = int(get_fontsize(p[0], f) * self._A)
 
             if p[1] == meredith.mipsy.glyph_at()[2][1]:
                 cr.set_source_rgba(1, 0.2, 0.6, 0.7)
@@ -740,47 +743,42 @@ class Document_view(ui.Cell):
                 
                 cr.move_to(x, y)
                 cr.rel_line_to(0, -fontsize)
-                cr.rel_line_to(-_3_, 0)
+                cr.rel_line_to(-3, 0)
                 # sharp edge do not round
                 cr.rel_line_to(-fontsize/5, fontsize/2)
-                cr.line_to(x - _3_, y)
+                cr.line_to(x - 3, y)
                 cr.close_path()
                 cr.fill()
 
             #        '<br>' +1
             elif a[0] == -6:
                 
-                fontsize = round(get_fontsize(p[0], f) * self._A) / self._A
-                
-                cr.rectangle(x - _6_, y - round(fontsize), _3_, round(fontsize))
-                cr.rectangle(x - _10_, y - _3_, _4_, _3_)
+                cr.rectangle(x - 6, y - fontsize, 3, fontsize)
+                cr.rectangle(x - 10, y - 3, 4, 3)
                 cr.fill()
 
             #           '<f>'
             elif a[0] == -4:
                 cr.move_to(x, y - fontsize)
-                cr.rel_line_to(0, _6_)
-                cr.rel_line_to(-_1_, 0)
-                cr.rel_line_to(-_3_, -_6_)
+                cr.rel_line_to(0, 6)
+                cr.rel_line_to(-1, 0)
+                cr.rel_line_to(-3, -6)
                 cr.close_path()
                 cr.fill()
             
             #          '</f>'
             elif a[0] == -5:
                 cr.move_to(x, y - fontsize)
-                cr.rel_line_to(0, _6_)
-                cr.rel_line_to(_1_, 0)
-                cr.rel_line_to(_3_, -_6_)
+                cr.rel_line_to(0, 6)
+                cr.rel_line_to(1, 0)
+                cr.rel_line_to(3, -6)
                 cr.close_path()
                 cr.fill()
 
     def _spelling_highlight(self, cr, x1, x2, y, height, I=None, J=None):
-        # constant numbers
-        _1_ = 1/self._A
-        
         cr.set_source_rgba(1, 0.15, 0.2, 0.8)
         
-        cr.rectangle(x1, y + int(2 * self._A) / self._A, x2 - x1, _1_)
+        cr.rectangle(x1, y + int(2 * self._A), x2 - x1, 1)
         cr.fill()
         
     def _selection_highlight(self, cr, x1, x2, y, height, I=None, J=None):
@@ -790,12 +788,12 @@ class Document_view(ui.Cell):
         cr.fill()
         # print cursor
         if I is not None:
-            self._draw_cursor(cr, I)
+            self._draw_cursor(cr, I, x1, y, height)
         if J is not None:
-            self._draw_cursor(cr, J)
+            self._draw_cursor(cr, J, x2, y, height)
 
 
-    def _highlight(self, cr, intervals, highlighting_engine, alpha, start_x, stop_x, l1, l2, I, J):
+    def _highlight(self, cr, intervals, page, highlighting_engine, alpha, start_x, stop_x, l1, l2, I, J):
         
         START_RENDERED = False
         STOP_RENDERED = False
@@ -815,21 +813,22 @@ class Document_view(ui.Cell):
         for l in operant:
             # get line dimensions
             start, stop, leading, y = meredith.mipsy.tracts[0].line_data(l)
-            start = self._GRID(cr, start, 0)[0]
-            stop, y = self._GRID(cr, stop, y)
-            leading = int(round(leading * self._A)) / self._A
+            start = self._X_to_screen(start, page)
+            stop = self._X_to_screen(stop, page)
+            y = self._Y_to_screen(y, page)
+            leading = int(leading * self._A)
             
             if l == l1 == l2:
-                highlighting_engine(cr, start_x, stop_x, y, leading, I, J)
+                highlighting_engine(cr, self._X_to_screen(start_x, page), self._X_to_screen(stop_x, page), y, leading, I, J)
                 START_RENDERED = True
                 STOP_RENDERED = True
 
             elif l == l1:
-                highlighting_engine(cr, start_x, stop, y, leading, I, None)
+                highlighting_engine(cr, self._X_to_screen(start_x, page), stop, y, leading, I, None)
                 START_RENDERED = True
 
             elif l == l2:
-                highlighting_engine(cr, start, stop_x, y, leading, None, J)
+                highlighting_engine(cr, start, self._X_to_screen(stop_x, page), y, leading, None, J)
                 STOP_RENDERED = True
 
             else:
@@ -841,46 +840,37 @@ class Document_view(ui.Cell):
         
         return START_RENDERED and STOP_RENDERED
     
-    def _draw_cursor(self, cr, i):
-        # constant numbers
-        _1_ = 1/self._A
-        _2_ = 2/self._A
-        _3_ = 3/self._A
-        _4_ = 4/self._A
+    def _draw_cursor(self, cr, i, x, y, leading):
         
         cr.set_source_rgb(1, 0, 0.5)
-        cx, cy, p, f = meredith.mipsy.tracts[0].text_index_location(i)
-        
-        cx, cy = self._GRID(cr, cx, cy)
-        leading = int(fonttable.p_table.get_paragraph(p[0])['leading'] * self._A) / self._A
 
-        ux = cx
-        uy = cy - leading
+        ux = x
+        uy = y - leading
         uh = leading
         
-        cr.rectangle(ux - _1_, 
+        cr.rectangle(ux - 1, 
                     uy, 
-                    _2_, 
+                    2, 
                     uh)
         # special cursor if adjacent to font tag
         if meredith.mipsy.at_absolute(i) in ('<f>', '</f>'):
-            cr.rectangle(ux - _3_, 
+            cr.rectangle(ux - 3, 
                     uy, 
-                    _4_, 
-                    _2_)
-            cr.rectangle(ux - _3_, 
+                    4, 
+                    2)
+            cr.rectangle(ux - 3, 
                     uy + uh, 
-                    _4_, 
-                    _2_)
+                    4, 
+                    2)
         if meredith.mipsy.at_absolute(i - 1) in ('<f>', '</f>'):
-            cr.rectangle(ux - _1_, 
+            cr.rectangle(ux - 1, 
                     uy, 
-                    _4_, 
-                    _2_)
-            cr.rectangle(ux - _1_, 
+                    4, 
+                    2)
+            cr.rectangle(ux - 1, 
                     uy + uh, 
-                    _4_, 
-                    _2_)
+                    4, 
+                    2)
         cr.fill()
 
 
@@ -895,9 +885,9 @@ class Document_view(ui.Cell):
         
         # channels
         if self._mode == 'text':
-            caramel.delight.render(cr, self._Tx, self._Ty)
+            caramel.delight.render(cr, self._X_to_screen, self._Y_to_screen)
         else:
-            caramel.delight.render(cr, self._Tx, self._Ty, show_rails=True)
+            caramel.delight.render(cr, self._X_to_screen, self._Y_to_screen, show_rails=True)
         
         self._mode_switcher.render(cr, h, k)
         
@@ -930,5 +920,5 @@ class Document_view(ui.Cell):
         
         cr.reset_clip()
 
-becky = Document_view()
+becky = None
 

@@ -25,27 +25,34 @@ class Meredith(object):
         for tract in self.tracts:
             tract.deep_recalculate()
 
-    def positive_page_context(self, x, y, radius, search_all=False):
-        if not self.channel_select(x, y, radius, search_all):
+    def positive_page_context(self, x, y):
+        if not self.channel_select(x, y):
             old_pg = self.page_context
-            self.page_context = penclick.page.Y_to_page(y)
-            if not self.channel_select(x, self.Y(y), radius, search_all):
+            self.page_context = penclick.page.XY_to_page(x, y)
+            xp, yp = self.XY(x, y)
+            if not self.channel_select(xp, yp):
                 self.page_context = old_pg
+                x, y = self.XY(x, y)
+            else:
+                x, y = xp, yp
+        return x, y
                 
-    def set_page_context(self, y):
-        self.page_context = penclick.page.Y_to_page(y)
+    def set_page_context(self, x, y):
+        self.page_context = penclick.page.XY_to_page(x, y)
+        return self.XY(x, y)
             
-    def set_hover_page_context(self, y):
-        self.hover_page_context = penclick.page.Y_to_page(y)
+    def set_hover_page_context(self, x, y):
+        self.hover_page_context = penclick.page.XY_to_page(x, y)
+        return self._XY_hover(x, y)
     
-    def Y(self, y):
-        return penclick.page.normalize_Y(y, self.page_context)
-    def Y_hover(self, y):
-        return penclick.page.normalize_Y(y, self.hover_page_context)
+    def XY(self, x, y):
+        return penclick.page.normalize_XY(x, y, self.page_context)
+    def _XY_hover(self, x, y):
+        return penclick.page.normalize_XY(x, y, self.hover_page_context)
 
-    def channel_select(self, x, y, radius, search_all=False):
+    def channel_select(self, x, y, search_all=False):
         # try local
-        c_local = self.tracts[0].channels.target_channel(x, y, self.page_context, radius)
+        c_local = self.tracts[0].channels.target_channel(x, y, self.page_context, 20)
         
         if c_local is not None and c_local != self._C:
             self._C = c_local
@@ -53,7 +60,7 @@ class Meredith(object):
         
         elif search_all:
             for t, tract in enumerate(self.tracts):
-                c = tract.channels.target_channel(x, y, self.page_context, radius)
+                c = tract.channels.target_channel(x, y, self.page_context, 20)
                 if c is not None:
                     self.tracts.insert(0, self.tracts.pop(t))
                     self._C = c
@@ -77,7 +84,7 @@ class Meredith(object):
                 noticeboard.refresh_properties_stack.push_change()
         
         else:
-            if self.channel_select(x, y, 20, search_all=True):
+            if self.channel_select(x, y, search_all=True):
                 noticeboard.refresh_properties_stack.push_change()
                 c = self._C
             else:

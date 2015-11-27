@@ -11,7 +11,7 @@ from fonts import fontsetters as fs
 
 from interface import kookies, caramel, ui
 
-from model import meredith
+from model import meredith, penclick
 from model import un
 
 
@@ -73,13 +73,16 @@ class _Paragraph_numeric_Field(kookies.Numeric_field):
 
 class _Paragraph_checkbox(kookies.Checkbox):
     def __init__(self, x, y, width, p, attribute, name=None):
-        kookies.Checkbox.__init__(self, x, y, width,
-                fonttable.p_table.get_paragraph(p)[attribute], 
-                callback=self._push_attribute, 
-                string=name)
-        
         self.p = p
         self._attribute = attribute
+        
+        kookies.Checkbox.__init__(self, x, y, width,
+                callback=self._push_attribute,
+                value_acquire=self._value_acquire,
+                string=name)
+
+    def _value_acquire(self):
+        return fonttable.p_table.get_paragraph(self.p)[self._attribute]
 
     def _push_attribute(self, value):
         fonttable.p_table.clear()
@@ -87,15 +90,15 @@ class _Paragraph_checkbox(kookies.Checkbox):
         fs.p_set_attribute(self._attribute, self.p, (False, value))
         meredith.mipsy.recalculate_all()
         
-        klossy.refresh()
+#        klossy.refresh()
 
 class _Paragraph_style_menu(kookies.Object_menu):
     def __init__(self, x, y, width, p, name=None, source=0):
-        kookies.Object_menu.__init__(self, x, y, width, p, callback=self._push_pname, addition_callback=self._add_paragraph_class, menu_callback=self._menu_select_class, menu_options=sorted(fonts.paragraph_classes.keys()), name=name, source=source)
+        entries = sorted(fonts.paragraph_classes.keys())
+        entries = list(zip(entries, [str(v) for v in entries]))
+        kookies.Object_menu.__init__(self, x, y, width, p, callback=self._push_pname, addition_callback=self._add_paragraph_class, menu_callback=self._menu_select_class, menu_options=entries, name=name, source=source)
         
         self.p = p
-
-#        self.hover_in_borders = self.in_borders
 
 
     def _push_pname(self, name):
@@ -132,27 +135,32 @@ class _Paragraph_style_menu(kookies.Object_menu):
         klossy.refresh()
         
 
+def _PF_options_acquire():
+    combos = ['x']
+    for key in sorted(fonts.paragraph_classes.keys()):
+        if not fonts.paragraph_classes[key]['fontclasses'][0]:
+            combos += [ (key, ff) for ff in fonts.paragraph_classes[key]['fontclasses'][1].keys() ]
+    return list(zip(combos, [str(v) for v in combos]))
+    
 class _Inheritance_selection_menu(kookies.Selection_menu):
-    def __init__(self, x, y, callback, p, f, attribute, source=0):
+    def __init__(self, x, y, p, f, attribute, source=0):
         self._p = p
         self._f = f
         self._attribute = attribute
-        
+
+        kookies.Selection_menu.__init__(self, x, y, width=180, height=15, menu_callback=self._push_inherit, options_acquire=_PF_options_acquire, value_acquire=self._value_acquire, source=source)
+    
+    def _value_acquire(self):
         if self._attribute == '_all':
             current = fonts.paragraph_classes[self._p]['fontclasses'][1][self._f]
         else:
             current = fonts.f_read_attribute(self._attribute, self._p, self._f)
+        
         if current[0]:
-            default = current[1]
+            return tuple(current[1])
         else:
-            default = 'x'
-        
-        combos = ['x']
-        for key in sorted(fonts.paragraph_classes.keys()):
-            if not fonts.paragraph_classes[key]['fontclasses'][0]:
-                combos += [ (key, ff) for ff in fonts.paragraph_classes[key]['fontclasses'][1].keys() ]
-        kookies.Selection_menu.__init__(self, x, y, width=50, height=15, callback=callback, menu_callback=self._push_inherit, menu_options=combos, default=default, source=source)
-        
+            return 'x'
+    
     def _push_inherit(self, value):
         fonttable.table.clear()
         if value == 'x':
@@ -176,25 +184,27 @@ class _Inheritance_selection_menu(kookies.Selection_menu):
                 fonttable.table.clear()
                 fs.f_set_attribute(self._attribute, self._p, self._f, v)
                 print('REFERENCE LOOP DETECTED')
-        
+
         klossy.refresh()
 
+def _P_options_acquire():
+    PPP = ['x'] + list(fonts.paragraph_classes.keys())
+    return list(zip(PPP, [str(v) for v in PPP]))
+    
 class _Paragraph_inheritance_menu(kookies.Selection_menu):
-    def __init__(self, x, y, callback, p, attribute, source=0):
+    def __init__(self, x, y, p, attribute, source=0):
         self._p = p
         self._attribute = attribute
         
+        kookies.Selection_menu.__init__(self, x, y, width=180, height=15, menu_callback=self._push_inherit, options_acquire=_P_options_acquire, value_acquire=self._value_acquire, source=source)
+
+    def _value_acquire(self):
         current = fonts.p_read_attribute(self._attribute, self._p)
-        
         if current[0]:
-            default = current[1]
+            return current[1]
         else:
-            default = 'x'
-        
-        combos = ['x']
-        combos += fonts.paragraph_classes.keys()
-        kookies.Selection_menu.__init__(self, x, y, width=50, height=15, callback=callback, menu_callback=self._push_inherit, menu_options=combos, default=default, source=source)
-        
+            return 'x'
+    
     def _push_inherit(self, value):
         fonttable.p_table.clear()
         if value == 'x':
@@ -237,7 +247,7 @@ class _Properties_panel(ui.Cell):
         
         self._partition = partition
 
-        width = 100
+        width = 140
         self._tabstrip = kookies.Tabs( (constants.window.get_h() - constants.UI[partition] - width)//2 , 50, width, 30, default=default, callback=self._tab_switch, signals=tabs)
         self._tab = tabs[default][0]
         
@@ -373,25 +383,25 @@ class Properties(_Properties_panel):
                 self._items.append(_preview( 16, y, 250, 0, classname, p, key ))
                 
                 if fonts.f_read_f(p[0], key)[0]:
-                    self._items.append(_Inheritance_selection_menu( 200, y + 20, callback=None, p=p[0], f=key, attribute='_all', source=self._partition))
+                    self._items.append(_Inheritance_selection_menu( 70, y + 20, p=p[0], f=key, attribute='_all', source=self._partition))
                     y += 50
                 else:
-                    self._items.append(_Inheritance_selection_menu( 200, y + 3, callback=None, p=p[0], f=key, attribute='_all', source=self._partition))
+                    self._items.append(_Inheritance_selection_menu( 70, y + 3, p=p[0], f=key, attribute='_all', source=self._partition))
                     y += 30
                     
                     self._items.append(_Font_file_Field( 15, y, 250, p[0], key, name='FONT FILE' ))
                     y += 30
-                    self._items.append(_Inheritance_selection_menu( 200, y, callback=None, p=p[0], f=key, attribute='path', source=self._partition))
+                    self._items.append(_Inheritance_selection_menu( 70, y, p=p[0], f=key, attribute='path', source=self._partition))
                     y += 15
                     
                     self._items.append(_Font_numeric_Field( 15, y, 250, p[0], key, attribute='fontsize', name='FONT SIZE' ))
                     y += 30
-                    self._items.append(_Inheritance_selection_menu( 200, y, callback=None, p=p[0], f=key, attribute='fontsize', source=self._partition))
+                    self._items.append(_Inheritance_selection_menu( 70, y, p=p[0], f=key, attribute='fontsize', source=self._partition))
                     y += 15
                     
                     self._items.append(_Font_numeric_Field( 15, y, 250, p[0], key, attribute='tracking', name='TRACKING' ))
                     y += 30
-                    self._items.append(_Inheritance_selection_menu( 200, y, callback=None, p=p[0], f=key, attribute='tracking', source=self._partition))
+                    self._items.append(_Inheritance_selection_menu( 70, y, p=p[0], f=key, attribute='tracking', source=self._partition))
                     y += 30
                         
         elif self._tab == 'paragraph':
@@ -400,19 +410,31 @@ class Properties(_Properties_panel):
             
             self._items.append(_Paragraph_numeric_Field( 15, y, 250, p[0], attribute='leading', name='LEADING' ))
             y += 30
-            self._items.append(_Paragraph_inheritance_menu( 200, y, callback=None, p=p[0], attribute='leading', source=self._partition))
+            self._items.append(_Paragraph_inheritance_menu( 70, y, p=p[0], attribute='leading', source=self._partition))
             y += 15
             
             self._items.append(_Paragraph_numeric_Field( 15, y, 250, p[0], attribute='margin_bottom', name='BOTTOM MARGIN' ))
             y += 30
-            self._items.append(_Paragraph_inheritance_menu( 200, y, callback=None, p=p[0], attribute='margin_bottom', source=self._partition))
+            self._items.append(_Paragraph_inheritance_menu( 70, y, p=p[0], attribute='margin_bottom', source=self._partition))
             y += 15
 
             self._items.append(_Paragraph_checkbox( 15, y + 15, 100, p[0], attribute='hyphenate', name='HYPHENATE' ))
             y += 30
-            self._items.append(_Paragraph_inheritance_menu( 200, y, callback=None, p=p[0], attribute='hyphenate', source=self._partition))
+            self._items.append(_Paragraph_inheritance_menu( 70, y, p=p[0], attribute='hyphenate', source=self._partition))
             y += 15
+
+        elif self._tab == 'page':
+            self._items.append(kookies.Integer_field( 15, y, 250, 
+                        str(penclick.page.WIDTH), 
+                        callback = penclick.page.set_width,
+                        name = 'WIDTH' ))
             
+            y += 45
+            self._items.append(kookies.Integer_field( 15, y, 250, 
+                        str(penclick.page.HEIGHT), 
+                        callback = penclick.page.set_height,
+                        name = 'HEIGHT' ))
+
         self._stack()
 
     def _reconstruct_channel_properties(self):
@@ -439,10 +461,10 @@ class Properties(_Properties_panel):
         self._stack()
         
     def _swap_reconstruct(self, to):
-        width = 100
+        width = 140
 
         if to == 'text':
-            tabs = (('paragraph', 'P'), ('font', 'F'), ('', '?'))
+            tabs = (('page', 'M'), ('paragraph', 'P'), ('font', 'F'), ('', '?'))
             default = 1
             self._tabstrip = kookies.Tabs( (constants.window.get_h() - constants.UI[self._partition] - width)//2 , 50, width, 30, default=default, callback=self._tab_switch, signals=tabs)
             self._tab = tabs[default][0]
@@ -458,5 +480,5 @@ class Properties(_Properties_panel):
         self._reconstruct()
 
 
-klossy = Properties(tabs = (('paragraph', 'P'), ('font', 'F'), ('', '?')), partition=1 )
+klossy = Properties(tabs = (('page', 'M'), ('paragraph', 'P'), ('font', 'F'), ('', '?')), partition=1 )
 

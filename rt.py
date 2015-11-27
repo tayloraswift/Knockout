@@ -64,9 +64,9 @@ class Display(Gtk.Window):
         self.show_all()
         
         self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
-#        self.clipboard_item = None
 
-    
+        self._HINTS = constants.HINTS
+
         self._c_ = 0
         
         self._periodic = GObject.timeout_add(2000, self._on_periodic)
@@ -77,9 +77,7 @@ class Display(Gtk.Window):
         return True
 
     def on_draw(self, wid, cr):
-        nohints = cairo.FontOptions()
-        nohints.set_hint_style(cairo.HINT_STYLE_NONE)
-        cr.set_font_options(nohints)
+        cr.set_font_options(self._HINTS)
 
         cr.save()
         cr.translate(constants.UI[0], 0)

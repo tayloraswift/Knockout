@@ -66,13 +66,11 @@ class Button(Base_kookie):
         cr.show_glyphs(self._texts[0])
 
 class Checkbox(Button):
-    def __init__(self, x, y, width, default=None, callback=None, callback_parameters = (), string=''):
+    def __init__(self, x, y, width, callback, callback_parameters = (), value_acquire=None, string=''):
         Base_kookie.__init__(self, x, y, width, 20, font=fonttable.table.get_font('_interface', ('label', )) )
         
-        if default:
-            self._active = 1
-        else:
-            self._active = None
+        self._get_value = value_acquire
+        self._ACQUIRE_REPRESENT()
         
         self._callback = callback
         self._callback_parameters = callback_parameters
@@ -82,14 +80,13 @@ class Checkbox(Button):
         
         self._add_static_text(self._x + 20, self._y_bottom - 5, string, align=1)
 
+    def _ACQUIRE_REPRESENT(self):
+        self._STATE = self._get_value()
+
     def focus(self, x):
-        if self._active is None:
-            self._callback(True, * self._callback_parameters)
-            self._active = 1
-        else:
-            self._callback(False, * self._callback_parameters)
-            self._active = None
-    
+        self._callback(not self._STATE, * self._callback_parameters)
+        self._ACQUIRE_REPRESENT()
+
     def release(self, action=True):
         pass
 
@@ -104,10 +101,9 @@ class Checkbox(Button):
             cr.set_source_rgba(0,0,0, 0.6)
             cr.show_glyphs(self._texts[0])
 
-
         cr.arc(self._x + 6, self._y_bottom - 9, 6, 0, 2*pi)
         cr.fill()
-        if not self._active:
+        if not self._STATE:
             cr.set_source_rgb(1, 1, 1)
             cr.arc(self._x + 6, self._y_bottom - 9, 4.5, 0, 2*pi)
             cr.fill()
@@ -553,12 +549,16 @@ class Integer_field(Blank_space):
 
 #########
 class Selection_menu(Base_kookie):
-    def __init__(self, x, y, width, height, callback, menu_callback, menu_options, default, source):
+    def __init__(self, x, y, width, height, menu_callback, options_acquire, value_acquire, source):
         Base_kookie.__init__(self, x, y, width, height, font=fonttable.table.get_font('_interface', ('strong',) ))
         
-        self._callback = callback
+        self._get_value = value_acquire
+        self._get_options = options_acquire
+        
         self._menu_callback = menu_callback
-        self._menu_options = menu_options
+        
+        # register menu
+        noticeboard.menus.add_menu(id(self))
 
         self._dropdown_active = False
         
@@ -567,10 +567,27 @@ class Selection_menu(Base_kookie):
         
         self._source = source
         
-        self._add_static_text(self._x_right, self._y_bottom - self._height/2 + 5, str(default), align=-1)
+        self._ACQUIRE_OPTIONS()
+        self._ACQUIRE_REPRESENT()
+
+    def _ACQUIRE_OPTIONS(self):
+        self._menu_options = self._get_options()
+        self._lookup_label = dict(self._menu_options)
+
+    def _ACQUIRE_REPRESENT(self):
+        label = self._lookup_label[self._get_value()]
+        self._texts = []
+        self._add_static_text(self._x_right, self._y_bottom - self._height/2 + 5, label, align=-1)
+    
+    def _MENU_PUSH(self, * args):
+        self._menu_callback( * args)
+        noticeboard.menus.push_refresh(id(self))
+    
+    def release(self, action=True):
+        pass
     
     def focus(self, x):
-        menu.menu.create(self._x_right - 170, self._y_bottom - 5, 200, self._menu_options, self._menu_callback, (), source=self._source )
+        menu.menu.create(self._x, self._y_bottom - 5, 200, self._menu_options, self._MENU_PUSH, (), source=self._source )
         self._active = True
         self._dropdown_active = True
         print('DROPDOWN')
@@ -585,6 +602,12 @@ class Selection_menu(Base_kookie):
         return 1
     
     def draw(self, cr, hover=(None, None)):
+        
+        if noticeboard.menus.should_refresh(id(self)):
+            print('reacquire')
+            self._ACQUIRE_OPTIONS()
+            self._ACQUIRE_REPRESENT()
+        
         self._render_fonts(cr)
         
         if hover[1] == 1:

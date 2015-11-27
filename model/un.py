@@ -3,6 +3,7 @@ from copy import deepcopy
 from fonts.fonts import GET, REPLACE
 
 from model.meredith import mipsy
+from model import penclick
 
 
 class UN(object):
@@ -11,8 +12,6 @@ class UN(object):
         self._i = 0
         
         self._state = 0
-        
-        self.save()
     
     def save(self):
         if len(self._history) > 989:
@@ -20,9 +19,10 @@ class UN(object):
             self._i -= 89
         
         kitty = [{'text': tuple(t.text), 'spelling': t.misspellings[:], 'outline': deepcopy(t.channels.channels), 'cursors': (t.cursor.cursor, t.select.cursor)} for t in mipsy.tracts]
+        page_xy = (penclick.page.WIDTH, penclick.page.HEIGHT)
         if len(self._history) > self._i:
             del self._history[self._i:]
-        self._history.append({'kitty': kitty, 'styles': deepcopy(GET())})
+        self._history.append({'kitty': kitty, 'styles': deepcopy(GET()), 'page': page_xy})
         self._i = len(self._history)
     
     def pop(self):
@@ -31,6 +31,7 @@ class UN(object):
         
     def _restore(self, i):
         REPLACE(self._history[i]['styles'])
+        penclick.page.WIDTH, penclick.page.HEIGHT = self._history[i]['page']
 
         for t in range(len(mipsy.tracts)):
             mipsy.tracts[t].text = list(self._history[i]['kitty'][t]['text'])

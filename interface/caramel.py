@@ -189,15 +189,16 @@ class Channels_controls(object):
             
         if show_rails:
             for c, channel in enumerate(meredith.mipsy.tracts[0].channels.channels):
-                offset = penclick.page.normalize_Y(0, -channel.page)
+                page = channel.page
+                
                 color = (0.3, 0.3, 0.3, 0.5)
                 if (c, 'entrance') == self._hover_portal:
                     color = (0.3, 0.3, 0.3, 1)
                 # draw portals            
                 _draw_broken_bar(cr,
-                        round( Tx(channel.railings[0][0][0]) ), 
-                        round( Ty(channel.railings[0][0][1] + offset) ),
-                        round( Tx(channel.railings[1][0][0]) ),
+                        round( Tx(channel.railings[0][0][0] , page) ), 
+                        round( Ty(channel.railings[0][0][1] , page) ),
+                        round( Tx(channel.railings[1][0][0] , page) ),
                         color,
                         top = 1
                         )
@@ -206,9 +207,9 @@ class Channels_controls(object):
                 else:
                     color = (1, 0, 0.1, 0.5)
                 _draw_broken_bar(cr,
-                        round( Tx(channel.railings[0][-1][0]) ), 
-                        round( Ty(channel.railings[1][-1][1] + offset) ),
-                        round( Tx(channel.railings[1][-1][0]) ),
+                        round( Tx(channel.railings[0][-1][0] , page) ), 
+                        round( Ty(channel.railings[1][-1][1] , page) ),
+                        round( Tx(channel.railings[1][-1][0] , page) ),
                         color,
                         top = 0
                         )
@@ -224,7 +225,7 @@ class Channels_controls(object):
                     w = 1
                 
                 for r, railing in enumerate(channel.railings):
-                    pts = [( Tx(p[0]), Ty(p[1] + offset) ) for p in railing]
+                    pts = [( Tx(p[0], page), Ty(p[1], page) ) for p in railing]
                     
                     cr.move_to(pts[0][0], pts[0][1])
 
@@ -236,7 +237,7 @@ class Channels_controls(object):
 
                     # draw selections
                     for i, p in enumerate(railing):
-                        cr.arc( Tx(p[0]), Ty(p[1] + offset), 3, 0, 2*pi)
+                        cr.arc( Tx(p[0], page), Ty(p[1], page), 3, 0, 2*pi)
                         if (c, r, i) == self._hover_point:
                             cr.set_source_rgba(1, 0.2, 0.6, 0.5)
                             cr.fill()
@@ -244,16 +245,16 @@ class Channels_controls(object):
                         else:
                             cr.fill()
                         if p[2]:
-                            cr.arc( Tx(p[0]), Ty(p[1] + offset), 5, 0, 2*pi)
+                            cr.arc( Tx(p[0], page), Ty(p[1], page), 5, 0, 2*pi)
                             cr.set_line_width(1)
                             cr.stroke()
     
             for channel in chain.from_iterable(tract.channels.channels for tract in meredith.mipsy.tracts[1:]):
-
-                offset = penclick.page.normalize_Y(0, -channel.page)
+                page = channel.page
+                
                 cr.set_source_rgba(0.3, 0.3, 0.3, 0.3)
                 
-                pts = [( Tx(p[0]), Ty(p[1] + offset) ) for p in channel.railings[0] + list(reversed(channel.railings[1]))]
+                pts = [( Tx(p[0], page), Ty(p[1], page) ) for p in channel.railings[0] + list(reversed(channel.railings[1]))]
                 cr.move_to(pts[0][0], pts[0][1])
                 for point in pts[1:]:
                     cr.line_to(point[0], point[1])
@@ -264,15 +265,16 @@ class Channels_controls(object):
 
         else:
             for c, channel in enumerate(meredith.mipsy.tracts[0].channels.channels):
-                offset = penclick.page.normalize_Y(0, -channel.page)
+                page = channel.page
+                
                 color = (0.3, 0.3, 0.3, 0.5)
                 if (c, 'entrance') == self._hover_portal:
                     color = (0.3, 0.3, 0.3, 1)
                 # draw portals            
                 _draw_broken_bar(cr,
-                        round( Tx(channel.railings[0][0][0]) ), 
-                        round( Ty(channel.railings[0][0][1] + offset) ),
-                        round( Tx(channel.railings[1][0][0]) ),
+                        round( Tx(channel.railings[0][0][0] , page) ), 
+                        round( Ty(channel.railings[0][0][1] , page) ),
+                        round( Tx(channel.railings[1][0][0] , page) ),
                         color,
                         top = 1
                         )
@@ -281,9 +283,9 @@ class Channels_controls(object):
                 else:
                     color = (1, 0, 0.1, 0.5)
                 _draw_broken_bar(cr,
-                        round( Tx(channel.railings[0][-1][0]) ), 
-                        round( Ty(channel.railings[1][-1][1] + offset) ),
-                        round( Tx(channel.railings[1][-1][0]) ),
+                        round( Tx(channel.railings[0][-1][0] , page) ), 
+                        round( Ty(channel.railings[1][-1][1] , page) ),
+                        round( Tx(channel.railings[1][-1][0] , page) ),
                         color,
                         top = 0
                         )

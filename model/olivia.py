@@ -71,7 +71,8 @@ def _assemble_line(text, startindex, c, l, anchor, stop, y, leading, PP, F, hyph
             
             'hyphen': None,
             
-            'P_BREAK': False
+            'P_BREAK': False,
+            'PP': PP
             }
     
     # list that contains glyphs
@@ -214,6 +215,7 @@ def _assemble_line(text, startindex, c, l, anchor, stop, y, leading, PP, F, hyph
                 x += FSTYLE['tracking']
     # n changes
     LINE['j'] = startindex + len(GLYPHS)
+    LINE['F'] = tuple(F)
     LINE['GLYPHS'] = GLYPHS
     
     return LINE
@@ -262,53 +264,47 @@ class Text(object):
         self.word_count = '—'
         self.misspellings = []
     
-    def _generate_lines(self, l, startindex):
-        
+    def _TYPESET(self, l, i):
         try:
             # ylevel is the y position of the first line to print
             # here we are removing the last existing line so we can redraw that one as well
-            LASTLINE = self._glyphs.pop(-1)
-            c = LASTLINE['c']
-            y = LASTLINE['y'] - LASTLINE['leading']
+            CURRENTLINE = self._glyphs.pop()
+            LASTLINE = self._glyphs[-1]
+            
+            if LASTLINE['P_BREAK']:
+                P = self.text[i][1]
+                P_i = i
+                F = []
+            else:
+                P, P_i = LASTLINE['PP']
+                F = list(LASTLINE['F'])
+            
+            PSTYLE = _retrieve_paragraphclass(P, l)
+            
+            c = CURRENTLINE['c']
+            y = CURRENTLINE['y'] - PSTYLE['leading']
             
         except IndexError:
             # which happens if nothing has yet been rendered
             c = 0
-            y = self.channels.channels[c].railings[0][0][1]
             P = self.text[0][1]
             P_i = 0
             F = []
             
             PSTYLE = _retrieve_paragraphclass(P, l)
+            y = self.channels.channels[c].railings[0][0][1]
         
         page = self.channels.channels[c].page
         page_start_l = l
-        
-        while True:
-            # check for paragraph change
-            try:
-                if character(self.text[startindex]) != '<p>':
-                    # extract last used style
-                    F = list(self._glyphs[-1]['GLYPHS'][-1][4])
-                    P, P_i = self._glyphs[-1]['GLYPHS'][-1][3]
-                else:
-                    F = []
-                    P = self.text[startindex][1]
-                    P_i = startindex
-                    
-                PSTYLE = _retrieve_paragraphclass(P, l)
-                    
-            except IndexError:
-                pass
 
-            # move down
+        while True:
             y += PSTYLE['leading']
             
             # see if the lines have overrun the portals
             if y > self.channels.channels[c].railings[1][-1][1] and c < len(self.channels.channels) - 1:
                 c += 1
                 # jump to new entrance
-                y = self.channels.channels[c].railings[0][0][1] + PSTYLE['leading']
+                y = self.channels.channels[c].railings[0][0][1]
                 
                 # PAGINATION
                 page_new = self.channels.channels[c].page
@@ -325,11 +321,12 @@ class Text(object):
                     page = page_new
                     page_start_l = l
                 #############
+                continue
 
             # generate line objects
             LINE = _assemble_line(
                     self.text, 
-                    startindex, 
+                    i, 
                     c, 
                     l, 
                     
@@ -345,23 +342,26 @@ class Text(object):
                     )
             
             # get the index of the last glyph printed so we know where to start next time
-            startindex = LINE['j']
-            # check for paragraph break (which returns a negative version of startindex)
+            i = LINE['j']
+            
             if LINE['P_BREAK']:
 
-                y += PSTYLE['margin_bottom']
-                
-                if startindex > len(self.text) - 1:
+                if i > len(self.text) - 1:
                     self._glyphs.append(LINE)
-                    del LINE
                     # this is the end of the document
                     break
-            else:
-                pass
-            l += 1
+                
+                y += PSTYLE['margin_bottom']
 
+                P = self.text[i][1]
+                P_i = i
+                F = []
+                PSTYLE = _retrieve_paragraphclass(P, l)
+                
+                y += PSTYLE['margin_top']
+            
+            l += 1
             self._glyphs.append(LINE)
-            del LINE
 
         if page not in self._page_intervals:
             self._page_intervals[page] = [ (page_start_l, l + 1) ]
@@ -381,18 +381,15 @@ class Text(object):
         
         # avoid recalculating lines that weren't affected
         try:
-            l = self.index_to_line( min(self.select.cursor, self.cursor.cursor) ) - 1
-            if l < 0:
-                l = 0
+            l = self.index_to_line( min(self.select.cursor, self.cursor.cursor) )
             
             self._page_intervals = { page: [I for I in 
                     [ interval if interval[1] <= l else interval[0] if interval[0] <= l else None for interval in intervals]
                     if I is not None] for page, intervals in self._page_intervals.items() if intervals[0][0] < l}    
             
-            startindex = self._glyphs[l]['i']
+            i = self._glyphs[l]['i']
             self._glyphs = self._glyphs[:l + 1]
-            #        i = affected
-            self._generate_lines(l, startindex)
+            self._TYPESET(l, i)
         except AttributeError:
             self.deep_recalculate()
         
@@ -405,7 +402,7 @@ class Text(object):
         self._sorted_pages = {}
         self._page_intervals = {}
         
-        self._generate_lines(0, 0)
+        self._TYPESET(0, 0)
         
         # tally errors
         errors.styleerrors.update(0)

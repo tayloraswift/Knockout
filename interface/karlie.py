@@ -421,6 +421,11 @@ class Properties(_Properties_panel):
             y += 30
             self._items.append(_Paragraph_inheritance_menu( 80, y, p=p[0], attribute='leading', source=self._partition))
             y += 15
+
+            self._items.append(_Paragraph_numeric_Field( 15, y, 250, p[0], attribute='margin_top', name='TOP MARGIN' ))
+            y += 30
+            self._items.append(_Paragraph_inheritance_menu( 80, y, p=p[0], attribute='margin_top', source=self._partition))
+            y += 15
             
             self._items.append(_Paragraph_numeric_Field( 15, y, 250, p[0], attribute='margin_bottom', name='BOTTOM MARGIN' ))
             y += 30
@@ -489,5 +494,5 @@ class Properties(_Properties_panel):
         self._reconstruct()
 
 
-klossy = Properties(tabs = (('page', 'M'), ('paragraph', 'P'), ('font', 'F'), ('', '?')), partition=1 )
+klossy = Properties(tabs = (('page', 'M'), ('paragraph', 'P'), ('font', 'F'), ('', '?')), default=1, partition=1 )
 

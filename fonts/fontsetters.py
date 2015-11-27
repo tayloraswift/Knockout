@@ -39,6 +39,9 @@ def rename_p(old, new):
                     
                     if paragraph_classes[k]['fontclasses'][1][f][1] [0] == old:
                         paragraph_classes[k]['fontclasses'][1][f][1] [0] = new
+                    
+                    paragraph_classes[k]['fontclasses'][1][f][1] = tuple(paragraph_classes[k]['fontclasses'][1][f][1])
+                
                 else:
                     paragraph_classes[k]['fontclasses'][1][f] = list(paragraph_classes[k]['fontclasses'][1][f])
                     
@@ -51,7 +54,14 @@ def rename_p(old, new):
 
                             if paragraph_classes[k]['fontclasses'][1][f][1][a][1] [0] == old:
                                 paragraph_classes[k]['fontclasses'][1][f][1][a][1] [0] = new
+                            
+                            paragraph_classes[k]['fontclasses'][1][f][1][a][1] = tuple(paragraph_classes[k]['fontclasses'][1][f][1][a][1])
+                        
+                        paragraph_classes[k]['fontclasses'][1][f][1][a] = tuple(paragraph_classes[k]['fontclasses'][1][f][1][a])
+                    
+                    paragraph_classes[k]['fontclasses'][1][f] = tuple(paragraph_classes[k]['fontclasses'][1][f])
 
+                paragraph_classes[k]['fontclasses'][1][f] = tuple(paragraph_classes[k]['fontclasses'][1][f])
                     
             
         for l in paragraph_classes[k]:
@@ -60,7 +70,10 @@ def rename_p(old, new):
             if paragraph_classes[k][l][0]:
                 if paragraph_classes[k][l][1] == old:
                     paragraph_classes[k][l][1] = new
+            
+            paragraph_classes[k][l] = tuple(paragraph_classes[k][l])
         
         if k == old:
             paragraph_classes[new] = paragraph_classes[k]
             del paragraph_classes[old]
+

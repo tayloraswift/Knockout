@@ -589,6 +589,31 @@ class Selection_menu(Base_kookie):
             
         cr.show_glyphs(self._texts[0])
 #########
+class Double_selection_menu(Selection_menu):
+    def __init__(self, x, y, width, height, menu_callback, options_acquire, options_acquire_l2, value_acquire, source):
+    
+        self._options_acquire_l2 = options_acquire_l2
+        Selection_menu.__init__(self, x, y, width, height, menu_callback, options_acquire, value_acquire, source)
+
+    def _ACQUIRE_OPTIONS(self):
+        self._menu_options = self._get_options()
+        self._lookup_label = dict(self._menu_options)
+        for key in self._lookup_label:
+            self._lookup_label[key] = dict(self._options_acquire_l2(key))
+            
+    def _ACQUIRE_REPRESENT(self):
+        V = self._get_value()
+        label = self._lookup_label[V[0]][V[1]]
+        label = str(V[0]) + ' › ' + str(label)
+        self._texts = []
+        self._add_static_text(self._x_right, self._y_bottom - self._height/2 + 5, label, align=-1)
+        
+    def _MENU_PUSH(self, branch):
+        menu.menu.create(self._x, self._y_bottom - 5, 200, self._options_acquire_l2(branch), self._DOUBLE_MENU_PUSH, (), extend_life=True, source=self._source )
+    
+    def _DOUBLE_MENU_PUSH(self, * args):
+        self._menu_callback( * args)
+        self._SYNCHRONIZE()
 
 class Object_menu(Blank_space):
     def __init__(self, x, y, width, callback, addition_callback, menu_callback, menu_options, value_acquire, name=None, source=0):

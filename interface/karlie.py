@@ -142,20 +142,23 @@ class _Paragraph_style_menu(kookies.Object_menu):
         klossy.refresh()
         
 
-def _PF_options_acquire():
-    combos = ['x']
-    for key in sorted(fonts.paragraph_classes.keys()):
-        if not fonts.paragraph_classes[key]['fontclasses'][0]:
-            combos += [ (key, ff) for ff in fonts.paragraph_classes[key]['fontclasses'][1].keys() ]
-    return list(zip(combos, [str(v) for v in combos]))
+def _P_options_acquire_filtered():
+    PPP = ['x'] + sorted(list( key for key in fonts.paragraph_classes.keys() if not fonts.paragraph_classes[key]['fontclasses'][0] ))
+    return list(zip(PPP, [str(v) for v in PPP]))
     
-class _Inheritance_selection_menu(kookies.Selection_menu):
+def _F_options_acquire(P):
+    if P != 'x':
+        return (('x', 'x'), ) + tuple( sorted(((P, ff), '{ ' + ', '.join(ff) + ' }') for ff in fonts.paragraph_classes[P]['fontclasses'][1].keys()) )
+    else:
+        return (('x', 'x'), )
+    
+class _Inheritance_selection_menu(kookies.Double_selection_menu):
     def __init__(self, x, y, p, f, attribute, source=0):
         self._p = p
         self._f = f
         self._attribute = attribute
 
-        kookies.Selection_menu.__init__(self, x, y, width=180, height=15, menu_callback=self._push_inherit, options_acquire=_PF_options_acquire, value_acquire=self._value_acquire, source=source)
+        kookies.Double_selection_menu.__init__(self, x, y, width=180, height=15, menu_callback=self._push_inherit, options_acquire=_P_options_acquire_filtered, options_acquire_l2=_F_options_acquire, value_acquire=self._value_acquire, source=source)
     
     def _value_acquire(self):
         if self._attribute == '_all':
@@ -164,9 +167,9 @@ class _Inheritance_selection_menu(kookies.Selection_menu):
             current = fonts.f_read_attribute(self._attribute, self._p, self._f)
         
         if current[0]:
-            return tuple(current[1])
+            return (current[1][0], tuple(current[1]))
         else:
-            return 'x'
+            return ('x', 'x')
     
     def _push_inherit(self, value):
         fonttable.table.clear()
@@ -386,25 +389,25 @@ class Properties(_Properties_panel):
                 self._items.append(_preview( 16, y, 250, 0, classname, p, key ))
                 
                 if fonts.f_read_f(p[0], key)[0]:
-                    self._items.append(_Inheritance_selection_menu( 70, y + 20, p=p[0], f=key, attribute='_all', source=self._partition))
+                    self._items.append(_Inheritance_selection_menu( 80, y + 20, p=p[0], f=key, attribute='_all', source=self._partition))
                     y += 50
                 else:
-                    self._items.append(_Inheritance_selection_menu( 70, y + 3, p=p[0], f=key, attribute='_all', source=self._partition))
+                    self._items.append(_Inheritance_selection_menu( 80, y + 3, p=p[0], f=key, attribute='_all', source=self._partition))
                     y += 30
                     
                     self._items.append(_Font_file_Field( 15, y, 250, p[0], key, name='FONT FILE' ))
                     y += 30
-                    self._items.append(_Inheritance_selection_menu( 70, y, p=p[0], f=key, attribute='path', source=self._partition))
+                    self._items.append(_Inheritance_selection_menu( 80, y, p=p[0], f=key, attribute='path', source=self._partition))
                     y += 15
                     
                     self._items.append(_Font_numeric_Field( 15, y, 250, p[0], key, attribute='fontsize', name='FONT SIZE' ))
                     y += 30
-                    self._items.append(_Inheritance_selection_menu( 70, y, p=p[0], f=key, attribute='fontsize', source=self._partition))
+                    self._items.append(_Inheritance_selection_menu( 80, y, p=p[0], f=key, attribute='fontsize', source=self._partition))
                     y += 15
                     
                     self._items.append(_Font_numeric_Field( 15, y, 250, p[0], key, attribute='tracking', name='TRACKING' ))
                     y += 30
-                    self._items.append(_Inheritance_selection_menu( 70, y, p=p[0], f=key, attribute='tracking', source=self._partition))
+                    self._items.append(_Inheritance_selection_menu( 80, y, p=p[0], f=key, attribute='tracking', source=self._partition))
                     y += 30
                         
         elif self._tab == 'paragraph':
@@ -413,17 +416,17 @@ class Properties(_Properties_panel):
             
             self._items.append(_Paragraph_numeric_Field( 15, y, 250, p[0], attribute='leading', name='LEADING' ))
             y += 30
-            self._items.append(_Paragraph_inheritance_menu( 70, y, p=p[0], attribute='leading', source=self._partition))
+            self._items.append(_Paragraph_inheritance_menu( 80, y, p=p[0], attribute='leading', source=self._partition))
             y += 15
             
             self._items.append(_Paragraph_numeric_Field( 15, y, 250, p[0], attribute='margin_bottom', name='BOTTOM MARGIN' ))
             y += 30
-            self._items.append(_Paragraph_inheritance_menu( 70, y, p=p[0], attribute='margin_bottom', source=self._partition))
+            self._items.append(_Paragraph_inheritance_menu( 80, y, p=p[0], attribute='margin_bottom', source=self._partition))
             y += 15
 
             self._items.append(_Paragraph_checkbox( 15, y + 15, 100, p[0], attribute='hyphenate', name='HYPHENATE' ))
             y += 30
-            self._items.append(_Paragraph_inheritance_menu( 70, y, p=p[0], attribute='hyphenate', source=self._partition))
+            self._items.append(_Paragraph_inheritance_menu( 80, y, p=p[0], attribute='hyphenate', source=self._partition))
             y += 15
 
         elif self._tab == 'page':

@@ -84,7 +84,7 @@ class Menu(Base_kookie):
         ht = item_height*len(signals)
         k = constants.window.get_k()
         if y > k/2:
-            signals.reverse()
+            signals = tuple(reversed(signals))
             y -= ht
             
         if y < 0:

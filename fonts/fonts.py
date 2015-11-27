@@ -34,14 +34,20 @@ def f_get_f(p, f):
         return a
 
 def p_get_attribute(attribute, p):
-    a = p_read_attribute(attribute, p)
+    try:
+        a = p_read_attribute(attribute, p)
+    except KeyError:
+        return (False, 0)
     if a[0]:
         return p_get_attribute(attribute, a[1])
     else:
         return a
 
 def p_read_attribute(attribute, p):
-    return paragraph_classes[p][attribute]
+    try:
+        return paragraph_classes[p][attribute]
+    except KeyError:
+        return (False, 0)
 
 
 def get_fontclasses(p):

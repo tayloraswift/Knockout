@@ -87,6 +87,7 @@ class _Paragraph_table(object):
             properties = {}
             
             properties['leading'] = fonts.p_get_attribute('leading', p)[1]
+            properties['margin_top'] = fonts.p_get_attribute('margin_top', p)[1]
             properties['margin_bottom'] = fonts.p_get_attribute('margin_bottom', p)[1]
             properties['hyphenate'] = fonts.p_get_attribute('hyphenate', p)[1]
 

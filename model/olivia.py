@@ -215,7 +215,7 @@ def _assemble_line(text, startindex, c, l, anchor, stop, y, leading, PP, F, hyph
                 x += FSTYLE['tracking']
     # n changes
     LINE['j'] = startindex + len(GLYPHS)
-    LINE['F'] = tuple(F)
+    LINE['F'] = GLYPHS[-1][4]
     LINE['GLYPHS'] = GLYPHS
     
     return LINE
@@ -359,6 +359,8 @@ class Text(object):
                 PSTYLE = _retrieve_paragraphclass(P, l)
                 
                 y += PSTYLE['margin_top']
+            else:
+                F = list(LINE['F'])
             
             l += 1
             self._glyphs.append(LINE)
@@ -381,7 +383,7 @@ class Text(object):
         
         # avoid recalculating lines that weren't affected
         try:
-            l = self.index_to_line( min(self.select.cursor, self.cursor.cursor) )
+            l = self.index_to_line( min(self.select.cursor, self.cursor.cursor) ) - 1
             
             self._page_intervals = { page: [I for I in 
                     [ interval if interval[1] <= l else interval[0] if interval[0] <= l else None for interval in intervals]

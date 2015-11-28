@@ -859,7 +859,7 @@ class Document_view(ui.Cell):
                     4, 
                     2)
             cr.rectangle(ux - 3, 
-                    uy + uh, 
+                    uy + uh - 2, 
                     4, 
                     2)
         if meredith.mipsy.at_absolute(i - 1) in ('<f>', '</f>'):
@@ -868,7 +868,7 @@ class Document_view(ui.Cell):
                     4, 
                     2)
             cr.rectangle(ux - 1, 
-                    uy + uh, 
+                    uy + uh - 2, 
                     4, 
                     2)
         cr.fill()

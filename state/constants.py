@@ -3,9 +3,9 @@ import cairo
 HINTS = cairo.FontOptions()
 
 def default_hints():
-    return [(1, 'None'), (2, 'Slight'), (3, 'Medium'), (4, 'Strong')]
+    return [(1, 'Default'), (1, 'None'), (2, 'Slight'), (3, 'Medium'), (4, 'Strong')]
 
-default_hint = default_hints()[0]
+default_hint = default_hints()[1]
 HINTS.set_hint_style(default_hint[0])
 
 filename = ''

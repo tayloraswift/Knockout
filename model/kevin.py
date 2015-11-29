@@ -1,5 +1,5 @@
 from copy import deepcopy
-import html
+import html, itertools
 
 def serialize(text):
     b = deepcopy(text)
@@ -74,35 +74,14 @@ def deserialize(string):
         
         del b[opentag:closetag + 1]
         b.insert(opentag, entity)
-    
-    segments = []
-    CH = False
-    i = 0
-    for j, e in enumerate(b):
-        if len(e) == 1 and e != '\u000A':
-            if not CH:
-                i = j
-                CH = True
-        else:
-            if CH:
-                segments.append((True, ''.join(b[i:j])))
-                CH = False
-            
-            if e == '\u000A':
-                if b[j - 1] != '\u000A':
-                    segments.append((False, '</p>'))
-                    segments.append((False, ('<p>', 'body')))
-            else:
-                segments.append((False, e))
 
-    if len(b[-1]) == 1:
-        segments.append((True, ''.join(b[i:])))
-    
     d = []
-    for segment in segments:
-        if segment[0]:
-            d += list(html.unescape(segment[1]))
-        else:
-            d.append(segment[1])
+    for k, g in [(k, list(g)) for k, g in itertools.groupby(b, key=lambda e: 1 if len(e) != 1 else 2 if e == '\u000A' else 0)]:
+        if k == 0:
+            d += list(html.unescape(''.join(g)))
+        elif k == 1:
+            d += g
+        elif k == 2:
+            d += ['</p>', ('<p>', 'body')]
 
     return d

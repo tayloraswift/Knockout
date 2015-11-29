@@ -75,6 +75,9 @@ class Base_kookie(object):
     def _render_fonts(self, cr):
         cr.set_font_size(self.font['fontsize'])
         cr.set_font_face(self.font['font'])
+    
+    def bounding_box(self):
+        return self._x, self._x_right,self._y, self._y_bottom
 
 
 class Menu(Base_kookie):

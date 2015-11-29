@@ -270,7 +270,18 @@ class Text(object):
         self.misspellings = []
     
     def _TYPESET(self, l, i):
-        try:
+        if not l:
+            self._glyphs = []
+            # which happens if nothing has yet been rendered
+            c = 0
+            P = self.text[0][1]
+            P_i = 0
+            F = []
+            
+            PSTYLE = _retrieve_paragraphclass(P, l)
+            y = self.channels.channels[c].railings[0][0][1]
+        
+        else:
             # ylevel is the y position of the first line to print
             # here we are removing the last existing line so we can redraw that one as well
             CURRENTLINE = self._glyphs.pop()
@@ -288,16 +299,6 @@ class Text(object):
             
             c = CURRENTLINE['c']
             y = CURRENTLINE['y'] - PSTYLE['leading']
-            
-        except IndexError:
-            # which happens if nothing has yet been rendered
-            c = 0
-            P = self.text[0][1]
-            P_i = 0
-            F = []
-            
-            PSTYLE = _retrieve_paragraphclass(P, l)
-            y = self.channels.channels[c].railings[0][0][1]
         
         page = self.channels.channels[c].page
         page_start_l = l
@@ -389,6 +390,9 @@ class Text(object):
         # avoid recalculating lines that weren't affected
         try:
             l = self.index_to_line( min(self.select.cursor, self.cursor.cursor) ) - 1
+            
+            if l < 0:
+                l = 0
             
             self._page_intervals = { page: [I for I in 
                     [ interval if interval[1] <= l else interval[0] if interval[0] <= l else None for interval in intervals]

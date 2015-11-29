@@ -153,12 +153,12 @@ def _F_options_acquire(P):
         return (('—', '—'), )
     
 class _Inheritance_selection_menu(kookies.Double_selection_menu):
-    def __init__(self, x, y, p, f, attribute, source=0):
+    def __init__(self, x, y, width, p, f, attribute, source=0):
         self._p = p
         self._f = f
         self._attribute = attribute
 
-        kookies.Double_selection_menu.__init__(self, x, y, width=180, height=15, menu_callback=self._push_inherit, options_acquire=_P_options_acquire_filtered, options_acquire_l2=_F_options_acquire, value_acquire=self._value_acquire, source=source)
+        kookies.Double_selection_menu.__init__(self, x, y, width=width, height=15, menu_callback=self._push_inherit, options_acquire=_P_options_acquire_filtered, options_acquire_l2=_F_options_acquire, value_acquire=self._value_acquire, source=source)
     
     def _value_acquire(self):
         if self._attribute == '_all':
@@ -205,11 +205,11 @@ def _P_options_acquire():
     return list(zip(PPP, [str(v) for v in PPP]))
     
 class _Paragraph_inheritance_menu(kookies.Selection_menu):
-    def __init__(self, x, y, p, attribute, source=0):
+    def __init__(self, x, y, width, p, attribute, source=0):
         self._p = p
         self._attribute = attribute
         
-        kookies.Selection_menu.__init__(self, x, y, width=180, height=15, menu_callback=self._push_inherit, options_acquire=_P_options_acquire, value_acquire=self._value_acquire, source=source)
+        kookies.Selection_menu.__init__(self, x, y, width=width, height=15, menu_callback=self._push_inherit, options_acquire=_P_options_acquire, value_acquire=self._value_acquire, source=source)
 
     def _value_acquire(self):
         current = fonts.p_read_attribute(self._attribute, self._p)
@@ -253,6 +253,16 @@ class _preview(kookies.Heading):
         cr.set_font_face(self.font['font'])
         cr.show_glyphs(self._texts[0])
 
+class _TWO_COLUMN(object):
+    def __init__(self, left, right):
+        lbb = left.bounding_box()
+        rbb = right.bounding_box()
+        self.partition = (lbb[1] + rbb[0]) // 2
+        self.y = max((lbb[3], rbb[3]))
+        
+        self.draw = lambda cr: None
+        self._SYNCHRONIZE = lambda: None
+
 # do not instantiate directly, requires a _reconstruct
 class _Properties_panel(ui.Cell):
     def __init__(self, tabs = (), default=0, partition=1 ):
@@ -273,8 +283,20 @@ class _Properties_panel(ui.Cell):
     def _stack(self):
         self._rows = [item.y for item in self._items]
 
-    def _stack_bisect(self, y):
-        return bisect.bisect(self._rows, y)
+    def _stack_bisect(self, x, y):
+        i = bisect.bisect(self._rows, y)
+        try:
+            item = self._items[i]
+        except IndexError:
+            i -= 1
+            item = self._items[i]
+        
+        if isinstance(item, _TWO_COLUMN):
+            if x < item.partition:
+                i += 1
+            else:
+                i += 2
+        return i
 
     def refresh(self):
         meredith.mipsy.recalculate_all() # must come before because it rewrites all the paragraph styles
@@ -325,15 +347,12 @@ class _Properties_panel(ui.Cell):
     def press(self, x, y, char):
 
         b = None
-        bb = self._stack_bisect(y)
+        bb = self._stack_bisect(x, y)
 
-        try:
-            if self._items[bb].is_over(x, y):
-                self._items[bb].focus(x)
-                b = bb
+        if self._items[bb].is_over(x, y):
+            self._items[bb].focus(x)
+            b = bb
 
-        except IndexError:
-            pass
         # defocus the other box, if applicable
         if b is None or b != self._active_box_i:
             if self._active_box_i is not None:
@@ -348,18 +367,15 @@ class _Properties_panel(ui.Cell):
     
         self._hover_box_ij = (None, None)
         
-        bb = self._stack_bisect(y)
-        try:
-            if self._items[bb].is_over_hover(x, y):
-                self._hover_box_ij = (bb, self._items[bb].hover(x))
+        bb = self._stack_bisect(x, y)
 
-        except IndexError:
-            # if last index
-            pass
+        if self._items[bb].is_over_hover(x, y):
+            self._hover_box_ij = (bb, self._items[bb].hover(x))
 
         if hovered[0] != self._hover_box_ij:
             hovered[0] = self._hover_box_ij
             noticeboard.redraw_klossy.push_change()
+
 
 class Properties(_Properties_panel):
     def __init__(self, tabs = (), default=0, partition=1 ):
@@ -392,25 +408,25 @@ class Properties(_Properties_panel):
                 self._items.append(_preview( 16, y, 250, 0, classname, p, key ))
                 
                 if fonts.f_read_f(p[0], key)[0]:
-                    self._items.append(_Inheritance_selection_menu( 80, y + 20, p=p[0], f=key, attribute='_all', source=self._partition))
+                    self._items.append(_Inheritance_selection_menu( 15, y + 20, width=250, p=p[0], f=key, attribute='_all', source=self._partition))
                     y += 50
                 else:
-                    self._items.append(_Inheritance_selection_menu( 80, y + 3, p=p[0], f=key, attribute='_all', source=self._partition))
+                    self._items.append(_Inheritance_selection_menu( 15, y + 3, width=250, p=p[0], f=key, attribute='_all', source=self._partition))
                     y += 30
                     
                     self._items.append(_Font_file_Field( 15, y, 250, p[0], key, name='FONT FILE' ))
                     y += 30
-                    self._items.append(_Inheritance_selection_menu( 80, y, p=p[0], f=key, attribute='path', source=self._partition))
+                    self._items.append(_Inheritance_selection_menu( 15, y, width=250, p=p[0], f=key, attribute='path', source=self._partition))
                     y += 15
                     
                     self._items.append(_Font_numeric_Field( 15, y, 250, p[0], key, attribute='fontsize', name='FONT SIZE' ))
                     y += 30
-                    self._items.append(_Inheritance_selection_menu( 80, y, p=p[0], f=key, attribute='fontsize', source=self._partition))
+                    self._items.append(_Inheritance_selection_menu( 15, y, width=250, p=p[0], f=key, attribute='fontsize', source=self._partition))
                     y += 15
                     
                     self._items.append(_Font_numeric_Field( 15, y, 250, p[0], key, attribute='tracking', name='TRACKING' ))
                     y += 30
-                    self._items.append(_Inheritance_selection_menu( 80, y, p=p[0], f=key, attribute='tracking', source=self._partition))
+                    self._items.append(_Inheritance_selection_menu( 15, y, width=250, p=p[0], f=key, attribute='tracking', source=self._partition))
                     y += 30
                         
         elif self._tab == 'paragraph':
@@ -419,23 +435,47 @@ class Properties(_Properties_panel):
             
             self._items.append(_Paragraph_numeric_Field( 15, y, 250, p[0], attribute='leading', name='LEADING' ))
             y += 30
-            self._items.append(_Paragraph_inheritance_menu( 80, y, p=p[0], attribute='leading', source=self._partition))
-            y += 15
+            self._items.append(_Paragraph_inheritance_menu( 15, y, width=250, p=p[0], attribute='leading', source=self._partition))
 
-            self._items.append(_Paragraph_numeric_Field( 15, y, 250, p[0], attribute='margin_top', name='TOP MARGIN' ))
-            y += 30
-            self._items.append(_Paragraph_inheritance_menu( 80, y, p=p[0], attribute='margin_top', source=self._partition))
             y += 15
-            
-            self._items.append(_Paragraph_numeric_Field( 15, y, 250, p[0], attribute='margin_bottom', name='BOTTOM MARGIN' ))
-            y += 30
-            self._items.append(_Paragraph_inheritance_menu( 80, y, p=p[0], attribute='margin_bottom', source=self._partition))
-            y += 15
+            _tc_ = [_Paragraph_numeric_Field( 15, y, 175, p[0], attribute='indent', name='INDENT' ), 
+                    _Paragraph_numeric_Field( 200, y, 65, p[0], attribute='indent_range', name='FOR LINES') ]
+            self._items.append( _TWO_COLUMN( * _tc_))
+            self._items += _tc_
 
+            y += 45
+            _tc_ = [_Paragraph_inheritance_menu( 15, y, width=175, p=p[0], attribute='indent', source=self._partition), 
+                    _Paragraph_inheritance_menu( 200, y, width=65, p=p[0], attribute='indent_range', source=self._partition) ]
+            self._items.append( _TWO_COLUMN( * _tc_))
+            self._items += _tc_
+
+            y += 15
+            _tc_ = [_Paragraph_numeric_Field( 15, y, 120, p[0], attribute='margin_left', name='LEFT MARGIN' ), 
+                    _Paragraph_numeric_Field( 145, y, 120, p[0], attribute='margin_right', name='RIGHT MARGIN') ]
+            self._items.append( _TWO_COLUMN( * _tc_))
+            self._items += _tc_
+            y += 45
+            _tc_ = [_Paragraph_inheritance_menu( 15, y, width=120, p=p[0], attribute='margin_left', source=self._partition), 
+                    _Paragraph_inheritance_menu( 145, y, width=120, p=p[0], attribute='margin_right', source=self._partition) ]
+            self._items.append( _TWO_COLUMN( * _tc_))
+            self._items += _tc_
+
+            y += 15
+            _tc_ = [_Paragraph_numeric_Field( 15, y, 120, p[0], attribute='margin_top', name='TOP MARGIN' ), 
+                    _Paragraph_numeric_Field( 145, y, 120, p[0], attribute='margin_bottom', name='BOTTOM MARGIN') ]
+            self._items.append( _TWO_COLUMN( * _tc_))
+            self._items += _tc_
+
+            y += 45
+            _tc_ = [_Paragraph_inheritance_menu( 15, y, width=120, p=p[0], attribute='margin_top', source=self._partition), 
+                    _Paragraph_inheritance_menu( 145, y, width=120, p=p[0], attribute='margin_bottom', source=self._partition) ]
+            self._items.append( _TWO_COLUMN( * _tc_))
+            self._items += _tc_
+
+            y += 15
             self._items.append(_Paragraph_checkbox( 15, y + 15, 100, p[0], attribute='hyphenate', name='HYPHENATE' ))
             y += 30
-            self._items.append(_Paragraph_inheritance_menu( 80, y, p=p[0], attribute='hyphenate', source=self._partition))
-            y += 15
+            self._items.append(_Paragraph_inheritance_menu( 15, y, width=250, p=p[0], attribute='hyphenate', source=self._partition))
 
         elif self._tab == 'page':
             self._items.append(kookies.Integer_field( 15, y, 250, 

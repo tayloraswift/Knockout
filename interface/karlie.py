@@ -1,4 +1,4 @@
-import bisect
+import bisect, itertools
 from freetype import ft_errors
 from copy import deepcopy
 
@@ -94,6 +94,86 @@ class _Paragraph_enum_Field(kookies.Enumerate_field):
         fonttable.p_table.clear()
         
         fs.p_set_attribute(self._attribute, self.p, (False, value))
+        meredith.mipsy.recalculate_all()
+        klossy.synchronize()
+
+class _Paragraph_INDENT_EXP(kookies.Blank_space):
+    def __init__(self, x, y, width, p, name=None):
+        self.p = p
+
+        kookies.Blank_space.__init__(self, x, y, width,
+                callback=self._push_indent, 
+                value_acquire=self._indent_acquire,
+                name=name)
+        
+        self._domain = lambda k: ''.join([c for c in k if c in '1234567890.-+K'])
+
+    def _stamp_glyphs(self, text):
+        self._template = self._build_line(self._x, self._y + self.font['fontsize'] + 5, text, self.font, sub_minus=True)
+    
+    def _indent_acquire(self):
+        C, SIGN, K = fonttable.p_table.get_paragraph(self.p)['indent']
+
+        if K:
+            if abs(K) == 1:
+                coefficient = ''
+            else:
+                coefficient = str(K)
+            
+            if SIGN == -1:
+                SIGN = ' - '
+            else:
+                SIGN = ' + '
+            
+            if C:
+                val = str(C) + SIGN + coefficient + 'K'
+            else:
+                if SIGN == ' + ':
+                    val = coefficient + 'K'
+                else:
+                    val = SIGN[1] + coefficient + 'K'
+        else:
+            val = str(C)
+        return val
+        
+    def _push_indent(self, value):
+        K = 0
+        C = 0
+        sgn = 1
+        for k, g in ( (k, ''.join(g)) for k, g in itertools.groupby(value, key=lambda v: True if v in ('+', '-') else False) ):
+            if k:
+                if g.count('-') % 2:
+                    sgn = -1
+                else:
+                    sgn = 1
+            else:
+                if 'K' in g:
+                    if g[0] == 'K':
+                        coefficient = 1
+                    else:
+                        coefficient = int(float(g[:g.find('K')]))
+                    K += coefficient*sgn
+                else:
+                    if '.' in g:
+                        if g.count('.') > 1:
+                            dot = g.find('.')
+                            g = ''.join(g[:dot + 1]) + ''.join([d for d in g[dot + 1:] if d != '.'])
+                        constant = float(g)
+                    else:
+                        constant = int(g)
+                    C += constant*sgn
+        
+        if K < 0:
+            SIGN = -1
+            K = abs(K)
+        else:
+            SIGN = 1
+        
+        value = (C, SIGN, K)
+        
+        fonttable.p_table.clear()
+        
+        fs.p_set_attribute('indent', self.p, (False, value))
         meredith.mipsy.recalculate_all()
         klossy.synchronize()
 
@@ -458,7 +538,7 @@ class Properties(_Properties_panel):
             self._items.append(_Paragraph_inheritance_menu( 15, y, width=250, p=p[0], attribute='leading', source=self._partition))
 
             y += 15
-            _tc_ = [_Paragraph_numeric_Field( 15, y, 175, p[0], attribute='indent', name='INDENT' ), 
+            _tc_ = [_Paragraph_INDENT_EXP( 15, y, 175, p[0], name='INDENT' ), 
                     _Paragraph_enum_Field( 200, y, 65, p[0], attribute='indent_range', name='FOR LINES') ]
             self._items.append( _TWO_COLUMN( * _tc_))
             self._items += _tc_

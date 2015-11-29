@@ -58,7 +58,7 @@ def _retrieve_fontclass(P, F, l):
     
     return FSTYLE
             
-def _assemble_line(text, startindex, c, l, anchor, stop, y, leading, PP, F, hyphenate=False):
+def _assemble_line(letters, startindex, c, l, anchor, stop, y, leading, PP, F, hyphenate=False):
     P = PP[0]
     
     LINE = {
@@ -85,9 +85,6 @@ def _assemble_line(text, startindex, c, l, anchor, stop, y, leading, PP, F, hyph
 
     # retrieve font style
     FSTYLE = _retrieve_fontclass(P, F, l)
-
-    # takes 1,989 characters starting from startindex
-    letters = text[startindex:startindex + 1989]
 
     for letter in letters:
         CHAR = character(letter)
@@ -307,6 +304,7 @@ class Text(object):
         
         page = self.channels.channels[c].page
         page_start_l = l
+        K_x = None
 
         while True:
             y += PSTYLE['leading']
@@ -337,7 +335,30 @@ class Text(object):
             # calculate indentation
 
             if R in PSTYLE['indent_range']:
-                L_indent = PSTYLE['margin_left'] + PSTYLE['indent']
+                D, SIGN, K = PSTYLE['indent']
+                if K:
+                    if K_x is None:
+                        INDLINE = _assemble_line(
+                            self.text[P_i : P_i + K + 1], 
+                            0, 
+                            c, 
+                            l, 
+                            
+                            0, 
+                            1989, 
+                            0, 
+                            0, 
+                            
+                            (P, P_i), 
+                            F[:], 
+                            
+                            hyphenate = False
+                            )
+                        K_x = INDLINE['GLYPHS'][-1][5] * SIGN
+                    
+                    L_indent = PSTYLE['margin_left'] + D + K_x
+                else:
+                    L_indent = PSTYLE['margin_left'] + D
             else:
                 L_indent = PSTYLE['margin_left']
             
@@ -345,7 +366,7 @@ class Text(object):
 
             # generate line objects
             LINE = _assemble_line(
-                    self.text, 
+                    self.text[i : i + 1989], 
                     i, 
                     c, 
                     l, 
@@ -382,6 +403,8 @@ class Text(object):
                 PSTYLE = _retrieve_paragraphclass(P, l)
                 
                 y += PSTYLE['margin_top']
+                
+                K_x = None
             else:
                 F = list(LINE['F'])
                 R += 1

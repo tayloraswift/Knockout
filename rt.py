@@ -5,7 +5,7 @@ from time import time
 from state import noticeboard
 from state import constants
 
-from model import kevin
+from model import kevin, meredith
 from model import errors
 from model import do
 
@@ -34,29 +34,44 @@ class Display(Gtk.Window):
         self.init_ui()
         
     def init_ui(self):    
-
-        self.darea = Gtk.DrawingArea()
-        self.darea.connect("draw", self.on_draw)
-        self.darea.set_events(Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_RELEASE_MASK | Gdk.EventMask.POINTER_MOTION_MASK | Gdk.EventMask.SCROLL_MASK)
-#        self.darea.set_events(Gdk.EventMask.BUTTON_RELEASE_MASK) 
-        self.add(self.darea)
+        self._h = constants.window.get_h()
+        self._k = constants.window.get_k()
         
+        self.SCREEN = Gtk.DrawingArea()
+        self.SCREEN.connect("draw", self.on_draw)
+        self.SCREEN.set_events(Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_RELEASE_MASK | Gdk.EventMask.POINTER_MOTION_MASK | Gdk.EventMask.SCROLL_MASK)
+        
+        self.BECKY = Gtk.DrawingArea()
+        self.BECKY.connect("draw", self.DRAW_BECKY)
+
+        self.KLOSSY = Gtk.DrawingArea()
+        self.KLOSSY.connect("draw", self.DRAW_KLOSSY)
+        self.KLOSSY.set_size_request(self._h - constants.UI[1], 0)
+        
+        box = Gtk.Box()
+        
+        box.pack_start(self.BECKY, True, True, 0)
+        box.pack_start(self.KLOSSY, False, False, 0)    
+        
+        overlay = Gtk.Overlay()
+        overlay.add_overlay(box)
+        overlay.add_overlay(self.SCREEN)
+
+        self.add(overlay)
+
         self.errorpanel = None
         
         self._compose = False
         
-        self.darea.connect("button-press-event", self.on_button_press)
-        self.darea.connect("button-release-event", self.on_button_release)
-        self.darea.connect("scroll-event", self.on_scroll)
-        self.darea.connect("motion_notify_event", self.motion_notify_event)
+        self.SCREEN.connect("button-press-event", self.on_button_press)
+        self.SCREEN.connect("button-release-event", self.on_button_release)
+        self.SCREEN.connect("scroll-event", self.on_scroll)
+        self.SCREEN.connect("motion_notify_event", self.motion_notify_event)
         self.connect("key-press-event", self.on_key_press)
         self.connect("check-resize", self.on_resize)
         
         self.set_title(constants.filename)
 
-        self._h = constants.window.get_h()
-        self._k = constants.window.get_k()
-        
         self.resize(self._h, self._k)
         
         self.set_position(Gtk.WindowPosition.CENTER)
@@ -72,29 +87,32 @@ class Display(Gtk.Window):
         self._periodic = GObject.timeout_add(2000, self._on_periodic)
     
     def _on_periodic(self):
-        tree.idle()
-        self.darea.queue_draw()
+        meredith.mipsy.stats(spell=True)
+        self.BECKY.queue_draw()
+        self.KLOSSY.queue_draw()
+        self.SCREEN.queue_draw()
         return True
 
-    def on_draw(self, wid, cr):
+    def DRAW_BECKY(self, w, cr):
         cr.set_font_options(self._HINTS)
-
-        cr.save()
-        cr.translate(constants.UI[0], 0)
         taylor.becky.render(cr, self._h, self._k)
-        cr.restore()
-        cr.save()
-        cr.translate(constants.UI[1], 0)
-        karlie.klossy.render(cr, self._h, self._k)
-        cr.restore()
-        
-        menu.menu.render(cr)
 
         if self.errorpanel is not None:
             self.errorpanel.draw(cr, constants.UI[1])
 
-        print(self._c_)
+        print('BECKY: ' + str(self._c_))
         self._c_ += 1
+
+    def DRAW_KLOSSY(self, w, cr):
+        cr.set_font_options(self._HINTS)
+        
+        karlie.klossy.render(cr, self._h, self._k)
+
+        print('KLOSSY: ' + str(self._c_))
+        self._c_ += 1
+        
+    def on_draw(self, wid, cr):
+        menu.menu.render(cr)
 
     def _draw_errors(self):
         if errors.styleerrors.new_error():
@@ -108,7 +126,8 @@ class Display(Gtk.Window):
     
     def transition_errorpanel(self):
 
-        self.darea.queue_draw()
+        self.BECKY.queue_draw()
+
         self.errorpanel.increment()
         if self.errorpanel.phase >= 20:
             return False
@@ -129,7 +148,6 @@ class Display(Gtk.Window):
             if e.button == MouseButtons.LEFT_BUTTON:
                 print('double')
                 tree.take_event(e.x, e.y, 'press2' )
-            self.darea.queue_draw()
         
         elif e.type == Gdk.EventType.BUTTON_PRESS:
             if e.button == MouseButtons.LEFT_BUTTON:
@@ -137,7 +155,6 @@ class Display(Gtk.Window):
                     mod = 'ctrl'
                 else:
                     mod = None
-                        
                 tree.take_event(e.x, e.y, 'press', char=mod )
             
             elif e.button == MouseButtons.MIDDLE_BUTTON:
@@ -146,21 +163,23 @@ class Display(Gtk.Window):
             elif e.button == MouseButtons.RIGHT_BUTTON:
                 tree.take_event(e.x, e.y, 'press_right' )
             
-            self.darea.queue_draw()
+        self.BECKY.queue_draw()
+        self.KLOSSY.queue_draw()
+        self.SCREEN.queue_draw()
             
     def on_button_release(self, w, e):
+        if e.button == MouseButtons.LEFT_BUTTON:
 
-        if e.type == Gdk.EventType.BUTTON_RELEASE:
-            if e.button == MouseButtons.LEFT_BUTTON:
-
-                tree.take_event(e.x, e.y, 'release' )
+            tree.take_event(e.x, e.y, 'release' )
+        
+        elif e.button == MouseButtons.MIDDLE_BUTTON:
+            tree.take_event(-1, -1, 'drag' )
             
-            elif e.button == MouseButtons.MIDDLE_BUTTON:
-                tree.take_event(-1, -1, 'drag' )
-                
-            self.darea.queue_draw()
-            
-            self._draw_errors()
+        self.BECKY.queue_draw()
+        self.KLOSSY.queue_draw()
+        self.SCREEN.queue_draw()
+        
+        self._draw_errors()
 
     def motion_notify_event(self, widget, event):
 
@@ -173,20 +192,31 @@ class Display(Gtk.Window):
         else:
             tree.take_event(event.x, event.y, 'motion' )
 
-        if noticeboard.refresh.should_refresh():
-            self.darea.queue_draw()
-
+        if noticeboard.redraw_overlay.should_refresh():
+            self.SCREEN.queue_draw()
+        if noticeboard.redraw_klossy.should_refresh():
+            self.KLOSSY.queue_draw()
+        if noticeboard.redraw_becky.should_refresh():
+            self.BECKY.queue_draw()
+            
     def on_scroll(self, w, e):
         if e.state & Gdk.ModifierType.CONTROL_MASK:
             mod = 'ctrl'
         else:
             mod = None
-        
+
         # direction of scrolling stored as sign
-        tree.take_event(e.x, e.y*(2*e.direction - 1), 'scroll', char=mod )
+        if e.direction == 1:
+            tree.take_event(e.x, e.y, 'scroll', char=mod )
+        elif e.direction == 0:
+            tree.take_event(e.x, -e.y, 'scroll', char=mod )
         
-        if noticeboard.refresh.should_refresh():
-            self.darea.queue_draw()
+        if noticeboard.redraw_overlay.should_refresh():
+            self.SCREEN.queue_draw()
+        if noticeboard.redraw_klossy.should_refresh():
+            self.KLOSSY.queue_draw()
+        if noticeboard.redraw_becky.should_refresh():
+            self.BECKY.queue_draw()
 
         
     def on_key_press(self, w, e):
@@ -247,7 +277,10 @@ class Display(Gtk.Window):
                 
         else:
             tree.take_event(0, 0, name, key=True, char = chr(Gdk.keyval_to_unicode(e.keyval)) )
-        self.darea.queue_draw()
+        
+        self.BECKY.queue_draw()
+        self.KLOSSY.queue_draw()
+        self.SCREEN.queue_draw()
         
         self._draw_errors()
 

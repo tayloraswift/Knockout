@@ -115,7 +115,7 @@ class Channels_controls(object):
                     
                 if self._sel_locale != tuple(meredith.mipsy.tracts[0].channels.channels[c].railings[r][i][:2]):
                     self._sel_locale = tuple(meredith.mipsy.tracts[0].channels.channels[c].railings[r][i][:2])
-                    noticeboard.refresh.push_change()
+                    noticeboard.redraw_becky.push_change()
         elif self._mode == 'grid':
             # translate grid lines
             self._grid_controls.move_grid(x, y)
@@ -180,10 +180,10 @@ class Channels_controls(object):
                 self._hover_portal = (None, None)
 
         if self._hover_point != hovered[0]:
-            noticeboard.refresh.push_change()
+            noticeboard.redraw_becky.push_change()
             hovered[0] = self._hover_point
         elif self._hover_portal != hovered[1]:
-            noticeboard.refresh.push_change()
+            noticeboard.redraw_becky.push_change()
             hovered[1] = self._hover_portal
 
     def render(self, cr, Tx, Ty, show_rails=False):            

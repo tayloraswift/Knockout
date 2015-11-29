@@ -2,8 +2,6 @@ import bisect
 
 from math import pi
 
-from state import noticeboard
-
 from fonts import fonttable
 
 from interface.base import Base_kookie
@@ -260,7 +258,6 @@ class Blank_space(Base_kookie):
     # scrolling function
     def _center_j(self):
         position = self._template[self._j][1] - self._x
-        print(position + self._scroll)
         if position + self._scroll > self._width:
             self._scroll = -(position - self._width)
         elif position + self._scroll < 0:
@@ -402,7 +399,9 @@ class Blank_space(Base_kookie):
         if self._j != j:
             self._j = j
             self._center_j()
-            noticeboard.refresh.push_change()
+            return True
+        else:
+            return False
 
     def defocus(self):
         self._active = None

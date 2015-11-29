@@ -24,6 +24,8 @@ _BREAK = _BREAK_WHITESPACE | _BREAK_ONLY_AFTER | _BREAK_AFTER_ELSE_BEFORE
 
 _BREAK_P = _BREAK | set(('</p>',))
 
+_APOSTROPHES = set("'’")
+
 
 def outside_tag(sequence):
     for i in reversed(range(len(sequence) - 1)):
@@ -170,13 +172,16 @@ def _assemble_line(text, startindex, c, l, anchor, stop, y, leading, PP, F, hyph
                     
                     except StopIteration:
                         del GLYPHS[-1]
-                        i = startindex
+                        i = 0
                     
                     ### AUTO HYPHENATION
                     if hyphenate:
-                        j = i + next(i for i, v in enumerate(letters[i:]) if v in _BREAK_P)
+                        try:
+                            j = i + next(i for i, v in enumerate(letters[i:]) if v in _BREAK_P)
+                        except StopIteration:
+                            j = i + 1989
                         
-                        word = ''.join([c if len(c) == 1 and c.isalpha() else ' ' for c in letters[i:j] ])
+                        word = ''.join([c if len(c) == 1 and c.isalpha() else "'" if c in _APOSTROPHES else ' ' for c in letters[i:j] ])
 
                         leading_spaces = len(word) - len(word.lstrip(' '))
 

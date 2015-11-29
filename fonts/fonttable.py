@@ -89,6 +89,10 @@ class _Paragraph_table(object):
             properties['leading'] = fonts.p_get_attribute('leading', p)[1]
             properties['margin_top'] = fonts.p_get_attribute('margin_top', p)[1]
             properties['margin_bottom'] = fonts.p_get_attribute('margin_bottom', p)[1]
+            properties['margin_left'] = fonts.p_get_attribute('margin_left', p)[1]
+            properties['margin_right'] = fonts.p_get_attribute('margin_right', p)[1]
+            properties['indent'] = fonts.p_get_attribute('indent', p)[1]
+            properties['indent_range'] = fonts.p_get_attribute('indent_range', p)[1]
             properties['hyphenate'] = fonts.p_get_attribute('hyphenate', p)[1]
 
             

@@ -523,6 +523,16 @@ class Integer_field(Numeric_field):
 
         self._domain = lambda k: int(float(self._digits(k)))
 
+class Enumerate_field(Blank_space):
+    def __init__(self, x, y, width, callback, value_acquire, params=(), name=None):
+    
+        Blank_space.__init__(self, x, y, width, callback, value_acquire, params, name)
+
+        self._domain = lambda k: set( int(v) for v in [''.join([c for c in val if c in '1234567890']) for val in k.split(',')] if v )
+
+    def _stamp_glyphs(self, text):
+        self._template = self._build_line(self._x, self._y + self.font['fontsize'] + 5, text, self.font, sub_minus=True)
+
 #########
 class Selection_menu(Base_kookie):
     def __init__(self, x, y, width, height, menu_callback, options_acquire, value_acquire, source):

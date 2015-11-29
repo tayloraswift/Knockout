@@ -278,6 +278,8 @@ class Text(object):
             P_i = 0
             F = []
             
+            R = 0
+            
             PSTYLE = _retrieve_paragraphclass(P, l)
             y = self.channels.channels[c].railings[0][0][1]
         
@@ -291,11 +293,14 @@ class Text(object):
                 P = self.text[i][1]
                 P_i = i
                 F = []
+
             else:
                 P, P_i = LASTLINE['PP']
                 F = list(LASTLINE['F'])
             
             PSTYLE = _retrieve_paragraphclass(P, l)
+            
+            R = CURRENTLINE['R']
             
             c = CURRENTLINE['c']
             y = CURRENTLINE['y'] - PSTYLE['leading']
@@ -329,6 +334,15 @@ class Text(object):
                 #############
                 continue
 
+            # calculate indentation
+
+            if R in PSTYLE['indent_range']:
+                L_indent = PSTYLE['margin_left'] + PSTYLE['indent']
+            else:
+                L_indent = PSTYLE['margin_left']
+            
+            R_indent = PSTYLE['margin_right']
+
             # generate line objects
             LINE = _assemble_line(
                     self.text, 
@@ -336,8 +350,8 @@ class Text(object):
                     c, 
                     l, 
                     
-                    self.channels.channels[c].edge(0, y)[0], 
-                    self.channels.channels[c].edge(1, y)[0], 
+                    self.channels.channels[c].edge(0, y)[0] + L_indent, 
+                    self.channels.channels[c].edge(1, y)[0] - R_indent, 
                     y, 
                     PSTYLE['leading'], 
                     
@@ -346,6 +360,8 @@ class Text(object):
                     
                     hyphenate = PSTYLE['hyphenate']
                     )
+            # stamp R line number
+            LINE['R'] = R
             
             # get the index of the last glyph printed so we know where to start next time
             i = LINE['j']
@@ -362,11 +378,13 @@ class Text(object):
                 P = self.text[i][1]
                 P_i = i
                 F = []
+                R = 0
                 PSTYLE = _retrieve_paragraphclass(P, l)
                 
                 y += PSTYLE['margin_top']
             else:
                 F = list(LINE['F'])
+                R += 1
             
             l += 1
             self._glyphs.append(LINE)

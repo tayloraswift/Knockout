@@ -533,6 +533,7 @@ class Enumerate_field(Blank_space):
     def _stamp_glyphs(self, text):
         self._template = self._build_line(self._x, self._y + self.font['fontsize'] + 5, text, self.font, sub_minus=True)
 
+        
 #########
 class Selection_menu(Base_kookie):
     def __init__(self, x, y, width, height, menu_callback, options_acquire, value_acquire, source):

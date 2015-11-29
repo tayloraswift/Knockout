@@ -74,7 +74,7 @@ class Sprinkles(object):
             
             if value not in self._grid[self.grid_selected[0]]:
                 self._grid[self.grid_selected[0]][self.grid_selected[1]] = value
-                noticeboard.refresh.push_change()
+                noticeboard.redraw_becky.push_change()
     
     def release(self):
         if self.grid_selected[0] is not None:

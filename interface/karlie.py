@@ -341,8 +341,8 @@ class _Properties_panel(ui.Cell):
             self._active_box_i = b
             
     def press_motion(self, x, y):
-        if self._active_box_i is not None:
-            self._items[self._active_box_i].focus_drag(x)
+        if self._active_box_i is not None and self._items[self._active_box_i].focus_drag(x):
+            noticeboard.redraw_klossy.push_change()
     
     def hover(self, x, y, hovered=[None]):
     
@@ -359,7 +359,7 @@ class _Properties_panel(ui.Cell):
 
         if hovered[0] != self._hover_box_ij:
             hovered[0] = self._hover_box_ij
-            noticeboard.refresh.push_change()
+            noticeboard.redraw_klossy.push_change()
 
 class Properties(_Properties_panel):
     def __init__(self, tabs = (), default=0, partition=1 ):

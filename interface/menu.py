@@ -54,11 +54,11 @@ class Menu(object):
             self._dy += 22
         else:
             self._dy -= 22
-        noticeboard.refresh.push_change()
+        noticeboard.redraw_overlay.push_change()
     
     def test_change(self, hist=[None]):
         if self._hovered != hist[0]:
-            noticeboard.refresh.push_change()
+            noticeboard.redraw_overlay.push_change()
             hist[0] = self._hovered
     
     def _clear_hover(self):

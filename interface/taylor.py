@@ -135,13 +135,13 @@ class Mode_switcher(object):
     def hover(self, x):
         self._hover_j = self._switcher.hover(x - self._dx)
         if self._hover_j != self._hover_memory:
-            noticeboard.refresh.push_change()
+            noticeboard.redraw_becky.push_change()
             self._hover_memory = self._hover_j
     
     def clear_hover(self):
         self._hover_j = None
         self._hover_memory = None
-        noticeboard.refresh.push_change()
+        noticeboard.redraw_becky.push_change()
 
 
 def PDF():
@@ -267,12 +267,12 @@ class Document_toolbar(object):
 
         if self._hover_memory != self._hover_box_ij:
             self._hover_memory = self._hover_box_ij
-            noticeboard.refresh.push_change()
+            noticeboard.redraw_becky.push_change()
 
     def clear_hover(self):
         self._hover_box_ij = (None, None)
         self._hover_memory = (None, None)
-        noticeboard.refresh.push_change()
+        noticeboard.redraw_becky.push_change()
 
 
 def _replace_misspelled(word):
@@ -303,7 +303,7 @@ class Document_view(ui.Cell):
 
         self._A = self._scroll_notches[self._scroll_notch_i]
         
-        self.idle()
+        meredith.mipsy.stats(spell=True)
     
     def read_display_state(self):
         return {
@@ -462,10 +462,10 @@ class Document_view(ui.Cell):
 
             if y <= 5:
                 self._K += int(10 / sqrt(self._A))
-                noticeboard.refresh.push_change()
+                noticeboard.redraw_becky.push_change()
             elif y >= constants.window.get_k() - 5:
                 self._K -= int(10 / sqrt(self._A))
-                noticeboard.refresh.push_change()
+                noticeboard.redraw_becky.push_change()
 
             x, y = self._T_1(x, y)
             xp, yp = meredith.mipsy.XY(x, y)
@@ -481,7 +481,7 @@ class Document_view(ui.Cell):
                     # if redraw needed
                     if meredith.mipsy.tracts[0].select.cursor != self._sel_cursor:
                         self._sel_cursor = meredith.mipsy.tracts[0].select.cursor
-                        noticeboard.refresh.push_change()
+                        noticeboard.redraw_becky.push_change()
                 except ValueError:
                     pass
 
@@ -502,7 +502,7 @@ class Document_view(ui.Cell):
             self._H = int(round(self._H))
             self._K = int(round(self._K))
             
-            noticeboard.refresh.push_change()
+            noticeboard.redraw_becky.push_change()
         # drag
         else:
             
@@ -515,7 +515,7 @@ class Document_view(ui.Cell):
             
             if [dx, dy] != reference:
                 reference[:] = [dx, dy]
-                noticeboard.refresh.push_change()
+                noticeboard.redraw_becky.push_change()
 
     def release(self, x, y):
         self._toolbar.release(x, y)
@@ -560,7 +560,7 @@ class Document_view(ui.Cell):
             else:
                 self._K += int(50 / sqrt(self._A))
         
-        noticeboard.refresh.push_change()
+        noticeboard.redraw_becky.push_change()
 
     def hover(self, x, y):
         self._check_region_hover(x, y)
@@ -576,9 +576,6 @@ class Document_view(ui.Cell):
             self._toolbar.hover(x, y)
         elif self._region_hover == 'switcher':
             self._mode_switcher.hover(x)
-
-    def idle(self):
-        meredith.mipsy.stats(spell=True)
 
     def resize(self, h, k):
         self._mode_switcher.resize(h, k)

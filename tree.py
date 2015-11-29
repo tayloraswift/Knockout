@@ -8,10 +8,6 @@ from interface import menu
 
 UI_CELLS = [taylor.becky, karlie.klossy]
 
-def idle():
-    if True:
-        taylor.becky.idle()
-
 #                                                         click | hover
 def take_event(x, y, event, key=False, char=None, region=[  0,      0  ]):
 

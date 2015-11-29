@@ -124,13 +124,16 @@ class Meredith(object):
         self.tracts[0].select.cursor = self.tracts[0].cursor.cursor
     
     def hop(self, dl):
-        self.tracts[0].cursor.set_cursor(
-                self.tracts[0].target_glyph(
-                        self.tracts[0].text_index_location(self.tracts[0].cursor.cursor)[0], 
-                        0, 
-                        self.tracts[0].index_to_line(self.tracts[0].cursor.cursor) + dl
-                        ), 
-                self.tracts[0].text)
+        try:
+            self.tracts[0].cursor.set_cursor(
+                    self.tracts[0].target_glyph(
+                            self.tracts[0].text_index_location(self.tracts[0].cursor.cursor)[0], 
+                            0, 
+                            self.tracts[0].index_to_line(self.tracts[0].cursor.cursor) + dl
+                            ), 
+                    self.tracts[0].text)
+        except IndexError:
+            pass
         
     def add_channel(self):
         self.tracts[0].channels.add_channel()

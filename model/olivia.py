@@ -1,6 +1,6 @@
 import bisect
 
-from itertools import chain
+from itertools import chain, groupby
 
 from pyphen import pyphen
 pyphen.language_fallback('en_US')
@@ -74,7 +74,8 @@ def _assemble_line(letters, startindex, c, l, anchor, stop, y, leading, PP, F, h
             'hyphen': None,
             
             'P_BREAK': False,
-            'PP': PP
+            'PP': PP,
+            'F': tuple(F)
             }
     
     # list that contains glyphs
@@ -217,8 +218,11 @@ def _assemble_line(letters, startindex, c, l, anchor, stop, y, leading, PP, F, h
                 x += FSTYLE['tracking']
     # n changes
     LINE['j'] = startindex + len(GLYPHS)
-    LINE['F'] = GLYPHS[-1][4]
     LINE['GLYPHS'] = GLYPHS
+    try:
+        LINE['F'] = GLYPHS[-1][4]
+    except:
+        pass
     
     return LINE
 
@@ -423,6 +427,7 @@ class Text(object):
 
 
         self._line_startindices = [line['i'] for line in self._glyphs]
+        self._line_yl = { cc: list(h[:2] for h in list(g)) for cc, g in groupby( ((LINE['y'], LINE['l'], LINE['c']) for LINE in self._glyphs if LINE['GLYPHS']), key=lambda k: k[2]) }
 
     def _recalculate(self):
         # clear sorts
@@ -460,12 +465,9 @@ class Text(object):
         errors.styleerrors.update(0)
 
 
-    def _target_line(self, x, y, c=None):
-
-        # get all y values
-        clines = [(LINE['y'], LINE['l']) for LINE in self._glyphs if LINE['c'] == c]
+    def _target_line(self, x, y, c):
         
-        yy, ll = zip( * clines)
+        yy, ll = zip( * self._line_yl[c])
         # find the clicked line
         lineindex = None
         if y >= yy[-1]:
@@ -481,12 +483,7 @@ class Text(object):
             l = self._target_line(x, y, c)
 
         # find first glyph to the right of click spot
-        try:
-            glyphindex = bisect.bisect([glyph[1] for glyph in self._glyphs[l]['GLYPHS']], x )
-        except IndexError:
-            # if l is greater than the length of the document
-            l = l % len(self._glyphs)
-            glyphindex = bisect.bisect([glyph[1] for glyph in self._glyphs[l]['GLYPHS']], x )
+        glyphindex = bisect.bisect([glyph[1] for glyph in self._glyphs[l]['GLYPHS']], x )
         
         # determine x position of glyph before it
         glyphx = self._glyphs[l]['GLYPHS'][glyphindex - 1][1]
@@ -777,7 +774,7 @@ class Text(object):
                 
                 for line in chain.from_iterable(self._glyphs[slice( * interval)] for interval in intervals):
 
-                    p_name = line['GLYPHS'][0][3][0]
+                    p_name = line['PP'][0]
                     hyphen = line['hyphen']
                     
                     for glyph in line['GLYPHS']:

@@ -92,8 +92,14 @@ class _Paragraph_table(object):
             properties['margin_left'] = fonts.p_get_attribute('margin_left', p)[1]
             properties['margin_right'] = fonts.p_get_attribute('margin_right', p)[1]
             properties['indent'] = fonts.p_get_attribute('indent', p)[1]
-            properties['indent_range'] = fonts.p_get_attribute('indent_range', p)[1]
             properties['hyphenate'] = fonts.p_get_attribute('hyphenate', p)[1]
+            
+            # temporary (file compatibility)
+            ir = fonts.p_get_attribute('indent_range', p)[1]
+            if ir == 0:
+                properties['indent_range'] = (0, )
+            else:
+                properties['indent_range'] = ir
 
             
             self._table[p] = properties

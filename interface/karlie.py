@@ -77,6 +77,26 @@ class _Paragraph_numeric_Field(kookies.Numeric_field):
         meredith.mipsy.recalculate_all()
         klossy.synchronize()
 
+class _Paragraph_enum_Field(kookies.Enumerate_field):
+    def __init__(self, x, y, width, p, attribute, name=None):
+        self.p = p
+        self._attribute = attribute
+
+        kookies.Enumerate_field.__init__(self, x, y, width,
+                callback=self._push_attribute, 
+                value_acquire=self._value_acquire,
+                name=name)
+                
+    def _value_acquire(self):
+        return str(sorted(fonttable.p_table.get_paragraph(self.p)[self._attribute]))[1:-1]
+        
+    def _push_attribute(self, value):
+        fonttable.p_table.clear()
+        
+        fs.p_set_attribute(self._attribute, self.p, (False, value))
+        meredith.mipsy.recalculate_all()
+        klossy.synchronize()
+
 class _Paragraph_checkbox(kookies.Checkbox):
     def __init__(self, x, y, width, p, attribute, name=None):
         self.p = p
@@ -439,7 +459,7 @@ class Properties(_Properties_panel):
 
             y += 15
             _tc_ = [_Paragraph_numeric_Field( 15, y, 175, p[0], attribute='indent', name='INDENT' ), 
-                    _Paragraph_numeric_Field( 200, y, 65, p[0], attribute='indent_range', name='FOR LINES') ]
+                    _Paragraph_enum_Field( 200, y, 65, p[0], attribute='indent_range', name='FOR LINES') ]
             self._items.append( _TWO_COLUMN( * _tc_))
             self._items += _tc_
 

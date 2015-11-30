@@ -383,8 +383,7 @@ class Blank_space(Base_kookie):
                 self._i -= 1
         elif x > self._x + self._width:
             self._i = self._target(self._x + self._width)
-            
-            if self._template[self._i][1] < self._x + self._width:
+            if self._template[self._i][1] < self._x + self._width and self._i < len(self._template) - 1:
                 self._i += 1
         else:
             self._i = self._target(x)

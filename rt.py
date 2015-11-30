@@ -1,6 +1,5 @@
 from gi.repository import Gtk, Gdk, GObject
 import cairo
-from time import time
 
 from state import noticeboard
 from state import constants

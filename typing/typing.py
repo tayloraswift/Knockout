@@ -1,5 +1,7 @@
 import time
 
+from fonts import fonts
+
 from model import meredith
 
 from model import un
@@ -85,7 +87,10 @@ def type_document(name, char, lastpress=[0], direction=[0]):
     
     elif name == 'paragraph':
         un.history.undo_save(2)
-        MT.insert(['</p>', ('<p>', 'body')])
+        p = meredith.mipsy.glyph_at()[2][0]
+        if p[0] == 'h' and p[1].isdigit() and meredith.mipsy.at_absolute(CURSOR) == '</p>' and 'body' in fonts.paragraph_classes:
+            p = 'body'
+        MT.insert(['</p>', ('<p>', p)])
         
     elif name == 'Return':
         un.history.undo_save(1)

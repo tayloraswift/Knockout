@@ -88,8 +88,8 @@ def type_document(name, char, lastpress=[0], direction=[0]):
     elif name == 'paragraph':
         un.history.undo_save(2)
         p = meredith.mipsy.glyph_at()[2][0]
-        if p[0] == 'h' and p[1].isdigit() and meredith.mipsy.at_absolute(CURSOR) == '</p>' and 'body' in fonts.paragraph_classes:
-            p = 'body'
+        if p[1][0] == 'h' and p[1][1].isdigit() and meredith.mipsy.at_absolute(CURSOR) == '</p>' and ('P', 'body') in fonts.paragraph_classes:
+            p = ('P', 'body')
         MT.insert(['</p>', ('<p>', p)])
         
     elif name == 'Return':

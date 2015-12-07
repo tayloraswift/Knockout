@@ -63,7 +63,7 @@ class _Font_table(object):
                 properties['fontmetrics'] = _FFace(properties['path'])
                 properties['font'] = _get_cairo_font(properties['path'])
             except freetype.ft_errors.FT_Exception:
-                pth = fonts.f_get_attribute('path', '_interface', () )[1]
+                pth = fonts.f_get_attribute('path', ('P', '_interface'), () )[1]
                 properties['fontmetrics'] = _FFace(pth)
                 properties['font'] = _get_cairo_font(pth)
                 

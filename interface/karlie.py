@@ -200,19 +200,20 @@ class _Paragraph_checkbox(kookies.Checkbox):
 class _Paragraph_style_menu(kookies.Object_menu):
     def __init__(self, x, y, width, p, name=None, source=0):
         entries = sorted(fonts.paragraph_classes.keys())
-        entries = list(zip(entries, [str(v) for v in entries]))
+        entries = list(zip(entries, [v[0] + ' : ' + v[1] for v in entries]))
         
         self.p = p
-        self._value_acquire = lambda: self.p
+        self._value_acquire = lambda: self.p[1]
         
         kookies.Object_menu.__init__(self, x, y, width, callback=self._push_pname, addition_callback=self._add_paragraph_class, menu_callback=self._menu_select_class, menu_options=entries, value_acquire=self._value_acquire, name=name, source=source)
 
     def _push_pname(self, name):
         fonttable.p_table.clear()
         
-        fs.rename_p(self.p, name)
-        meredith.mipsy.rename_paragraph_class(self.p, name)
-        self.p = name
+        new = (self.p[0], name)
+        fs.rename_p(self.p, new )
+        meredith.mipsy.rename_paragraph_class(self.p, new )
+        self.p = new
 
         meredith.mipsy.recalculate_all()
         klossy.refresh() # all the self.p’s have changed
@@ -226,25 +227,26 @@ class _Paragraph_style_menu(kookies.Object_menu):
     def _add_paragraph_class(self):
         fonttable.p_table.clear()
         
-        p = meredith.mipsy.glyph_at()[2]
-        if len(p[0]) > 3 and p[0][-4] == '.' and len([c for c in p[0][-3:] if c in '1234567890']) == 3:
-            serialnumber = int(p[0][-3:])
+        p, p_i = meredith.mipsy.glyph_at()[2]
+        ns, p = p
+        if len(p) > 3 and p[-4] == '.' and len([c for c in p[-3:] if c in '1234567890']) == 3:
+            serialnumber = int(p[-3:])
             while True:
                 serialnumber += 1
-                name = p[0][:-3] + str(serialnumber).zfill(3)
-                if name not in fonts.paragraph_classes:
+                name = p[:-3] + str(serialnumber).zfill(3)
+                if (ns, name) not in fonts.paragraph_classes:
                     break
         else:
-            name = p[0] + '.001'
-        fs.add_paragraph_class(name, p[0])
-        meredith.mipsy.change_paragraph_class(p[1], name)
+            name = p + '.001'
+        fs.add_paragraph_class( (ns, name), (ns, p) )
+        meredith.mipsy.change_paragraph_class( p_i, (ns, name) )
 
         klossy.refresh()
         
 
 def _P_options_acquire_filtered():
     PPP = ['—'] + sorted(list( key for key in fonts.paragraph_classes.keys() if not fonts.paragraph_classes[key]['fontclasses'][0] ))
-    return list(zip(PPP, [str(v) for v in PPP]))
+    return list(zip(PPP, [v if v == '—' else v[0] + ' : ' + v[1] for v in PPP]))
     
 def _F_options_acquire(P):
     if P != '—':
@@ -257,9 +259,11 @@ class _Inheritance_selection_menu(kookies.Double_selection_menu):
         self._p = p
         self._f = f
         self._attribute = attribute
-
+        
+        self._display = lambda k, v: k[0][1] + ' › ' + v if isinstance(k[0], tuple) else '—'
+        
         kookies.Double_selection_menu.__init__(self, x, y, width=width, height=15, menu_callback=self._push_inherit, options_acquire=_P_options_acquire_filtered, options_acquire_l2=_F_options_acquire, value_acquire=self._value_acquire, source=source)
-    
+
     def _value_acquire(self):
         if self._attribute == '_all':
             current = fonts.paragraph_classes[self._p]['fontclasses'][1][self._f]
@@ -295,14 +299,17 @@ class _Inheritance_selection_menu(kookies.Double_selection_menu):
                 fs.f_set_attribute(self._attribute, self._p, self._f, v)
                 print('REFERENCE LOOP DETECTED')
         
-        if self._attribute == '_all':
+        if self._attribute == 'path':
+            meredith.mipsy.recalculate_all()
+            klossy.synchronize()
+        elif self._attribute == '_all':
             klossy.refresh()
         else:
             klossy.synchronize()
 
 def _P_options_acquire():
     PPP = ['—'] + list(fonts.paragraph_classes.keys())
-    return list(zip(PPP, [str(v) for v in PPP]))
+    return list(zip(PPP, [v if v == '—' else v[0] + ' : ' + v[1] for v in PPP]))
     
 class _Paragraph_inheritance_menu(kookies.Selection_menu):
     def __init__(self, x, y, width, p, attribute, source=0):
@@ -495,7 +502,7 @@ class Properties(_Properties_panel):
         
         y = 145
         
-        self._items.append(kookies.Heading( 15, 90, 250, 30, p[0], upper=True))
+        self._items.append(kookies.Heading( 15, 90, 250, 30, p[0][0] + ':' + p[0][1], upper=True))
         
         if self._tab == 'font':
         

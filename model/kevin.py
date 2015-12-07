@@ -22,8 +22,8 @@ def serialize(text):
                     b[e] = '</f class="' + entity[1] + '">'
             
             elif entity[0] == '<p>':
-                if entity[1] != 'body':
-                    b[e] = '<p class="' + entity[1] + '">'
+                if entity[1] != ('P', 'body'):
+                    b[e] = '<' + entity[1][0].lower() + ' class="' + entity[1][1] + '">'
                 else:
                     b[e] = '<p>'
 

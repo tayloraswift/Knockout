@@ -204,6 +204,9 @@ class Document_toolbar(object):
         y += 30
         self._items.append(kookies.Button(5, y, 90, 30, callback=punch_tags, string='x Strong', params=('strong',) ))
 
+        y += 40
+        self._items.append(kookies.Button(5, y, 90, 30, callback=lambda: meredith.mipsy.tracts[0].insert(['</p>', ('<p>',  ('IMAGE', 'figure') ) ]), string='Image'))
+
         y += 50
         self._items.append(kookies.Checkbox(15, y, 80, callback=penclick.page.toggle_dual, value_acquire=lambda: penclick.page.dual, string='Dual'.upper()))
         

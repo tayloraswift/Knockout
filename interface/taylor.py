@@ -598,7 +598,7 @@ class Document_view(ui.Cell):
                 try:
                     font = fonttable.table.get_font(name[0], ())
                 except AttributeError:
-                    font = fonttable.table.get_font('_interface', ())
+                    font = fonttable.table.get_font(('P', '_interface'), ())
             
             cr.set_font_size(font['fontsize'])
             cr.set_font_face(font['font'])
@@ -900,7 +900,7 @@ class Document_view(ui.Cell):
         
         # draw stats
         cr.set_source_rgba(0, 0, 0, 0.8)
-        font = fonttable.table.get_font('_interface', ('strong',))
+        font = fonttable.table.get_font(('P', '_interface'), ('strong',))
         
         cr.set_font_size(font['fontsize'])
         cr.set_font_face(font['font'])

@@ -10,7 +10,7 @@ from interface import menu
 
 class Button(Base_kookie):
     def __init__(self, x, y, width, height, callback=None, string='', params=() ):
-        Base_kookie.__init__(self, x, y, width, height, font=fonttable.table.get_font('_interface', ('strong',) ))
+        Base_kookie.__init__(self, x, y, width, height, font=fonttable.table.get_font(('P', '_interface'), ('strong',) ))
         
         self._callback = callback
         self._params = params
@@ -65,7 +65,7 @@ class Button(Base_kookie):
 
 class Checkbox(Button):
     def __init__(self, x, y, width, callback, callback_parameters = (), value_acquire=None, string=''):
-        Base_kookie.__init__(self, x, y, width, 20, font=fonttable.table.get_font('_interface', ('label', )) )
+        Base_kookie.__init__(self, x, y, width, 20, font=fonttable.table.get_font(('P', '_interface'), ('label', )) )
         
         self._get_value = value_acquire
         self._ACQUIRE_REPRESENT()
@@ -111,7 +111,7 @@ class Checkbox(Button):
 class Tabs(Base_kookie):
     def __init__(self, x, y, width, height, default=0, callback=None, signals=() ):
 
-        Base_kookie.__init__(self, x, y, width, height, font=fonttable.table.get_font('_interface', ('strong',) ))
+        Base_kookie.__init__(self, x, y, width, height, font=fonttable.table.get_font(('P', '_interface'), ('strong',) ))
         
         self._signals, self._strings = zip( * signals )
         
@@ -176,7 +176,7 @@ class Tabs(Base_kookie):
             cr.show_glyphs(self._texts[i])
 
 class Heading(Base_kookie):
-    def __init__(self, x, y, width, height, text, font=fonttable.table.get_font('_interface', ('title',) ), fontsize=None, upper=False):
+    def __init__(self, x, y, width, height, text, font=fonttable.table.get_font(('P', '_interface'), ('title',) ), fontsize=None, upper=False):
         
         Base_kookie.__init__(self, x, y, width, height)
         
@@ -223,7 +223,7 @@ class Blank_space(Base_kookie):
         self._j = self._i
         
         # build static texts
-        self._add_static_text(self._x, self._y + 40, self._name, font=fonttable.table.get_font('_interface', ('label', )) , upper=True)
+        self._add_static_text(self._x, self._y + 40, self._name, font=fonttable.table.get_font(('P', '_interface'), ('label', )) , upper=True)
         
         self._resting_bar_color = (0, 0, 0, 0.4)
         self._active_bar_color = (0, 0, 0, 0.8)
@@ -536,7 +536,7 @@ class Enumerate_field(Blank_space):
 #########
 class Selection_menu(Base_kookie):
     def __init__(self, x, y, width, height, menu_callback, options_acquire, value_acquire, source):
-        Base_kookie.__init__(self, x, y, width, height, font=fonttable.table.get_font('_interface', ('strong',) ))
+        Base_kookie.__init__(self, x, y, width, height, font=fonttable.table.get_font(('P', '_interface'), ('strong',) ))
         
         self._get_value = value_acquire
         self._get_options = options_acquire
@@ -600,7 +600,7 @@ class Selection_menu(Base_kookie):
 #########
 class Double_selection_menu(Selection_menu):
     def __init__(self, x, y, width, height, menu_callback, options_acquire, options_acquire_l2, value_acquire, source):
-    
+        
         self._options_acquire_l2 = options_acquire_l2
         Selection_menu.__init__(self, x, y, width, height, menu_callback, options_acquire, value_acquire, source)
 
@@ -612,8 +612,7 @@ class Double_selection_menu(Selection_menu):
             
     def _ACQUIRE_REPRESENT(self):
         V = self._get_value()
-        label = self._lookup_label[V[0]][V[1]]
-        label = str(V[0]) + ' › ' + str(label)
+        label = self._display(V, self._lookup_label[V[0]][V[1]])
         self._texts = []
         self._add_static_text(self._x_right, self._y_bottom - self._height/2 + 5, label, align=-1)
         

@@ -41,7 +41,7 @@ def _retrieve_paragraphclass(P, l):
     except KeyError:
         # happens if requested style is not defined
         errors.styleerrors.add_style_error((P,), l)
-        PSTYLE = fonttable.p_table.get_paragraph('_interface')
+        PSTYLE = fonttable.p_table.get_paragraph(('P', '_interface'))
     
     return PSTYLE
 
@@ -54,7 +54,7 @@ def _retrieve_fontclass(P, F, l):
         try:
             FSTYLE = fonttable.table.get_font(P, () )
         except AttributeError:
-            FSTYLE = fonttable.table.get_font('_interface', () )
+            FSTYLE = fonttable.table.get_font(('P', '_interface'), () )
     
     return FSTYLE
             

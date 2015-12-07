@@ -16,7 +16,7 @@ class Base_kookie(object):
         self._texts = []
         
         if font is None:
-            self.font = fonttable.table.get_font('_interface', () )
+            self.font = fonttable.table.get_font(('P', '_interface'), () )
         else:
             self.font = font
         

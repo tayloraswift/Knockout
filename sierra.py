@@ -1,4 +1,4 @@
-import _pickle as pickle
+import pprint, pickle, ast
 
 from fonts import fonts
 
@@ -28,13 +28,18 @@ def save():
     
     doc = {'kitty': kitty, 'grid': grid, 'contexts': contexts, 'styles': styles, 'view': taylor.becky.read_display_state(), 'page': page}
     
-    with open(constants.filename, 'wb') as fi:
-        pickle.dump(doc, fi)
+    with open(constants.filename, 'w') as fi:
+        pprint.pprint(doc, fi)
 
 def load(name):
-    with open(name, 'rb') as fi:
-        constants.filename = name
-        doc = pickle.load(fi)
+    try:
+        with open(name, 'r') as fi:
+            constants.filename = name
+            doc = ast.literal_eval(fi.read())
+    except UnicodeDecodeError:
+        with open(name, 'rb') as fi:
+            constants.filename = name
+            doc = pickle.load(fi)
     fonts.paragraph_classes = doc['styles']
 
     # compatibility

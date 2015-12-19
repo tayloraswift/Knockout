@@ -1,4 +1,4 @@
-import freetype
+from libraries import freetype
 
 from fonts import pycairo_font
 from fonts import fonts

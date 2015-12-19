@@ -50,6 +50,14 @@ def load(name):
         
         if not isinstance(p, tuple):
             _r_rename_p(p, ('P', p))
+#    if ('IMAGE', '_graph') not in fonts.paragraph_classes:
+ #       fonts.paragraph_classes[('IMAGE', '_graph')] = {
+  #              'margin_bottom': (False, 0),
+   #             'margin_left': (False, 0),
+    #            'margin_right': (False, 0),
+     #           'margin_top': (False, 0)
+      #          }
+        
 
 
     for t in doc['kitty']:

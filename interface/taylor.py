@@ -205,13 +205,15 @@ class Document_toolbar(object):
         self._items.append(kookies.Button(5, y, 90, 30, callback=punch_tags, string='x Strong', params=('strong',) ))
 
         y += 40
-        self._items.append(kookies.Button(5, y, 90, 30, callback=lambda: meredith.mipsy.tracts[0].insert(['</p>', ('<p>',  ('IMAGE', 'figure') ) ]), string='Image'))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=lambda: meredith.mipsy.tracts[0].insert(['</p>', ('<p>',  ('IMAGE', '_graph') ) ]), string='Image'))
 
         y += 50
         self._items.append(kookies.Checkbox(15, y, 80, callback=penclick.page.toggle_dual, value_acquire=lambda: penclick.page.dual, string='Dual'.upper()))
         
         y += 50
         self._items.append(kookies.Selection_menu(5, y, 90, 30, menu_callback=constants.HINTS.set_hint_style, options_acquire=constants.default_hints, value_acquire=constants.HINTS.get_hint_style, source=0))
+        y += 30
+        self._items.append(kookies.Selection_menu(5, y, 90, 30, menu_callback=constants.HINTS.set_antialias, options_acquire=constants.default_antialias, value_acquire=constants.HINTS.get_antialias, source=0))
         
     def render(self, cr):
         for i, entry in enumerate(self._items):
@@ -624,6 +626,7 @@ class Document_view(ui.Cell):
         return classed_pages
     
     def print_page(self, cr, p, classed_pages):
+        self._draw_images(cr, classed_pages[p]['_images'])
         self._print_sorted(cr, classed_pages[p])
             
     def _draw_by_page(self, cr, mx_cx, my_cy, cx, cy, A=1, refresh=False):
@@ -670,6 +673,7 @@ class Document_view(ui.Cell):
                 cr.translate(A*penclick.page.map_X(mx_cx, page) + cx, A*penclick.page.map_Y(my_cy, page) + cy)
                 cr.scale(A, A)
 
+                self._draw_images(cr, sorted_glyphs['_images'])
                 self._print_sorted(cr, sorted_glyphs)
 
                 cr.restore()
@@ -721,6 +725,22 @@ class Document_view(ui.Cell):
             
             if self._mode == 'channels':
                 caramel.delight.render_grid(cr, px, py, PWIDTH, PHEIGHT, self._A)
+
+    def _draw_images(self, cr, images):
+        for IMAGE, x, y in images:
+            image_surface = cairo.ImageSurface.create_from_png(IMAGE[0])
+            
+            H = image_surface.get_width()
+            factor = IMAGE[1]/H
+            
+            cr.save()
+            cr.translate(x, y)
+            cr.scale(factor, factor)
+            
+            cr.set_source_surface(image_surface, 0, 0)
+            cr.paint()
+            
+            cr.restore()
 
     def _draw_annotations(self, cr, annot, page):
 

@@ -27,6 +27,9 @@ def serialize(text):
                 else:
                     b[e] = '<p>'
 
+            elif entity[0] == '<image>':
+                b[e] = '<image data=' + repr(entity[1]) + '>'
+
         elif entity == '<':
             b[e] = '&lt;'
         elif entity == '>':
@@ -65,13 +68,14 @@ def deserialize(string):
             try:
                 equals = entity.index('=')
 
-                style = entity[equals + 1:closetag]
-                style = style.partition('"')[-1].rpartition('"')[0]
+                data = entity[equals + 1:closetag]
+                data = eval(data)
                 
                 if tag == 'p':
-                    style = ('P', style)
+                    data = ('P', data)
 
-                entity = ('<' + tag + '>', style)
+                entity = ('<' + tag + '>', data)
+
             except ValueError:
                 entity = '<' + tag + '>'
         

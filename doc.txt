@@ -1,6 +1,6 @@
 {'contexts': {'c': 0, 'p': 0},
  'grid': [[90, 680], [60, 90, 900]],
- 'kitty': [{'cursors': (881, 881),
+ 'kitty': [{'cursors': (236, 236),
             'outline': [[[[90, 230, False], [90, 900, False]],
                          [[370, 230, False], [370, 900, False]],
                          0],
@@ -29,11 +29,11 @@
                     '“1989” on tour, and as much as it was a celebration '
                     'of her blossoming into a full-fledged, gleaming pop '
                     'idol, it also served as a treatise on the virtues — '
-                    'and perks — of friendship.</p><p>During set changes, '
-                    'the stadium screens beamed videos of Ms. Swift’s '
-                    'intimates — Karlie Kloss, Selena Gomez, the Haim '
-                    'sisters — telling sweet, propagandistic stories about '
-                    'their friendship with Ms. Swift.</p><p>And each '
+                    'and perks — of friendship.</p><p> <image data=(\'meredith.png\', 100)> </p><p>During set '
+                    'changes, the stadium screens beamed videos of Ms. '
+                    'Swift’s intimates — Karlie Kloss, Selena Gomez, the '
+                    'Haim sisters — telling sweet, propagandistic stories '
+                    'about their friendship with Ms. Swift.</p><p>And each '
                     'night, Ms. Swift brought out one or more special '
                     'guests onstage — like Miranda Lambert, Lorde or, in '
                     'one case, Julia Roberts and Joan Baez together. As '

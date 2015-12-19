@@ -16,7 +16,7 @@ from model.wonder import words, character, _breaking_chars
 hy = pyphen.Pyphen(lang='en_US')
 
 # linebreaking characters
-_BREAK_WHITESPACE = set(' ')
+_BREAK_WHITESPACE = set((' ', '<image>'))
 _BREAK_ONLY_AFTER = set('-')
 _BREAK_AFTER_ELSE_BEFORE = set('–—')
 
@@ -42,6 +42,16 @@ def _retrieve_paragraphclass(P, l):
         # happens if requested style is not defined
         errors.styleerrors.add_style_error((P,), l)
         PSTYLE = fonttable.p_table.get_paragraph(('P', '_interface'))
+    
+    return PSTYLE
+
+def _retrieve_p_imageclass(P, l):
+    try:
+        PSTYLE = fonttable.p_table.get_image_class(P)
+    except KeyError:
+        # happens if requested style is not defined
+        errors.styleerrors.add_style_error((P,), l)
+        PSTYLE = fonttable.p_table.get_image_class(('IMAGE', '_graph'))
     
     return PSTYLE
 
@@ -136,6 +146,12 @@ def _assemble_line(letters, startindex, c, l, anchor, stop, y, leading, PP, F, h
         elif CHAR == '<br>':
             GLYPHS.append((-6, x, y,  PP, tuple(F), x))
             break
+        
+        elif CHAR == '<image>':
+            IMAGE = letter[1]
+                                                                                # additional fields
+            GLYPHS.append((-13, x, y - leading,  PP, tuple(F), x + IMAGE[1], IMAGE ))
+            x += IMAGE[1]
         
         else:
             glyphwidth = FSTYLE['fontmetrics'].advance_pixel_width(CHAR) * FSTYLE['fontsize']
@@ -309,9 +325,11 @@ class Text(object):
         page = self.channels.channels[c].page
         page_start_l = l
         K_x = None
+        
+        displacement = PSTYLE['leading']
 
         while True:
-            y += PSTYLE['leading']
+            y += displacement
             
             # see if the lines have overrun the portals
             if y > self.channels.channels[c].railings[1][-1][1] and c < len(self.channels.channels) - 1:
@@ -404,11 +422,14 @@ class Text(object):
                 P_i = i
                 F = []
                 R = 0
+                K_x = None
+                
                 PSTYLE = _retrieve_paragraphclass(P, l)
                 
                 y += PSTYLE['margin_top']
                 
-                K_x = None
+                displacement = PSTYLE['leading']
+
             else:
                 F = list(LINE['F'])
                 R += 1
@@ -770,7 +791,7 @@ class Text(object):
         if not self._sorted_pages:
 
             for page, intervals in self._page_intervals.items():
-                sorted_page = {'_annot': [], '_intervals': intervals}
+                sorted_page = {'_annot': [], '_images': [], '_intervals': intervals}
                 
                 for line in chain.from_iterable(self._glyphs[slice( * interval)] for interval in intervals):
 
@@ -782,6 +803,8 @@ class Text(object):
                         if glyph[0] < 0:
                             if glyph[0] == -6:
                                 sorted_page['_annot'].append( (glyph[0], line['anchor'], line['y'] + line['leading']) + glyph[3:])
+                            elif glyph[0] == -13:
+                                sorted_page['_images'].append( (glyph[6], glyph[1], glyph[2]) )
                             else:
                                 sorted_page['_annot'].append(glyph)
                         else:

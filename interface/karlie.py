@@ -7,7 +7,6 @@ from state import noticeboard
 
 from fonts import fonts
 from fonts import fonttable
-from fonts import fontsetters as fs
 
 from interface import kookies, caramel, ui
 
@@ -30,173 +29,128 @@ class _Font_file_Field(kookies.Blank_space):
 
         fonttable.table.clear()
         
-        fs.f_set_attribute('path', self.p, self.f, (False, path))
+        fonts.f_set_attribute((False, path), 'path', self.p, self.f)
         
         meredith.mipsy.recalculate_all()
         klossy.synchronize()
 
-class _Font_numeric_Field(kookies.Numeric_field):
-    def __init__(self, x, y, width, p, f, attribute, name=None):
-        self.p = p
-        self.f = f
-        self._attribute = attribute
-        
-        kookies.Numeric_field.__init__(self, x, y, width, 
-                callback=self._push_attribute, 
-                value_acquire=self._value_acquire,
-                name=name)
+def _p_push_value(value, attribute, p):
+    fonts.p_set_attribute((False, value), attribute, p)
 
-    def _value_acquire(self):
-        return str(fonttable.table.get_font(self.p, self.f)[self._attribute])
+def create_p_field(TYPE, x, y, width, attribute, p, after, value_acquire=lambda A, p: str(fonttable.p_table.get_paragraph(p)[A]),  name=''):
+    return TYPE(x, y, width,
+            callback= _p_push_value, 
+            value_acquire= value_acquire,
+            params = (attribute, p), 
+            before=un.history.save,
+            after=after,
+            name=name)
+
+def _indent_acquire(A, p):
+    C, SIGN, K = fonttable.p_table.get_paragraph(p)[A]
+
+    if K:
+        if abs(K) == 1:
+            coefficient = ''
+        else:
+            coefficient = str(K)
         
-    def _push_attribute(self, value):
-        fonttable.table.clear()
+        if SIGN == -1:
+            SIGN = ' - '
+        else:
+            SIGN = ' + '
         
-        fs.f_set_attribute(self._attribute, self.p, self.f, (False, value))
-        
-        meredith.mipsy.recalculate_all()
-        klossy.synchronize()
+        if C:
+            val = str(C) + SIGN + coefficient + 'K'
+        else:
+            if SIGN == ' + ':
+                val = coefficient + 'K'
+            else:
+                val = SIGN[1] + coefficient + 'K'
+    else:
+        val = str(C)
+    return val
+
+def _push_indent(value, A, p):
+    K = 0
+    C = 0
+    sgn = 1
+    for k, g in ( (k, ''.join(g)) for k, g in itertools.groupby(value, key=lambda v: True if v in ('+', '-') else False) ):
+        if k:
+            if g.count('-') % 2:
+                sgn = -1
+            else:
+                sgn = 1
+        else:
+            if 'K' in g:
+                if g[0] == 'K':
+                    coefficient = 1
+                else:
+                    coefficient = int(float(g[:g.find('K')]))
+                K += coefficient*sgn
+            else:
+                if '.' in g:
+                    if g.count('.') > 1:
+                        dot = g.find('.')
+                        g = ''.join(g[:dot + 1]) + ''.join([d for d in g[dot + 1:] if d != '.'])
+                    constant = float(g)
+                else:
+                    constant = int(g)
+                C += constant*sgn
     
-class _Paragraph_numeric_Field(kookies.Numeric_field):
-    def __init__(self, x, y, width, p, attribute, name=None):
-        self.p = p
-        self._attribute = attribute
-
-        kookies.Numeric_field.__init__(self, x, y, width,
-                callback=self._push_attribute, 
-                value_acquire=self._value_acquire,
-                name=name)
-                
-    def _value_acquire(self):
-        return str(fonttable.p_table.get_paragraph(self.p)[self._attribute])
-        
-    def _push_attribute(self, value):
-        fonttable.p_table.clear()
-        
-        fs.p_set_attribute(self._attribute, self.p, (False, value))
-        meredith.mipsy.recalculate_all()
-        klossy.synchronize()
-
-class _Paragraph_enum_Field(kookies.Enumerate_field):
-    def __init__(self, x, y, width, p, attribute, name=None):
-        self.p = p
-        self._attribute = attribute
-
-        kookies.Enumerate_field.__init__(self, x, y, width,
-                callback=self._push_attribute, 
-                value_acquire=self._value_acquire,
-                name=name)
-                
-    def _value_acquire(self):
-        return str(sorted(fonttable.p_table.get_paragraph(self.p)[self._attribute]))[1:-1]
-        
-    def _push_attribute(self, value):
-        fonttable.p_table.clear()
-        
-        fs.p_set_attribute(self._attribute, self.p, (False, value))
-        meredith.mipsy.recalculate_all()
-        klossy.synchronize()
+    if K < 0:
+        SIGN = -1
+        K = abs(K)
+    else:
+        SIGN = 1
+    
+    value = (C, SIGN, K)
+    
+    fonts.p_set_attribute((False, value), A, p)
 
 class _Paragraph_INDENT_EXP(kookies.Blank_space):
-    def __init__(self, x, y, width, p, name=None):
-        self.p = p
-
+    def __init__(self, x, y, width, p, after, name=None):
         kookies.Blank_space.__init__(self, x, y, width,
-                callback=self._push_indent, 
-                value_acquire=self._indent_acquire,
+                callback=_push_indent, 
+                value_acquire=_indent_acquire,
+                params = ('indent', p), 
+                before=un.history.save,
+                after=after,
                 name=name)
         
         self._domain = lambda k: ''.join([c for c in k if c in '1234567890.-+K'])
 
     def _stamp_glyphs(self, text):
         self._template = self._build_line(self._x, self._y + self.font['fontsize'] + 5, text, self.font, sub_minus=True)
+
+
+def _add_pclass():
+    un.history.save()
+    fonttable.p_table.clear()
     
-    def _indent_acquire(self):
-        C, SIGN, K = fonttable.p_table.get_paragraph(self.p)['indent']
+    p, p_i = meredith.mipsy.glyph_at()[2]
+    ns, p = p
+    if len(p) > 3 and p[-4] == '.' and len([c for c in p[-3:] if c in '1234567890']) == 3:
+        serialnumber = int(p[-3:])
+        while True:
+            serialnumber += 1
+            name = p[:-3] + str(serialnumber).zfill(3)
+            if (ns, name) not in fonts.paragraph_classes:
+                break
+    else:
+        name = p + '.001'
+    fonts.add_paragraph_class( (ns, name), (ns, p) )
+    meredith.mipsy.change_paragraph_class( p_i, (ns, name) )
 
-        if K:
-            if abs(K) == 1:
-                coefficient = ''
-            else:
-                coefficient = str(K)
-            
-            if SIGN == -1:
-                SIGN = ' - '
-            else:
-                SIGN = ' + '
-            
-            if C:
-                val = str(C) + SIGN + coefficient + 'K'
-            else:
-                if SIGN == ' + ':
-                    val = coefficient + 'K'
-                else:
-                    val = SIGN[1] + coefficient + 'K'
-        else:
-            val = str(C)
-        return val
-        
-    def _push_indent(self, value):
-        K = 0
-        C = 0
-        sgn = 1
-        for k, g in ( (k, ''.join(g)) for k, g in itertools.groupby(value, key=lambda v: True if v in ('+', '-') else False) ):
-            if k:
-                if g.count('-') % 2:
-                    sgn = -1
-                else:
-                    sgn = 1
-            else:
-                if 'K' in g:
-                    if g[0] == 'K':
-                        coefficient = 1
-                    else:
-                        coefficient = int(float(g[:g.find('K')]))
-                    K += coefficient*sgn
-                else:
-                    if '.' in g:
-                        if g.count('.') > 1:
-                            dot = g.find('.')
-                            g = ''.join(g[:dot + 1]) + ''.join([d for d in g[dot + 1:] if d != '.'])
-                        constant = float(g)
-                    else:
-                        constant = int(g)
-                    C += constant*sgn
-        
-        if K < 0:
-            SIGN = -1
-            K = abs(K)
-        else:
-            SIGN = 1
-        
-        value = (C, SIGN, K)
-        
-        fonttable.p_table.clear()
-        
-        fs.p_set_attribute('indent', self.p, (False, value))
-        meredith.mipsy.recalculate_all()
-        klossy.synchronize()
+    klossy.refresh()
 
-class _Paragraph_checkbox(kookies.Checkbox):
-    def __init__(self, x, y, width, p, attribute, name=None):
-        self.p = p
-        self._attribute = attribute
-        
-        kookies.Checkbox.__init__(self, x, y, width,
-                callback=self._push_attribute,
-                value_acquire=self._value_acquire,
-                string=name)
-
-    def _value_acquire(self):
-        return fonttable.p_table.get_paragraph(self.p)[self._attribute]
-
-    def _push_attribute(self, value):
-        fonttable.p_table.clear()
-        
-        fs.p_set_attribute(self._attribute, self.p, (False, value))
-        meredith.mipsy.recalculate_all()
-        klossy.synchronize()
-
+def _current_set_pclass(name):
+    un.history.save()
+    p = meredith.mipsy.glyph_at()[2]
+    meredith.mipsy.change_paragraph_class(p[1], name)
+    klossy.refresh()
+    return False
+    
 class _Paragraph_style_menu(kookies.Object_menu):
     def __init__(self, x, y, width, p, name=None, source=0):
         entries = sorted(fonts.paragraph_classes.keys())
@@ -205,44 +159,20 @@ class _Paragraph_style_menu(kookies.Object_menu):
         self.p = p
         self._value_acquire = lambda: self.p[1]
         
-        kookies.Object_menu.__init__(self, x, y, width, callback=self._push_pname, addition_callback=self._add_paragraph_class, menu_callback=self._menu_select_class, menu_options=entries, value_acquire=self._value_acquire, name=name, source=source)
+        kookies.Object_menu.__init__(self, x, y, width, callback=self._push_pname, addition_callback=_add_pclass, menu_callback=_current_set_pclass, menu_options=entries, value_acquire=self._value_acquire, name=name, source=source)
 
     def _push_pname(self, name):
+        un.history.save()
         fonttable.p_table.clear()
         
         new = (self.p[0], name)
-        fs.rename_p(self.p, new )
+        fonts.rename_p(self.p, new )
         meredith.mipsy.rename_paragraph_class(self.p, new )
         self.p = new
 
         meredith.mipsy.recalculate_all()
         klossy.refresh() # all the self.p’s have changed
 
-    def _menu_select_class(self, name):
-        p = meredith.mipsy.glyph_at()[2]
-        meredith.mipsy.change_paragraph_class(p[1], name)
-        klossy.refresh()
-        return False
-
-    def _add_paragraph_class(self):
-        fonttable.p_table.clear()
-        
-        p, p_i = meredith.mipsy.glyph_at()[2]
-        ns, p = p
-        if len(p) > 3 and p[-4] == '.' and len([c for c in p[-3:] if c in '1234567890']) == 3:
-            serialnumber = int(p[-3:])
-            while True:
-                serialnumber += 1
-                name = p[:-3] + str(serialnumber).zfill(3)
-                if (ns, name) not in fonts.paragraph_classes:
-                    break
-        else:
-            name = p + '.001'
-        fs.add_paragraph_class( (ns, name), (ns, p) )
-        meredith.mipsy.change_paragraph_class( p_i, (ns, name) )
-
-        klossy.refresh()
-        
 
 def _P_options_acquire_filtered():
     PPP = ['—'] + sorted(list( key for key in fonts.paragraph_classes.keys() if not fonts.paragraph_classes[key]['fontclasses'][0] ))
@@ -281,7 +211,7 @@ class _Inheritance_selection_menu(kookies.Double_selection_menu):
             if self._attribute == '_all':
                 fonts.paragraph_classes[self._p]['fontclasses'][1][self._f] = deepcopy(fonts.f_get_f(self._p, self._f))
             else:
-                fs.f_set_attribute(self._attribute, self._p, self._f, (False, fonttable.table.get_font(self._p, self._f)[self._attribute]) )
+                fonts.f_set_attribute((False, fonttable.table.get_font(self._p, self._f)[self._attribute]), self._attribute, self._p, self._f)
         else:
             # save old value in case of a disaster
             if self._attribute == '_all':
@@ -290,13 +220,13 @@ class _Inheritance_selection_menu(kookies.Double_selection_menu):
                 v = fonts.f_get_attribute(self._attribute, self._p, self._f)
             
             value = (True, value)
-            fs.f_set_attribute(self._attribute, self._p, self._f, value)
+            fonts.f_set_attribute(value, self._attribute, self._p, self._f)
 
             try:
                 fonttable.table.get_font(self._p, self._f)
             except RuntimeError:
                 fonttable.table.clear()
-                fs.f_set_attribute(self._attribute, self._p, self._f, v)
+                fonts.f_set_attribute(v, self._attribute, self._p, self._f)
                 print('REFERENCE LOOP DETECTED')
         
         if self._attribute == 'path':
@@ -326,20 +256,21 @@ class _Paragraph_inheritance_menu(kookies.Selection_menu):
             return '—'
     
     def _push_inherit(self, value):
+        un.history.save()
         fonttable.p_table.clear()
         if value == '—':
-            fs.p_set_attribute(self._attribute, self._p, (False, fonttable.p_table.get_paragraph(self._p)[self._attribute]) )
+            fonts.p_set_attribute((False, fonttable.p_table.get_paragraph(self._p)[self._attribute]), self._attribute, self._p)
         else:
             # save old value in case of a disaster
             v = fonts.p_get_attribute(self._attribute, self._p)
             value = (True, value)
-            fs.p_set_attribute(self._attribute, self._p, value)
+            fonts.p_set_attribute(value, self._attribute, self._p)
 
             try:
                 fonttable.p_table.get_paragraph(self._p)
             except RuntimeError:
                 fonttable.p_table.clear()
-                fs.p_set_attribute(self._attribute, self._p, v)
+                fonts.p_set_attribute(v, self._attribute, self._p)
                 print('REFERENCE LOOP DETECTED')
         
         klossy.refresh()
@@ -359,6 +290,7 @@ class _preview(kookies.Heading):
         cr.set_font_size(15)
         cr.set_font_face(self.font['font'])
         cr.show_glyphs(self._texts[0])
+
 
 class _TWO_COLUMN(object):
     def __init__(self, left, right):
@@ -412,7 +344,12 @@ class _Properties_panel(ui.Cell):
     def synchronize(self):
         for item in self._items:
             item._SYNCHRONIZE()
-    
+
+    def _TURNOVER_WITH_RERENDER_P(self):
+        fonttable.p_table.clear()
+        meredith.mipsy.recalculate_all()
+        self.synchronize()
+
     def render(self, cr, h, k):
         
         # DRAW BACKGROUND
@@ -457,7 +394,7 @@ class _Properties_panel(ui.Cell):
         bb = self._stack_bisect(x, y)
 
         if self._items[bb].is_over(x, y):
-            self._items[bb].focus(x)
+            self._items[bb].focus(x, y)
             b = bb
 
         # defocus the other box, if applicable
@@ -477,7 +414,7 @@ class _Properties_panel(ui.Cell):
         bb = self._stack_bisect(x, y)
 
         if self._items[bb].is_over_hover(x, y):
-            self._hover_box_ij = (bb, self._items[bb].hover(x))
+            self._hover_box_ij = (bb, self._items[bb].hover(x, y))
 
         if hovered[0] != self._hover_box_ij:
             hovered[0] = self._hover_box_ij
@@ -539,14 +476,16 @@ class Properties(_Properties_panel):
         elif self._tab == 'paragraph':
             self._items.append(_Paragraph_style_menu( 15, y, 250, p[0], name='RENAME CLASS', source=self._partition))
             y += 45
-            
-            self._items.append(_Paragraph_numeric_Field( 15, y, 250, p[0], attribute='leading', name='LEADING' ))
+
+            self._items.append(create_p_field(kookies.Numeric_field, 15, y, 250, 'leading', p[0], after=self._TURNOVER_WITH_RERENDER_P, name='LEADING') )
             y += 30
             self._items.append(_Paragraph_inheritance_menu( 15, y, width=250, p=p[0], attribute='leading', source=self._partition))
 
             y += 15
-            _tc_ = [_Paragraph_INDENT_EXP( 15, y, 175, p[0], name='INDENT' ), 
-                    _Paragraph_enum_Field( 200, y, 65, p[0], attribute='indent_range', name='FOR LINES') ]
+            _tc_ = [_Paragraph_INDENT_EXP( 15, y, 175, p[0], after=self._TURNOVER_WITH_RERENDER_P, name='INDENT' ), 
+                    create_p_field(kookies.Enumerate_field, 200, y, 65, 'indent_range', p[0], after=self._TURNOVER_WITH_RERENDER_P, 
+                            value_acquire = lambda A, p: str(sorted(fonttable.p_table.get_paragraph(p)[A]))[1:-1], 
+                            name='FOR LINES') ]
             self._items.append( _TWO_COLUMN( * _tc_))
             self._items += _tc_
 
@@ -557,8 +496,8 @@ class Properties(_Properties_panel):
             self._items += _tc_
 
             y += 15
-            _tc_ = [_Paragraph_numeric_Field( 15, y, 120, p[0], attribute='margin_left', name='LEFT MARGIN' ), 
-                    _Paragraph_numeric_Field( 145, y, 120, p[0], attribute='margin_right', name='RIGHT MARGIN') ]
+            _tc_ = [create_p_field(kookies.Numeric_field, 15, y, 120, 'margin_left', p[0], after=self._TURNOVER_WITH_RERENDER_P, name='LEFT MARGIN'),
+                    create_p_field(kookies.Numeric_field, 145, y, 120, 'margin_right', p[0], after=self._TURNOVER_WITH_RERENDER_P, name='RIGHT MARGIN')]
             self._items.append( _TWO_COLUMN( * _tc_))
             self._items += _tc_
             y += 45
@@ -568,8 +507,8 @@ class Properties(_Properties_panel):
             self._items += _tc_
 
             y += 15
-            _tc_ = [_Paragraph_numeric_Field( 15, y, 120, p[0], attribute='margin_top', name='TOP MARGIN' ), 
-                    _Paragraph_numeric_Field( 145, y, 120, p[0], attribute='margin_bottom', name='BOTTOM MARGIN') ]
+            _tc_ = [create_p_field(kookies.Numeric_field, 15, y, 120, 'margin_top', p[0], after=self._TURNOVER_WITH_RERENDER_P, name='TOP MARGIN'),
+                    create_p_field(kookies.Numeric_field, 145, y, 120, 'margin_bottom', p[0], after=self._TURNOVER_WITH_RERENDER_P, name='BOTTOM MARGIN')]
             self._items.append( _TWO_COLUMN( * _tc_))
             self._items += _tc_
 
@@ -580,9 +519,21 @@ class Properties(_Properties_panel):
             self._items += _tc_
 
             y += 15
-            self._items.append(_Paragraph_checkbox( 15, y + 15, 100, p[0], attribute='hyphenate', name='HYPHENATE' ))
+            self._items.append(create_p_field(kookies.Checkbox, 15, y + 15, 100, 'hyphenate', p[0], after=self._TURNOVER_WITH_RERENDER_P, 
+                            value_acquire = lambda A, p: fonttable.p_table.get_paragraph(p)[A], 
+                            name='HYPHENATE') )
             y += 30
             self._items.append(_Paragraph_inheritance_menu( 15, y, width=250, p=p[0], attribute='hyphenate', source=self._partition))
+
+            y += 30
+            self._items.append(kookies.Orderable( 15, y, 
+                        list_acquire=lambda: fonts.TAGS[fonts.paragraph_classes[p[0]]['tags']], 
+                        before=un.history.save, after=self.synchronize ))
+            y += 200
+            self._items.append(kookies.Blank_space(15, y, width=250, 
+                    callback=fonts.q_set, 
+                    value_acquire=fonts.q_read, 
+                    params = (p[0],), before=un.history.save, after=self.synchronize, name='TAG NAME'))
 
         elif self._tab == 'page':
             self._items.append(kookies.Integer_field( 15, y, 250, 

@@ -21,21 +21,15 @@ class Button(Base_kookie):
         
         self._add_static_text(x + width/2, self._y_bottom - self._height/2 + 5, string, align=0)
     
-    def focus(self, x):
+    def focus(self, x, y):
         self._active = 1
-    
-    def focus_drag(self, x):
-        pass
     
     def release(self, action=True):
         self._active = None
         if action:
             self._callback( * self._params)
-    
-    def defocus(self):
-        pass
 
-    def hover(self, x):
+    def hover(self, x, y):
         return 1
 
     def draw(self, cr, hover=(None, None)):
@@ -63,31 +57,34 @@ class Button(Base_kookie):
             cr.set_source_rgb(0,0,0)
         cr.show_glyphs(self._texts[0])
 
-class Checkbox(Button):
-    def __init__(self, x, y, width, callback, callback_parameters = (), value_acquire=None, string=''):
+class Checkbox(Base_kookie):
+    def __init__(self, x, y, width, callback, params = (), value_acquire=None, before=lambda: None, after=lambda: None, name=''):
         Base_kookie.__init__(self, x, y, width, 20, font=fonttable.table.get_font(('P', '_interface'), ('label', )) )
-        
-        self._get_value = value_acquire
+
+        self._BEFORE = before
+        self._AFTER = after
+        self._callback = callback
+        self._params = params
+        self._value_acquire = value_acquire
         self._ACQUIRE_REPRESENT()
         self._SYNCHRONIZE = self._ACQUIRE_REPRESENT
-        
-        self._callback = callback
-        self._callback_parameters = callback_parameters
 
         # set hover function equal to press function
         self.is_over_hover = self.is_over
         
-        self._add_static_text(self._x + 20, self._y_bottom - 5, string, align=1)
+        self._add_static_text(self._x + 20, self._y_bottom - 5, name, align=1)
 
     def _ACQUIRE_REPRESENT(self):
-        self._STATE = self._get_value()
+        self._STATE = self._value_acquire( * self._params)
 
-    def focus(self, x):
-        self._callback(not self._STATE, * self._callback_parameters)
+    def focus(self, x, y):
+        self._BEFORE()
+        self._callback(not self._STATE, * self._params)
         self._ACQUIRE_REPRESENT()
+        self._AFTER()
 
-    def release(self, action=True):
-        pass
+    def hover(self, x, y):
+        return 1
 
     def draw(self, cr, hover=(None, None)):
         self._render_fonts(cr)
@@ -136,17 +133,11 @@ class Tabs(Base_kookie):
     def _target(self, x):
         return bisect.bisect(self._x_left, x) - 1
 
-    def focus(self, x):
+    def focus(self, x, y):
         self._active = self._target(x)
         self._callback(self._signals[self._active])
-    
-    def focus_drag(self, x):
-        pass
-    
-    def defocus(self):
-        pass
 
-    def hover(self, x):
+    def hover(self, x, y):
         return self._target(x)
 
     def draw(self, cr, hover=(None, None)):
@@ -201,8 +192,11 @@ class Heading(Base_kookie):
 
 
 class Blank_space(Base_kookie):
-    def __init__(self, x, y, width, callback, value_acquire, params = (), name=''):
+    def __init__(self, x, y, width, callback, value_acquire, params = (), before=lambda: None, after=lambda: None, name=''):
         self.broken = False
+        self._params = params
+        self._BEFORE = before
+        self._AFTER = after
         
         Base_kookie.__init__(self, x, y, width, 28)
 
@@ -210,9 +204,7 @@ class Blank_space(Base_kookie):
         self._value_acquire = value_acquire
         
         self._SYNCHRONIZE()
-        
-        self._params = params
-        
+
         self._domain = lambda k: k
         self._name = name
         
@@ -238,7 +230,7 @@ class Blank_space(Base_kookie):
         self._scroll = 0
 
     def _ACQUIRE_REPRESENT(self):
-        self._VALUE = self._value_acquire()
+        self._VALUE = self._value_acquire( * self._params)
         self._LIST = list(self._VALUE) + [None]
         self._stamp_glyphs(self._LIST)
 
@@ -372,7 +364,7 @@ class Blank_space(Base_kookie):
         return i
 
 
-    def focus(self, x):
+    def focus(self, x, y):
         self._active = True
         
         # clip to edges of visible text
@@ -408,14 +400,16 @@ class Blank_space(Base_kookie):
         self._scroll = 0
         # dump entry
         self._VALUE = self._entry()
-        if self._VALUE != self._PREV_VALUE:            
+        if self._VALUE != self._PREV_VALUE:
+            self._BEFORE()
             self._callback(self._domain(self._VALUE), * self._params)
             self._SYNCHRONIZE()
+            self._AFTER()
         else:
             return False
         return True
 
-    def hover(self, x):
+    def hover(self, x, y):
         return 1
     # drawing
     def _sup_draw(self, cr, hover):
@@ -505,9 +499,9 @@ class Blank_space(Base_kookie):
 
 
 class Numeric_field(Blank_space):
-    def __init__(self, x, y, width, callback, value_acquire, params=(), name=None):
+    def __init__(self, x, y, width, callback, value_acquire, params=(), before=lambda: None, after=lambda: None, name=None):
     
-        Blank_space.__init__(self, x, y, width, callback, value_acquire, params, name)
+        Blank_space.__init__(self, x, y, width, callback, value_acquire, params, before, after, name)
         
         self._digits = lambda k: ''.join([c for c in k if c in '1234567890.-'])
         self._domain = lambda k: float(self._digits(k)) if '.' in k else int(self._digits(k))
@@ -516,16 +510,16 @@ class Numeric_field(Blank_space):
         self._template = self._build_line(self._x, self._y + self.font['fontsize'] + 5, text, self.font, sub_minus=True)
 
 class Integer_field(Numeric_field):
-    def __init__(self, x, y, width, callback, value_acquire, params=(), name=None):
+    def __init__(self, x, y, width, callback, value_acquire, params=(), before=lambda: None, after=lambda: None, name=None):
     
-        Numeric_field.__init__(self, x, y, width, callback, value_acquire, params, name)
+        Numeric_field.__init__(self, x, y, width, callback, value_acquire, params, before, after, name)
 
         self._domain = lambda k: int(float(self._digits(k)))
 
 class Enumerate_field(Blank_space):
-    def __init__(self, x, y, width, callback, value_acquire, params=(), name=None):
+    def __init__(self, x, y, width, callback, value_acquire, params=(), before=lambda: None, after=lambda: None, name=None):
     
-        Blank_space.__init__(self, x, y, width, callback, value_acquire, params, name)
+        Blank_space.__init__(self, x, y, width, callback, value_acquire, params, before, after, name)
 
         self._domain = lambda k: set( int(v) for v in [''.join([c for c in val if c in '1234567890']) for val in k.split(',')] if v )
 
@@ -569,10 +563,7 @@ class Selection_menu(Base_kookie):
         self._menu_callback( * args)
         self._SYNCHRONIZE()
     
-    def release(self, action=True):
-        pass
-    
-    def focus(self, x):
+    def focus(self, x, y):
         menu.menu.create(self._x, self._y_bottom - 5, 200, self._menu_options, self._MENU_PUSH, (), source=self._source )
         self._active = True
         self._dropdown_active = True
@@ -584,7 +575,7 @@ class Selection_menu(Base_kookie):
 
         return False
 
-    def hover(self, x):
+    def hover(self, x, y):
         return 1
     
     def draw(self, cr, hover=(None, None)):
@@ -635,7 +626,7 @@ class Object_menu(Blank_space):
         
         self._source = source
     
-    def focus(self, x):
+    def focus(self, x, y):
         if x < self._x + self._width - 40:
             self._active = True
             self._dropdown_active = False
@@ -653,7 +644,7 @@ class Object_menu(Blank_space):
                 self._dropdown_active = True
                 print('DROPDOWN')
             
-    def hover(self, x):
+    def hover(self, x, y):
         if x < self._x + self._width - 40:
             j = 1
         elif x < self._x + self._width - 20:
@@ -681,4 +672,169 @@ class Object_menu(Blank_space):
             cr.set_source_rgba(0, 0, 0, 0.7)
         cr.rectangle(self._x + self._width - 25 - 8, self._y + 5, 2, 12)
         cr.rectangle(self._x + self._width - 25 - 13, self._y + 5 + 5, 12, 2)
+        cr.fill()
+
+class Orderable(Base_kookie):
+    def __init__(self, x, y, list_acquire, before=lambda: None, after=lambda: None ):
+        self._itemheight = 26
+        self._BEFORE = before
+        self._AFTER = after
+
+        Base_kookie.__init__(self, x, y, 200, 200, font=fonttable.table.get_font(('P', '_interface'), ('strong',) ))
+        
+        self._list_acquire = list_acquire
+
+        # set hover function equal to press function
+        self.is_over_hover = self.is_over
+
+        self._SYNCHRONIZE = self._ACQUIRE_REPRESENT
+        
+        self._SYNCHRONIZE()
+
+    def _ACQUIRE_REPRESENT(self):
+        self._LIST = self._list_acquire()
+        self._texts = []
+        for i, l in enumerate(self._LIST[1:]):
+            self._add_static_text(self._x + 10, self._y + self._itemheight*i + 17, l, align=1)
+    
+    def _move(self, i, j):
+        if 0 < j < len(self._LIST):
+            self._LIST.insert(j, self._LIST.pop(i))
+            self._LIST[0] = j - 1
+    
+    def _add(self):
+        self._LIST.append('{new}')
+    
+    def hover(self, x, y):
+        y -= self._y
+        i = int(y // self._itemheight)
+        if i >= len(self._LIST):
+            i = len(self._LIST) - 2
+        
+        if x > self._x_right - 25:
+            j = 4
+        elif x > self._x_right - 47:
+            j = 3
+        elif x > self._x_right - 69:
+            j = 2
+        else:
+            j = 1
+        return i, j
+    
+    def focus(self, x, y):
+        F, C = self.hover(x, y)
+        if C == 1:
+            self._LIST[0] = F
+            if self._LIST[0] == len(self._LIST) - 1:
+                self._BEFORE()
+                self._add()
+                self._SYNCHRONIZE()
+            self._AFTER()
+        elif C == 2:
+            self._BEFORE()
+            self._move(F + 1, F)
+            self._SYNCHRONIZE()
+            self._AFTER()
+        elif C == 3:
+            self._BEFORE()
+            self._move(F + 1, F + 2)
+            self._SYNCHRONIZE()
+            self._AFTER()
+        elif C == 4:
+            if F < len(self._LIST) - 1:
+                self._BEFORE()
+                del self._LIST[F + 1]
+                self._SYNCHRONIZE()
+                self._AFTER()
+
+    def draw(self, cr, hover=(None, None)):
+        self._render_fonts(cr)
+        
+        cr.set_source_rgba(0, 0, 0, 0.7)
+        cr.set_line_width(2)
+        
+        for i, l in enumerate(self._texts):
+            y1 = self._y + i*self._itemheight
+            
+            if i == self._LIST[0]:
+                cr.set_source_rgb(1, 0.2, 0.6)
+
+                radius = 5
+
+                y2 = y1 + self._itemheight
+                cr.arc(self._x + radius, y1 + radius, radius, 2*(pi/2), 3*(pi/2))
+                cr.arc(self._x_right - radius, y1 + radius, radius, 3*(pi/2), 4*(pi/2))
+                cr.arc(self._x_right - radius, y2 - radius, radius, 0*(pi/2), 1*(pi/2))
+                cr.arc(self._x + radius, y2 - radius, radius, 1*(pi/2), 2*(pi/2))
+                cr.close_path()
+
+                cr.fill()
+                
+                cr.set_source_rgb(1, 1, 1)
+                cr.show_glyphs(l)
+                
+                cr.move_to(self._x_right - 9, y1 + 9)
+                cr.rel_line_to(-8, 8)
+                cr.rel_move_to(0, -8)
+                cr.rel_line_to(8, 8)
+                cr.stroke()
+
+                cr.move_to(self._x_right - 30 - 10, y1 + 10)
+                cr.rel_line_to(5, 5)
+                cr.rel_line_to(5, -5)
+                cr.stroke()
+
+                cr.move_to(self._x_right - 54 - 10, y1 + 15)
+                cr.rel_line_to(5, -5)
+                cr.rel_line_to(5, 5)
+                cr.stroke()
+
+                cr.set_source_rgba(0, 0, 0, 0.7)
+            elif hover[1] is not None and hover[1][0] == i:
+                if hover[1][1] == 1:
+                    cr.set_source_rgb(1, 0.2, 0.6)
+                else:
+                    cr.set_source_rgba(0, 0, 0, 0.7)
+                cr.show_glyphs(l)
+
+                if hover[1][1] == 3:
+                    cr.set_source_rgb(1, 0.2, 0.6)
+                else:
+                    cr.set_source_rgba(0, 0, 0, 0.7)
+                cr.move_to(self._x_right - 30 - 10, y1 + 10)
+                cr.rel_line_to(5, 5)
+                cr.rel_line_to(5, -5)
+                cr.stroke()
+
+                if hover[1][1] == 2:
+                    cr.set_source_rgb(1, 0.2, 0.6)
+                else:
+                    cr.set_source_rgba(0, 0, 0, 0.7)
+                cr.move_to(self._x_right - 54 - 10, y1 + 15)
+                cr.rel_line_to(5, -5)
+                cr.rel_line_to(5, 5)
+                cr.stroke()
+
+                if hover[1][1] == 4:
+                    cr.set_source_rgb(1, 0.2, 0.6)
+                else:
+                    cr.set_source_rgba(0, 0, 0, 0.7)
+                cr.move_to(self._x_right - 9, y1 + 9)
+                cr.rel_line_to(-8, 8)
+                cr.rel_move_to(0, -8)
+                cr.rel_line_to(8, 8)
+                cr.stroke()
+                
+                cr.set_source_rgba(0, 0, 0, 0.7)
+            else:
+                cr.show_glyphs(l)
+
+        
+        if hover[1] is not None and hover[1][0] == len(self._LIST) - 1:
+            cr.set_source_rgb(1, 0.2, 0.6)
+        else:
+            cr.set_source_rgba(0, 0, 0, 0.7)
+        cr.rectangle(self._x + 16, y1 + self._itemheight + 7, 2, 10)
+        cr.rectangle(self._x + 12, y1 + self._itemheight + 11, 10, 2)
+        
         cr.fill()

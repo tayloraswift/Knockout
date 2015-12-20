@@ -208,7 +208,7 @@ class Document_toolbar(object):
         self._items.append(kookies.Button(5, y, 90, 30, callback=lambda: meredith.mipsy.tracts[0].insert(['</p>', ('<p>',  ('IMAGE', '_graph') ) ]), string='Image'))
 
         y += 50
-        self._items.append(kookies.Checkbox(15, y, 80, callback=penclick.page.toggle_dual, value_acquire=lambda: penclick.page.dual, string='Dual'.upper()))
+        self._items.append(kookies.Checkbox(15, y, 80, callback=penclick.page.toggle_dual, value_acquire=lambda: penclick.page.dual, name='Dual'.upper()))
         
         y += 50
         self._items.append(kookies.Selection_menu(5, y, 90, 30, menu_callback=constants.HINTS.set_hint_style, options_acquire=constants.default_hints, value_acquire=constants.HINTS.get_hint_style, source=0))
@@ -229,7 +229,7 @@ class Document_toolbar(object):
 
         try:
             if self._items[inspect_i].is_over(x, y):
-                self._items[inspect_i].focus(x)
+                self._items[inspect_i].focus(x, y)
                 b = inspect_i
 
         except IndexError:
@@ -264,7 +264,7 @@ class Document_toolbar(object):
         inspect_i = bisect.bisect([item.y for item in self._items], y)
         try:
             if self._items[inspect_i].is_over_hover(x, y):
-                self._hover_box_ij = (inspect_i, self._items[inspect_i].hover(x))
+                self._hover_box_ij = (inspect_i, self._items[inspect_i].hover(x, y))
 
         except IndexError:
             # if last index

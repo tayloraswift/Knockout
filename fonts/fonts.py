@@ -11,14 +11,14 @@ def REPLACE(pc):
 def GET():
     return paragraph_classes
 
-def q_read(p):
+def q_read(attribute, p):
     li = TAGS[ paragraph_classes[p]['tags'] ]
-    return li [li[0] + 1]
+    return li [li[0] + 1][attribute]
 
-def q_set(value, p):
+def q_set(value, attribute, p):
     li = TAGS[ paragraph_classes[p]['tags'] ]
     old = li [li[0] + 1]
-    li [li[0] + 1] = value
+    li [li[0] + 1][attribute] = value
 
 def p_get_attribute(attribute, p):
     try:

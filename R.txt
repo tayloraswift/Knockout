@@ -1,6 +1,6 @@
 {'contexts': {'c': 0, 'p': 0},
  'grid': [[], []],
- 'kitty': [{'cursors': (45, 45),
+ 'kitty': [{'cursors': (264, 264),
             'outline': [[[[90, 80, False], [90, 910, False]],
                          [[370, 80, False], [370, 910, False]],
                          0],
@@ -9,12 +9,19 @@
                          0]],
             'text': '<p class="_interface">We begin our story in <strong>New '
                     'York</strong>.</p><p>There once was a girl known by '
-                    'asfasf '
-                    'safasfasfgdgsdgsdh</p><p><em>everyone</em></p><p>and</p><p>no '
-                    'one.</p>'}],
+                    '</p><p><em>everyone</em></p><p>and</p><p>no one. Her '
+                    'heart belonged to someone who couldn’t stay. They loved '
+                    'each other recklessly. They paid the price. She danced to '
+                    'forget him. He drove past her <em>street every night. She '
+                    'made friends and enemies. <strong>She only saw him</em> '
+                    'in his dreams.</strong> Then one day he came back. Timing '
+                    'is a funny thing. But everyone was watching. She lost him '
+                    'but she found herself and somehow that was '
+                    'everything.</p>'}],
  'page': {'dimensions': (765, 990), 'dual': False},
  'styles': {('P', '_interface'): {'fontclasses': (False,
-                                                  {(): '_interface:REGULAR',
+                                                  {'_ACTIVE': (),
+                                                   (): '_interface:REGULAR',
                                                    ('label',): '_interface:LABEL',
                                                    ('strong',): '_interface:STRONG',
                                                    ('title',): '_interface:TITLE'}),
@@ -23,17 +30,21 @@
                                   'margin_bottom': (False, 5),
                                   'tags': '_UI'},
             ('P', 'body'): {'fontclasses': (False,
-                                            {(): 'body:REGULAR',
+                                            {'_ACTIVE': None,
+                                             (): 'body:REGULAR',
                                              ('caption',): '_interface:REGULAR',
                                              ('emphasis',): 'body:ITALIC',
                                              ('emphasis', 'strong'): 'body:BOLDITALIC',
                                              ('strong',): 'body:BOLD'}),
                             'hyphenate': (False, True),
+                            'indent': (False, (0, -1, 2)),
+                            'indent_range': (False, {0}),
                             'leading': (False, 16),
                             'margin_bottom': (False, 8),
                             'tags': 'TEXT'},
             ('P', 'h1'): {'fontclasses': (False,
-                                          {(): 'h1:DISPLAY',
+                                          {'_ACTIVE': (),
+                                           (): 'h1:DISPLAY',
                                            ('emphasis',): 'body:ITALIC',
                                            ('emphasis', 'strong'): 'body:BOLDITALIC',
                                            ('strong',): 'body:BOLD'}),
@@ -41,8 +52,15 @@
                           'leading': (False, 50),
                           'margin_bottom': (False, 10),
                           'tags': 'TEXT'}},
- 'tags': {'TEXT': [3, 'emphasis', 'strong', 'caption', '*SCRIPT'],
-          '_UI': [0, 'title', 'strong', 'label']},
+ 'tags': {'TEXT': [0,
+                   {'exclusive': False, 'name': 'emphasis'},
+                   {'exclusive': False, 'name': 'strong'},
+                   {'exclusive': True, 'name': 'caption'},
+                   {'exclusive': False, 'name': '*SCRIPT'}],
+          '_UI': [2,
+                  {'exclusive': False, 'name': 'title'},
+                  {'exclusive': False, 'name': 'strong'},
+                  {'exclusive': False, 'name': 'label'}]},
  'textures': {'_interface:LABEL': {'fontsize': (False, 11),
                                    'path': (True, '_interface:REGULAR'),
                                    'tracking': (False, 1)},
@@ -77,9 +95,9 @@
                              'path': (False,
                                       '/home/kelvin/.fonts/NYTCheltenham-ExtraLight.otf'),
                              'tracking': (False, 0)}},
- 'view': {'H': 176,
-          'Hc': 350.747314453125,
-          'K': 95,
-          'Kc': 98.7503662109375,
-          'Zoom': 13,
+ 'view': {'H': 283,
+          'Hc': 502.70245361328125,
+          'K': 271,
+          'Kc': 515.5828857421875,
+          'Zoom': 14,
           'mode': 'text'}}

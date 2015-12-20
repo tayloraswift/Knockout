@@ -350,6 +350,11 @@ class _Properties_panel(ui.Cell):
         meredith.mipsy.recalculate_all()
         self.synchronize()
 
+    def _TURNOVER_WITH_RERENDER_F(self):
+        fonttable.table.clear()
+        meredith.mipsy.recalculate_all()
+        self.synchronize()
+
     def render(self, cr, h, k):
         
         # DRAW BACKGROUND
@@ -442,7 +447,13 @@ class Properties(_Properties_panel):
         self._items.append(kookies.Heading( 15, 90, 250, 30, p[0][0] + ':' + p[0][1], upper=True))
         
         if self._tab == 'font':
-        
+            self._items.append(kookies.Unordered( 15, y, 250, 200,
+                        dict_acquire=lambda: fonts.p_get_attribute('fontclasses', p[0])[1], 
+                        protect = set(((),)),
+                        new = lambda L: (('{new}',), None),
+                        display = lambda l: ', '.join(l) if l else '{none}',
+                        before=un.history.save, after=self.synchronize, after_delete=self._TURNOVER_WITH_RERENDER_F))
+            """      
             for key, item in sorted(fonts.get_fontclasses(p[0]).items()):
                 if key:
                     classname = 'Class: ' + ', '.join(key)
@@ -472,7 +483,9 @@ class Properties(_Properties_panel):
                     y += 30
                     self._items.append(_Inheritance_selection_menu( 15, y, width=250, p=p[0], f=key, attribute='tracking', source=self._partition))
                     y += 30
-                        
+
+            """
+                 
         elif self._tab == 'paragraph':
             self._items.append(_Paragraph_style_menu( 15, y, 250, p[0], name='RENAME CLASS', source=self._partition))
             y += 45
@@ -526,14 +539,23 @@ class Properties(_Properties_panel):
             self._items.append(_Paragraph_inheritance_menu( 15, y, width=250, p=p[0], attribute='hyphenate', source=self._partition))
 
             y += 30
-            self._items.append(kookies.Orderable( 15, y, 
+            self._items.append(kookies.Orderable( 15, y, 200, 180,
                         list_acquire=lambda: fonts.TAGS[fonts.paragraph_classes[p[0]]['tags']], 
+                        new = lambda L: {'name': '{new}', 'exclusive': 'False'},
+                        display = lambda l: l['name'],
                         before=un.history.save, after=self.synchronize ))
-            y += 200
+            y += 180
             self._items.append(kookies.Blank_space(15, y, width=250, 
                     callback=fonts.q_set, 
                     value_acquire=fonts.q_read, 
-                    params = (p[0],), before=un.history.save, after=self.synchronize, name='TAG NAME'))
+                    params = ('name', p[0]), before=un.history.save, after=self.synchronize, name='TAG NAME'))
+
+            y += 45
+            self._items.append(kookies.Checkbox( 15, y + 15, 100, callback=fonts.q_set, 
+                            value_acquire = fonts.q_read, params = ('exclusive', p[0]),
+                            before = un.history.save,
+                            after = self._TURNOVER_WITH_RERENDER_P,
+                            name = 'EXCLUSIVE') )
 
         elif self._tab == 'page':
             self._items.append(kookies.Integer_field( 15, y, 250, 

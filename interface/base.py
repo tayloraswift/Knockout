@@ -67,7 +67,19 @@ class Base_kookie(object):
     
     def is_over_hover(self, x, y):
         return False
-    
+
+
+    def focus(self, x):
+        pass
+    def focus_drag(self, x):
+        pass
+    def release(self, action):
+        pass
+    def defocus(self):
+        pass
+    def hover(self, x):
+        pass
+
     
     def type_box(self, name, char):
         pass

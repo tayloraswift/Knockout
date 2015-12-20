@@ -675,12 +675,14 @@ class Object_menu(Blank_space):
         cr.fill()
 
 class Orderable(Base_kookie):
-    def __init__(self, x, y, list_acquire, before=lambda: None, after=lambda: None ):
+    def __init__(self, x, y, width, height, list_acquire, new, display=lambda: None, before=lambda: None, after=lambda: None ):
         self._itemheight = 26
+        self._new = new
+        self._display = display
         self._BEFORE = before
         self._AFTER = after
 
-        Base_kookie.__init__(self, x, y, 200, 200, font=fonttable.table.get_font(('P', '_interface'), ('strong',) ))
+        Base_kookie.__init__(self, x, y, width, height, font=fonttable.table.get_font(('P', '_interface'), ('strong',) ))
         
         self._list_acquire = list_acquire
 
@@ -695,7 +697,7 @@ class Orderable(Base_kookie):
         self._LIST = self._list_acquire()
         self._texts = []
         for i, l in enumerate(self._LIST[1:]):
-            self._add_static_text(self._x + 10, self._y + self._itemheight*i + 17, l, align=1)
+            self._add_static_text(self._x + 10, self._y + self._itemheight*i + 17, self._display(l), align=1)
     
     def _move(self, i, j):
         if 0 < j < len(self._LIST):
@@ -703,7 +705,8 @@ class Orderable(Base_kookie):
             self._LIST[0] = j - 1
     
     def _add(self):
-        self._LIST.append('{new}')
+        self._LIST.append(self._new(self._LIST))
+        self._LIST[0] = len(self._LIST) - 2
     
     def hover(self, x, y):
         y -= self._y
@@ -723,29 +726,36 @@ class Orderable(Base_kookie):
     
     def focus(self, x, y):
         F, C = self.hover(x, y)
-        if C == 1:
-            self._LIST[0] = F
-            if self._LIST[0] == len(self._LIST) - 1:
+
+        if F == len(self._LIST) - 1:
+            self._BEFORE()
+            self._add()
+            self._SYNCHRONIZE()
+            self._AFTER()
+        else:
+            if C == 1:
+                self._LIST[0] = F
+
+            elif C == 2:
                 self._BEFORE()
-                self._add()
+                self._move(F + 1, F)
                 self._SYNCHRONIZE()
-            self._AFTER()
-        elif C == 2:
-            self._BEFORE()
-            self._move(F + 1, F)
-            self._SYNCHRONIZE()
-            self._AFTER()
-        elif C == 3:
-            self._BEFORE()
-            self._move(F + 1, F + 2)
-            self._SYNCHRONIZE()
-            self._AFTER()
-        elif C == 4:
-            if F < len(self._LIST) - 1:
+
+            elif C == 3:
+                self._BEFORE()
+                self._move(F + 1, F + 2)
+                self._SYNCHRONIZE()
+
+            elif C == 4:
                 self._BEFORE()
                 del self._LIST[F + 1]
+                
+                if self._LIST[0] >= len(self._LIST) - 1:
+                    self._LIST[0] = len(self._LIST) - 2
+                
                 self._SYNCHRONIZE()
-                self._AFTER()
+            
+            self._AFTER()
 
     def draw(self, cr, hover=(None, None)):
         self._render_fonts(cr)
@@ -831,6 +841,145 @@ class Orderable(Base_kookie):
 
         
         if hover[1] is not None and hover[1][0] == len(self._LIST) - 1:
+            cr.set_source_rgb(1, 0.2, 0.6)
+        else:
+            cr.set_source_rgba(0, 0, 0, 0.7)
+        cr.rectangle(self._x + 16, y1 + self._itemheight + 7, 2, 10)
+        cr.rectangle(self._x + 12, y1 + self._itemheight + 11, 10, 2)
+        
+        cr.fill()
+
+class Unordered(Base_kookie):
+    def __init__(self, x, y, width, height, dict_acquire, protect, new, display=lambda: None, before=lambda: None, after=lambda: None, after_delete=None ):
+        self._itemheight = 26
+        self._protect = protect
+        self._new = new
+        self._display = display
+        self._BEFORE = before
+        self._AFTER = after
+        if after_delete is None:
+            self._AFTER_DEL = after
+        else:
+            self._AFTER_DEL = after_delete
+
+        Base_kookie.__init__(self, x, y, width, height, font=fonttable.table.get_font(('P', '_interface'), ('strong',) ))
+        
+        self._dict_acquire = dict_acquire
+
+        # set hover function equal to press function
+        self.is_over_hover = self.is_over
+
+        self._SYNCHRONIZE = self._ACQUIRE_REPRESENT
+        self._SYNCHRONIZE()
+
+    def _ACQUIRE_REPRESENT(self):
+        self._DICT = self._dict_acquire()
+        self._map = list(self._DICT.keys())
+        self._map.remove('_ACTIVE')
+        self._map.sort()
+        
+        self._texts = []
+        for i, l in enumerate(self._map):
+            self._add_static_text(self._x + 10, self._y + self._itemheight*i + 17, self._display(l), align=1)
+    
+    def _add(self):
+        key, v = self._new(self._DICT)
+        self._DICT[key] = v
+        self._DICT['_ACTIVE'] = key
+    
+    def hover(self, x, y):
+        y -= self._y
+        i = int(y // self._itemheight)
+        if i >= len(self._DICT):
+            i = len(self._DICT) - 2
+        
+        if x > self._x_right - 25:
+            j = 4
+        else:
+            j = 1
+        return i, j
+    
+    def focus(self, x, y):
+        F, C = self.hover(x, y)
+
+        if F == len(self._DICT) - 1:
+            self._BEFORE()
+            self._add()
+            self._SYNCHRONIZE()
+            self._AFTER()
+        else:
+            key = self._map[F]
+            if C == 1 or key in self._protect:
+                self._DICT['_ACTIVE'] = key
+                self._AFTER()
+
+            elif C == 4:
+                self._BEFORE()
+                del self._DICT[key]
+                self._DICT['_ACTIVE'] = None
+                
+                self._SYNCHRONIZE()
+                self._AFTER_DEL()
+
+    def draw(self, cr, hover=(None, None)):
+        self._render_fonts(cr)
+        
+        cr.set_source_rgba(0, 0, 0, 0.7)
+        cr.set_line_width(2)
+        
+        for i, l in enumerate(self._texts):
+            y1 = self._y + i*self._itemheight
+            
+            key = self._map[i]
+            if key == self._DICT['_ACTIVE']:
+                cr.set_source_rgb(1, 0.2, 0.6)
+
+                radius = 5
+
+                y2 = y1 + self._itemheight
+                cr.arc(self._x + radius, y1 + radius, radius, 2*(pi/2), 3*(pi/2))
+                cr.arc(self._x_right - radius, y1 + radius, radius, 3*(pi/2), 4*(pi/2))
+                cr.arc(self._x_right - radius, y2 - radius, radius, 0*(pi/2), 1*(pi/2))
+                cr.arc(self._x + radius, y2 - radius, radius, 1*(pi/2), 2*(pi/2))
+                cr.close_path()
+
+                cr.fill()
+                
+                cr.set_source_rgb(1, 1, 1)
+                cr.show_glyphs(l)
+                
+                if key not in self._protect:
+                    cr.move_to(self._x_right - 9, y1 + 9)
+                    cr.rel_line_to(-8, 8)
+                    cr.rel_move_to(0, -8)
+                    cr.rel_line_to(8, 8)
+                    cr.stroke()
+
+                cr.set_source_rgba(0, 0, 0, 0.7)
+            elif hover[1] is not None and hover[1][0] == i:
+                if hover[1][1] == 1:
+                    cr.set_source_rgb(1, 0.2, 0.6)
+                else:
+                    cr.set_source_rgba(0, 0, 0, 0.7)
+                cr.show_glyphs(l)
+
+                if key not in self._protect:
+                    if hover[1][1] == 4:
+                        cr.set_source_rgb(1, 0.2, 0.6)
+                    else:
+                        cr.set_source_rgba(0, 0, 0, 0.7)
+                    cr.move_to(self._x_right - 9, y1 + 9)
+                    cr.rel_line_to(-8, 8)
+                    cr.rel_move_to(0, -8)
+                    cr.rel_line_to(8, 8)
+                    cr.stroke()
+                
+                cr.set_source_rgba(0, 0, 0, 0.7)
+            else:
+                cr.show_glyphs(l)
+
+        
+        if hover[1] is not None and hover[1][0] == len(self._DICT) - 1:
             cr.set_source_rgb(1, 0.2, 0.6)
         else:
             cr.set_source_rgba(0, 0, 0, 0.7)

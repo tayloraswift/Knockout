@@ -1,6 +1,6 @@
 from copy import deepcopy
 
-from fonts.fonts import GET, REPLACE
+from fonts import fonts
 
 from model.meredith import mipsy
 from model import penclick
@@ -22,7 +22,7 @@ class UN(object):
         page_xy = (penclick.page.WIDTH, penclick.page.HEIGHT)
         if len(self._history) > self._i:
             del self._history[self._i:]
-        self._history.append({'kitty': kitty, 'styles': deepcopy(GET()), 'page': page_xy})
+        self._history.append({'kitty': kitty, 'styles': deepcopy(fonts.paragraph_classes), 'page': page_xy})
         self._i = len(self._history)
     
     def pop(self):
@@ -30,7 +30,7 @@ class UN(object):
         self._i = len(self._history)
         
     def _restore(self, i):
-        REPLACE(self._history[i]['styles'])
+        fonts.paragraph_classes = self._history[i]['styles']
         penclick.page.WIDTH, penclick.page.HEIGHT = self._history[i]['page']
 
         for t in range(len(mipsy.tracts)):

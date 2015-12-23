@@ -80,7 +80,7 @@ def load(name):
     un.history.save()
 
 def _r_rename_p(old, new):
-    paragraph_classes = fonts.GET()
+    paragraph_classes = fonts.paragraph_classes
     for k in paragraph_classes:
         # travel through fontclasses
         if not paragraph_classes[k]['fontclasses'][0]:

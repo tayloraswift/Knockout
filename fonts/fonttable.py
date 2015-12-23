@@ -46,15 +46,15 @@ class _Font_table(object):
     def __init__(self):
         self._table = {}
 
-    def get_font(self, p, f):
+    def get_font(self, f):
 
-        if (p, f) not in self._table:
+        if f not in self._table:
 
             properties = {}
-            
-            properties['path'] = fonts.f_get_attribute('path', p, f)[1]
-            properties['fontsize'] = fonts.f_get_attribute('fontsize', p, f)[1]
-            properties['tracking'] = fonts.f_get_attribute('tracking', p, f)[1]
+
+            properties['path'] = fonts.f_get_attribute('path', f)[1]
+            properties['fontsize'] = fonts.f_get_attribute('fontsize', f)[1]
+            properties['tracking'] = fonts.f_get_attribute('tracking', f)[1]
             
             properties['path_valid'] = True
             
@@ -63,15 +63,15 @@ class _Font_table(object):
                 properties['fontmetrics'] = _FFace(properties['path'])
                 properties['font'] = _get_cairo_font(properties['path'])
             except freetype.ft_errors.FT_Exception:
-                pth = fonts.f_get_attribute('path', ('P', '_interface'), () )[1]
+                pth = fonts.f_get_attribute('path', '_interface:REGULAR')[1]
                 properties['fontmetrics'] = _FFace(pth)
                 properties['font'] = _get_cairo_font(pth)
                 
                 properties['path_valid'] = False
             
-            self._table[(p, f)] = properties
+            self._table[f] = properties
     
-        return self._table[(p, f)]
+        return self._table[f]
 
     def clear(self):
         self._table = {}
@@ -86,6 +86,7 @@ class _Paragraph_table(object):
 
             properties = {}
             
+            properties['fontclasses'] = fonts.p_get_attribute('fontclasses', p)[1]
             properties['leading'] = fonts.p_get_attribute('leading', p)[1]
             properties['margin_top'] = fonts.p_get_attribute('margin_top', p)[1]
             properties['margin_bottom'] = fonts.p_get_attribute('margin_bottom', p)[1]
@@ -107,21 +108,6 @@ class _Paragraph_table(object):
             else:
                 properties['indent'] = cc
 
-            
-            self._table[p] = properties
-    
-        return self._table[p]
-
-    def get_image_class(self, p):
-
-        if p not in self._table:
-
-            properties = {}
-
-            properties['margin_top'] = fonts.p_get_attribute('margin_top', p)[1]
-            properties['margin_bottom'] = fonts.p_get_attribute('margin_bottom', p)[1]
-            properties['margin_left'] = fonts.p_get_attribute('margin_left', p)[1]
-            properties['margin_right'] = fonts.p_get_attribute('margin_right', p)[1]
             
             self._table[p] = properties
     

@@ -117,8 +117,8 @@ class Meredith(object):
     def at_absolute(self, i):
         return character(self.tracts[0].text[i])
     
-    def glyph_at(self):
-        return self.tracts[0].text_index_location(self.tracts[0].cursor.cursor)
+    def paragraph_at(self):
+        return self.tracts[0].pp_at(self.tracts[0].cursor.cursor)
             
     def match_cursors(self):
         self.tracts[0].select.cursor = self.tracts[0].cursor.cursor

@@ -1,5 +1,5 @@
 import bisect
-
+from copy import deepcopy
 from math import pi
 
 from fonts import fonttable
@@ -10,7 +10,7 @@ from interface import menu
 
 class Button(Base_kookie):
     def __init__(self, x, y, width, height, callback=None, string='', params=() ):
-        Base_kookie.__init__(self, x, y, width, height, font=fonttable.table.get_font(('P', '_interface'), ('strong',) ))
+        Base_kookie.__init__(self, x, y, width, height, font=fonttable.table.get_font('_interface:STRONG'))
         
         self._callback = callback
         self._params = params
@@ -59,7 +59,7 @@ class Button(Base_kookie):
 
 class Checkbox(Base_kookie):
     def __init__(self, x, y, width, callback, params = (), value_acquire=None, before=lambda: None, after=lambda: None, name=''):
-        Base_kookie.__init__(self, x, y, width, 20, font=fonttable.table.get_font(('P', '_interface'), ('label', )) )
+        Base_kookie.__init__(self, x, y, width, 20, font=fonttable.table.get_font('_interface:LABEL'))
 
         self._BEFORE = before
         self._AFTER = after
@@ -108,7 +108,7 @@ class Checkbox(Base_kookie):
 class Tabs(Base_kookie):
     def __init__(self, x, y, width, height, default=0, callback=None, signals=() ):
 
-        Base_kookie.__init__(self, x, y, width, height, font=fonttable.table.get_font(('P', '_interface'), ('strong',) ))
+        Base_kookie.__init__(self, x, y, width, height, font=fonttable.table.get_font('_interface:STRONG'))
         
         self._signals, self._strings = zip( * signals )
         
@@ -167,7 +167,7 @@ class Tabs(Base_kookie):
             cr.show_glyphs(self._texts[i])
 
 class Heading(Base_kookie):
-    def __init__(self, x, y, width, height, text, font=fonttable.table.get_font(('P', '_interface'), ('title',) ), fontsize=None, upper=False):
+    def __init__(self, x, y, width, height, text, font=fonttable.table.get_font('_interface:TITLE'), fontsize=None, upper=False):
         
         Base_kookie.__init__(self, x, y, width, height)
         
@@ -203,6 +203,9 @@ class Blank_space(Base_kookie):
         self._callback = callback
         self._value_acquire = value_acquire
         
+        self._set_text_bounds()
+        self._text_width = self._text_right - self._text_left
+        
         self._SYNCHRONIZE()
 
         self._domain = lambda k: k
@@ -215,7 +218,7 @@ class Blank_space(Base_kookie):
         self._j = self._i
         
         # build static texts
-        self._add_static_text(self._x, self._y + 40, self._name, font=fonttable.table.get_font(('P', '_interface'), ('label', )) , upper=True)
+        self._add_static_text(self._x, self._y + 40, self._name, font=fonttable.table.get_font('_interface:LABEL') , upper=True)
         
         self._resting_bar_color = (0, 0, 0, 0.4)
         self._active_bar_color = (0, 0, 0, 0.8)
@@ -228,6 +231,10 @@ class Blank_space(Base_kookie):
         self._broken_active_text_color = (1, 0.15, 0.2, 1)
         
         self._scroll = 0
+    
+    def _set_text_bounds(self):
+        self._text_left = self._x
+        self._text_right = self._x_right
 
     def _ACQUIRE_REPRESENT(self):
         self._VALUE = self._value_acquire( * self._params)
@@ -239,7 +246,7 @@ class Blank_space(Base_kookie):
         self._PREV_VALUE = self._VALUE
 
     def _stamp_glyphs(self, glyphs):
-        self._template = self._build_line(self._x, self._y + self.font['fontsize'] + 5, glyphs, self.font)
+        self._template = self._build_line(self._text_left, self._y + self.font['fontsize'] + 5, glyphs, self.font)
         
     def is_over(self, x, y):
         return self._y <= y <= self._y_bottom and self._x - 10 <= x <= self._x_right + 10
@@ -249,9 +256,9 @@ class Blank_space(Base_kookie):
     
     # scrolling function
     def _center_j(self):
-        position = self._template[self._j][1] - self._x
-        if position + self._scroll > self._width:
-            self._scroll = -(position - self._width)
+        position = self._template[self._j][1] - self._text_left
+        if position + self._scroll > self._text_width:
+            self._scroll = -(position - self._text_width)
         elif position + self._scroll < 0:
             self._scroll = -(position)
 
@@ -363,19 +370,18 @@ class Blank_space(Base_kookie):
             i -= 1
         return i
 
-
     def focus(self, x, y):
         self._active = True
         
         # clip to edges of visible text
-        if x < self._x:
-            self._i = self._target(self._x)
+        if x < self._text_left:
+            self._i = self._target(self._text_left)
             # inch left or right
-            if self._template[self._i][1] > self._x:
+            if self._template[self._i][1] > self._text_left:
                 self._i -= 1
-        elif x > self._x + self._width:
-            self._i = self._target(self._x + self._width)
-            if self._template[self._i][1] < self._x + self._width and self._i < len(self._template) - 1:
+        elif x > self._text_right:
+            self._i = self._target(self._text_right)
+            if self._template[self._i][1] < self._text_right and self._i < len(self._template) - 1:
                 self._i += 1
         else:
             self._i = self._target(x)
@@ -439,7 +445,7 @@ class Blank_space(Base_kookie):
             
         fontsize = round(self.font['fontsize'])
         
-        cr.rectangle(self._x - 1, self._y, self._width + 2, self._height)
+        cr.rectangle(self._text_left - 1, self._y, self._text_width + 2, self._height)
         cr.clip()
         
         if self._active:
@@ -494,7 +500,7 @@ class Blank_space(Base_kookie):
             cr.set_source_rgba( * active_bar_color)
         else:
             cr.set_source_rgba( * resting_bar_color)
-        cr.rectangle(self._x, self._y + fontsize + 10, self._width, 1)
+        cr.rectangle(self._text_left, self._y + fontsize + 10, self._text_width, 1)
         cr.fill()
 
 
@@ -507,11 +513,10 @@ class Numeric_field(Blank_space):
         self._domain = lambda k: float(self._digits(k)) if '.' in k else int(self._digits(k))
 
     def _stamp_glyphs(self, text):
-        self._template = self._build_line(self._x, self._y + self.font['fontsize'] + 5, text, self.font, sub_minus=True)
+        self._template = self._build_line(self._text_left, self._y + self.font['fontsize'] + 5, text, self.font, sub_minus=True)
 
 class Integer_field(Numeric_field):
     def __init__(self, x, y, width, callback, value_acquire, params=(), before=lambda: None, after=lambda: None, name=None):
-    
         Numeric_field.__init__(self, x, y, width, callback, value_acquire, params, before, after, name)
 
         self._domain = lambda k: int(float(self._digits(k)))
@@ -524,13 +529,13 @@ class Enumerate_field(Blank_space):
         self._domain = lambda k: set( int(v) for v in [''.join([c for c in val if c in '1234567890']) for val in k.split(',')] if v )
 
     def _stamp_glyphs(self, text):
-        self._template = self._build_line(self._x, self._y + self.font['fontsize'] + 5, text, self.font, sub_minus=True)
+        self._template = self._build_line(self._text_left, self._y + self.font['fontsize'] + 5, text, self.font, sub_minus=True)
 
         
 #########
 class Selection_menu(Base_kookie):
     def __init__(self, x, y, width, height, menu_callback, options_acquire, value_acquire, source):
-        Base_kookie.__init__(self, x, y, width, height, font=fonttable.table.get_font(('P', '_interface'), ('strong',) ))
+        Base_kookie.__init__(self, x, y, width, height, font=fonttable.table.get_font('_interface:STRONG'))
         
         self._get_value = value_acquire
         self._get_options = options_acquire
@@ -615,19 +620,79 @@ class Double_selection_menu(Selection_menu):
         self._SYNCHRONIZE()
 
 class Object_menu(Blank_space):
-    def __init__(self, x, y, width, callback, addition_callback, menu_callback, menu_options, value_acquire, name=None, source=0):
-        Blank_space.__init__(self, x, y, width, callback, value_acquire, (), name)
+    def __init__(self, x, y, width, rename, value_acquire, value_push, objects_acquire, params = (), before=lambda: None, after=lambda: None, name='', source=0):
 
-        self._addition_callback = addition_callback
-        self._menu_callback = menu_callback
-        self._menu_options = menu_options
+        self._objects_acquire = objects_acquire
+        self._value_push = value_push
+
+        Blank_space.__init__(self, x, y, width, rename, value_acquire, params, before, after, name)
+
         self.broken = False
         self._dropdown_active = False
         
         self._source = source
-    
+
+    def _set_text_bounds(self):
+        self._text_left = self._x + 30
+        self._text_right = self._x_right
+
+    def _ACQUIRE_REPRESENT(self):
+        # scan objects
+        self._objects = self._objects_acquire()
+        object_keys = sorted(self._objects.keys())
+        self._menu_options = tuple( (key, str(key)) for key in object_keys )
+        
+        KEY = self._value_acquire( * self._params)
+
+        self._OLD_KEY = KEY
+        if isinstance(KEY, tuple):
+            self._PREFIX = KEY[:-1]
+            self._VALUE = KEY[-1]
+        else:
+            self._PREFIX = ()
+            self._VALUE = KEY
+
+        if KEY is None:
+            self._VALUE = 'None'
+        self._LIST = list(self._VALUE) + [None]
+        self._stamp_glyphs(self._LIST)
+        
+    def _new(self):
+        if self._PREFIX:
+            if len(self._VALUE) > 3 and self._VALUE[-4] == '.' and len([c for c in self._VALUE[-3:] if c in '1234567890']) == 3:
+                serialnumber = int(self._VALUE[-3:])
+                while True:
+                    serialnumber += 1
+                    name = self._VALUE[:-3] + str(serialnumber).zfill(3)
+                    
+                    KEY = self._PREFIX + (name,)
+                    if KEY not in self._objects:
+                        break
+            else:
+                KEY = self._PREFIX + ( self._VALUE + '.001', )
+            
+            self._objects[KEY] = deepcopy(self._objects[ self._PREFIX + (self._VALUE,) ])
+        
+        else:
+            if len(self._VALUE) > 3 and self._VALUE[-4] == '.' and len([c for c in self._VALUE[-3:] if c in '1234567890']) == 3:
+                    serialnumber = int(self._VALUE[-3:])
+                    while True:
+                        serialnumber += 1
+                        name = self._VALUE[:-3] + str(serialnumber).zfill(3)
+                        
+                        KEY = name
+                        if KEY not in self._objects:
+                            break
+            else:
+                KEY = self._VALUE + '.001'
+            
+            self._objects[KEY] = deepcopy(self._objects[self._VALUE])
+        
+        return KEY
+
     def focus(self, x, y):
-        if x < self._x + self._width - 40:
+        J = self.hover(x, y)
+        if J == 1:
             self._active = True
             self._dropdown_active = False
             self._i = self._target(x)
@@ -636,43 +701,86 @@ class Object_menu(Blank_space):
             self._center_j()
         else:
             self.defocus()
-            if x < self._x + self._width - 20:
-                self._addition_callback()
-            else:
-                menu.menu.create(self._x_right - 170, self._y_bottom - 5, 170, self._menu_options, self._menu_callback, (), source=self._source )
+            if J == 3:
+                KEY = self._new()
+                self._value_push(KEY, * self._params)
+            elif J == 2:
+                menu.menu.create(self._x, self._y_bottom - 5, 200, self._menu_options, lambda *args: (self._BEFORE(), self._value_push(*args), self._AFTER()), self._params, source=self._source )
                 self._active = True
                 self._dropdown_active = True
                 print('DROPDOWN')
+            elif J == 4:
+                # unlink
+                self._value_push(None, * self._params)
             
-    def hover(self, x, y):
-        if x < self._x + self._width - 40:
-            j = 1
-        elif x < self._x + self._width - 20:
-            j = 2
+            self._AFTER()
+        
+    def defocus(self):
+        self._active = None
+        self._dropdown_active = False
+        self._scroll = 0
+        # dump entry
+        self._VALUE = self._entry()
+        if self._VALUE != self._PREV_VALUE:
+            self._BEFORE()
+            
+            if self._PREFIX:
+                KEY = self._PREFIX + (self._VALUE,)
+            else:
+                KEY = self._VALUE
+            self._objects[KEY] = self._objects.pop(self._OLD_KEY)
+            self._callback(self._OLD_KEY, KEY, * self._params)
+            self._AFTER()
+
         else:
+            return False
+        return True
+    
+    def hover(self, x, y):
+        if x < self._x + 30:
+            j = 2
+        elif x < self._x_right - 52:
+            j = 1
+        elif x < self._x_right - 26:
             j = 3
+        else:
+            j = 4
         return j
         
     def _sup_draw(self, cr, hover=(None, None)):
+        cr.set_line_width(2)
         if self._dropdown_active:
             cr.set_source_rgb(1, 0.2, 0.6)
-        elif hover[1] == 3:
+        elif hover[1] == 2:
             cr.set_source_rgb(1, 0.2, 0.6)
         else:
             cr.set_source_rgba(0, 0, 0, 0.7)
-        cr.move_to(self._x + self._width - 5, self._y + 8)
-        cr.rel_line_to(8, 0)
-        cr.rel_line_to(-4, 4*1.41)
-        cr.close_path()
+        
+        # DROPDOWN
+        cr.move_to(self._x + 8, self._y + 10)
+        cr.rel_line_to(5, 5)
+        cr.rel_line_to(5, -5)
+        cr.stroke()
+
+        # +
+        if hover[1] == 3:
+            cr.set_source_rgb(1, 0.2, 0.6)
+        else:
+            cr.set_source_rgba(0, 0, 0, 0.7)
+        cr.rectangle(self._x_right - 40, self._y + 7, 2, 10)
+        cr.rectangle(self._x_right - 44, self._y + 11, 10, 2)
         cr.fill()
 
-        if hover[1] == 2:
+        # x
+        if hover[1] == 4:
             cr.set_source_rgb(1, 0.2, 0.6)
         else:
             cr.set_source_rgba(0, 0, 0, 0.7)
-        cr.rectangle(self._x + self._width - 25 - 8, self._y + 5, 2, 12)
-        cr.rectangle(self._x + self._width - 25 - 13, self._y + 5 + 5, 12, 2)
-        cr.fill()
+        cr.move_to(self._x_right - 9, self._y + 8)
+        cr.rel_line_to(-8, 8)
+        cr.rel_move_to(0, -8)
+        cr.rel_line_to(8, 8)
+        cr.stroke()
 
 class Orderable(Base_kookie):
     def __init__(self, x, y, width, height, list_acquire, new, display=lambda: None, before=lambda: None, after=lambda: None ):
@@ -682,7 +790,7 @@ class Orderable(Base_kookie):
         self._BEFORE = before
         self._AFTER = after
 
-        Base_kookie.__init__(self, x, y, width, height, font=fonttable.table.get_font(('P', '_interface'), ('strong',) ))
+        Base_kookie.__init__(self, x, y, width, height, font=fonttable.table.get_font('_interface:STRONG'))
         
         self._list_acquire = list_acquire
 
@@ -862,7 +970,7 @@ class Unordered(Base_kookie):
         else:
             self._AFTER_DEL = after_delete
 
-        Base_kookie.__init__(self, x, y, width, height, font=fonttable.table.get_font(('P', '_interface'), ('strong',) ))
+        Base_kookie.__init__(self, x, y, width, height, font=fonttable.table.get_font('_interface:STRONG'))
         
         self._dict_acquire = dict_acquire
 
@@ -916,15 +1024,13 @@ class Unordered(Base_kookie):
             elif C == 4:
                 self._BEFORE()
                 del self._DICT[key]
-                self._DICT['_ACTIVE'] = None
+                self._DICT['_ACTIVE'] = self._map[0]
                 
                 self._SYNCHRONIZE()
                 self._AFTER_DEL()
 
     def draw(self, cr, hover=(None, None)):
         self._render_fonts(cr)
-        
-        cr.set_source_rgba(0, 0, 0, 0.7)
         cr.set_line_width(2)
         
         for i, l in enumerate(self._texts):
@@ -946,7 +1052,6 @@ class Unordered(Base_kookie):
                 cr.fill()
                 
                 cr.set_source_rgb(1, 1, 1)
-                cr.show_glyphs(l)
                 
                 if key not in self._protect:
                     cr.move_to(self._x_right - 9, y1 + 9)
@@ -955,14 +1060,7 @@ class Unordered(Base_kookie):
                     cr.rel_line_to(8, 8)
                     cr.stroke()
 
-                cr.set_source_rgba(0, 0, 0, 0.7)
             elif hover[1] is not None and hover[1][0] == i:
-                if hover[1][1] == 1:
-                    cr.set_source_rgb(1, 0.2, 0.6)
-                else:
-                    cr.set_source_rgba(0, 0, 0, 0.7)
-                cr.show_glyphs(l)
-
                 if key not in self._protect:
                     if hover[1][1] == 4:
                         cr.set_source_rgb(1, 0.2, 0.6)
@@ -973,10 +1071,15 @@ class Unordered(Base_kookie):
                     cr.rel_move_to(0, -8)
                     cr.rel_line_to(8, 8)
                     cr.stroke()
-                
-                cr.set_source_rgba(0, 0, 0, 0.7)
+
+                if hover[1][1] == 1:
+                    cr.set_source_rgb(1, 0.2, 0.6)
+                else:
+                    cr.set_source_rgba(0, 0, 0, 0.7)
+
             else:
-                cr.show_glyphs(l)
+                cr.set_source_rgba(0, 0, 0, 0.7)
+            cr.show_glyphs(l)
 
         
         if hover[1] is not None and hover[1][0] == len(self._DICT) - 1:
@@ -987,3 +1090,91 @@ class Unordered(Base_kookie):
         cr.rectangle(self._x + 12, y1 + self._itemheight + 11, 10, 2)
         
         cr.fill()
+
+class Binary_table(Base_kookie):
+    def __init__(self, x, y, width, height, cellsize, callback, states_acquire, params = (), before=lambda: None, after=lambda: None):
+        self._BEFORE = before
+        self._AFTER = after
+        self._callback = callback
+        self._params = params
+        self._cellwidth, self._cellheight = cellsize
+
+        Base_kookie.__init__(self, x, y, width, height, font=fonttable.table.get_font('_interface:STRONG'))
+        
+        self._per_row = ( self._width // self._cellwidth )
+        self._states_acquire = states_acquire
+
+        # set hover function equal to press function
+        self.is_over_hover = self.is_over
+
+        self._SYNCHRONIZE = self._ACQUIRE_REPRESENT
+        self._SYNCHRONIZE()
+
+    def _ACQUIRE_REPRESENT(self):
+        self._STATES, self._NAMES = zip( * self._states_acquire( * self._params))
+        self._STATES = list(self._STATES)
+        self._construct_table()
+
+    def _construct_table(self):
+        self._texts = []
+        self._cells = []
+        x = self._x
+        y = self._y
+        mp = self._cellwidth/2
+        for name in self._NAMES:
+            if x + self._cellwidth > self._x_right:
+                x = self._x
+                y += self._cellheight
+            
+            self._add_static_text(x + mp, y + 17, name, align=0)
+            self._cells.append((x, y, self._cellwidth, self._cellheight))
+            
+            x += self._cellwidth
+
+    def hover(self, x, y):
+        y -= self._y
+        x -= self._x
+        i = (y // self._cellheight) * self._per_row
+        ij = x // self._cellwidth
+        if ij >= self._per_row:
+            ij = self._per_row - 1
+        i = int(i + ij)
+        if i >= len(self._STATES):
+            i = None
+        return i
+
+    def focus(self, x, y):
+        i = self.hover(x, y)
+
+        if i is not None:
+            self._BEFORE()
+            self._STATES[i] = not self._STATES[i]
+            self._callback(self._STATES, * self._params)
+            self._SYNCHRONIZE()
+            self._AFTER()
+
+    def draw(self, cr, hover=(None, None)):
+        self._render_fonts(cr)
+        
+        for i, cell in enumerate(self._cells):
+            if self._STATES[i]:
+                cr.set_source_rgb(1, 0.2, 0.6)
+
+#                radius = 5
+                
+#                x1, x2, y1, y2 = cell
+#                cr.arc(x1 + radius, y1 + radius, radius, 2*(pi/2), 3*(pi/2))
+#                cr.arc(x2 - radius, y1 + radius, radius, 3*(pi/2), 4*(pi/2))
+#                cr.arc(x2 - radius, y2 - radius, radius, 0*(pi/2), 1*(pi/2))
+#                cr.arc(x1 + radius, y2 - radius, radius, 1*(pi/2), 2*(pi/2))
+#                cr.close_path()
+                cr.rectangle( * cell)
+                cr.fill()
+                
+                cr.set_source_rgb(1, 1, 1)
+            
+            elif hover[1] == i:
+                cr.set_source_rgb(1, 0.2, 0.6)
+            else:
+                cr.set_source_rgba(0, 0, 0, 0.7)
+            cr.show_glyphs(self._texts[i])

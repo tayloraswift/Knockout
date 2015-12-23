@@ -57,7 +57,7 @@ class ErrorPanel(object):
 
     def draw(self, cr, width):
         cr.set_font_size(14)
-        cr.set_font_face(fonttable.table.get_font(('P', '_interface'), ('strong',))['font'])
+        cr.set_font_face(fonttable.table.get_font('_interface:STRONG')['font'])
         if self.phase >= 18:
             phase = 1
         else:

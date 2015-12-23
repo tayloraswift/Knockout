@@ -30,7 +30,7 @@
                                   'margin_bottom': (False, 5),
                                   'tags': '_UI'},
             ('P', 'body'): {'fontclasses': (False,
-                                            {'_ACTIVE': ('*SCRIPT', 'strong'),
+                                            {'_ACTIVE': ('strong',),
                                              (): 'body:REGULAR',
                                              ('*SCRIPT', 'strong'): 'body:REGULAR '
                                                                     'SMALL',

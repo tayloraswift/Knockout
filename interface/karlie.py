@@ -79,10 +79,16 @@ def _P_inheritance_menu(x, y, width, p, attribute, after, source=0):
             before = un.history.save, after=after,
             source=source)
 
-class _preview(kookies.Heading):
+class _F_preview(kookies.Heading):
     def __init__(self, x, y, width, height, text, f):
-        
+        self._f = f
+        self._text = text
         kookies.Heading.__init__(self, x, y, width, height, text, font=fonttable.table.get_font(f), fontsize = 16)
+
+    def _SYNCHRONIZE(self):
+        self.font = fonttable.table.get_font(self._f)
+        del self._texts[0]
+        self._add_static_text(self._x, self._y + 16, self._text, fontsize=16)
 
     def draw(self, cr, hover=(None, None)):
         cr.set_source_rgb(0,0,0)
@@ -277,7 +283,7 @@ class Properties(_Properties_panel):
             
             if key is not None:
             
-                self._items.append(_preview( 16, y, 250, 0, 'Preview  ( ' + key + ' )', key ))
+                self._items.append(_F_preview( 16, y, 250, 0, 'Preview  ( ' + key + ' )', key ))
                 y += 30
                 
                 self._items.append(_Font_file_Field( 15, y, 250, f=key, after=self._TURNOVER_WITH_RERENDER_F, name='FONT FILE' ))

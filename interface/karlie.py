@@ -367,9 +367,9 @@ class Properties(_Properties_panel):
             y += 30
             self._items.append(kookies.Orderable( 15, y, 200, 180,
                         list_acquire=lambda: fonts.TAGS[fonts.paragraph_classes[p[0]]['tags']], 
-                        new = lambda L: {'name': '{new}', 'exclusive': 'False'},
+                        new = lambda L: {'subtags': {}, 'collapse': False ,'exclusive': False, 'name': '{new}'},
                         display = lambda l: l['name'],
-                        before=un.history.save, after=self.synchronize ))
+                        before=un.history.save, after=self.refresh ))
             y += 180
             self._items.append(kookies.Blank_space(15, y, width=250, 
                     callback=fonts.q_set, 
@@ -382,7 +382,28 @@ class Properties(_Properties_panel):
                             before = un.history.save,
                             after = self._TURNOVER_WITH_RERENDER_P,
                             name = 'EXCLUSIVE') )
+            y += 45
 
+            self._items.append(kookies.Unordered( 15, y, 250, 100,
+                        dict_acquire=lambda: fonts.q_read('subtags', p[0]) ,
+                        new = lambda L: ('{new}', None),
+                        display = lambda l: str(l),
+                        before=un.history.save, after=self._TURNOVER_WITH_REFRESH_F, after_delete=self._TURNOVER_WITH_REFRESH_F))
+
+            y += 100
+            if fonts.q_read('subtags', p[0]):
+                self._items.append(kookies.Blank_space(15, y, width=250, 
+                        callback=plane.tags_push_subtag_name, 
+                        value_acquire= lambda P: fonts.q_read('subtags', P)['_ACTIVE'], 
+                        params = (p[0],), before=un.history.save, after=self.synchronize, name='SUBTAG NAME'))
+
+                y += 45
+                self._items.append(kookies.Checkbox( 15, y + 15, 100, callback=fonts.q_set, 
+                                value_acquire = fonts.q_read, params = ('collapse', p[0]),
+                                before = un.history.save,
+                                after = self._TURNOVER_WITH_RERENDER_P,
+                                name = 'COLLAPSE') )
+                
         elif self._tab == 'page':
             self._items.append(kookies.Integer_field( 15, y, 250, 
                         callback = penclick.page.set_width,

@@ -102,6 +102,14 @@ def tags_push_states(states, p):
     fc[tags] = fc.pop(fc['_ACTIVE'])
     fc['_ACTIVE'] = tags
 
+# Q
+
+def tags_push_subtag_name(name, p):
+    li = fonts.TAGS[ fonts.paragraph_classes[p]['tags'] ]
+    ST = li [li[0] + 1]['subtags']
+    ST[name] = ST.pop(ST['_ACTIVE'])
+    ST['_ACTIVE'] = name
+
 # FONT STYLES
     
 def rename_f(old, new, P):

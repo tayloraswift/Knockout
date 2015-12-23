@@ -823,7 +823,7 @@ class Orderable(Base_kookie):
         y -= self._y
         i = int(y // self._itemheight)
         if i >= len(self._LIST):
-            i = len(self._LIST) - 2
+            i = len(self._LIST) - 1
         
         if x > self._x_right - 25:
             j = 4
@@ -874,9 +874,8 @@ class Orderable(Base_kookie):
         cr.set_source_rgba(0, 0, 0, 0.7)
         cr.set_line_width(2)
         
+        y1 = self._y
         for i, l in enumerate(self._texts):
-            y1 = self._y + i*self._itemheight
-            
             if i == self._LIST[0]:
                 cr.set_source_rgb(1, 0.2, 0.6)
 
@@ -950,18 +949,19 @@ class Orderable(Base_kookie):
             else:
                 cr.show_glyphs(l)
 
+            y1 += self._itemheight
         
         if hover[1] is not None and hover[1][0] == len(self._LIST) - 1:
             cr.set_source_rgb(1, 0.2, 0.6)
         else:
             cr.set_source_rgba(0, 0, 0, 0.7)
-        cr.rectangle(self._x + 16, y1 + self._itemheight + 7, 2, 10)
-        cr.rectangle(self._x + 12, y1 + self._itemheight + 11, 10, 2)
+        cr.rectangle(self._x + 16, y1 + 7, 2, 10)
+        cr.rectangle(self._x + 12, y1 + 11, 10, 2)
         
         cr.fill()
 
 class Unordered(Base_kookie):
-    def __init__(self, x, y, width, height, dict_acquire, protect, new, display=lambda: None, before=lambda: None, after=lambda: None, after_delete=None ):
+    def __init__(self, x, y, width, height, dict_acquire, protect=set(), new=lambda: None, display=lambda: None, before=lambda: None, after=lambda: None, after_delete=None ):
         self._itemheight = 26
         self._protect = protect
         self._new = new
@@ -986,12 +986,14 @@ class Unordered(Base_kookie):
     def _ACQUIRE_REPRESENT(self):
         self._DICT = self._dict_acquire()
         self._map = list(self._DICT.keys())
-        self._map.remove('_ACTIVE')
-        self._map.sort()
         
         self._texts = []
-        for i, l in enumerate(self._map):
-            self._add_static_text(self._x + 10, self._y + self._itemheight*i + 17, self._display(l), align=1)
+        if self._DICT:
+            self._map.remove('_ACTIVE')
+            self._map.sort()
+
+            for i, l in enumerate(self._map):
+                self._add_static_text(self._x + 10, self._y + self._itemheight*i + 17, self._display(l), align=1)
     
     def _add(self):
         key, v = self._new(self._DICT)
@@ -1002,12 +1004,13 @@ class Unordered(Base_kookie):
         y -= self._y
         i = int(y // self._itemheight)
         if i >= len(self._DICT):
-            i = len(self._DICT) - 2
+            i = len(self._DICT) - 1
         
         if x > self._x_right - 25:
             j = 4
         else:
             j = 1
+        print(i, j)
         return i, j
     
     def focus(self, x, y):
@@ -1035,10 +1038,9 @@ class Unordered(Base_kookie):
     def draw(self, cr, hover=(None, None)):
         self._render_fonts(cr)
         cr.set_line_width(2)
+        y1 = self._y
         
         for i, l in enumerate(self._texts):
-            y1 = self._y + i*self._itemheight
-            
             key = self._map[i]
             if key == self._DICT['_ACTIVE']:
                 cr.set_source_rgb(1, 0.2, 0.6)
@@ -1083,14 +1085,14 @@ class Unordered(Base_kookie):
             else:
                 cr.set_source_rgba(0, 0, 0, 0.7)
             cr.show_glyphs(l)
+            y1 += self._itemheight
 
-        
         if hover[1] is not None and hover[1][0] == len(self._DICT) - 1:
             cr.set_source_rgb(1, 0.2, 0.6)
         else:
             cr.set_source_rgba(0, 0, 0, 0.7)
-        cr.rectangle(self._x + 16, y1 + self._itemheight + 7, 2, 10)
-        cr.rectangle(self._x + 12, y1 + self._itemheight + 11, 10, 2)
+        cr.rectangle(self._x + 16, y1 + 7, 2, 10)
+        cr.rectangle(self._x + 12, y1 + 11, 10, 2)
         
         cr.fill()
 

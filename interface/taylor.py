@@ -25,15 +25,15 @@ from interface import menu, ui
 
 
 # used in rendering with undefined classes
-def get_fontsize(p, f):
+def get_fontsize(f):
     try:
-        fontsize = fonttable.table.get_font(p, f)['fontsize']
+        fontsize = fonttable.table.get_font(f)['fontsize']
     except KeyError:
-        fontsize = fonttable.table.get_font(p, () )['fontsize']
+        fontsize = fonttable.table.get_font('_interface:REGULAR')['fontsize']
     return fontsize
 
 def paragraph_context_changed(previous=[None]):
-    p = meredith.mipsy.glyph_at()[2]
+    p = meredith.mipsy.paragraph_at()
     if p != previous[0]:
         previous[0] = p
         return True
@@ -133,7 +133,7 @@ class Mode_switcher(object):
         self._switcher.focus(x - self._dx)
     
     def hover(self, x):
-        self._hover_j = self._switcher.hover(x - self._dx)
+        self._hover_j = self._switcher.hover(x - self._dx, 0)
         if self._hover_j != self._hover_memory:
             noticeboard.redraw_becky.push_change()
             self._hover_memory = self._hover_j
@@ -591,23 +591,16 @@ class Document_view(ui.Cell):
         noticeboard.refresh_properties_type.push_change(mode)
     
     def _print_sorted(self, cr, classed_glyphs):
-        for name, glyphs in classed_glyphs.items():
+        for name, glyphs in (item for item in classed_glyphs.items() if isinstance(item[0], str)):
             try:
                 cr.set_source_rgb(0, 0, 0)
-                font = fonttable.table.get_font( * name)
-            except TypeError:
-                # happens on '_annot'
-                continue
+                font = fonttable.table.get_font(name)
             except KeyError:
                 cr.set_source_rgb(1, 0.15, 0.2)
-                try:
-                    font = fonttable.table.get_font(name[0], ())
-                except AttributeError:
-                    font = fonttable.table.get_font(('P', '_interface'), ())
+                font = fonttable.table.get_font('_interface:REGULAR')
             
             cr.set_font_size(font['fontsize'])
             cr.set_font_face(font['font'])
-                
             cr.show_glyphs(glyphs)
     
     def page_classes(self):
@@ -626,7 +619,7 @@ class Document_view(ui.Cell):
         return classed_pages
     
     def print_page(self, cr, p, classed_pages):
-        self._draw_images(cr, classed_pages[p]['_images'])
+        self._draw_images(cr, classed_pages[p][('_images',)])
         self._print_sorted(cr, classed_pages[p])
             
     def _draw_by_page(self, cr, mx_cx, my_cy, cx, cy, A=1, refresh=False):
@@ -673,21 +666,21 @@ class Document_view(ui.Cell):
                 cr.translate(A*penclick.page.map_X(mx_cx, page) + cx, A*penclick.page.map_Y(my_cy, page) + cy)
                 cr.scale(A, A)
 
-                self._draw_images(cr, sorted_glyphs['_images'])
+                self._draw_images(cr, sorted_glyphs[('_images',)])
                 self._print_sorted(cr, sorted_glyphs)
 
                 cr.restore()
                 
                 # only annotate active tract
                 if t == 0 and self._mode == 'text':
-                    self._draw_annotations(cr, sorted_glyphs['_annot'], page)
+                    self._draw_annotations(cr, sorted_glyphs[('_annot',)], page)
                     
                     # this is how we know what page the cursor is on
-                    if self._highlight(cr, sorted_glyphs['_intervals'], page, self._selection_highlight, 0.75, start, stop, l1, l2, i, j):
+                    if self._highlight(cr, sorted_glyphs[('_intervals',)], page, self._selection_highlight, 0.75, start, stop, l1, l2, i, j):
                         meredith.mipsy.page_context = page
                     
                     for red_line in annoying_red_lines:
-                        self._highlight(cr, sorted_glyphs['_intervals'], page, self._spelling_highlight, 1, * red_line)
+                        self._highlight(cr, sorted_glyphs[('_intervals',)], page, self._spelling_highlight, 1, * red_line)
 
         for pp in range(max_page + 1):
             #draw page border
@@ -746,14 +739,14 @@ class Document_view(ui.Cell):
 
         for a in annot:
         
-            x, y, p, f = a[1:5]
+            x, y, p_i, f = a[1:]
             
             x = self._X_to_screen(x, page)
             y = self._Y_to_screen(y, page)
             
-            fontsize = int(get_fontsize(p[0], f) * self._A)
+            fontsize = int(get_fontsize(f) * self._A)
 
-            if p[1] == meredith.mipsy.glyph_at()[2][1]:
+            if p_i == meredith.mipsy.paragraph_at()[1]:
                 cr.set_source_rgba(1, 0.2, 0.6, 0.7)
             else:
                 cr.set_source_rgba(0, 0, 0, 0.4)
@@ -923,7 +916,7 @@ class Document_view(ui.Cell):
         
         # draw stats
         cr.set_source_rgba(0, 0, 0, 0.8)
-        font = fonttable.table.get_font(('P', '_interface'), ('strong',))
+        font = fonttable.table.get_font('_interface:STRONG')
         
         cr.set_font_size(font['fontsize'])
         cr.set_font_face(font['font'])

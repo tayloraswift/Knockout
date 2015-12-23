@@ -45,34 +45,21 @@ def _retrieve_paragraphclass(P, l):
     
     return PSTYLE
 
-def _retrieve_p_imageclass(P, l):
+def _retrieve_fontclass(F, FONTCLASSES, l):
+    F = tuple(F)
     try:
-        PSTYLE = fonttable.p_table.get_image_class(P)
+        N = FONTCLASSES[F]
+        FSTYLE = fonttable.table.get_font(N)
     except KeyError:
         # happens if requested style is not defined
-        errors.styleerrors.add_style_error((P,), l)
-        PSTYLE = fonttable.p_table.get_image_class(('IMAGE', '_graph'))
+        errors.styleerrors.add_style_error(F, l)
+        FSTYLE = fonttable.table.get_font('_interface:REGULAR')
+        N = '_undefined'
     
-    return PSTYLE
-
-def _retrieve_fontclass(P, F, l):
-    try:
-        FSTYLE = fonttable.table.get_font(P, tuple(F))
-    except KeyError:
-        # happens if requested style is not defined
-        errors.styleerrors.add_style_error(tuple(F), l)
-        try:
-            FSTYLE = fonttable.table.get_font(P, () )
-        except AttributeError:
-            FSTYLE = fonttable.table.get_font(('P', '_interface'), () )
-    
-    return FSTYLE
+    return N, FSTYLE
             
-def _assemble_line(letters, startindex, c, l, anchor, stop, y, leading, PP, F, hyphenate=False):
-    P = PP[0]
-    
+def _assemble_line(letters, startindex, l, anchor, stop, y, leading, FONTCLASSES, F, hyphenate=False):
     LINE = {
-            'c': c,
             'l': l,
             'i': startindex,
             
@@ -84,7 +71,6 @@ def _assemble_line(letters, startindex, c, l, anchor, stop, y, leading, PP, F, h
             'hyphen': None,
             
             'P_BREAK': False,
-            'PP': PP,
             'F': tuple(F)
             }
     
@@ -95,7 +81,7 @@ def _assemble_line(letters, startindex, c, l, anchor, stop, y, leading, PP, F, h
     x = anchor
 
     # retrieve font style
-    FSTYLE = _retrieve_fontclass(P, F, l)
+    N, FSTYLE = _retrieve_fontclass(F, FONTCLASSES, l)
 
     for letter in letters:
         CHAR = character(letter)
@@ -107,10 +93,10 @@ def _assemble_line(letters, startindex, c, l, anchor, stop, y, leading, PP, F, h
             else:
                 F.append(letter[1])
                 F.sort()
-                
-            FSTYLE = _retrieve_fontclass(P, F, l)
             
-            GLYPHS.append((-4, x, y,  PP, tuple(F), x))
+            N, FSTYLE = _retrieve_fontclass(F, FONTCLASSES, l)
+            
+            GLYPHS.append((-4, x, y,  N, tuple(F), x))
             
         elif CHAR == '</f>':
             try:
@@ -118,10 +104,10 @@ def _assemble_line(letters, startindex, c, l, anchor, stop, y, leading, PP, F, h
             except ValueError:
                 F.append('~' + letter[1])
                 F.sort()
-            
-            FSTYLE = _retrieve_fontclass(P, F, l)
 
-            GLYPHS.append((-5, x, y,  PP, tuple(F), x))
+            N, FSTYLE = _retrieve_fontclass(F, FONTCLASSES, l)
+
+            GLYPHS.append((-5, x, y,  N, tuple(F), x))
             
         elif CHAR == '<p>':
             if GLYPHS:
@@ -133,24 +119,24 @@ def _assemble_line(letters, startindex, c, l, anchor, stop, y, leading, PP, F, h
                         x - FSTYLE['fontsize'], # 1
                         y,                      # 2
                         
-                        PP,                     # 3
+                        N,                      # 3
                         tuple(F),               # 4
                         x - FSTYLE['fontsize']  # 5
                         ))
         
         elif CHAR == '</p>':
             LINE['P_BREAK'] = True
-            GLYPHS.append((-3, x, y,  PP, tuple(F), x))
+            GLYPHS.append((-3, x, y,  N, tuple(F), x))
             break
         
         elif CHAR == '<br>':
-            GLYPHS.append((-6, x, y,  PP, tuple(F), x))
+            GLYPHS.append((-6, x, y,  N, tuple(F), x))
             break
         
         elif CHAR == '<image>':
             IMAGE = letter[1]
                                                                                 # additional fields
-            GLYPHS.append((-13, x, y - leading,  PP, tuple(F), x + IMAGE[1], IMAGE ))
+            GLYPHS.append((-13, x, y - leading,  N, tuple(F), x + IMAGE[1], IMAGE ))
             x += IMAGE[1]
         
         else:
@@ -161,7 +147,7 @@ def _assemble_line(letters, startindex, c, l, anchor, stop, y, leading, PP, F, h
                     x,                                              # 1
                     y,                                              # 2
                     
-                    PP,                                             # 3
+                    N,                                              # 3
                     tuple(F),                                       # 4
                     x + glyphwidth                                  # 5
                     ))
@@ -210,9 +196,9 @@ def _assemble_line(letters, startindex, c, l, anchor, stop, y, leading, PP, F, h
                             
                             # check if the hyphen overflows
 
-                            h_P = GLYPHS[i - 1 + k][3][0]
                             h_F = GLYPHS[i - 1 + k][4]
-                            HFS = _retrieve_fontclass(h_P, h_F, l)
+                            
+                            h_N, HFS = _retrieve_fontclass( h_F , FONTCLASSES, l)
                                 
                             if GLYPHS[i - 1 + k][5] + HFS['fontmetrics'].advance_pixel_width('-') * HFS['fontsize'] < stop:
                                 i = i + k
@@ -221,7 +207,7 @@ def _assemble_line(letters, startindex, c, l, anchor, stop, y, leading, PP, F, h
                                         HFS['fontmetrics'].character_index('-'), 
                                         GLYPHS[i - 1][5], # x
                                         GLYPHS[i - 1][2], # y
-                                        h_P,
+                                        h_N,
                                         h_F
                                         )
                                 break
@@ -363,7 +349,6 @@ class Text(object):
                         INDLINE = _assemble_line(
                             self.text[P_i : P_i + K + 1], 
                             0, 
-                            c, 
                             l, 
                             
                             0, 
@@ -371,7 +356,7 @@ class Text(object):
                             0, 
                             0, 
                             
-                            (P, P_i), 
+                            PSTYLE['fontclasses'],
                             F[:], 
                             
                             hyphenate = False
@@ -390,7 +375,6 @@ class Text(object):
             LINE = _assemble_line(
                     self.text[i : i + 1989], 
                     i, 
-                    c, 
                     l, 
                     
                     self.channels.channels[c].edge(0, y)[0] + L_indent, 
@@ -398,13 +382,15 @@ class Text(object):
                     y, 
                     PSTYLE['leading'], 
                     
-                    (P, P_i), 
+                    PSTYLE['fontclasses'],
                     F, 
                     
                     hyphenate = PSTYLE['hyphenate']
                     )
             # stamp R line number
             LINE['R'] = R
+            LINE['PP'] = (P, P_i)
+            LINE['c'] = c
             
             # get the index of the last glyph printed so we know where to start next time
             i = LINE['j']
@@ -768,7 +754,7 @@ class Text(object):
             print ('ahead')
             ahead = True
 
-        return glyph[1:5]
+        return glyph[1:3]
 
     def stats(self, spell):
         if spell:
@@ -782,6 +768,9 @@ class Text(object):
         leading = self._glyphs[l]['leading']
         y = self._glyphs[l]['y']
         return anchor, stop, leading, y
+    
+    def pp_at(self, i):
+        return self._glyphs[self.index_to_line(i)]['PP']
 
     def extract_glyphs(self, refresh=False):
 
@@ -791,37 +780,36 @@ class Text(object):
         if not self._sorted_pages:
 
             for page, intervals in self._page_intervals.items():
-                sorted_page = {'_annot': [], '_images': [], '_intervals': intervals}
+                sorted_page = {('_annot',): [], ('_images',): [], ('_intervals',): intervals}
                 
                 for line in chain.from_iterable(self._glyphs[slice( * interval)] for interval in intervals):
 
-                    p_name = line['PP'][0]
+                    p_name, p_i = line['PP']
                     hyphen = line['hyphen']
                     
                     for glyph in line['GLYPHS']:
                         
                         if glyph[0] < 0:
                             if glyph[0] == -6:
-                                sorted_page['_annot'].append( (glyph[0], line['anchor'], line['y'] + line['leading']) + glyph[3:])
+                                sorted_page[('_annot',)].append( (glyph[0], line['anchor'], line['y'] + line['leading'], p_i, glyph[3]))
                             elif glyph[0] == -13:
-                                sorted_page['_images'].append( (glyph[6], glyph[1], glyph[2]) )
+                                sorted_page[('_images',)].append( (glyph[6], glyph[1], glyph[2]) )
                             else:
-                                sorted_page['_annot'].append(glyph)
+                                sorted_page[('_annot',)].append(glyph[:3] + (p_i, glyph[3]))
                         else:
                             K = glyph[0:3]
-                            f = glyph[4]
+                            f = glyph[3]
                             try:
-                                sorted_page[(p_name, f)].append(K)
+                                sorted_page[f].append(K)
                             except KeyError:
-                                sorted_page[(p_name, f)] = []
-                                sorted_page[(p_name, f)].append(K)
+                                sorted_page[f] = [K]
+
                     if hyphen is not None:
                         try:
-                            sorted_page[hyphen[3:5]].append((hyphen[0:3]))
+                            sorted_page[hyphen[3]].append((hyphen[0:3]))
                         except KeyError:
-                            sorted_page[hyphen[3:5]] = []
-                            sorted_page[hyphen[3:5]].append((hyphen[0:3]))
+                            sorted_page[hyphen[3]] = []
+                            sorted_page[hyphen[3]].append((hyphen[0:3]))
                 
                 self._sorted_pages[page] = sorted_page
-
         return self._sorted_pages

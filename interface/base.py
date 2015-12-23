@@ -16,7 +16,7 @@ class Base_kookie(object):
         self._texts = []
         
         if font is None:
-            self.font = fonttable.table.get_font(('P', '_interface'), () )
+            self.font = fonttable.table.get_font('_interface:REGULAR')
         else:
             self.font = font
         
@@ -69,7 +69,7 @@ class Base_kookie(object):
         return False
 
 
-    def focus(self, x):
+    def focus(self, x, y):
         pass
     def focus_drag(self, x):
         pass
@@ -77,7 +77,7 @@ class Base_kookie(object):
         pass
     def defocus(self):
         pass
-    def hover(self, x):
+    def hover(self, x, y):
         pass
 
     

@@ -7,11 +7,13 @@ class Menu(object):
         self._menu = None
         self._hovered = None
     
-    def create(self, x, y, width, options, callback, callback_parameters, extend_life=False, source = 0):
+    def create(self, x, y, width, options, callback, callback_parameters, extend_life=False, before=lambda: None, after=lambda: None, source = 0):
 
         self._dy = 0
         
         self._menu = base.Menu(int(round(x)) + constants.UI[source], int(round(y)), int(round(width)), 30, options)
+        self._BEFORE = before
+        self._AFTER = after
         self._callback = callback
         self._callback_parameters = callback_parameters
         
@@ -40,10 +42,13 @@ class Menu(object):
     # do we need x?
     def press(self, y):
         name = self._menu.press(y - self._dy)
-        self._callback(name, * self._callback_parameters)
         if self._extend:
+            self._callback(name, * self._callback_parameters)
             self._extend = False
         else:
+            self._BEFORE()
+            self._callback(name, * self._callback_parameters)
+            self._AFTER()
             self.destroy()
     
     def hover(self, y):

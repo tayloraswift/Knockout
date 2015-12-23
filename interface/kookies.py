@@ -534,12 +534,15 @@ class Enumerate_field(Blank_space):
         
 #########
 class Selection_menu(Base_kookie):
-    def __init__(self, x, y, width, height, menu_callback, options_acquire, value_acquire, source):
+    def __init__(self, x, y, width, height, menu_callback, options_acquire, value_acquire, params = (), before=lambda: None, after=lambda: None, source=0):
         Base_kookie.__init__(self, x, y, width, height, font=fonttable.table.get_font('_interface:STRONG'))
         
         self._get_value = value_acquire
         self._get_options = options_acquire
-        
+        self._params = params
+        self._BEFORE = before
+        self._AFTER = after
+
         self._menu_callback = menu_callback
 
         self._dropdown_active = False
@@ -556,7 +559,7 @@ class Selection_menu(Base_kookie):
         self._lookup_label = dict(self._menu_options)
 
     def _ACQUIRE_REPRESENT(self):
-        label = self._lookup_label[self._get_value()]
+        label = self._lookup_label[self._get_value( * self._params)]
         self._texts = []
         self._add_static_text(self._x_right, self._y_bottom - self._height/2 + 5, label, align=-1)
 
@@ -569,7 +572,7 @@ class Selection_menu(Base_kookie):
         self._SYNCHRONIZE()
     
     def focus(self, x, y):
-        menu.menu.create(self._x, self._y_bottom - 5, 200, self._menu_options, self._MENU_PUSH, (), source=self._source )
+        menu.menu.create(self._x, self._y_bottom - 5, 200, self._menu_options, self._MENU_PUSH, self._params, before=self._BEFORE, after=self._AFTER, source=self._source )
         self._active = True
         self._dropdown_active = True
         print('DROPDOWN')

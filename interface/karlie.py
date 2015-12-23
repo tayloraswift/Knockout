@@ -15,22 +15,16 @@ from model import meredith, penclick
 from model import un
 
 class _Font_file_Field(kookies.Blank_space):
-    def __init__(self, x, y, width, f, name=None):
-        self.f = f
+    def __init__(self, x, y, width, f, after, name=None):
+        kookies.Blank_space.__init__(self, x, y, width, callback = plane.f_push_attribute, 
+                value_acquire = self._value_acquire, params=('path', f), 
+                before=un.history.save, 
+                after=after, name=name)
 
-        kookies.Blank_space.__init__(self, x, y, width, callback=self._push_fontname, value_acquire=self._value_acquire, name=name)
+    def _value_acquire(self, A, f):
+        self.broken = not fonttable.table.get_font(f)['path_valid']
+        return fonttable.table.get_font(f)['path']
 
-    def _value_acquire(self):
-        self.broken = not fonttable.table.get_font(self.f)['path_valid']
-        return fonttable.table.get_font(self.f)['path']
-
-    def _push_fontname(self, path):
-        fonttable.table.clear()
-        
-        plane.f_push_attribute(path, 'path', self.f)
-        
-        meredith.mipsy.recalculate_all()
-        klossy.synchronize()
 
 def create_f_field(TYPE, x, y, width, attribute, f, after, value_acquire=lambda A, f: str(fonts.TEXTURES[f][A]),  name=''):
     return TYPE(x, y, width,
@@ -69,78 +63,21 @@ def _p_rename(OLD, KEY):
     plane.p_rename(OLD, KEY)
     meredith.mipsy.rename_paragraph_class(OLD, KEY)
 
-class _F_inheritance_menu(kookies.Selection_menu):
-    def __init__(self, x, y, width, f, attribute, source=0):
-        self._f = f
-        self._attribute = attribute
-        
-        kookies.Selection_menu.__init__(self, x, y, width=width, height=15, menu_callback=self._push_inherit, 
-                options_acquire=lambda: (('—', '—'),) + tuple((k, k) for k in sorted(fonts.TEXTURES.keys())), 
-                value_acquire=self._value_acquire, source=source)
-
-    def _value_acquire(self):
-        current = fonts.f_read_attribute(self._attribute, self._f)
-        if current[0]:
-            return current[1]
-        else:
-            return '—'
-    
-    def _push_inherit(self, value):
-        un.history.save()
-        fonttable.table.clear()
-        if value == '—':
-            plane.f_push_attribute(fonttable.table.get_font(self._f)[self._attribute], self._attribute, self._f)
-        else:
-            # save old value in case of a disaster
-            v = fonts.f_get_attribute(self._attribute, self._f)
-            fonts.TEXTURES[self._f][self._attribute] = (True, value)
-
-            try:
-                fonttable.table.get_font(self._f)
-            except RuntimeError:
-                fonttable.table.clear()
-                fonts.TEXTURES[self._f][self._attribute] = v
-                print('REFERENCE LOOP DETECTED')
-        
-        klossy.refresh()
-
-def _P_options_acquire():
-    PPP = ['—'] + list(fonts.paragraph_classes.keys())
-    return list(zip(PPP, [v if v == '—' else v[0] + ' : ' + v[1] for v in PPP]))
-    
-class _Paragraph_inheritance_menu(kookies.Selection_menu):
-    def __init__(self, x, y, width, p, attribute, source=0):
-        self._p = p
-        self._attribute = attribute
-        
-        kookies.Selection_menu.__init__(self, x, y, width=width, height=15, menu_callback=self._push_inherit, options_acquire=_P_options_acquire, value_acquire=self._value_acquire, source=source)
-
-    def _value_acquire(self):
-        current = fonts.p_read_attribute(self._attribute, self._p)
-        if current[0]:
-            return current[1]
-        else:
-            return '—'
-    
-    def _push_inherit(self, value):
-        un.history.save()
-        fonttable.p_table.clear()
-        if value == '—':
-            fonts.p_set_attribute((False, fonttable.p_table.get_paragraph(self._p)[self._attribute]), self._attribute, self._p)
-        else:
-            # save old value in case of a disaster
-            v = fonts.p_get_attribute(self._attribute, self._p)
-            fonts.p_set_attribute((True, value), self._attribute, self._p)
-
-            try:
-                fonttable.p_table.get_paragraph(self._p)
-            except RuntimeError:
-                fonttable.p_table.clear()
-                fonts.p_set_attribute(v, self._attribute, self._p)
-                print('REFERENCE LOOP DETECTED')
-        
-        klossy.refresh()
-    
+def _F_inheritance_menu(x, y, width, f, attribute, after, source=0):
+    return kookies.Selection_menu(x, y, width=width, height=15, menu_callback = plane._F_push_inherit, 
+            options_acquire=lambda: (('—', '—'),) + tuple((k, k) for k in sorted(fonts.TEXTURES.keys())), 
+            value_acquire = plane._F_read_inherit, 
+            params = (attribute, f),
+            before = un.history.save, after=after,
+            source=source)
+                
+def _P_inheritance_menu(x, y, width, p, attribute, after, source=0):
+    return kookies.Selection_menu(x, y, width=width, height=15, menu_callback = plane._P_push_inherit, 
+            options_acquire = lambda: (('—', '—'),) + tuple((k, k[0] + ' : ' + k[1]) for k in sorted(fonts.paragraph_classes.keys())),
+            value_acquire = plane._P_read_inherit, 
+            params = (attribute, p),
+            before = un.history.save, after=after,
+            source=source)
 
 class _preview(kookies.Heading):
     def __init__(self, x, y, width, height, text, f):
@@ -343,9 +280,9 @@ class Properties(_Properties_panel):
                 self._items.append(_preview( 16, y, 250, 0, 'Preview  ( ' + key + ' )', key ))
                 y += 30
                 
-                self._items.append(_Font_file_Field( 15, y, 250, f=key, name='FONT FILE' ))
+                self._items.append(_Font_file_Field( 15, y, 250, f=key, after=self._TURNOVER_WITH_RERENDER_F, name='FONT FILE' ))
                 y += 30
-                self._items.append(_F_inheritance_menu( 15, y, width=250, f=key, attribute='path', source=self._partition))
+                self._items.append(_F_inheritance_menu( 15, y, width=250, f=key, attribute='path', after=self.refresh, source=self._partition))
                 y += 15
                 
                 self._items.append(create_f_field(kookies.Numeric_field, 15, y, 250, 'fontsize', key, after=self._TURNOVER_WITH_RERENDER_F, 
@@ -353,14 +290,14 @@ class Properties(_Properties_panel):
                                 name='FONT SIZE') )
 
                 y += 30
-                self._items.append(_F_inheritance_menu( 15, y, width=250, f=key, attribute='fontsize', source=self._partition))
+                self._items.append(_F_inheritance_menu( 15, y, width=250, f=key, attribute='fontsize', after=self.refresh, source=self._partition))
                 y += 15
 
                 self._items.append(create_f_field(kookies.Numeric_field, 15, y, 250, 'tracking', key, after=self._TURNOVER_WITH_RERENDER_F, 
                                 value_acquire = lambda A, f: str(fonts.f_get_attribute(A, f)[1]), 
                                 name='TRACKING') )
                 y += 30
-                self._items.append(_F_inheritance_menu( 15, y, width=250, f=key, attribute='tracking', source=self._partition))
+                self._items.append(_F_inheritance_menu( 15, y, width=250, f=key, attribute='tracking', after=self.refresh, source=self._partition))
                 y += 15
 
                  
@@ -375,7 +312,7 @@ class Properties(_Properties_panel):
 
             self._items.append(create_p_field(kookies.Numeric_field, 15, y, 250, 'leading', p[0], after=self._TURNOVER_WITH_RERENDER_P, name='LEADING') )
             y += 30
-            self._items.append(_Paragraph_inheritance_menu( 15, y, width=250, p=p[0], attribute='leading', source=self._partition))
+            self._items.append(_P_inheritance_menu( 15, y, width=250, p=p[0], attribute='leading', after=self.refresh, source=self._partition))
 
             y += 15
             _tc_ = [_Paragraph_INDENT_EXP( 15, y, 175, p[0], after=self._TURNOVER_WITH_RERENDER_P, name='INDENT' ), 
@@ -386,8 +323,8 @@ class Properties(_Properties_panel):
             self._items += _tc_
 
             y += 45
-            _tc_ = [_Paragraph_inheritance_menu( 15, y, width=175, p=p[0], attribute='indent', source=self._partition), 
-                    _Paragraph_inheritance_menu( 200, y, width=65, p=p[0], attribute='indent_range', source=self._partition) ]
+            _tc_ = [_P_inheritance_menu( 15, y, width=175, p=p[0], attribute='indent', after=self.refresh, source=self._partition), 
+                    _P_inheritance_menu( 200, y, width=65, p=p[0], attribute='indent_range', after=self.refresh, source=self._partition) ]
             self._items.append( _TWO_COLUMN( * _tc_))
             self._items += _tc_
 
@@ -397,8 +334,8 @@ class Properties(_Properties_panel):
             self._items.append( _TWO_COLUMN( * _tc_))
             self._items += _tc_
             y += 45
-            _tc_ = [_Paragraph_inheritance_menu( 15, y, width=120, p=p[0], attribute='margin_left', source=self._partition), 
-                    _Paragraph_inheritance_menu( 145, y, width=120, p=p[0], attribute='margin_right', source=self._partition) ]
+            _tc_ = [_P_inheritance_menu( 15, y, width=120, p=p[0], attribute='margin_left', after=self.refresh, source=self._partition), 
+                    _P_inheritance_menu( 145, y, width=120, p=p[0], attribute='margin_right', after=self.refresh, source=self._partition) ]
             self._items.append( _TWO_COLUMN( * _tc_))
             self._items += _tc_
 
@@ -409,8 +346,8 @@ class Properties(_Properties_panel):
             self._items += _tc_
 
             y += 45
-            _tc_ = [_Paragraph_inheritance_menu( 15, y, width=120, p=p[0], attribute='margin_top', source=self._partition), 
-                    _Paragraph_inheritance_menu( 145, y, width=120, p=p[0], attribute='margin_bottom', source=self._partition) ]
+            _tc_ = [_P_inheritance_menu( 15, y, width=120, p=p[0], attribute='margin_top', after=self.refresh, source=self._partition), 
+                    _P_inheritance_menu( 145, y, width=120, p=p[0], attribute='margin_bottom', after=self.refresh, source=self._partition) ]
             self._items.append( _TWO_COLUMN( * _tc_))
             self._items += _tc_
 
@@ -419,7 +356,7 @@ class Properties(_Properties_panel):
                             value_acquire = lambda A, p: fonttable.p_table.get_paragraph(p)[A], 
                             name='HYPHENATE') )
             y += 30
-            self._items.append(_Paragraph_inheritance_menu( 15, y, width=250, p=p[0], attribute='hyphenate', source=self._partition))
+            self._items.append(_P_inheritance_menu( 15, y, width=250, p=p[0], attribute='hyphenate', after=self.refresh, source=self._partition))
 
             y += 30
             self._items.append(kookies.Orderable( 15, y, 200, 180,

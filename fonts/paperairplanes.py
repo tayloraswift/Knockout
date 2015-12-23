@@ -103,6 +103,7 @@ def tags_push_states(states, p):
     fc['_ACTIVE'] = tags
 
 # FONT STYLES
+    
 def rename_f(old, new, P):
     for k, PC in fonts.paragraph_classes.items():
         if not PC['fontclasses'][0]:
@@ -119,3 +120,49 @@ def rename_f(old, new, P):
                 if TX[l][1] == old:
                     fonts.TEXTURES[k][l] = (True, new)
 
+# INHERITANCE
+def _F_read_inherit(A, f):
+    current = fonts.f_read_attribute(A, f)
+    if current[0]:
+        return current[1]
+    else:
+        return '—'
+
+def _F_push_inherit(value, A, f):
+    fonttable.table.clear()
+    if value == '—':
+        plane.f_push_attribute(fonttable.table.get_font(f)[A], A, f)
+    else:
+        # save old value in case of a disaster
+        v = fonts.f_get_attribute(A, f)
+        fonts.TEXTURES[f][A] = (True, value)
+
+        try:
+            fonttable.table.get_font(f)
+        except RuntimeError:
+            fonttable.table.clear()
+            fonts.TEXTURES[f][A] = v
+            print('REFERENCE LOOP DETECTED')
+
+def _P_read_inherit(A, p):
+    current = fonts.p_read_attribute(A, p)
+    if current[0]:
+        return current[1]
+    else:
+        return '—'
+
+def _P_push_inherit(value, A, p):
+    fonttable.p_table.clear()
+    if value == '—':
+        fonts.p_set_attribute((False, fonttable.p_table.get_paragraph(p)[A]), A, p)
+    else:
+        # save old value in case of a disaster
+        v = fonts.p_get_attribute(A, p)
+        fonts.p_set_attribute((True, value), A, p)
+
+        try:
+            fonttable.p_table.get_paragraph(p)
+        except RuntimeError:
+            fonttable.p_table.clear()
+            fonts.p_set_attribute(v, A, p)
+            print('REFERENCE LOOP DETECTED')

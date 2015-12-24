@@ -1030,7 +1030,11 @@ class Unordered(Base_kookie):
             elif C == 4:
                 self._BEFORE()
                 del self._DICT[key]
-                self._DICT['_ACTIVE'] = self._map[0]
+
+                if len(self._DICT) > 1:
+                    self._DICT['_ACTIVE'] = self._map[0]
+                else:
+                    self._DICT.clear()
                 
                 self._SYNCHRONIZE()
                 self._AFTER_DEL()

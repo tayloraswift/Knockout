@@ -86,7 +86,19 @@ class _Paragraph_table(object):
 
             properties = {}
             
+            # Resolve subtag permutations
             properties['fontclasses'] = fonts.p_get_attribute('fontclasses', p)[1]
+            FC = properties['fontclasses'].copy()
+            for tag in (t for t in fonts.TAGS[ fonts.paragraph_classes[p]['tags'] ][1:] if t['subtags']):
+                subtags = list(tag['subtags'].keys())
+                subtags.remove('_ACTIVE')
+                for FF in list(FC.keys()):
+                    if tag['name'] in FF:
+                        EL = list(FF)
+                        EL.remove(tag['name'])
+                        FC.update({tuple(sorted( EL + [st] )) : FC[FF] for st in subtags})
+
+            properties['stylemap'] = FC
             properties['leading'] = fonts.p_get_attribute('leading', p)[1]
             properties['margin_top'] = fonts.p_get_attribute('margin_top', p)[1]
             properties['margin_bottom'] = fonts.p_get_attribute('margin_bottom', p)[1]

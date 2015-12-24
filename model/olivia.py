@@ -356,7 +356,7 @@ class Text(object):
                             0, 
                             0, 
                             
-                            PSTYLE['fontclasses'],
+                            PSTYLE['stylemap'],
                             F[:], 
                             
                             hyphenate = False
@@ -382,7 +382,7 @@ class Text(object):
                     y, 
                     PSTYLE['leading'], 
                     
-                    PSTYLE['fontclasses'],
+                    PSTYLE['stylemap'],
                     F, 
                     
                     hyphenate = PSTYLE['hyphenate']

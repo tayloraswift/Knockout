@@ -3,6 +3,7 @@ from copy import deepcopy
 paragraph_classes = {}
 TEXTURES = {}
 TAGS = {}
+PEGS = {}
 
 def q_read(attribute, p):
     li = TAGS[ paragraph_classes[p]['tags'] ]

@@ -58,7 +58,7 @@ def _retrieve_fontclass(F, FONTCLASSES, l):
     
     return N, FSTYLE
             
-def _assemble_line(letters, startindex, l, anchor, stop, y, leading, FONTCLASSES, F, hyphenate=False):
+def _assemble_line(letters, startindex, l, anchor, stop, y, leading, COLLAPSE, FONTCLASSES, F, hyphenate=False):
     LINE = {
             'l': l,
             'i': startindex,
@@ -88,26 +88,37 @@ def _assemble_line(letters, startindex, l, anchor, stop, y, leading, FONTCLASSES
     gx = 0
     gy = 0
     effective_peg = None
+    
+    root = x
+    root_for = set()
+    front = x
 
     for letter in letters:
         CHAR = character(letter)
 
         if CHAR == '<f>':
+            TAG = letter[1]
             # look for negative classes
-            if '~' + letter[1] in F:
-                F.remove('~' + letter[1])
+            if '~' + TAG in F:
+                F.remove('~' + TAG)
             else:
-                F.append(letter[1])
+                F.append(TAG)
                 F.sort()
             
             N, FSTYLE = _retrieve_fontclass(F, FONTCLASSES, l)
             
             # calculate pegging
             G = FSTYLE['pegs']
-            if letter[1] in fonts.PEGS[G]:
-                gx, gy = fonts.PEGS[G][letter[1]]
+            if TAG in fonts.PEGS[G]:
+                if TAG in COLLAPSE[0]:
+                    if TAG in root_for:
+                        x = root
+                    else:
+                        root = x
+                
+                gx, gy = fonts.PEGS[G][TAG]
                 gx = gx * glyphwidth
-                gy = gy * FSTYLE['fontsize']
+                gy = gy * leading
                 effective_peg = letter[1]
                 
                 y -= gy
@@ -116,18 +127,27 @@ def _assemble_line(letters, startindex, l, anchor, stop, y, leading, FONTCLASSES
             GLYPHS.append((-4, x, y,  N, tuple(F), x))
             
         elif CHAR == '</f>':
+            TAG = letter[1]
             try:
-                F.remove(letter[1])
+                F.remove(TAG)
             except ValueError:
-                F.append('~' + letter[1])
+                F.append('~' + TAG)
                 F.sort()
 
             N, FSTYLE = _retrieve_fontclass(F, FONTCLASSES, l)
 
             # depeg
-            if letter[1] == effective_peg:
+            if TAG == effective_peg:
                 y += gy
 
+            # calculate pegging
+            G = FSTYLE['pegs']
+            if TAG in fonts.PEGS[G] and TAG in COLLAPSE[0]:
+                root_for = set(chain.from_iterable(s for s in COLLAPSE[1] if TAG in s))
+                if front > x:
+                    x = front
+                else:
+                    front = x
             GLYPHS.append((-5, x, y,  N, tuple(F), x))
             
         elif CHAR == '<p>':
@@ -151,16 +171,19 @@ def _assemble_line(letters, startindex, l, anchor, stop, y, leading, FONTCLASSES
             break
         
         elif CHAR == '<br>':
+            root_for = set()
             GLYPHS.append((-6, x, y,  N, tuple(F), x))
             break
         
         elif CHAR == '<image>':
+            root_for = set()
             IMAGE = letter[1]
                                                                                 # additional fields
             GLYPHS.append((-13, x, y - leading,  N, tuple(F), x + IMAGE[1], IMAGE ))
             x += IMAGE[1]
         
         else:
+            root_for = set()
             glyphwidth = FSTYLE['fontmetrics'].advance_pixel_width(CHAR) * FSTYLE['fontsize']
             
             GLYPHS.append((
@@ -377,6 +400,7 @@ class Text(object):
                             0, 
                             0, 
                             
+                            PSTYLE['collapsible'],
                             PSTYLE['stylemap'],
                             F[:], 
                             
@@ -403,6 +427,7 @@ class Text(object):
                     y, 
                     PSTYLE['leading'], 
                     
+                    PSTYLE['collapsible'],
                     PSTYLE['stylemap'],
                     F, 
                     

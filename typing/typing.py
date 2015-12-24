@@ -6,6 +6,8 @@ from model import meredith
 
 from model import un
             
+specials = {'Ctrl equal': [('<f>', 'sup')], 'Ctrl minus': [('<f>', 'sub')], 'Ctrl underscore': [('</f>', 'sub')], 'Ctrl plus': [('</f>', 'sup')]}
+special_names = set(specials)
 
 def type_document(name, char, lastpress=[0], direction=[0]):
 
@@ -87,7 +89,7 @@ def type_document(name, char, lastpress=[0], direction=[0]):
     
     elif name == 'paragraph':
         un.history.undo_save(2)
-        p = meredith.mipsy.glyph_at()[2][0]
+        p = meredith.mipsy.paragraph_at()[0]
         if p[1][0] == 'h' and p[1][1].isdigit() and meredith.mipsy.at_absolute(CURSOR) == '</p>' and ('P', 'body') in fonts.paragraph_classes:
             p = ('P', 'body')
         MT.insert(['</p>', ('<p>', p)])
@@ -118,20 +120,20 @@ def type_document(name, char, lastpress=[0], direction=[0]):
             return sel
     
     # encapsulating
-    elif name == 'Ctrl_I':
+    elif name == 'Ctrl i':
         un.history.undo_save(3)
         if not MT.bridge('emphasis', True):
             un.history.pop()
-    elif name == 'Ctrl_B':
+    elif name == 'Ctrl b':
         un.history.undo_save(3)
         if not MT.bridge('strong', True):
             un.history.pop()
 
-    elif name == 'Ctrl_Shift_I':
+    elif name == 'Ctrl I':
         un.history.undo_save(3)
         if not MT.bridge('emphasis', False):
             un.history.pop()
-    elif name == 'Ctrl_Shift_B':
+    elif name == 'Ctrl B':
         un.history.undo_save(3)
         if not MT.bridge('strong', False):
             un.history.pop()
@@ -139,4 +141,7 @@ def type_document(name, char, lastpress=[0], direction=[0]):
     # inserting
     else:
         un.history.undo_save(1)
-        MT.insert([char])
+        if name in special_names:
+            MT.insert(specials[name])
+        else:
+            MT.insert([char])

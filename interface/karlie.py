@@ -1,6 +1,4 @@
-import bisect, itertools
-from freetype import ft_errors
-from copy import deepcopy
+import bisect
 
 from state import constants
 from state import noticeboard

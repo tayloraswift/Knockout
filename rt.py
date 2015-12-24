@@ -235,7 +235,7 @@ class Display(Gtk.Window):
             elif name == 'v':
                 tree.take_event(0, 0, 'Paste', key=True, char = kevin.deserialize(self.clipboard.wait_for_text()) )
 
-            elif name in ['c', 'x']:
+            elif name in {'c', 'x'}:
                 if name == 'c':
                     cp = tree.take_event(0, 0, 'Copy', key=True)
                 else:
@@ -247,17 +247,8 @@ class Display(Gtk.Window):
             elif name == 'a':
                 tree.take_event(0, 0, 'All', key=True)
 
-            elif name == 'i':
-                tree.take_event(0, 0, 'Ctrl_I', key=True)
-            
-            elif name == 'b':
-                tree.take_event(0, 0, 'Ctrl_B', key=True)
-
-            elif name == 'I':
-                tree.take_event(0, 0, 'Ctrl_Shift_I', key=True)
-            
-            elif name == 'B':
-                tree.take_event(0, 0, 'Ctrl_Shift_B', key=True)
+            elif name not in {'Shift_L', 'Shift_R'}:
+                tree.take_event(0, 0, 'Ctrl ' + name, key=True)
         
         elif name in _special_keys:
 

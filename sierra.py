@@ -25,10 +25,11 @@ def save():
     styles = fonts.paragraph_classes
     textures = fonts.TEXTURES
     tags = fonts.TAGS
+    pegs = fonts.PEGS
     grid = meredith.mipsy.page_grid
     contexts = {'c': meredith.mipsy.C(), 'p': meredith.mipsy.page_context}
     
-    doc = {'kitty': kitty, 'grid': grid, 'contexts': contexts, 'styles': styles, 'textures': textures, 'tags': tags, 'view': taylor.becky.read_display_state(), 'page': page}
+    doc = {'kitty': kitty, 'grid': grid, 'contexts': contexts, 'styles': styles, 'textures': textures, 'tags': tags, 'pegs': pegs, 'view': taylor.becky.read_display_state(), 'page': page}
     
     with open(constants.filename, 'w') as fi:
         pprint.pprint(doc, fi)
@@ -45,6 +46,7 @@ def load(name):
     fonts.paragraph_classes = doc['styles']
     fonts.TEXTURES = doc['textures']
     fonts.TAGS = doc['tags']
+    fonts.PEGS = doc['pegs']
 
     # compatibility
     

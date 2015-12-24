@@ -304,8 +304,23 @@ class Properties(_Properties_panel):
                                 name='TRACKING') )
                 y += 30
                 self._items.append(_F_inheritance_menu( 15, y, width=250, f=key, attribute='tracking', after=self.refresh, source=self._partition))
-                y += 15
-
+                y += 30
+                
+                g = fonts.TEXTURES[key]['pegs']
+                self._items.append(kookies.Unordered( 15, y, 250, 100,
+                        dict_acquire=lambda: fonts.PEGS[g],
+                        new = lambda L: ('{new}', [0.13, 0.22]),
+                        display = lambda l: str(l),
+                        before=un.history.save, after=self._TURNOVER_WITH_REFRESH_F, after_delete=self._TURNOVER_WITH_REFRESH_F))
+                y += 100
+                if '_ACTIVE' in fonts.PEGS[g]:
+                    self._items.append(kookies.Selection_menu(15, y, width=250, height=15, menu_callback = plane.pegs_push_tag, 
+                                options_acquire=lambda: (('{new}', 'None'),) + tuple((k, k) for k in plane.tags_and_subtags(p[0])), 
+                                value_acquire = lambda G: fonts.PEGS[G]['_ACTIVE'], 
+                                params = (g,),
+                                before = un.history.save, after=self._TURNOVER_WITH_REFRESH_F,
+                                source=self._partition))
+                    y += 45
                  
         elif self._tab == 'paragraph':
 
@@ -387,7 +402,7 @@ class Properties(_Properties_panel):
             self._items.append(kookies.Unordered( 15, y, 250, 100,
                         dict_acquire=lambda: fonts.q_read('subtags', p[0]) ,
                         new = lambda L: ('{new}', None),
-                        display = lambda l: str(l),
+                        display = lambda l: l,
                         before=un.history.save, after=self._TURNOVER_WITH_REFRESH_F, after_delete=self._TURNOVER_WITH_REFRESH_F))
 
             y += 100

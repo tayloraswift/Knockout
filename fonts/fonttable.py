@@ -1,5 +1,7 @@
 import freetype
 
+import itertools
+
 from fonts import pycairo_font
 from fonts import fonts
 
@@ -88,10 +90,11 @@ class _Paragraph_table(object):
 
             properties = {}
             
+            _tags = fonts.TAGS[ fonts.paragraph_classes[p]['tags'] ][1:]
             # Resolve subtag permutations
             properties['fontclasses'] = fonts.p_get_attribute('fontclasses', p)[1]
             FC = properties['fontclasses'].copy()
-            for tag in (t for t in fonts.TAGS[ fonts.paragraph_classes[p]['tags'] ][1:] if t['subtags']):
+            for tag in (t for t in _tags if t['subtags']):
                 subtags = list(tag['subtags'].keys())
                 subtags.remove('_ACTIVE')
                 for FF in list(FC.keys()):
@@ -101,6 +104,11 @@ class _Paragraph_table(object):
                         FC.update({tuple(sorted( EL + [st] )) : FC[FF] for st in subtags})
 
             properties['stylemap'] = FC
+            
+            # Resolve collapsible tags
+            _CPS = [set(t['subtags']) - {'_ACTIVE'}  for t in _tags if t['collapse']]
+            properties['collapsible'] = (set(itertools.chain.from_iterable(_CPS)), _CPS)
+            
             properties['leading'] = fonts.p_get_attribute('leading', p)[1]
             properties['margin_top'] = fonts.p_get_attribute('margin_top', p)[1]
             properties['margin_bottom'] = fonts.p_get_attribute('margin_bottom', p)[1]

@@ -1,3 +1,5 @@
+import itertools
+
 from fonts import fonts, fonttable
 
 # PARAGRAPH STYLES

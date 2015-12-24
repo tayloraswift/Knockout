@@ -1,6 +1,6 @@
 {'contexts': {'c': 0, 'p': 0},
  'grid': [[], []],
- 'kitty': [{'cursors': (205, 205),
+ 'kitty': [{'cursors': (409, 409),
             'outline': [[[[90, 80, False], [90, 910, False]],
                          [[370, 80, False], [370, 910, False]],
                          0],
@@ -15,10 +15,15 @@
                     'forget him. He drove past her <em>street every night. She '
                     'made friends and enemies. <strong>She only saw him</em> '
                     'in his dreams.</strong> Then one day he came back. Timing '
-                    'is a funny thing. But everyone was watching. She lost him '
-                    'but she found herself and somehow that was '
-                    'everything.</p>'}],
+                    'is a funny thing. x<f '
+                    'class="sup">1<em>9</em><strong>89</strong></f '
+                    'class="sup"> But everyone was watching. She lost him but '
+                    'she found herself and somehow that was everything.</p>'}],
  'page': {'dimensions': (765, 990), 'dual': False},
+ 'pegs': {'Standard pegs': {'_ACTIVE': 'sub',
+                            'sub': [0, -0.2],
+                            'sup': [0, 0.6]},
+          '_ACTIVE': 'Standard pegs'},
  'styles': {('P', '_interface'): {'fontclasses': (False,
                                                   {'_ACTIVE': (),
                                                    (): '_interface:REGULAR',
@@ -30,10 +35,14 @@
                                   'margin_bottom': (False, 5),
                                   'tags': '_UI'},
             ('P', 'body'): {'fontclasses': (False,
-                                            {'_ACTIVE': ('strong',),
+                                            {'_ACTIVE': ('*SCRIPT', 'strong'),
                                              (): 'body:REGULAR',
-                                             ('*SCRIPT',): 'body:REGULAR '
-                                                                    'SMALL',
+                                             ('*SCRIPT',): 'body:REGULAR SMALL',
+                                             ('*SCRIPT', 'emphasis'): 'body:REGULAR '
+                                                                      'SMALL '
+                                                                      'ITALIC',
+                                             ('*SCRIPT', 'strong'): 'body:REGULAR '
+                                                                    'SMALL.001',
                                              ('caption',): '_interface:REGULAR',
                                              ('emphasis',): 'body:ITALIC',
                                              ('emphasis', 'strong'): 'body:BOLDITALIC',
@@ -70,9 +79,7 @@
                    {'collapse': True,
                     'exclusive': False,
                     'name': '*SCRIPT',
-                    'subtags': {'_ACTIVE': 'sup',
-                                'sub': None,
-                                'sup': None}}],
+                    'subtags': {'_ACTIVE': 'sup', 'sub': None, 'sup': None}}],
           '_UI': [3,
                   {'collapse': False,
                    'exclusive': False,
@@ -133,15 +140,24 @@
                                               '/home/kelvin/.fonts/Proforma-Semibold.otf'),
                                      'pegs': 'Standard pegs',
                                      'tracking': (False, 0.5)},
+              'body:REGULAR SMALL ITALIC': {'fontsize': (False, 9),
+                                            'path': (False,
+                                                     '/home/kelvin/.fonts/Proforma-SemiboldItalic.otf'),
+                                            'pegs': 'Standard pegs',
+                                            'tracking': (False, 0.5)},
+              'body:REGULAR SMALL.001': {'fontsize': (False, 9),
+                                         'path': (False,
+                                                  '/home/kelvin/.fonts/Proforma-Bold.otf'),
+                                         'pegs': 'Standard pegs',
+                                         'tracking': (False, 0.5)},
               'h1:DISPLAY': {'fontsize': (False, 48),
                              'path': (False,
                                       '/home/kelvin/.fonts/NYTCheltenham-ExtraLight.otf'),
                              'pegs': 'Standard pegs',
                              'tracking': (False, 0)}},
- 'pegs': {'_ACTIVE': 'Standard pegs', 'Standard pegs': {'_ACTIVE': 'sub', 'sub': [0, -0.2], 'sup': [0, 0.6]}},
- 'view': {'H': 233,
-          'Hc': 384.03619384765625,
-          'K': 246,
-          'Kc': 455.01141357421875,
-          'Zoom': 16,
+ 'view': {'H': 198,
+          'Hc': 528.1539306640625,
+          'K': 172,
+          'Kc': 447.5994873046875,
+          'Zoom': 11,
           'mode': 'text'}}

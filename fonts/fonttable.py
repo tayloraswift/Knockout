@@ -52,6 +52,8 @@ class _Font_table(object):
 
             properties = {}
 
+            properties['pegs'] = fonts.TEXTURES[f]['pegs']
+
             properties['path'] = fonts.f_get_attribute('path', f)[1]
             properties['fontsize'] = fonts.f_get_attribute('fontsize', f)[1]
             properties['tracking'] = fonts.f_get_attribute('tracking', f)[1]

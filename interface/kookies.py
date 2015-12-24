@@ -1010,7 +1010,6 @@ class Unordered(Base_kookie):
             j = 4
         else:
             j = 1
-        print(i, j)
         return i, j
     
     def focus(self, x, y):

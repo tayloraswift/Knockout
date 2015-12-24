@@ -5,7 +5,7 @@ from itertools import chain, groupby
 from pyphen import pyphen
 pyphen.language_fallback('en_US')
 
-from fonts import fonttable
+from fonts import fonttable, fonts
 
 from state import noticeboard
 
@@ -83,6 +83,12 @@ def _assemble_line(letters, startindex, l, anchor, stop, y, leading, FONTCLASSES
     # retrieve font style
     N, FSTYLE = _retrieve_fontclass(F, FONTCLASSES, l)
 
+    # blank pegs
+    glyphwidth = 0
+    gx = 0
+    gy = 0
+    effective_peg = None
+
     for letter in letters:
         CHAR = character(letter)
 
@@ -96,6 +102,17 @@ def _assemble_line(letters, startindex, l, anchor, stop, y, leading, FONTCLASSES
             
             N, FSTYLE = _retrieve_fontclass(F, FONTCLASSES, l)
             
+            # calculate pegging
+            G = FSTYLE['pegs']
+            if letter[1] in fonts.PEGS[G]:
+                gx, gy = fonts.PEGS[G][letter[1]]
+                gx = gx * glyphwidth
+                gy = gy * FSTYLE['fontsize']
+                effective_peg = letter[1]
+                
+                y -= gy
+                x += gx
+            
             GLYPHS.append((-4, x, y,  N, tuple(F), x))
             
         elif CHAR == '</f>':
@@ -106,6 +123,10 @@ def _assemble_line(letters, startindex, l, anchor, stop, y, leading, FONTCLASSES
                 F.sort()
 
             N, FSTYLE = _retrieve_fontclass(F, FONTCLASSES, l)
+
+            # depeg
+            if letter[1] == effective_peg:
+                y += gy
 
             GLYPHS.append((-5, x, y,  N, tuple(F), x))
             

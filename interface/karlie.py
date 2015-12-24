@@ -165,6 +165,12 @@ class _Properties_panel(ui.Cell):
         fonttable.table.clear()
         meredith.mipsy.recalculate_all()
         self._reconstruct()
+
+    def _TURNOVER_WITH_REFRESH(self):
+        fonttable.p_table.clear()
+        fonttable.table.clear()
+        meredith.mipsy.recalculate_all()
+        self._reconstruct()
         
     def render(self, cr, h, k):
         
@@ -258,14 +264,14 @@ class Properties(_Properties_panel):
         self._items.append(kookies.Heading( 15, 90, 250, 30, p[0][0] + ':' + p[0][1], upper=True))
         
         if self._tab == 'font':
-            self._items.append(kookies.Unordered( 15, y, 250, 200,
+            self._items.append(kookies.Unordered( 15, y, 250, 250,
                         dict_acquire=lambda: fonts.p_get_attribute('fontclasses', p[0])[1], 
                         protect = set(((),)),
                         new = lambda L: (('{new}',), None),
                         display = lambda l: ', '.join(l) if l else '{none}',
                         before=un.history.save, after=self._TURNOVER_WITH_REFRESH_F, after_delete=self._TURNOVER_WITH_REFRESH_F))
 
-            y += 200
+            y += 250
             self._items.append(kookies.Binary_table(15, y, 250, 100, (80, 26), 
                         callback= plane.tags_push_states,
                         states_acquire=plane.tags_read_states, params=(p[0],),
@@ -276,7 +282,7 @@ class Properties(_Properties_panel):
                         value_acquire = plane.p_active_f, 
                         value_push = plane.p_link_font_datablock, 
                         objects_acquire=lambda: fonts.TEXTURES, 
-                        params = (p[0], ), before=un.history.save, after=self._TURNOVER_WITH_REFRESH_F, name='FONTSTYLE', source=self._partition))
+                        params = (p[0], ), before=un.history.save, after=self._TURNOVER_WITH_REFRESH, name='FONTSTYLE', source=self._partition))
 
             y += 55
             key = plane.p_active_f(p[0])

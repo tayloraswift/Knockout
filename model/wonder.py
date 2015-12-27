@@ -1,7 +1,7 @@
 import enchant
 
 def character(entity):
-    if type(entity) is tuple:
+    if type(entity) is not str:
         entity = entity[0]
     return entity
 
@@ -36,15 +36,15 @@ def words(text, startindex=0, spell=False):
         misspelled_indices = []
         
         previous = 0
-        for i in (i for i, e in enumerate(text) if e in _breaking_prose):
+        for i in (i for i, e in enumerate(text) if type(e) is str and e in _breaking_prose):
             if i - previous > 0:
                 selection = text[previous:i]
                 
-                if any(e in _prose for e in selection):
+                if any(type(e) is str and e in _prose for e in selection):
                     word_count += 1
                     
                     iprevious = 0
-                    for ii in (ii for ii, e in enumerate(selection + [' ']) if e in _breaking_chars):
+                    for ii in (ii for ii, e in enumerate(selection + [' ']) if type(e) is str and e in _breaking_chars):
                         if ii - iprevious > 0:
                             W = ''.join([v for v in selection[iprevious:ii] if len(v) == 1])
                             if len(W) > 1 and not check_spelling(W):
@@ -59,9 +59,9 @@ def words(text, startindex=0, spell=False):
     else:
         word_count = 0
         previous = 0
-        for i in (i for i, e in enumerate(text) if e in _breaking_prose):
+        for i in (i for i, e in enumerate(text) if type(e) is str and e in _breaking_prose):
             if i - previous > 0:
-                if any(True for e in text[previous:i] if e in _prose):
+                if any(True for e in text[previous:i] if type(e) is str and e in _prose):
                     word_count += 1
                 
             previous = i + 1

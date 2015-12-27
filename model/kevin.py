@@ -1,29 +1,31 @@
 from copy import deepcopy
 import html, itertools
 
+from fonts import styles
+
 def serialize(text):
-    b = deepcopy(text)
+    b = text.copy()
     for e, entity in enumerate(b):
         if not isinstance(entity, str):
             if entity[0] == '<f>':
-                if entity[1] == 'emphasis':
+                if entity[1].name == 'emphasis':
                     b[e] = '<em>'
-                elif entity[1] == 'strong':
+                elif entity[1].name == 'strong':
                     b[e] = '<strong>'
                 else:
-                    b[e] = '<f class="' + entity[1] + '">'
+                    b[e] = '<f class="' + entity[1].name + '">'
             
             elif entity[0] == '</f>':
-                if entity[1] == 'emphasis':
+                if entity[1].name == 'emphasis':
                     b[e] = '</em>'
-                elif entity[1] == 'strong':
+                elif entity[1].name == 'strong':
                     b[e] = '</strong>'
                 else:
-                    b[e] = '</f class="' + entity[1] + '">'
+                    b[e] = '</f class="' + entity[1].name + '">'
             
             elif entity[0] == '<p>':
-                if entity[1] != ('P', 'body'):
-                    b[e] = '<' + entity[1][0].lower() + ' class="' + entity[1][1] + '">'
+                if entity[1].name != 'body':
+                    b[e] = '<p class="' + entity[1].name + '">'
                 else:
                     b[e] = '<p>'
 
@@ -49,17 +51,17 @@ def deserialize(string):
         entity = ''.join(b[opentag + 1:closetag])
         
         if entity == 'p':
-            entity = ('<p>', ('P', 'body'))
+            entity = ['<p>', styles.PARASTYLES['body'] ]
         elif entity == '/p':
             entity = '</p>'
         elif entity == 'em':
-            entity = ('<f>', 'emphasis')
+            entity = ('<f>', styles.TAGLIST.elements['emphasis'])
         elif entity == '/em':
-            entity = ('</f>', 'emphasis')
+            entity = ('</f>', styles.TAGLIST.elements['emphasis'])
         elif entity == 'strong':
-            entity = ('<f>', 'strong')
+            entity = ('<f>', styles.TAGLIST.elements['strong'])
         elif entity == '/strong':
-            entity = ('</f>', 'strong')
+            entity = ('</f>', styles.TAGLIST.elements['strong'])
 
         else:
             tag = entity.split()[0]
@@ -72,7 +74,10 @@ def deserialize(string):
                 data = eval(data)
                 
                 if tag == 'p':
-                    data = ('P', data)
+                    data = styles.PARASTYLES[data]
+                
+                elif tag in {'f', '/f'}:
+                    data = styles.TAGLIST.elements[data]
 
                 entity = ('<' + tag + '>', data)
 
@@ -89,6 +94,6 @@ def deserialize(string):
         elif k == 1:
             d += g
         elif k == 2:
-            d += ['</p>', ('<p>', ('P', 'body'))]
+            d += ['</p>', ['<p>', styles.PARASTYLES['body']]]
 
     return d

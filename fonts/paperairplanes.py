@@ -1,18 +1,7 @@
 import itertools
-
-from fonts import fonts, fonttable
-
 # PARAGRAPH STYLES
 
-def p_push_attribute(value, attribute, p):
-    fonts.p_set_attribute((False, value), attribute, p)
-
-def f_push_attribute(value, attribute, f):
-    fonts.TEXTURES[f][attribute] = (False, value)
-
-def p_read_indent(A, p):
-    C, SIGN, K = fonttable.p_table.get_paragraph(p)[A]
-
+def read_binomial(C, SIGN, K):
     if K:
         if abs(K) == 1:
             coefficient = ''
@@ -35,7 +24,7 @@ def p_read_indent(A, p):
         val = str(C)
     return val
 
-def p_push_indent(value, A, p):
+def pack_binomial(value):
     K = 0
     C = 0
     sgn = 1
@@ -68,20 +57,8 @@ def p_push_indent(value, A, p):
     else:
         SIGN = 1
     
-    value = (C, SIGN, K)
-    
-    fonts.p_set_attribute((False, value), A, p)
+    return C, SIGN, K
 
-def p_rename(OLD, NEW):
-    for k, u in fonts.paragraph_classes.items():
-        for attribute, v in u.items():
-
-            # inherit flag
-            if v[0]:
-                if v[1] == OLD:
-                    fonts.paragraph_classes[k][attribute] = (True, NEW)
-
-    fonttable.p_table.clear()
 
 def p_link_font_datablock(name, p):
     fonts.paragraph_classes[p]['fontclasses'][1] [ fonts.paragraph_classes[p]['fontclasses'][1]['_ACTIVE'] ] = name
@@ -130,67 +107,3 @@ def pegs_push_tag(tag, G):
     fonts.PEGS[G] [tag] = fonts.PEGS[G].pop(fonts.PEGS[G]['_ACTIVE'])
     fonts.PEGS[G]['_ACTIVE'] = tag
 
-# FONT STYLES
-    
-def rename_f(old, new, P):
-    for k, PC in fonts.paragraph_classes.items():
-        if not PC['fontclasses'][0]:
-            for l in PC['fontclasses'][1]:
-                if PC['fontclasses'][1][l] == old:
-                    fonts.paragraph_classes[k]['fontclasses'][1][l] = new
-                else:
-                    if PC['fontclasses'][1]['_ACTIVE'] == old:
-                        fonts.paragraph_classes[k]['fontclasses'][1]['_ACTIVE'] = new
-
-    for k, TX in fonts.TEXTURES.items():
-        for l in TX:
-            if TX[l][0]:
-                if TX[l][1] == old:
-                    fonts.TEXTURES[k][l] = (True, new)
-
-# INHERITANCE
-def _F_read_inherit(A, f):
-    current = fonts.f_read_attribute(A, f)
-    if current[0]:
-        return current[1]
-    else:
-        return '—'
-
-def _F_push_inherit(value, A, f):
-    fonttable.table.clear()
-    if value == '—':
-        plane.f_push_attribute(fonttable.table.get_font(f)[A], A, f)
-    else:
-        # save old value in case of a disaster
-        v = fonts.f_get_attribute(A, f)
-        fonts.TEXTURES[f][A] = (True, value)
-
-        try:
-            fonttable.table.get_font(f)
-        except RuntimeError:
-            fonttable.table.clear()
-            fonts.TEXTURES[f][A] = v
-            print('REFERENCE LOOP DETECTED')
-
-def _P_read_inherit(A, p):
-    current = fonts.p_read_attribute(A, p)
-    if current[0]:
-        return current[1]
-    else:
-        return '—'
-
-def _P_push_inherit(value, A, p):
-    fonttable.p_table.clear()
-    if value == '—':
-        fonts.p_set_attribute((False, fonttable.p_table.get_paragraph(p)[A]), A, p)
-    else:
-        # save old value in case of a disaster
-        v = fonts.p_get_attribute(A, p)
-        fonts.p_set_attribute((True, value), A, p)
-
-        try:
-            fonttable.p_table.get_paragraph(p)
-        except RuntimeError:
-            fonttable.p_table.clear()
-            fonts.p_set_attribute(v, A, p)
-            print('REFERENCE LOOP DETECTED')

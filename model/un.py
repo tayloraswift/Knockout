@@ -22,7 +22,7 @@ class UN(object):
         page_xy = (penclick.page.WIDTH, penclick.page.HEIGHT)
         if len(self._history) > self._i:
             del self._history[self._i:]
-        self._history.append({'kitty': kitty, 'styles': deepcopy(fonts.paragraph_classes), 'page': page_xy})
+        self._history.append({'kitty': kitty, 'styles': None, 'page': page_xy})
         self._i = len(self._history)
     
     def pop(self):

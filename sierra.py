@@ -1,6 +1,6 @@
 import pprint, pickle, ast
 
-from fonts import fonts
+from fonts import fonts, styles
 
 from state import constants
 
@@ -22,14 +22,17 @@ def save():
             'dual': penclick.page.dual
             }
     
-    styles = fonts.paragraph_classes
-    textures = fonts.TEXTURES
-    tags = fonts.TAGS
-    pegs = fonts.PEGS
     grid = meredith.mipsy.page_grid
     contexts = {'c': meredith.mipsy.C(), 'p': meredith.mipsy.page_context}
     
-    doc = {'kitty': kitty, 'grid': grid, 'contexts': contexts, 'styles': styles, 'textures': textures, 'tags': tags, 'pegs': pegs, 'view': taylor.becky.read_display_state(), 'page': page}
+    PPP = {N: P.polaroid() for N, P in styles.PARASTYLES.items()}
+    FFF = {N: F.polaroid() for N, F in styles.FONTSTYLES.items()}
+    
+    GGG = {N: G.polaroid() for N, G in styles.PEGS.items()}
+    MMM = {N: M.polaroid() for N, M in styles.MAPS.items()}
+    TTT = [styles.TAGLIST.ordered.index(styles.TAGLIST.active)] + [T.polaroid() for T in styles.TAGLIST.ordered]
+
+    doc = {'kitty': kitty, 'grid': grid, 'contexts': contexts, 'PARASTYLES': PPP, 'FONTSTYLES': FFF, 'MAPS': MMM, 'TAGLIST': TTT, 'PEGS': GGG, 'view': taylor.becky.read_display_state(), 'page': page}
     
     with open(constants.filename, 'w') as fi:
         pprint.pprint(doc, fi)
@@ -43,35 +46,7 @@ def load(name):
         with open(name, 'rb') as fi:
             constants.filename = name
             doc = pickle.load(fi)
-    fonts.paragraph_classes = doc['styles']
-    fonts.TEXTURES = doc['textures']
-    fonts.TAGS = doc['tags']
-    fonts.PEGS = doc['pegs']
-
-    # compatibility
-    
-    for p in fonts.paragraph_classes:
-        if 'hyphenate' not in fonts.paragraph_classes[p]:
-            fonts.paragraph_classes[p]['hyphenate'] = (False, True)
-        
-        if not isinstance(p, tuple):
-            _r_rename_p(p, ('P', p))
-#    if ('IMAGE', '_graph') not in fonts.paragraph_classes:
- #       fonts.paragraph_classes[('IMAGE', '_graph')] = {
-  #              'margin_bottom': (False, 0),
-   #             'margin_left': (False, 0),
-    #            'margin_right': (False, 0),
-     #           'margin_top': (False, 0)
-      #          }
-        
-
-
-    for t in doc['kitty']:
-        if 'cursors' not in t:
-            t['cursors'] = 1, 1
-    
-#    doc['grid'] = [[], []]
-#    doc['contexts'] = {'p': 0, 'c': 0}
+    styles.faith(doc)
     
     penclick.page = penclick.Page(doc['page'])
     meredith.mipsy = meredith.Meredith(doc['kitty'], grid=doc['grid'], contexts=doc['contexts'])
@@ -80,58 +55,4 @@ def load(name):
     taylor.becky = taylor.Document_view(doc['view'])
     from model import un
     un.history.save()
-
-def _r_rename_p(old, new):
-    paragraph_classes = fonts.paragraph_classes
-    for k in paragraph_classes:
-        # travel through fontclasses
-        if not paragraph_classes[k]['fontclasses'][0]:
-            for f in paragraph_classes[k]['fontclasses'][1]:
-            
-                paragraph_classes[k]['fontclasses'][1][f] = list(paragraph_classes[k]['fontclasses'][1][f])
-                
-                # inherit flag
-                if paragraph_classes[k]['fontclasses'][1][f][0]:
-                    
-                    paragraph_classes[k]['fontclasses'][1][f][1] = list(paragraph_classes[k]['fontclasses'][1][f][1])
-                    
-                    if paragraph_classes[k]['fontclasses'][1][f][1] [0] == old:
-                        paragraph_classes[k]['fontclasses'][1][f][1] [0] = new
-                    
-                    paragraph_classes[k]['fontclasses'][1][f][1] = tuple(paragraph_classes[k]['fontclasses'][1][f][1])
-                
-                else:
-                    paragraph_classes[k]['fontclasses'][1][f] = list(paragraph_classes[k]['fontclasses'][1][f])
-                    
-                    for a in paragraph_classes[k]['fontclasses'][1][f][1]:
-                        paragraph_classes[k]['fontclasses'][1][f][1][a] = list(paragraph_classes[k]['fontclasses'][1][f][1][a])
-                        # inherit flag
-                        if paragraph_classes[k]['fontclasses'][1][f][1][a][0]:
-                            
-                            paragraph_classes[k]['fontclasses'][1][f][1][a][1] = list(paragraph_classes[k]['fontclasses'][1][f][1][a][1])
-
-                            if paragraph_classes[k]['fontclasses'][1][f][1][a][1] [0] == old:
-                                paragraph_classes[k]['fontclasses'][1][f][1][a][1] [0] = new
-                            
-                            paragraph_classes[k]['fontclasses'][1][f][1][a][1] = tuple(paragraph_classes[k]['fontclasses'][1][f][1][a][1])
-                        
-                        paragraph_classes[k]['fontclasses'][1][f][1][a] = tuple(paragraph_classes[k]['fontclasses'][1][f][1][a])
-                    
-                    paragraph_classes[k]['fontclasses'][1][f] = tuple(paragraph_classes[k]['fontclasses'][1][f])
-
-                paragraph_classes[k]['fontclasses'][1][f] = tuple(paragraph_classes[k]['fontclasses'][1][f])
-                    
-            
-        for l in paragraph_classes[k]:
-            paragraph_classes[k][l] = list(paragraph_classes[k][l])
-            # inherit flag
-            if paragraph_classes[k][l][0]:
-                if paragraph_classes[k][l][1] == old:
-                    paragraph_classes[k][l][1] = new
-            
-            paragraph_classes[k][l] = tuple(paragraph_classes[k][l])
-        
-        if k == old:
-            paragraph_classes[new] = paragraph_classes[k]
-            del paragraph_classes[old]
 

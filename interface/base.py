@@ -2,7 +2,7 @@ from math import floor
 
 from state import constants
 
-from fonts import fonttable
+from fonts import styles
 
 class Base_kookie(object):
     def __init__(self, x, y, width, height, font=None):
@@ -16,7 +16,7 @@ class Base_kookie(object):
         self._texts = []
         
         if font is None:
-            self.font = fonttable.table.get_font('_interface:REGULAR')
+            self.font = styles.FONTSTYLES['_interface:REGULAR']
         else:
             self.font = font
         
@@ -30,16 +30,16 @@ class Base_kookie(object):
 
     def _build_line(self, x, y, text, font, fontsize=None, align=1, sub_minus=False):
         if fontsize is None:
-            fontsize = font['fontsize']
+            fontsize = font.u_fontsize
         xo = x
         line = []
         for character in text:
             if sub_minus and character == '-':
                 character = '–'
             try:
-                line.append((font['fontmetrics'].character_index(character), x, y))
+                line.append((font.u_fontmetrics.character_index(character), x, y))
 
-                x += (font['fontmetrics'].advance_pixel_width(character)*fontsize + font['tracking'])
+                x += (font.u_fontmetrics.advance_pixel_width(character)*fontsize + font.u_tracking)
             except TypeError:
                 line.append((None, x, y))
 
@@ -85,8 +85,8 @@ class Base_kookie(object):
         pass
     
     def _render_fonts(self, cr):
-        cr.set_font_size(self.font['fontsize'])
-        cr.set_font_face(self.font['font'])
+        cr.set_font_size(self.font.u_fontsize)
+        cr.set_font_face(self.font.u_font)
     
     def bounding_box(self):
         return self._x, self._x_right,self._y, self._y_bottom

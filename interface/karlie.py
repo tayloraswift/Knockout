@@ -1,13 +1,11 @@
 import bisect
 
-from state import constants
+from state import constants, contexts
 from state import noticeboard
 
-from fonts import fonts
-from fonts import fonttable
-from fonts import paperairplanes as plane
+from fonts import styles
 
-from interface import kookies, caramel, ui
+from interface import kookies, caramel, ui, ops
 
 from model import meredith, penclick
 from model import un
@@ -33,47 +31,28 @@ def create_f_field(TYPE, x, y, width, attribute, f, after, value_acquire=lambda 
             after=after,
             name=name)
             
-def create_p_field(TYPE, x, y, width, attribute, p, after, value_acquire=lambda A, p: str(fonttable.p_table.get_paragraph(p)[A]),  name=''):
+def _create_p_field(TYPE, x, y, width, attribute, after, name='', **kwargs):
     return TYPE(x, y, width,
-            callback= plane.p_push_attribute, 
-            value_acquire= value_acquire,
-            params = (attribute, p), 
+            callback = ops.Text.p_set_attribute, 
+            value_acquire= lambda A: getattr(contexts.Text.paragraph[1], 'u_' + A),
+            params = (attribute,), 
             before=un.history.save,
             after=after,
-            name=name)
+            name=name, **kwargs)
 
-class _Paragraph_INDENT_EXP(kookies.Blank_space):
-    def __init__(self, x, y, width, p, after, name=None):
-        kookies.Blank_space.__init__(self, x, y, width,
-                callback= plane.p_push_indent, 
-                value_acquire= plane.p_read_indent,
-                params = ('indent', p), 
-                before=un.history.save,
-                after=after,
-                name=name)
-        
-        self._domain = lambda k: ''.join([c for c in k if c in '1234567890.-+K'])
-
-    def _stamp_glyphs(self, text):
-        self._template = self._build_line(self._x, self._y + self.font['fontsize'] + 5, text, self.font, sub_minus=True)
-
-def _p_rename(OLD, KEY):
-    plane.p_rename(OLD, KEY)
-    meredith.mipsy.rename_paragraph_class(OLD, KEY)
+def _create_p_inherit(x, y, width, attribute, after, source=0):
+    return kookies.Datablock_selection_menu(x, y, width=width, height=15, menu_callback = ops.Text.p_link_inheritance, 
+            options_acquire = lambda: ((None, 'None'),) + tuple( (l, l.name) for l in sorted(styles.PARASTYLES.values(), key=lambda k: k.name) ),
+            value_acquire = lambda A: contexts.Text.paragraph[1].read_inherit_name(A), 
+            params = (attribute,),
+            before = un.history.save, after=after,
+            source=source)
 
 def _F_inheritance_menu(x, y, width, f, attribute, after, source=0):
     return kookies.Selection_menu(x, y, width=width, height=15, menu_callback = plane._F_push_inherit, 
             options_acquire=lambda: (('—', '—'),) + tuple((k, k) for k in sorted(fonts.TEXTURES.keys())), 
             value_acquire = plane._F_read_inherit, 
             params = (attribute, f),
-            before = un.history.save, after=after,
-            source=source)
-                
-def _P_inheritance_menu(x, y, width, p, attribute, after, source=0):
-    return kookies.Selection_menu(x, y, width=width, height=15, menu_callback = plane._P_push_inherit, 
-            options_acquire = lambda: (('—', '—'),) + tuple((k, k[0] + ' : ' + k[1]) for k in sorted(fonts.paragraph_classes.keys())),
-            value_acquire = plane._P_read_inherit, 
-            params = (attribute, p),
             before = un.history.save, after=after,
             source=source)
 
@@ -148,30 +127,8 @@ class _Properties_panel(ui.Cell):
     def synchronize(self):
         for item in self._items:
             item._SYNCHRONIZE()
-
-    def _TURNOVER_WITH_RERENDER_P(self):
-        fonttable.p_table.clear()
-        meredith.mipsy.recalculate_all()
-        self.synchronize()
-
-    def _TURNOVER_WITH_RERENDER_F(self):
-        fonttable.table.clear()
-        meredith.mipsy.recalculate_all()
-        self.synchronize()
-    
-    def _TURNOVER_WITH_REFRESH_F(self):
-        fonttable.table.clear()
-        meredith.mipsy.recalculate_all()
-        self._reconstruct()
-
-    def _TURNOVER_WITH_REFRESH(self):
-        fonttable.p_table.clear()
-        fonttable.table.clear()
-        meredith.mipsy.recalculate_all()
-        self._reconstruct()
         
     def render(self, cr, h, k):
-        
         # DRAW BACKGROUND
         cr.rectangle(0, 0, 
                 h - constants.UI[self._partition], 
@@ -251,7 +208,7 @@ class Properties(_Properties_panel):
         # ALWAYS REQUIRES CALL TO _stack()
         print('reconstruct')
 
-        p = meredith.mipsy.paragraph_at()
+        p = contexts.Text.paragraph
         
         self._items = [self._tabstrip]
         self._active_box_i = None
@@ -259,16 +216,17 @@ class Properties(_Properties_panel):
         
         y = 145
         
-        self._items.append(kookies.Heading( 15, 90, 250, 30, p[0][0] + ':' + p[0][1], upper=True))
-        
+        self._items.append(kookies.Heading( 15, 90, 250, 30, p[1].name, upper=True))
+               
         if self._tab == 'font':
+            """
             self._items.append(kookies.Unordered( 15, y, 250, 250,
-                        dict_acquire=lambda: fonts.p_get_attribute('fontclasses', p[0])[1], 
+                        dict_acquire=lambda: p[1].fontclasses.elements, 
                         protect = set(((),)),
                         new = lambda L: (('{new}',), None),
                         display = lambda l: ', '.join(l) if l else '{none}',
-                        before=un.history.save, after=self._TURNOVER_WITH_REFRESH_F, after_delete=self._TURNOVER_WITH_REFRESH_F))
-
+                        before=un.history.save, after=self.refresh, after_delete=self.refresh))
+            
             y += 250
             self._items.append(kookies.Binary_table(15, y, 250, 100, (80, 26), 
                         callback= plane.tags_push_states,
@@ -325,64 +283,61 @@ class Properties(_Properties_panel):
                                 before = un.history.save, after=self._TURNOVER_WITH_REFRESH_F,
                                 source=self._partition))
                     y += 45
-                 
+                    """
         elif self._tab == 'paragraph':
 
-            self._items.append(kookies.Object_menu( 15, y, 250, rename=_p_rename, 
-                        value_acquire=lambda: p[0], 
-                        value_push=lambda name: meredith.mipsy.change_paragraph_class(meredith.mipsy.paragraph_at()[1], name), 
-                        objects_acquire=lambda: fonts.paragraph_classes, 
+            self._items.append(kookies.Object_menu( 15, y, 250, 
+                        value_acquire=lambda: p[1], 
+                        value_push=ops.Text.link_parastyle, 
+                        library=styles.PARASTYLES, 
                         params = (), before=un.history.save, after=self.refresh, name='RENAME CLASS', source=self._partition))
             y += 45
-
-            self._items.append(create_p_field(kookies.Numeric_field, 15, y, 250, 'leading', p[0], after=self._TURNOVER_WITH_RERENDER_P, name='LEADING') )
+            
+            self._items.append(_create_p_field(kookies.Numeric_field, 15, y, 250, 'leading', after=self.synchronize, name='LEADING') )
             y += 30
-            self._items.append(_P_inheritance_menu( 15, y, width=250, p=p[0], attribute='leading', after=self.refresh, source=self._partition))
-
+            
+            self._items.append(_create_p_inherit(15, y, width=250, attribute='leading', after=self.synchronize, source=self._partition))
+            
             y += 15
-            _tc_ = [_Paragraph_INDENT_EXP( 15, y, 175, p[0], after=self._TURNOVER_WITH_RERENDER_P, name='INDENT' ), 
-                    create_p_field(kookies.Enumerate_field, 200, y, 65, 'indent_range', p[0], after=self._TURNOVER_WITH_RERENDER_P, 
-                            value_acquire = lambda A, p: str(sorted(fonttable.p_table.get_paragraph(p)[A]))[1:-1], 
-                            name='FOR LINES') ]
+            _tc_ = [_create_p_field(kookies.Binomial_field, 15, y, 175, 'indent', after=self.synchronize, name='INDENT', letter='K'), 
+                    _create_p_field(kookies.Enumerate_field, 200, y, 65, 'indent_range', after=self.synchronize, name='FOR LINES') ]
+            self._items.append( _TWO_COLUMN( * _tc_))
+            self._items += _tc_
+            
+            y += 45
+            _tc_ = [_create_p_inherit(15, y, width=175, attribute='indent', after=self.synchronize, source=self._partition), 
+                    _create_p_inherit(200, y, width=65, attribute='indent_range', after=self.synchronize, source=self._partition) ]
+            self._items.append( _TWO_COLUMN( * _tc_))
+            self._items += _tc_
+            
+            y += 15
+            _tc_ = [_create_p_field(kookies.Numeric_field, 15, y, 120, 'margin_left', after=self.synchronize, name='LEFT MARGIN'),
+                    _create_p_field(kookies.Numeric_field, 145, y, 120, 'margin_right', after=self.synchronize, name='RIGHT MARGIN')]
+            self._items.append( _TWO_COLUMN( * _tc_))
+            self._items += _tc_
+            y += 45
+            _tc_ = [_create_p_inherit( 15, y, width=120, attribute='margin_left', after=self.synchronize, source=self._partition), 
+                    _create_p_inherit( 145, y, width=120, attribute='margin_right', after=self.synchronize, source=self._partition) ]
+            self._items.append( _TWO_COLUMN( * _tc_))
+            self._items += _tc_
+            
+            y += 15
+            _tc_ = [_create_p_field(kookies.Numeric_field, 15, y, 120, 'margin_top', after=self.synchronize, name='TOP MARGIN'),
+                    _create_p_field(kookies.Numeric_field, 145, y, 120, 'margin_bottom', after=self.synchronize, name='BOTTOM MARGIN')]
             self._items.append( _TWO_COLUMN( * _tc_))
             self._items += _tc_
 
             y += 45
-            _tc_ = [_P_inheritance_menu( 15, y, width=175, p=p[0], attribute='indent', after=self.refresh, source=self._partition), 
-                    _P_inheritance_menu( 200, y, width=65, p=p[0], attribute='indent_range', after=self.refresh, source=self._partition) ]
+            _tc_ = [_create_p_inherit( 15, y, width=120, attribute='margin_top', after=self.synchronize, source=self._partition), 
+                    _create_p_inherit( 145, y, width=120, attribute='margin_bottom', after=self.synchronize, source=self._partition) ]
             self._items.append( _TWO_COLUMN( * _tc_))
             self._items += _tc_
-
+            
             y += 15
-            _tc_ = [create_p_field(kookies.Numeric_field, 15, y, 120, 'margin_left', p[0], after=self._TURNOVER_WITH_RERENDER_P, name='LEFT MARGIN'),
-                    create_p_field(kookies.Numeric_field, 145, y, 120, 'margin_right', p[0], after=self._TURNOVER_WITH_RERENDER_P, name='RIGHT MARGIN')]
-            self._items.append( _TWO_COLUMN( * _tc_))
-            self._items += _tc_
-            y += 45
-            _tc_ = [_P_inheritance_menu( 15, y, width=120, p=p[0], attribute='margin_left', after=self.refresh, source=self._partition), 
-                    _P_inheritance_menu( 145, y, width=120, p=p[0], attribute='margin_right', after=self.refresh, source=self._partition) ]
-            self._items.append( _TWO_COLUMN( * _tc_))
-            self._items += _tc_
-
-            y += 15
-            _tc_ = [create_p_field(kookies.Numeric_field, 15, y, 120, 'margin_top', p[0], after=self._TURNOVER_WITH_RERENDER_P, name='TOP MARGIN'),
-                    create_p_field(kookies.Numeric_field, 145, y, 120, 'margin_bottom', p[0], after=self._TURNOVER_WITH_RERENDER_P, name='BOTTOM MARGIN')]
-            self._items.append( _TWO_COLUMN( * _tc_))
-            self._items += _tc_
-
-            y += 45
-            _tc_ = [_P_inheritance_menu( 15, y, width=120, p=p[0], attribute='margin_top', after=self.refresh, source=self._partition), 
-                    _P_inheritance_menu( 145, y, width=120, p=p[0], attribute='margin_bottom', after=self.refresh, source=self._partition) ]
-            self._items.append( _TWO_COLUMN( * _tc_))
-            self._items += _tc_
-
-            y += 15
-            self._items.append(create_p_field(kookies.Checkbox, 15, y + 15, 100, 'hyphenate', p[0], after=self._TURNOVER_WITH_RERENDER_P, 
-                            value_acquire = lambda A, p: fonttable.p_table.get_paragraph(p)[A], 
-                            name='HYPHENATE') )
+            self._items.append(_create_p_field(kookies.Checkbox, 15, y + 15, 100, 'hyphenate', after=self.synchronize, name='HYPHENATE') )
             y += 30
-            self._items.append(_P_inheritance_menu( 15, y, width=250, p=p[0], attribute='hyphenate', after=self.refresh, source=self._partition))
-
+            self._items.append(_create_p_inherit(15, y, width=250, attribute='hyphenate', after=self.refresh, source=self._partition))
+            """
             y += 30
             self._items.append(kookies.Orderable( 15, y, 200, 180,
                         list_acquire=lambda: fonts.TAGS[fonts.paragraph_classes[p[0]]['tags']], 
@@ -422,19 +377,18 @@ class Properties(_Properties_panel):
                                 before = un.history.save,
                                 after = self._TURNOVER_WITH_RERENDER_P,
                                 name = 'COLLAPSE') )
-                
+            """
         elif self._tab == 'page':
             self._items.append(kookies.Integer_field( 15, y, 250, 
                         callback = penclick.page.set_width,
-                        value_acquire = lambda: str(penclick.page.WIDTH),
+                        value_acquire = lambda: penclick.page.WIDTH,
                         name = 'WIDTH' ))
             
             y += 45
             self._items.append(kookies.Integer_field( 15, y, 250,
                         callback = penclick.page.set_height,
-                        value_acquire = lambda: str(penclick.page.HEIGHT),
+                        value_acquire = lambda: penclick.page.HEIGHT,
                         name = 'HEIGHT' ))
-
         self._stack()
 
     def _reconstruct_channel_properties(self):

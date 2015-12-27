@@ -1,4 +1,4 @@
-from fonts import fonttable
+from fonts import styles
 
 class StyleErrors(object):
     def __init__(self):
@@ -57,7 +57,7 @@ class ErrorPanel(object):
 
     def draw(self, cr, width):
         cr.set_font_size(14)
-        cr.set_font_face(fonttable.table.get_font('_interface:STRONG')['font'])
+        cr.set_font_face(styles.FONTSTYLES['_interface:STRONG'].u_font)
         if self.phase >= 18:
             phase = 1
         else:
@@ -71,19 +71,4 @@ class ErrorPanel(object):
         
         cr.move_to(100 + 30, 40)
         cr.show_text(self.location)
-"""
-class Error_noticeboard(object):
-    def __init__(self):
-        self.new = False
-        self.errors = []
-    
-    def push_new(self, name, subtitle):
-        self.errors.append((name, subtitle))
-        self.new = True
-    
-    def is_new(self):
-        if self.new:
-            return True
-"""    
 
-        

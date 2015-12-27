@@ -1,5 +1,3 @@
-from fonts import fonttable
-
 from model import un
 from model.meredith import mipsy
 

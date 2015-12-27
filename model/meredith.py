@@ -8,7 +8,7 @@ from state import noticeboard
 class Meredith(object):
     def __init__(self, kitty, grid, contexts):
         self.tracts = [olivia.Text(k['text'], george.Washington([george.Swimming_pool( * c ) for c in k['outline']]), * k['cursors'] ) for k in kitty if k['outline']]
-        
+
         self.page_context = contexts['p']
         self.hover_page_context = 0
         
@@ -147,9 +147,6 @@ class Meredith(object):
     def rename_paragraph_class(self, old, new):
         for tract in self.tracts:
             tract.text[:] = [('<p>', new) if e == ('<p>', old) else e for e in tract.text]
-
-    def change_paragraph_class(self, i, po):
-        self.tracts[0].text[i] = ('<p>', po)
     
     def change_channel_page(self, page, c):
         self.tracts[0].channels.channels[c].set_page(page)

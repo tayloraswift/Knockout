@@ -9,9 +9,9 @@ import cairo
 import sierra
 
 from state import noticeboard
-from state import constants
+from state import constants, contexts
 
-from fonts import fonttable
+from fonts import styles
 
 from model import meredith
 from model import wonder
@@ -23,19 +23,11 @@ from interface import kookies
 from interface import caramel
 from interface import menu, ui
 
-
-# used in rendering with undefined classes
-def get_fontsize(f):
-    try:
-        fontsize = fonttable.table.get_font(f)['fontsize']
-    except KeyError:
-        fontsize = fonttable.table.get_font('_interface:REGULAR')['fontsize']
-    return fontsize
-
-def paragraph_context_changed(previous=[None]):
+def check_paragraph_context_changed(previous=[None]):
     p = meredith.mipsy.paragraph_at()
     if p != previous[0]:
         previous[0] = p
+        contexts.Text.update_p(p)
         return True
     else:
         return False
@@ -55,8 +47,8 @@ class Tabs_round(kookies.Tabs):
         self._add_static_text(self._x + self._width//2, self._y_bottom + 20, self._longstrings[self._active], align=0)
         
     def draw(self, cr, hover=(None, None)):
-        cr.set_font_size(self.font['fontsize'])
-        cr.set_font_face(self.font['font'])
+        cr.set_font_size(self.font.u_fontsize)
+        cr.set_font_face(self.font.u_font)
         
         for i, button in enumerate(self._x_left):
 
@@ -195,14 +187,14 @@ class Document_toolbar(object):
         self._items.append(kookies.Button(5, y, 90, 30, callback=meredith.mipsy.add_tract, string='Add tract'))
 
         y += 50
-        self._items.append(kookies.Button(5, y, 90, 30, callback=place_tags, string='Emphasis', params=('emphasis',) ))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=place_tags, string='Emphasis', params=(styles.TAGLIST.elements['emphasis'],) ))
         y += 30
-        self._items.append(kookies.Button(5, y, 90, 30, callback=punch_tags, string='x Emphasis', params=('emphasis',) ))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=punch_tags, string='x Emphasis', params=(styles.TAGLIST.elements['emphasis'],) ))
 
         y += 40
-        self._items.append(kookies.Button(5, y, 90, 30, callback=place_tags, string='Strong', params=('strong',) ))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=place_tags, string='Strong', params=(styles.TAGLIST.elements['strong'],) ))
         y += 30
-        self._items.append(kookies.Button(5, y, 90, 30, callback=punch_tags, string='x Strong', params=('strong',) ))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=punch_tags, string='x Strong', params=(styles.TAGLIST.elements['strong'],) ))
 
         y += 40
         self._items.append(kookies.Button(5, y, 90, 30, callback=lambda: meredith.mipsy.tracts[0].insert(['</p>', ('<p>',  ('IMAGE', '_graph') ) ]), string='Image'))
@@ -366,7 +358,7 @@ class Document_view(ui.Cell):
         if self._mode == 'text':
             clipboard = typing.type_document(name, char)
             # check if paragraph context changed
-            if paragraph_context_changed():
+            if check_paragraph_context_changed():
                 noticeboard.refresh_properties_stack.push_change()
             
             return clipboard
@@ -400,7 +392,7 @@ class Document_view(ui.Cell):
                     # occurs if an empty channel is selected
                     pass
                 # check if paragraph context changed
-                if paragraph_context_changed():
+                if check_paragraph_context_changed():
                     noticeboard.refresh_properties_stack.push_change()
                 
                 # count words
@@ -458,7 +450,7 @@ class Document_view(ui.Cell):
                     # occurs if an empty channel is selected
                     pass
                 # check if paragraph context changed
-                if paragraph_context_changed():
+                if check_paragraph_context_changed():
                     noticeboard.refresh_properties_stack.push_change()
 
         
@@ -591,16 +583,11 @@ class Document_view(ui.Cell):
         noticeboard.refresh_properties_type.push_change(mode)
     
     def _print_sorted(self, cr, classed_glyphs):
-        for name, glyphs in (item for item in classed_glyphs.items() if isinstance(item[0], str)):
-            try:
-                cr.set_source_rgb(0, 0, 0)
-                font = fonttable.table.get_font(name)
-            except KeyError:
-                cr.set_source_rgb(1, 0.15, 0.2)
-                font = fonttable.table.get_font('_interface:REGULAR')
-            
-            cr.set_font_size(font['fontsize'])
-            cr.set_font_face(font['font'])
+        for name, L in (item for item in classed_glyphs.items() if isinstance(item[0], str)):
+            font, glyphs = L
+            cr.set_source_rgba( * font.u_color)
+            cr.set_font_size(font.u_fontsize)
+            cr.set_font_face(font.u_font)
             cr.show_glyphs(glyphs)
     
     def page_classes(self):
@@ -614,7 +601,7 @@ class Document_view(ui.Cell):
                     for style, glyphs in sorted_glyphs.items():
                         classed_pages[page].setdefault(style, []).extend(glyphs)
                 else:
-                    classed_pages[page] = deepcopy(sorted_glyphs)
+                    classed_pages[page] = sorted_glyphs.copy()
         
         return classed_pages
     
@@ -737,14 +724,12 @@ class Document_view(ui.Cell):
 
     def _draw_annotations(self, cr, annot, page):
 
-        for a in annot:
-        
-            x, y, p_i, f = a[1:]
+        for a, x, y, p_i, F in annot:
             
             x = self._X_to_screen(x, page)
             y = self._Y_to_screen(y, page)
             
-            fontsize = int(get_fontsize(f) * self._A)
+            fontsize = F.u_fontsize * self._A
 
             if p_i == meredith.mipsy.paragraph_at()[1]:
                 cr.set_source_rgba(1, 0.2, 0.6, 0.7)
@@ -752,7 +737,7 @@ class Document_view(ui.Cell):
                 cr.set_source_rgba(0, 0, 0, 0.4)
             
             #         '<p>'
-            if a[0] == -2:
+            if a == -2:
                 
                 cr.move_to(x, y)
                 cr.rel_line_to(0, -fontsize)
@@ -764,14 +749,14 @@ class Document_view(ui.Cell):
                 cr.fill()
 
             #        '<br>' +1
-            elif a[0] == -6:
+            elif a == -6:
                 
                 cr.rectangle(x - 6, y - fontsize, 3, fontsize)
                 cr.rectangle(x - 10, y - 3, 4, 3)
                 cr.fill()
 
             #           '<f>'
-            elif a[0] == -4:
+            elif a == -4:
                 cr.move_to(x, y - fontsize)
                 cr.rel_line_to(0, 6)
                 cr.rel_line_to(-1, 0)
@@ -780,7 +765,7 @@ class Document_view(ui.Cell):
                 cr.fill()
             
             #          '</f>'
-            elif a[0] == -5:
+            elif a == -5:
                 cr.move_to(x, y - fontsize)
                 cr.rel_line_to(0, 6)
                 cr.rel_line_to(1, 0)
@@ -916,10 +901,10 @@ class Document_view(ui.Cell):
         
         # draw stats
         cr.set_source_rgba(0, 0, 0, 0.8)
-        font = fonttable.table.get_font('_interface:STRONG')
+        font = styles.FONTSTYLES['_interface:STRONG']
         
-        cr.set_font_size(font['fontsize'])
-        cr.set_font_face(font['font'])
+        cr.set_font_size(font.u_fontsize)
+        cr.set_font_face(font.u_font)
 
         if noticeboard.composition_sequence:
             cr.move_to(130, 40)

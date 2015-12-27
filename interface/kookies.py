@@ -2,7 +2,8 @@ import bisect
 from copy import deepcopy
 from math import pi
 
-from fonts import fonttable
+from fonts import styles
+from fonts import paperairplanes as plane
 
 from interface.base import Base_kookie
 from interface import menu
@@ -10,7 +11,7 @@ from interface import menu
 
 class Button(Base_kookie):
     def __init__(self, x, y, width, height, callback=None, string='', params=() ):
-        Base_kookie.__init__(self, x, y, width, height, font=fonttable.table.get_font('_interface:STRONG'))
+        Base_kookie.__init__(self, x, y, width, height, font=styles.FONTSTYLES['_interface:STRONG'])
         
         self._callback = callback
         self._params = params
@@ -59,7 +60,7 @@ class Button(Base_kookie):
 
 class Checkbox(Base_kookie):
     def __init__(self, x, y, width, callback, params = (), value_acquire=None, before=lambda: None, after=lambda: None, name=''):
-        Base_kookie.__init__(self, x, y, width, 20, font=fonttable.table.get_font('_interface:LABEL'))
+        Base_kookie.__init__(self, x, y, width, 20, font=styles.FONTSTYLES['_interface:LABEL'])
 
         self._BEFORE = before
         self._AFTER = after
@@ -108,7 +109,7 @@ class Checkbox(Base_kookie):
 class Tabs(Base_kookie):
     def __init__(self, x, y, width, height, default=0, callback=None, signals=() ):
 
-        Base_kookie.__init__(self, x, y, width, height, font=fonttable.table.get_font('_interface:STRONG'))
+        Base_kookie.__init__(self, x, y, width, height, font=styles.FONTSTYLES['_interface:STRONG'])
         
         self._signals, self._strings = zip( * signals )
         
@@ -167,13 +168,13 @@ class Tabs(Base_kookie):
             cr.show_glyphs(self._texts[i])
 
 class Heading(Base_kookie):
-    def __init__(self, x, y, width, height, text, font=fonttable.table.get_font('_interface:TITLE'), fontsize=None, upper=False):
+    def __init__(self, x, y, width, height, text, font=styles.FONTSTYLES['_interface:TITLE'], fontsize=None, upper=False):
         
         Base_kookie.__init__(self, x, y, width, height)
         
         self.font = font
         if fontsize is None:
-            fontsize = self.font['fontsize']
+            fontsize = self.font.u_fontsize
         
         self._add_static_text(self._x, self._y + fontsize, text, fontsize=fontsize, upper=upper)
     
@@ -218,7 +219,7 @@ class Blank_space(Base_kookie):
         self._j = self._i
         
         # build static texts
-        self._add_static_text(self._x, self._y + 40, self._name, font=fonttable.table.get_font('_interface:LABEL') , upper=True)
+        self._add_static_text(self._x, self._y + 40, self._name, font=styles.FONTSTYLES['_interface:LABEL'] , upper=True)
         
         self._resting_bar_color = (0, 0, 0, 0.4)
         self._active_bar_color = (0, 0, 0, 0.8)
@@ -246,7 +247,7 @@ class Blank_space(Base_kookie):
         self._PREV_VALUE = self._VALUE
 
     def _stamp_glyphs(self, glyphs):
-        self._template = self._build_line(self._text_left, self._y + self.font['fontsize'] + 5, glyphs, self.font)
+        self._template = self._build_line(self._text_left, self._y + self.font.u_fontsize + 5, glyphs, self.font)
         
     def is_over(self, x, y):
         return self._y <= y <= self._y_bottom and self._x - 10 <= x <= self._x_right + 10
@@ -443,7 +444,7 @@ class Blank_space(Base_kookie):
             resting_text_color = self._resting_text_color
             active_text_color = self._active_text_color
             
-        fontsize = round(self.font['fontsize'])
+        fontsize = round(self.font.u_fontsize)
         
         cr.rectangle(self._text_left - 1, self._y, self._text_width + 2, self._height)
         cr.clip()
@@ -490,7 +491,7 @@ class Blank_space(Base_kookie):
         cr.reset_clip()
                 
         if self._name is not None:
-            cr.move_to(self._x, self._y + self.font['fontsize'] + 5)
+            cr.move_to(self._x, self._y + self.font.u_fontsize + 5)
             cr.set_font_size(11)
             # print label
             for label in self._texts:
@@ -513,7 +514,12 @@ class Numeric_field(Blank_space):
         self._domain = lambda k: float(self._digits(k)) if '.' in k else int(self._digits(k))
 
     def _stamp_glyphs(self, text):
-        self._template = self._build_line(self._text_left, self._y + self.font['fontsize'] + 5, text, self.font, sub_minus=True)
+        self._template = self._build_line(self._text_left, self._y + self.font.u_fontsize + 5, text, self.font, sub_minus=True)
+
+    def _ACQUIRE_REPRESENT(self):
+        self._VALUE = str(self._value_acquire( * self._params))
+        self._LIST = list(self._VALUE) + [None]
+        self._stamp_glyphs(self._LIST)
 
 class Integer_field(Numeric_field):
     def __init__(self, x, y, width, callback, value_acquire, params=(), before=lambda: None, after=lambda: None, name=None):
@@ -521,21 +527,33 @@ class Integer_field(Numeric_field):
 
         self._domain = lambda k: int(float(self._digits(k)))
 
-class Enumerate_field(Blank_space):
+class Enumerate_field(Numeric_field):
     def __init__(self, x, y, width, callback, value_acquire, params=(), before=lambda: None, after=lambda: None, name=None):
     
         Blank_space.__init__(self, x, y, width, callback, value_acquire, params, before, after, name)
 
         self._domain = lambda k: set( int(v) for v in [''.join([c for c in val if c in '1234567890']) for val in k.split(',')] if v )
 
-    def _stamp_glyphs(self, text):
-        self._template = self._build_line(self._text_left, self._y + self.font['fontsize'] + 5, text, self.font, sub_minus=True)
+    def _ACQUIRE_REPRESENT(self):
+        self._VALUE = str(self._value_acquire( * self._params))[1:-1]
+        self._LIST = list(self._VALUE) + [None]
+        self._stamp_glyphs(self._LIST)
 
-        
+class Binomial_field(Numeric_field):
+    def __init__(self, x, y, width, callback, value_acquire, params, before=lambda: None, after=lambda: None, name=None, letter='X'):
+        Blank_space.__init__(self, x, y, width, callback, value_acquire, params, before, after, name)
+        letters = set('1234567890.-+' + letter)
+        self._domain = lambda k: plane.pack_binomial(''.join([c for c in k if c in letters]))
+
+    def _ACQUIRE_REPRESENT(self):
+        self._VALUE = plane.read_binomial( * self._value_acquire( * self._params))
+        self._LIST = list(self._VALUE) + [None]
+        self._stamp_glyphs(self._LIST)
+
 #########
 class Selection_menu(Base_kookie):
     def __init__(self, x, y, width, height, menu_callback, options_acquire, value_acquire, params = (), before=lambda: None, after=lambda: None, source=0):
-        Base_kookie.__init__(self, x, y, width, height, font=fonttable.table.get_font('_interface:STRONG'))
+        Base_kookie.__init__(self, x, y, width, height, font=styles.FONTSTYLES['_interface:STRONG'])
         
         self._get_value = value_acquire
         self._get_options = options_acquire
@@ -557,6 +575,7 @@ class Selection_menu(Base_kookie):
     def _ACQUIRE_OPTIONS(self):
         self._menu_options = self._get_options()
         self._lookup_label = dict(self._menu_options)
+        print(self._lookup_label)
 
     def _ACQUIRE_REPRESENT(self):
         label = self._lookup_label[self._get_value( * self._params)]
@@ -596,6 +615,15 @@ class Selection_menu(Base_kookie):
             cr.set_source_rgba(0, 0, 0, 0.7)
             
         cr.show_glyphs(self._texts[0])
+
+class Datablock_selection_menu(Selection_menu):
+    def _ACQUIRE_OPTIONS(self):
+        self._menu_options = self._get_options()
+    def _ACQUIRE_REPRESENT(self):
+        label = self._get_value( * self._params)
+        self._texts = []
+        self._add_static_text(self._x_right, self._y_bottom - self._height/2 + 5, label, align=-1)
+    
 #########
 class Double_selection_menu(Selection_menu):
     def __init__(self, x, y, width, height, menu_callback, options_acquire, options_acquire_l2, value_acquire, source):
@@ -623,12 +651,12 @@ class Double_selection_menu(Selection_menu):
         self._SYNCHRONIZE()
 
 class Object_menu(Blank_space):
-    def __init__(self, x, y, width, rename, value_acquire, value_push, objects_acquire, params = (), before=lambda: None, after=lambda: None, name='', source=0):
+    def __init__(self, x, y, width, value_acquire, value_push, library, params = (), before=lambda: None, after=lambda: None, name='', source=0):
 
-        self._objects_acquire = objects_acquire
+        self._library = library
         self._value_push = value_push
 
-        Blank_space.__init__(self, x, y, width, rename, value_acquire, params, before, after, name)
+        Blank_space.__init__(self, x, y, width, lambda O, N, *args: O.rename(N, *args), value_acquire, params, before, after, name)
 
         self.broken = False
         self._dropdown_active = False
@@ -641,57 +669,18 @@ class Object_menu(Blank_space):
 
     def _ACQUIRE_REPRESENT(self):
         # scan objects
-        self._objects = self._objects_acquire()
-        object_keys = sorted(self._objects.keys())
-        self._menu_options = tuple( (key, str(key)) for key in object_keys )
+        self._menu_options = tuple( (v, str(k)) for k, v in sorted(self._library.items()) )
         
-        KEY = self._value_acquire( * self._params)
+        self._O = self._value_acquire( * self._params)
 
-        self._OLD_KEY = KEY
-        if isinstance(KEY, tuple):
-            self._PREFIX = KEY[:-1]
-            self._VALUE = KEY[-1]
-        else:
-            self._PREFIX = ()
-            self._VALUE = KEY
-
-        if KEY is None:
-            self._VALUE = 'None'
+        self._VALUE = self._O.name
         self._LIST = list(self._VALUE) + [None]
         self._stamp_glyphs(self._LIST)
         
     def _new(self):
-        if self._PREFIX:
-            if len(self._VALUE) > 3 and self._VALUE[-4] == '.' and len([c for c in self._VALUE[-3:] if c in '1234567890']) == 3:
-                serialnumber = int(self._VALUE[-3:])
-                while True:
-                    serialnumber += 1
-                    name = self._VALUE[:-3] + str(serialnumber).zfill(3)
-                    
-                    KEY = self._PREFIX + (name,)
-                    if KEY not in self._objects:
-                        break
-            else:
-                KEY = self._PREFIX + ( self._VALUE + '.001', )
-            
-            self._objects[KEY] = deepcopy(self._objects[ self._PREFIX + (self._VALUE,) ])
-        
-        else:
-            if len(self._VALUE) > 3 and self._VALUE[-4] == '.' and len([c for c in self._VALUE[-3:] if c in '1234567890']) == 3:
-                    serialnumber = int(self._VALUE[-3:])
-                    while True:
-                        serialnumber += 1
-                        name = self._VALUE[:-3] + str(serialnumber).zfill(3)
-                        
-                        KEY = name
-                        if KEY not in self._objects:
-                            break
-            else:
-                KEY = self._VALUE + '.001'
-            
-            self._objects[KEY] = deepcopy(self._objects[self._VALUE])
-        
-        return KEY
+        KEY = self._O.next_name()
+        self._library[KEY] = self._O.copy(KEY)
+        return self._library[KEY]
 
     def focus(self, x, y):
         J = self.hover(x, y)
@@ -705,8 +694,8 @@ class Object_menu(Blank_space):
         else:
             self.defocus()
             if J == 3:
-                KEY = self._new()
-                self._value_push(KEY, * self._params)
+                O = self._new()
+                self._value_push(O, * self._params)
             elif J == 2:
                 menu.menu.create(self._x, self._y_bottom - 5, 200, self._menu_options, lambda *args: (self._BEFORE(), self._value_push(*args), self._AFTER()), self._params, source=self._source )
                 self._active = True
@@ -726,13 +715,7 @@ class Object_menu(Blank_space):
         self._VALUE = self._entry()
         if self._VALUE != self._PREV_VALUE:
             self._BEFORE()
-            
-            if self._PREFIX:
-                KEY = self._PREFIX + (self._VALUE,)
-            else:
-                KEY = self._VALUE
-            self._objects[KEY] = self._objects.pop(self._OLD_KEY)
-            self._callback(self._OLD_KEY, KEY, * self._params)
+            self._callback(self._O, self._VALUE, * self._params)
             self._AFTER()
 
         else:
@@ -793,7 +776,7 @@ class Orderable(Base_kookie):
         self._BEFORE = before
         self._AFTER = after
 
-        Base_kookie.__init__(self, x, y, width, height, font=fonttable.table.get_font('_interface:STRONG'))
+        Base_kookie.__init__(self, x, y, width, height, font=styles.FONTSTYLES['_interface:STRONG'])
         
         self._list_acquire = list_acquire
 
@@ -973,7 +956,7 @@ class Unordered(Base_kookie):
         else:
             self._AFTER_DEL = after_delete
 
-        Base_kookie.__init__(self, x, y, width, height, font=fonttable.table.get_font('_interface:STRONG'))
+        Base_kookie.__init__(self, x, y, width, height, font=styles.FONTSTYLES['_interface:STRONG'])
         
         self._dict_acquire = dict_acquire
 
@@ -1107,7 +1090,7 @@ class Binary_table(Base_kookie):
         self._params = params
         self._cellwidth, self._cellheight = cellsize
 
-        Base_kookie.__init__(self, x, y, width, height, font=fonttable.table.get_font('_interface:STRONG'))
+        Base_kookie.__init__(self, x, y, width, height, font=styles.FONTSTYLES['_interface:STRONG'])
         
         self._per_row = ( self._width // self._cellwidth )
         self._states_acquire = states_acquire

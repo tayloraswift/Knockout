@@ -5,7 +5,7 @@ from itertools import chain, groupby
 from pyphen import pyphen
 pyphen.language_fallback('en_US')
 
-from fonts import fonttable, fonts
+from fonts import styles
 
 from state import noticeboard
 
@@ -35,30 +35,18 @@ def outside_tag(sequence):
 
     return sequence
 
-def _retrieve_paragraphclass(P, l):
-    try:
-        PSTYLE = fonttable.p_table.get_paragraph(P)
-    except KeyError:
-        # happens if requested style is not defined
-        errors.styleerrors.add_style_error((P,), l)
-        PSTYLE = fonttable.p_table.get_paragraph(('P', '_interface'))
-    
-    return PSTYLE
-
-def _retrieve_fontclass(F, FONTCLASSES, l):
+def _retrieve_fontclass(F, FONTMAP, l):
     F = tuple(F)
     try:
-        N = FONTCLASSES[F]
-        FSTYLE = fonttable.table.get_font(N)
+        FSTYLE = FONTMAP[F]
     except KeyError:
         # happens if requested style is not defined
         errors.styleerrors.add_style_error(F, l)
-        FSTYLE = fonttable.table.get_font('_interface:REGULAR')
-        N = '_undefined'
+        FSTYLE = styles.F_UNDEFINED
     
-    return N, FSTYLE
+    return FSTYLE
             
-def _assemble_line(letters, startindex, l, anchor, stop, y, leading, COLLAPSE, FONTCLASSES, F, hyphenate=False):
+def _assemble_line(letters, startindex, l, anchor, stop, y, leading, COLLAPSE, FONTMAP, F, hyphenate=False):
     LINE = {
             'l': l,
             'i': startindex,
@@ -81,7 +69,7 @@ def _assemble_line(letters, startindex, l, anchor, stop, y, leading, COLLAPSE, F
     x = anchor
 
     # retrieve font style
-    N, FSTYLE = _retrieve_fontclass(F, FONTCLASSES, l)
+    FSTYLE = _retrieve_fontclass(F, FONTMAP, l)
 
     # blank pegs
     glyphwidth = 0
@@ -97,7 +85,7 @@ def _assemble_line(letters, startindex, l, anchor, stop, y, leading, COLLAPSE, F
         CHAR = character(letter)
 
         if CHAR == '<f>':
-            TAG = letter[1]
+            TAG = letter[1].name
             # look for negative classes
             if '~' + TAG in F:
                 F.remove('~' + TAG)
@@ -105,50 +93,50 @@ def _assemble_line(letters, startindex, l, anchor, stop, y, leading, COLLAPSE, F
                 F.append(TAG)
                 F.sort()
             
-            N, FSTYLE = _retrieve_fontclass(F, FONTCLASSES, l)
+            FSTYLE = _retrieve_fontclass(F, FONTMAP, l)
             
             # calculate pegging
-            G = FSTYLE['pegs']
-            if TAG in fonts.PEGS[G]:
+            G = FSTYLE.pegs.elements
+            if TAG in G:
                 if TAG in COLLAPSE[0]:
                     if TAG in root_for:
                         x = root
                     else:
                         root = x
                 
-                gx, gy = fonts.PEGS[G][TAG]
+                gx, gy = G[TAG]
                 gx = gx * glyphwidth
                 gy = gy * leading
-                effective_peg = letter[1]
+                effective_peg = TAG
                 
                 y -= gy
                 x += gx
             
-            GLYPHS.append((-4, x, y,  N, tuple(F), x))
+            GLYPHS.append((-4, x, y, FSTYLE, tuple(F), x))
             
         elif CHAR == '</f>':
-            TAG = letter[1]
+            TAG = letter[1].name
             try:
                 F.remove(TAG)
             except ValueError:
                 F.append('~' + TAG)
                 F.sort()
 
-            N, FSTYLE = _retrieve_fontclass(F, FONTCLASSES, l)
+            FSTYLE = _retrieve_fontclass(F, FONTMAP, l)
 
             # depeg
             if TAG == effective_peg:
                 y += gy
 
             # calculate pegging
-            G = FSTYLE['pegs']
-            if TAG in fonts.PEGS[G] and TAG in COLLAPSE[0]:
+            G = FSTYLE.pegs.elements
+            if TAG in G and TAG in COLLAPSE[0]:
                 root_for = set(chain.from_iterable(s for s in COLLAPSE[1] if TAG in s))
                 if front > x:
                     x = front
                 else:
                     front = x
-            GLYPHS.append((-5, x, y,  N, tuple(F), x))
+            GLYPHS.append((-5, x, y, FSTYLE, tuple(F), x))
             
         elif CHAR == '<p>':
             if GLYPHS:
@@ -157,41 +145,41 @@ def _assemble_line(letters, startindex, l, anchor, stop, y, leading, COLLAPSE, F
                 # we don’t load the style because the outer function takes care of that
                 GLYPHS.append((
                         -2,                     # 0
-                        x - FSTYLE['fontsize'], # 1
+                        x - FSTYLE.u_fontsize,  # 1
                         y,                      # 2
                         
-                        N,                      # 3
+                        FSTYLE,                 # 3
                         tuple(F),               # 4
-                        x - FSTYLE['fontsize']  # 5
+                        x - FSTYLE.u_fontsize   # 5
                         ))
         
         elif CHAR == '</p>':
             LINE['P_BREAK'] = True
-            GLYPHS.append((-3, x, y,  N, tuple(F), x))
+            GLYPHS.append((-3, x, y, FSTYLE, tuple(F), x))
             break
         
         elif CHAR == '<br>':
             root_for = set()
-            GLYPHS.append((-6, x, y,  N, tuple(F), x))
+            GLYPHS.append((-6, x, y, FSTYLE, tuple(F), x))
             break
         
         elif CHAR == '<image>':
             root_for = set()
             IMAGE = letter[1]
                                                                                 # additional fields
-            GLYPHS.append((-13, x, y - leading,  N, tuple(F), x + IMAGE[1], IMAGE ))
+            GLYPHS.append((-13, x, y - leading, FSTYLE, tuple(F), x + IMAGE[1], IMAGE ))
             x += IMAGE[1]
         
         else:
             root_for = set()
-            glyphwidth = FSTYLE['fontmetrics'].advance_pixel_width(CHAR) * FSTYLE['fontsize']
+            glyphwidth = FSTYLE.u_fontmetrics.advance_pixel_width(CHAR) * FSTYLE.u_fontsize
             
             GLYPHS.append((
-                    FSTYLE['fontmetrics'].character_index(CHAR),    # 0
+                    FSTYLE.u_fontmetrics.character_index(CHAR),     # 0
                     x,                                              # 1
                     y,                                              # 2
                     
-                    N,                                              # 3
+                    FSTYLE,                                         # 3
                     tuple(F),                                       # 4
                     x + glyphwidth                                  # 5
                     ))
@@ -242,16 +230,16 @@ def _assemble_line(letters, startindex, l, anchor, stop, y, leading, COLLAPSE, F
 
                             h_F = GLYPHS[i - 1 + k][4]
                             
-                            h_N, HFS = _retrieve_fontclass( h_F , FONTCLASSES, l)
+                            HFS = _retrieve_fontclass(h_F, FONTMAP, l)
                                 
-                            if GLYPHS[i - 1 + k][5] + HFS['fontmetrics'].advance_pixel_width('-') * HFS['fontsize'] < stop:
+                            if GLYPHS[i - 1 + k][5] + HFS.u_fontmetrics.advance_pixel_width('-') * HFS.u_fontsize < stop:
                                 i = i + k
 
                                 LINE['hyphen'] = (
-                                        HFS['fontmetrics'].character_index('-'), 
+                                        HFS.u_fontmetrics.character_index('-'), 
                                         GLYPHS[i - 1][5], # x
                                         GLYPHS[i - 1][2], # y
-                                        h_N,
+                                        HFS,
                                         h_F
                                         )
                                 break
@@ -261,7 +249,7 @@ def _assemble_line(letters, startindex, l, anchor, stop, y, leading, COLLAPSE, F
                 break
                 
             else:
-                x += FSTYLE['tracking']
+                x += FSTYLE.u_tracking
     # n changes
     LINE['j'] = startindex + len(GLYPHS)
     LINE['GLYPHS'] = GLYPHS
@@ -326,8 +314,6 @@ class Text(object):
             F = []
             
             R = 0
-            
-            PSTYLE = _retrieve_paragraphclass(P, l)
             y = self.channels.channels[c].railings[0][0][1]
         
         else:
@@ -345,18 +331,16 @@ class Text(object):
                 P, P_i = LASTLINE['PP']
                 F = list(LASTLINE['F'])
             
-            PSTYLE = _retrieve_paragraphclass(P, l)
-            
             R = CURRENTLINE['R']
             
             c = CURRENTLINE['c']
-            y = CURRENTLINE['y'] - PSTYLE['leading']
+            y = CURRENTLINE['y'] - P.u_leading
         
         page = self.channels.channels[c].page
         page_start_l = l
         K_x = None
         
-        displacement = PSTYLE['leading']
+        displacement = P.u_leading
 
         while True:
             y += displacement
@@ -386,8 +370,8 @@ class Text(object):
 
             # calculate indentation
 
-            if R in PSTYLE['indent_range']:
-                D, SIGN, K = PSTYLE['indent']
+            if R in P.u_indent_range:
+                D, SIGN, K = P.u_indent
                 if K:
                     if K_x is None:
                         INDLINE = _assemble_line(
@@ -400,21 +384,21 @@ class Text(object):
                             0, 
                             0, 
                             
-                            PSTYLE['collapsible'],
-                            PSTYLE['stylemap'],
+                            P.u_collapsible,
+                            P.u_stylemap,
                             F[:], 
                             
                             hyphenate = False
                             )
                         K_x = INDLINE['GLYPHS'][-1][5] * SIGN
                     
-                    L_indent = PSTYLE['margin_left'] + D + K_x
+                    L_indent = P.u_margin_left + D + K_x
                 else:
-                    L_indent = PSTYLE['margin_left'] + D
+                    L_indent = P.u_margin_left + D
             else:
-                L_indent = PSTYLE['margin_left']
+                L_indent = P.u_margin_left
             
-            R_indent = PSTYLE['margin_right']
+            R_indent = P.u_margin_right
 
             # generate line objects
             LINE = _assemble_line(
@@ -425,13 +409,13 @@ class Text(object):
                     self.channels.channels[c].edge(0, y)[0] + L_indent, 
                     self.channels.channels[c].edge(1, y)[0] - R_indent, 
                     y, 
-                    PSTYLE['leading'], 
+                    P.u_leading, 
                     
-                    PSTYLE['collapsible'],
-                    PSTYLE['stylemap'],
+                    P.u_collapsible,
+                    P.u_stylemap,
                     F, 
                     
-                    hyphenate = PSTYLE['hyphenate']
+                    hyphenate = P.u_hyphenate
                     )
             # stamp R line number
             LINE['R'] = R
@@ -448,7 +432,7 @@ class Text(object):
                     # this is the end of the document
                     break
                 
-                y += PSTYLE['margin_bottom']
+                y += P.u_margin_bottom
 
                 P = self.text[i][1]
                 P_i = i
@@ -456,11 +440,9 @@ class Text(object):
                 R = 0
                 K_x = None
                 
-                PSTYLE = _retrieve_paragraphclass(P, l)
+                y += P.u_margin_top
                 
-                y += PSTYLE['margin_top']
-                
-                displacement = PSTYLE['leading']
+                displacement = P.u_leading
 
             else:
                 F = list(LINE['F'])
@@ -830,7 +812,7 @@ class Text(object):
                 
                 for line in chain.from_iterable(self._glyphs[slice( * interval)] for interval in intervals):
 
-                    p_name, p_i = line['PP']
+                    p_i = line['PP'][1]
                     hyphen = line['hyphen']
                     
                     for glyph in line['GLYPHS']:
@@ -844,18 +826,19 @@ class Text(object):
                                 sorted_page[('_annot',)].append(glyph[:3] + (p_i, glyph[3]))
                         else:
                             K = glyph[0:3]
-                            f = glyph[3]
+                            N = glyph[3].name
                             try:
-                                sorted_page[f].append(K)
+                                sorted_page[N][1].append(K)
                             except KeyError:
-                                sorted_page[f] = [K]
+                                sorted_page[N] = (glyph[3], [K])
 
                     if hyphen is not None:
+                        H = hyphen[0:3]
+                        N = hyphen[3].name
                         try:
-                            sorted_page[hyphen[3]].append((hyphen[0:3]))
+                            sorted_page[N][1].append(H)
                         except KeyError:
-                            sorted_page[hyphen[3]] = []
-                            sorted_page[hyphen[3]].append((hyphen[0:3]))
+                            sorted_page[N] = (hyphen[3], [H])
                 
                 self._sorted_pages[page] = sorted_page
         return self._sorted_pages

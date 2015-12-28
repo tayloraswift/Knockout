@@ -157,7 +157,7 @@
               'subtags': []}],
  'contexts': {'c': 0, 'p': 0},
  'grid': [[], []],
- 'kitty': [{'cursors': (431, 431),
+ 'kitty': [{'cursors': (137, 137),
             'outline': [[[[90, 80, False], [90, 910, False]],
                          [[370, 80, False], [370, 910, False]],
                          0],
@@ -182,9 +182,9 @@
                     'class="sup">x</f class="sup"> <em>x</em> + 2 d<em>x</em> '
                     '</p>'}],
  'page': {'dimensions': (765, 990), 'dual': False},
- 'view': {'H': 276,
-          'Hc': 391.90484619140625,
-          'K': -248,
-          'Kc': 245.70404052734375,
-          'Zoom': 18,
+ 'view': {'H': 296,
+          'Hc': 520.3101196289062,
+          'K': 35,
+          'Kc': 456.08746337890625,
+          'Zoom': 11,
           'mode': 'text'}}

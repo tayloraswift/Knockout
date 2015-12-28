@@ -11,67 +11,66 @@ from model import meredith, penclick
 from model import un
 
 class _Font_file_Field(kookies.Blank_space):
-    def __init__(self, x, y, width, f, after, name=None):
-        kookies.Blank_space.__init__(self, x, y, width, callback = plane.f_push_attribute, 
-                value_acquire = self._value_acquire, params=('path', f), 
+    def __init__(self, x, y, width, after, name=None):
+        kookies.Blank_space.__init__(self, x, y, width, callback = ops.Fontstyle.f_set_attribute, 
+                value_acquire = self._value_acquire, 
+                params=('path',), 
                 before=un.history.save, 
                 after=after, name=name)
 
-    def _value_acquire(self, A, f):
-        self.broken = not fonttable.table.get_font(f)['path_valid']
-        return fonttable.table.get_font(f)['path']
+    def _value_acquire(self, A):
+        self.broken = not contexts.Fontstyle.fontstyle.u_path_valid
+        return contexts.Fontstyle.fontstyle.u_path
 
-
-def create_f_field(TYPE, x, y, width, attribute, f, after, value_acquire=lambda A, f: str(fonts.TEXTURES[f][A]),  name=''):
+def _create_f_field(TYPE, x, y, width, attribute, after, name='', **kwargs):
     return TYPE(x, y, width,
-            callback= plane.f_push_attribute, 
-            value_acquire= value_acquire,
-            params = (attribute, f), 
+            callback= ops.Fontstyle.f_set_attribute, 
+            value_acquire = lambda A: getattr(contexts.Fontstyle.fontstyle, 'u_' + A),
+            params = (attribute,), 
             before=un.history.save,
             after=after,
-            name=name)
+            name=name, **kwargs)
             
 def _create_p_field(TYPE, x, y, width, attribute, after, name='', **kwargs):
     return TYPE(x, y, width,
-            callback = ops.Text.p_set_attribute, 
-            value_acquire= lambda A: getattr(contexts.Text.paragraph[1], 'u_' + A),
+            callback = ops.Parastyle.p_set_attribute, 
+            value_acquire= lambda A: getattr(contexts.Parastyle.parastyle, 'u_' + A),
             params = (attribute,), 
             before=un.history.save,
             after=after,
             name=name, **kwargs)
 
-def _create_p_inherit(x, y, width, attribute, after, source=0):
-    return kookies.Datablock_selection_menu(x, y, width=width, height=15, menu_callback = ops.Text.p_link_inheritance, 
-            options_acquire = lambda: ((None, 'None'),) + tuple( (l, l.name) for l in sorted(styles.PARASTYLES.values(), key=lambda k: k.name) ),
-            value_acquire = lambda A: contexts.Text.paragraph[1].read_inherit_name(A), 
+def _create_f_inherit(x, y, width, attribute, after, source=0):
+    return kookies.Datablock_selection_menu(x, y, width=width, height=15, menu_callback = ops.Fontstyle.f_link_inheritance, 
+            options_acquire = lambda: ((None, 'None'),) + tuple( (l, l.name) for l in sorted(styles.FONTSTYLES.values(), key=lambda k: k.name) ),
+            value_acquire = lambda A: contexts.Fontstyle.fontstyle.read_inherit_name(A), 
             params = (attribute,),
             before = un.history.save, after=after,
             source=source)
-
-def _F_inheritance_menu(x, y, width, f, attribute, after, source=0):
-    return kookies.Selection_menu(x, y, width=width, height=15, menu_callback = plane._F_push_inherit, 
-            options_acquire=lambda: (('—', '—'),) + tuple((k, k) for k in sorted(fonts.TEXTURES.keys())), 
-            value_acquire = plane._F_read_inherit, 
-            params = (attribute, f),
+            
+def _create_p_inherit(x, y, width, attribute, after, source=0):
+    return kookies.Datablock_selection_menu(x, y, width=width, height=15, menu_callback = ops.Parastyle.p_link_inheritance, 
+            options_acquire = lambda: ((None, 'None'),) + tuple( (l, l.name) for l in sorted(styles.PARASTYLES.values(), key=lambda k: k.name) ),
+            value_acquire = lambda A: contexts.Parastyle.parastyle.read_inherit_name(A), 
+            params = (attribute,),
             before = un.history.save, after=after,
             source=source)
 
 class _F_preview(kookies.Heading):
     def __init__(self, x, y, width, height, text, f):
-        self._f = f
+        self._F = f
         self._text = text
-        kookies.Heading.__init__(self, x, y, width, height, text, font=fonttable.table.get_font(f), fontsize = 16)
+        kookies.Heading.__init__(self, x, y, width, height, text, font=self._F, fontsize = 15)
 
     def _SYNCHRONIZE(self):
-        self.font = fonttable.table.get_font(self._f)
         del self._texts[0]
-        self._add_static_text(self._x, self._y + 16, self._text, fontsize=16)
+        self._add_static_text(self._x, self._y + 16, self._text, fontsize=15)
 
     def draw(self, cr, hover=(None, None)):
         cr.set_source_rgb(0,0,0)
         
         cr.set_font_size(15)
-        cr.set_font_face(self.font['font'])
+        cr.set_font_face(self.font.u_font)
         cr.show_glyphs(self._texts[0])
 
 
@@ -219,55 +218,63 @@ class Properties(_Properties_panel):
         self._items.append(kookies.Heading( 15, 90, 250, 30, p[1].name, upper=True))
                
         if self._tab == 'font':
-            """
-            self._items.append(kookies.Unordered( 15, y, 250, 250,
-                        dict_acquire=lambda: p[1].fontclasses.elements, 
+
+            self._items.append(kookies.Object_menu(15, y, 250, 
+                        value_acquire = lambda: contexts.Keymap.keymap, 
+                        value_push = ops.Parastyle.link_keymap, 
+                        library = styles.MAPS, 
+                        before=un.history.save, after = self.refresh, name='RENAME KEYMAP', source=self._partition))
+            y += 45
+            
+            self._items.append(kookies.Unorderable(15, y, 250, 250,
+                        datablock = contexts.Keymap.keymap, 
                         protect = set(((),)),
-                        new = lambda L: (('{new}',), None),
                         display = lambda l: ', '.join(l) if l else '{none}',
-                        before=un.history.save, after=self.refresh, after_delete=self.refresh))
+                        before=un.history.save, after= lambda: (contexts.Fontstyle.update(), self.refresh())))
             
             y += 250
             self._items.append(kookies.Binary_table(15, y, 250, 100, (80, 26), 
-                        callback= plane.tags_push_states,
-                        states_acquire=plane.tags_read_states, params=(p[0],),
-                        before=un.history.save, after=self._TURNOVER_WITH_REFRESH_F))
-
+                        callback= ops.Keymap.remap_active,
+                        states_acquire = lambda: [ (T.name in set(contexts.Keymap.keymap.active), T.name ) for T in styles.TAGLIST.ordered ], 
+                        before = un.history.save, after = self.refresh))
+            
             y += 100
-            self._items.append(kookies.Object_menu( 15, y, 250, rename=plane.rename_f, 
-                        value_acquire = plane.p_active_f, 
-                        value_push = plane.p_link_font_datablock, 
-                        objects_acquire=lambda: fonts.TEXTURES, 
-                        params = (p[0], ), before=un.history.save, after=self._TURNOVER_WITH_REFRESH, name='FONTSTYLE', source=self._partition))
+            
+            key = contexts.Fontstyle.fontstyle
+            if key is None:
+                self._items.append(kookies.New_object_menu(15, y, 250,
+                            value_push = ops.Keymap.link_fontstyle, 
+                            library = styles.FONTSTYLES, 
+                            before = un.history.save, after = self.refresh, name='FONTSTYLE', source=self._partition))
 
-            y += 55
-            key = plane.p_active_f(p[0])
-            
-            if key is not None:
-            
-                self._items.append(_F_preview( 16, y, 250, 0, 'Preview  ( ' + key + ' )', key ))
+            else:
+                self._items.append(kookies.Object_menu(15, y, 250,
+                            value_acquire = lambda: contexts.Fontstyle.fontstyle, 
+                            value_push = ops.Keymap.link_fontstyle, 
+                            library = styles.FONTSTYLES, 
+                            before = un.history.save, after = self.refresh, name='FONTSTYLE', source=self._partition))
+
+                y += 55
+
+                self._items.append(_F_preview( 16, y, 250, 0, 'Preview  ( ' + key.name + ' )', key ))
                 y += 30
                 
-                self._items.append(_Font_file_Field( 15, y, 250, f=key, after=self._TURNOVER_WITH_RERENDER_F, name='FONT FILE' ))
+                self._items.append(_Font_file_Field( 15, y, 250, after=self.synchronize, name='FONT FILE' ))
                 y += 30
-                self._items.append(_F_inheritance_menu( 15, y, width=250, f=key, attribute='path', after=self.refresh, source=self._partition))
+                self._items.append(_create_f_inherit( 15, y, width=250, attribute='path', after=self.synchronize, source=self._partition))
                 y += 15
                 
-                self._items.append(create_f_field(kookies.Numeric_field, 15, y, 250, 'fontsize', key, after=self._TURNOVER_WITH_RERENDER_F, 
-                                value_acquire = lambda A, f: str(fonts.f_get_attribute(A, f)[1]), 
-                                name='FONT SIZE') )
+                self._items.append(_create_f_field(kookies.Numeric_field, 15, y, 250, 'fontsize', after=self.synchronize, name='FONT SIZE') )
 
                 y += 30
-                self._items.append(_F_inheritance_menu( 15, y, width=250, f=key, attribute='fontsize', after=self.refresh, source=self._partition))
+                self._items.append(_create_f_inherit( 15, y, width=250, attribute='fontsize', after=self.synchronize, source=self._partition))
                 y += 15
-
-                self._items.append(create_f_field(kookies.Numeric_field, 15, y, 250, 'tracking', key, after=self._TURNOVER_WITH_RERENDER_F, 
-                                value_acquire = lambda A, f: str(fonts.f_get_attribute(A, f)[1]), 
-                                name='TRACKING') )
-                y += 30
-                self._items.append(_F_inheritance_menu( 15, y, width=250, f=key, attribute='tracking', after=self.refresh, source=self._partition))
-                y += 30
                 
+                self._items.append(_create_f_field(kookies.Numeric_field, 15, y, 250, 'tracking', after=self.synchronize, name='TRACKING') )
+                y += 30
+                self._items.append(_create_f_inherit( 15, y, width=250, attribute='tracking', after=self.synchronize, source=self._partition))
+                y += 30
+                """
                 g = fonts.TEXTURES[key]['pegs']
                 self._items.append(kookies.Unordered( 15, y, 250, 100,
                         dict_acquire=lambda: fonts.PEGS[g],

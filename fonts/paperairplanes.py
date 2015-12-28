@@ -59,27 +59,7 @@ def pack_binomial(value):
     
     return C, SIGN, K
 
-
-def p_link_font_datablock(name, p):
-    fonts.paragraph_classes[p]['fontclasses'][1] [ fonts.paragraph_classes[p]['fontclasses'][1]['_ACTIVE'] ] = name
-
-def p_active_f(p):
-    return fonts.paragraph_classes[p]['fontclasses'][1] [ fonts.paragraph_classes[p]['fontclasses'][1]['_ACTIVE'] ]
-
 # TAGS
-    
-def tags_read_states(p):
-    tags = set(fonts.paragraph_classes[p]['fontclasses'][1] ['_ACTIVE'])
-    return [ (k['name'] in tags, k['name'] ) for k in fonts.TAGS[fonts.paragraph_classes[p]['tags']][1:] ]
-
-def tags_push_states(states, p):
-    tags = tuple(sorted(k['name'] for state, k in zip(states, fonts.TAGS[fonts.paragraph_classes[p]['tags']][1:]) if state))
-    if tags in fonts.paragraph_classes[p]['fontclasses'][1]:
-        tags = ('_occupied', ) + tags
-    
-    fc = fonts.paragraph_classes[p]['fontclasses'][1]
-    fc[tags] = fc.pop(fc['_ACTIVE'])
-    fc['_ACTIVE'] = tags
 
 def tags_and_subtags(p):
     TT = []

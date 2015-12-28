@@ -49,14 +49,3 @@ def q_read(attribute, p):
 def q_set(value, attribute, p):
     li = TAGS[ paragraph_classes[p]['tags'] ]
     li [li[0] + 1][attribute] = value
-
-
-def f_get_attribute(attribute, f):
-    a = TEXTURES[f] [attribute]
-    if a[0]:
-        return f_get_attribute(attribute, a[1])
-    else:
-        return a
-
-def f_read_attribute(attribute, f):
-    return TEXTURES[f] [attribute]

@@ -650,6 +650,78 @@ class Double_selection_menu(Selection_menu):
         self._menu_callback( * args)
         self._SYNCHRONIZE()
 
+class New_object_menu(Base_kookie):
+    def __init__(self, x, y, width, value_push, library, params = (), before=lambda: None, after=lambda: None, name='', source=0):
+        Base_kookie.__init__(self, x, y, width, 28, font=styles.FONTSTYLES['_interface:STRONG'])
+        self._BEFORE = before
+        self._AFTER = after
+        self._params = params
+        self._library = library
+        self._value_push = value_push
+
+        self.broken = False
+        self._dropdown_active = False
+        self.is_over_hover = self.is_over
+        
+        self._source = source
+        
+        self._add_static_text(self._x + 40, self._y + self.font.u_fontsize + 5, 'NEW')
+        
+        self._SYNCHRONIZE()
+
+    def _SYNCHRONIZE(self):
+        # scan objects
+        self._menu_options = tuple( (v, str(k)) for k, v in sorted(self._library.items()) )
+
+    def focus(self, x, y):
+        J = self.hover(x, y)
+
+        if J == 3:
+            F = next(iter(self._library.values()))
+            KEY = F.next_name('New fontclass')
+            self._library[KEY] = F.copy(KEY)
+            self._value_push(self._library[KEY], * self._params)
+        elif J == 2:
+            menu.menu.create(self._x, self._y_bottom - 5, 200, self._menu_options, lambda *args: (self._BEFORE(), self._value_push(*args), self._AFTER()), self._params, source=self._source )
+            self._active = True
+            self._dropdown_active = True
+            print('DROPDOWN')
+        
+        self._AFTER()
+    
+    def hover(self, x, y):
+        if x < self._x + 30:
+            j = 2
+        else:
+            j = 3
+        return j
+        
+    def draw(self, cr, hover=(None, None)):
+        cr.set_line_width(2)
+        if self._dropdown_active:
+            cr.set_source_rgb(1, 0.2, 0.6)
+        elif hover[1] == 2:
+            cr.set_source_rgb(1, 0.2, 0.6)
+        else:
+            cr.set_source_rgba(0, 0, 0, 0.7)
+        
+        # DROPDOWN
+        cr.move_to(self._x + 8, self._y + 10)
+        cr.rel_line_to(5, 5)
+        cr.rel_line_to(5, -5)
+        cr.stroke()
+
+        # +
+        if hover[1] == 3:
+            cr.set_source_rgb(1, 0.2, 0.6)
+        else:
+            cr.set_source_rgba(0, 0, 0, 0.7)
+        cr.rectangle(self._x_right - 40, self._y + 7, 2, 10)
+        cr.rectangle(self._x_right - 44, self._y + 11, 10, 2)
+        cr.fill()
+        self._render_fonts(cr)
+        cr.show_glyphs(self._texts[0])
+        
 class Object_menu(Blank_space):
     def __init__(self, x, y, width, value_acquire, value_push, library, params = (), before=lambda: None, after=lambda: None, name='', source=0):
 
@@ -943,22 +1015,17 @@ class Orderable(Base_kookie):
         
         cr.fill()
 
-class Unordered(Base_kookie):
-    def __init__(self, x, y, width, height, dict_acquire, protect=set(), new=lambda: None, display=lambda: None, before=lambda: None, after=lambda: None, after_delete=None ):
+class Unorderable(Base_kookie):
+    def __init__(self, x, y, width, height, datablock, protect=set(), display=lambda: None, before=lambda: None, after=lambda: None ):
         self._itemheight = 26
         self._protect = protect
-        self._new = new
         self._display = display
         self._BEFORE = before
         self._AFTER = after
-        if after_delete is None:
-            self._AFTER_DEL = after
-        else:
-            self._AFTER_DEL = after_delete
 
         Base_kookie.__init__(self, x, y, width, height, font=styles.FONTSTYLES['_interface:STRONG'])
         
-        self._dict_acquire = dict_acquire
+        self._DB = datablock
 
         # set hover function equal to press function
         self.is_over_hover = self.is_over
@@ -967,27 +1034,19 @@ class Unordered(Base_kookie):
         self._SYNCHRONIZE()
 
     def _ACQUIRE_REPRESENT(self):
-        self._DICT = self._dict_acquire()
-        self._map = list(self._DICT.keys())
+        self._map = list(self._DB.elements.keys())
         
         self._texts = []
-        if self._DICT:
-            self._map.remove('_ACTIVE')
+        if self._map:
             self._map.sort()
-
             for i, l in enumerate(self._map):
                 self._add_static_text(self._x + 10, self._y + self._itemheight*i + 17, self._display(l), align=1)
-    
-    def _add(self):
-        key, v = self._new(self._DICT)
-        self._DICT[key] = v
-        self._DICT['_ACTIVE'] = key
     
     def hover(self, x, y):
         y -= self._y
         i = int(y // self._itemheight)
-        if i >= len(self._DICT):
-            i = len(self._DICT) - 1
+        if i > len(self._DB.elements):
+            i = len(self._DB.elements) - 1
         
         if x > self._x_right - 25:
             j = 4
@@ -998,28 +1057,22 @@ class Unordered(Base_kookie):
     def focus(self, x, y):
         F, C = self.hover(x, y)
 
-        if F == len(self._DICT) - 1:
+        if F == len(self._DB.elements):
             self._BEFORE()
-            self._add()
+            self._DB.add_slot()
             self._SYNCHRONIZE()
             self._AFTER()
         else:
             key = self._map[F]
             if C == 1 or key in self._protect:
-                self._DICT['_ACTIVE'] = key
+                self._DB.active = key
                 self._AFTER()
 
             elif C == 4:
                 self._BEFORE()
-                del self._DICT[key]
-
-                if len(self._DICT) > 1:
-                    self._DICT['_ACTIVE'] = self._map[0]
-                else:
-                    self._DICT.clear()
-                
+                self._DB.delete_slot(key)
                 self._SYNCHRONIZE()
-                self._AFTER_DEL()
+                self._AFTER()
 
     def draw(self, cr, hover=(None, None)):
         self._render_fonts(cr)
@@ -1028,7 +1081,7 @@ class Unordered(Base_kookie):
         
         for i, l in enumerate(self._texts):
             key = self._map[i]
-            if key == self._DICT['_ACTIVE']:
+            if key == self._DB.active:
                 cr.set_source_rgb(1, 0.2, 0.6)
 
                 radius = 5
@@ -1073,7 +1126,7 @@ class Unordered(Base_kookie):
             cr.show_glyphs(l)
             y1 += self._itemheight
 
-        if hover[1] is not None and hover[1][0] == len(self._DICT) - 1:
+        if hover[1] is not None and hover[1][0] == len(self._DB.elements):
             cr.set_source_rgb(1, 0.2, 0.6)
         else:
             cr.set_source_rgba(0, 0, 0, 0.7)

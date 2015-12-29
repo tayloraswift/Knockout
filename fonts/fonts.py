@@ -4,7 +4,6 @@ from fonts import pycairo_font
 
 _type_registry = {}
 
-
 def get_cairo_font(path):
     if path not in _type_registry:
         _type_registry[path] = pycairo_font.create_cairo_font_face_for_file(path)
@@ -39,13 +38,3 @@ class Memo_font(freetype.Face):
             i = self.get_char_index(character)
             self._ordinals[character] = i
             return i
-
-###
-
-def q_read(attribute, p):
-    li = TAGS[ paragraph_classes[p]['tags'] ]
-    return li [li[0] + 1][attribute]
-
-def q_set(value, attribute, p):
-    li = TAGS[ paragraph_classes[p]['tags'] ]
-    li [li[0] + 1][attribute] = value

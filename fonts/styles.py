@@ -12,56 +12,6 @@ class Subtag(object):
     def __init__(self, name):
         self.name = name
 
-class Tag(object):
-    def __init__(self, tag):
-        self.name = tag['name']
-        self.collapse = tag['collapse']
-        self.exclusive = tag['exclusive']
-
-        self.active = tag['_active']
-        self.elements = {s: Subtag(s) for s in tag['subtags']}
-    
-    def polaroid(self):
-        return {'name': self.name,
-                'collapse': self.collapse,
-                'exclusive': self.exclusive,
-                '_active': self.active,
-                'subtags': list(self.elements.keys())
-                }
-
-class W_TAGLIST(object):
-    def __init__(self):
-        pass
-    
-    def populate(self, taglist):
-        a = taglist.pop(0)
-        self.ordered = [Tag(t) for t in taglist]
-        self.active = self.ordered[a]
-        self.elements = {t.name: t for t in self.ordered}
-        self.elements.update(dict(itertools.chain.from_iterable(t.elements.items() for t in self.ordered)))
-
-# Peg() is just a 2-element list
-
-class DB_Pegs(object):
-    def __init__(self, pegs, name):
-        self.name = name
-        a = pegs[1].pop('_ACTIVE')
-        self.elements = pegs[1] #dict
-        self.active = self.elements[a]
-        if pegs[0]:
-            self.applies_to = set(pegs[0])
-        else:
-            self.applies_to = None
-    
-    def polaroid(self):
-        D = self.elements.copy()
-        D['_ACTIVE'] = next(k for k, v in self.elements.items() if v == self.active)
-        if self.applies_to:
-            C = ''.join(self.applies_to)
-        else:
-            C = ''
-        return (C, D)
-
 class _DB(object):
     def __init__(self, name, library):
         self.name = name
@@ -94,6 +44,93 @@ class _DB(object):
             name = self.name
         CC = type(self)(self.polaroid(), name)
         return CC
+
+class _DB_with_dict(_DB):
+    def __init__(self, elements, active, name, library):
+        _DB.__init__(self, name, library)
+        self.active = active
+        self.elements = elements
+
+    def _delete_element(self, key=None):
+        if key is None or self.active == key:
+            del self.elements[self.active]
+            if self.elements:
+                keys = list(sorted(self.elements.keys()))
+                if self.active == keys[0]:
+                    self.active = keys[-1]
+                else:
+                    self.active = keys[0]
+            else:
+                self.active = None
+        else:
+            del self.elements[key]
+
+class DB_Tag(_DB_with_dict):
+    def __init__(self, tdict, name):
+        self.collapse = tdict['collapse']
+        self.exclusive = tdict['exclusive']
+
+        ACT = tdict['_active']
+        E = {s: Subtag(s) for s in tdict['subtags']}
+        
+        _DB_with_dict.__init__(self, E, ACT, name, TAGLIST)
+
+    def add_slot(self):
+        k = '{New}'
+        self.elements[k] = Subtag(k)
+        self.active = k
+    
+    def delete_slot(self, key=None):
+        self._delete_element(key)
+        TAGLIST.update_map()
+
+    def polaroid(self):
+        return {'name': self.name,
+                'collapse': self.collapse,
+                'exclusive': self.exclusive,
+                '_active': self.active,
+                'subtags': list(self.elements.keys())
+                }
+
+class DB_TAGLIST(dict):
+    def populate(self, taglist):
+        self.active = taglist.pop(0)
+        self.ordered = [DB_Tag(t, t['name']) for t in taglist]
+        self.update_map()
+
+    def update_map(self):
+        self.clear()
+        self.update({t.name: t for t in self.ordered})
+        self.update(dict(itertools.chain.from_iterable(t.elements.items() for t in self.ordered)))
+
+# Peg() is just a 2-element list
+
+class DB_Pegs(_DB_with_dict):
+    def __init__(self, pegs, name):
+        ACT = pegs[1].pop('_ACTIVE')
+        E = pegs[1]
+        _DB_with_dict.__init__(self, E, ACT, name, PEGS)
+
+        if pegs[0]:
+            self.applies_to = set(pegs[0])
+        else:
+            self.applies_to = None
+
+    def add_slot(self, key=None):
+        self.elements[key] = [0, 0]
+        self.active = key
+    
+    def delete_slot(self, key=None):
+        self._delete_element(key)
+
+    def polaroid(self):
+        D = {k: v.copy() for k, v in self.elements.items()}
+        D['_ACTIVE'] = self.active
+        if self.applies_to:
+            C = ''.join(self.applies_to)
+        else:
+            C = ''
+        return (C, D)
 
 class _DB_with_inherit(_DB):
     def __init__(self, xdict, I, B, name, library):
@@ -130,7 +167,7 @@ class _DB_with_inherit(_DB):
         if V[0]:
             return V[1].name
         else:
-            return 'None'
+            return '—'
 
     def polaroid(self):
         E = ((A, getattr(self, A)) for A in self._i_attributes)
@@ -172,12 +209,12 @@ class DB_Fontstyle(_DB_with_inherit):
             self.u_font = fonts.get_cairo_font(path)
             self.u_path_valid = False
 
-class DB_Map(_DB):
+class DB_Map(_DB_with_dict):
     def __init__(self, mdict, name):
-        _DB.__init__(self, name, library = MAPS)
-        self.active = mdict.pop('_ACTIVE')
+        ACT = mdict.pop('_ACTIVE')
         # link fontstyle datablocks
-        self.elements = {k: FONTSTYLES[v] if v is not None else None for k, v in mdict.items()}
+        E = {k: FONTSTYLES[v] if v is not None else None for k, v in mdict.items()}
+        _DB_with_dict.__init__(self, E, ACT, name, MAPS)
     
     def add_slot(self):
         k = ('{New}',)
@@ -185,18 +222,7 @@ class DB_Map(_DB):
         self.active = k
     
     def delete_slot(self, key=None):
-        if key is None or self.active == key:
-            del self.elements[self.active]
-            if self.elements:
-                keys = list(sorted(self.elements.keys()))
-                if self.active == keys[0]:
-                    self.active = keys[-1]
-                else:
-                    self.active = keys[0]
-            else:
-                self.active = None
-        else:
-            del self.elements[key]
+        self._delete_element(key)
         PARASTYLES.update_tables()
 
     def polaroid(self):
@@ -253,14 +279,19 @@ def TREES(DB_TYPE, tree):
 #
 #   >
 
-TAGLIST = W_TAGLIST()
+TAGLIST = DB_TAGLIST()
 PEGS = {}
 FONTSTYLES = I_TREES()
 MAPS = {}
 PARASTYLES = I_TREES()
 
 def faith(woods):
-                                     
+    TAGLIST.clear()
+    PEGS.clear()
+    FONTSTYLES.clear()
+    MAPS.clear()
+    PARASTYLES.clear()
+
     TAGLIST.populate(woods['TAGLIST'])
     PEGS.update(TREES(DB_Pegs, woods['PEGS']))
     FONTSTYLES.update(TREES(DB_Fontstyle, woods['FONTSTYLES']))
@@ -272,17 +303,27 @@ def faith(woods):
         P.link_inheritable()
     PARASTYLES.update_tables()
 
-    # set up emergency undefined classes
-    global F_UNDEFINED
-    F_UNDEFINED = DB_Fontstyle({'fontsize': (False, 13),
-                 'path': (False, 'fonts/FreeMono.ttf'),
-                 'pegs': 'Standard pegs',
-                 'tracking': (False, 0),
-                 'color': (False, (1, 0.15, 0.2, 1))}, '_undefined')
-    F_UNDEFINED.link_inheritable()
-    F_UNDEFINED.update_table()
-
     for F in FONTSTYLES.values():
         F.link_inheritable()
     FONTSTYLES.update_tables()
 
+def daydream():
+    # set up emergency undefined classes
+    PEGS['_undefined'] = DB_Pegs(('',
+                            {'_ACTIVE': 'sup',
+                             'sub': [0, -0.2],
+                             'sup': [0, 0.4]}), '_undefined')
+    
+    global F_UNDEFINED
+    F_UNDEFINED = DB_Fontstyle({'fontsize': (False, 13),
+                 'path': (False, 'fonts/FreeMono.ttf'),
+                 'pegs': '_undefined',
+                 'tracking': (False, 0),
+                 'color': (False, (1, 0.15, 0.2, 1))}, '_undefined')
+    F_UNDEFINED.link_inheritable()
+    F_UNDEFINED.update_table()
+    
+    PEGS.clear()
+    
+    global T_UNDEFINED
+    T_UNDEFINED = DB_Tag({'_active': None, 'subtags': [], 'collapse': False ,'exclusive': False}, '_undefined')

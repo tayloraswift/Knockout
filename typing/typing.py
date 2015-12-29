@@ -6,10 +6,10 @@ from model import meredith
 
 from model import un
 
-sup = styles.TAGLIST.elements['sup']
-sub = styles.TAGLIST.elements['sub']
-emphasis = styles.TAGLIST.elements['emphasis']
-strong = styles.TAGLIST.elements['strong']
+sup = styles.TAGLIST['sup']
+sub = styles.TAGLIST['sub']
+emphasis = styles.TAGLIST['emphasis']
+strong = styles.TAGLIST['strong']
 specials = {'Ctrl equal': [('<f>', sup)], 'Ctrl minus': [('<f>', sub)], 'Ctrl underscore': [('</f>', sub)], 'Ctrl plus': [('</f>', sup)]}
 special_names = set(specials)
 

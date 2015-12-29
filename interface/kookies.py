@@ -108,9 +108,7 @@ class Checkbox(Base_kookie):
 
 class Tabs(Base_kookie):
     def __init__(self, x, y, width, height, default=0, callback=None, signals=() ):
-
         Base_kookie.__init__(self, x, y, width, height, font=styles.FONTSTYLES['_interface:STRONG'])
-        
         self._signals, self._strings = zip( * signals )
         
         self._callback = callback
@@ -169,7 +167,6 @@ class Tabs(Base_kookie):
 
 class Heading(Base_kookie):
     def __init__(self, x, y, width, height, text, font=styles.FONTSTYLES['_interface:TITLE'], fontsize=None, upper=False):
-        
         Base_kookie.__init__(self, x, y, width, height)
         
         self.font = font
@@ -183,12 +180,9 @@ class Heading(Base_kookie):
         
     def draw(self, cr, hover=(None, None)):
         self._render_fonts(cr)
-        
         cr.set_source_rgb(0,0,0)
-        
         cr.rectangle(self._x, self._y_bottom - 2, self._width, 2)
         cr.fill()
-        
         cr.show_glyphs(self._texts[0])
 
 
@@ -524,14 +518,11 @@ class Numeric_field(Blank_space):
 class Integer_field(Numeric_field):
     def __init__(self, x, y, width, callback, value_acquire, params=(), before=lambda: None, after=lambda: None, name=None):
         Numeric_field.__init__(self, x, y, width, callback, value_acquire, params, before, after, name)
-
         self._domain = lambda k: int(float(self._digits(k)))
 
 class Enumerate_field(Numeric_field):
     def __init__(self, x, y, width, callback, value_acquire, params=(), before=lambda: None, after=lambda: None, name=None):
-    
         Blank_space.__init__(self, x, y, width, callback, value_acquire, params, before, after, name)
-
         self._domain = lambda k: set( int(v) for v in [''.join([c for c in val if c in '1234567890']) for val in k.split(',')] if v )
 
     def _ACQUIRE_REPRESENT(self):
@@ -620,10 +611,11 @@ class Datablock_selection_menu(Selection_menu):
     def _ACQUIRE_OPTIONS(self):
         self._menu_options = self._get_options()
     def _ACQUIRE_REPRESENT(self):
-        label = self._get_value( * self._params)
+        current = self._get_value( * self._params)
         self._texts = []
-        self._add_static_text(self._x_right, self._y_bottom - self._height/2 + 5, label, align=-1)
-    
+        self._add_static_text(self._x_right, self._y_bottom - self._height/2 + 5, current, align=-1)
+    def focus(self, x, y):
+        menu.menu.create(self._x_right - 200, self._y_bottom - 5, 200, self._menu_options, self._MENU_PUSH, self._params, before=self._BEFORE, after=self._AFTER, source=self._source )
 #########
 class Double_selection_menu(Selection_menu):
     def __init__(self, x, y, width, height, menu_callback, options_acquire, options_acquire_l2, value_acquire, source):
@@ -841,44 +833,47 @@ class Object_menu(Blank_space):
         cr.stroke()
 
 class Orderable(Base_kookie):
-    def __init__(self, x, y, width, height, list_acquire, new, display=lambda: None, before=lambda: None, after=lambda: None ):
+    def __init__(self, x, y, width, height, datablock, display=lambda: None, before=lambda: None, after=lambda: None ):
         self._itemheight = 26
-        self._new = new
         self._display = display
         self._BEFORE = before
         self._AFTER = after
 
         Base_kookie.__init__(self, x, y, width, height, font=styles.FONTSTYLES['_interface:STRONG'])
         
-        self._list_acquire = list_acquire
+        self._DB = datablock
+        self._DB_ordered = self._DB.ordered
 
         # set hover function equal to press function
         self.is_over_hover = self.is_over
 
         self._SYNCHRONIZE = self._ACQUIRE_REPRESENT
-        
         self._SYNCHRONIZE()
 
     def _ACQUIRE_REPRESENT(self):
-        self._LIST = self._list_acquire()
         self._texts = []
-        for i, l in enumerate(self._LIST[1:]):
+        for i, l in enumerate(self._DB_ordered):
             self._add_static_text(self._x + 10, self._y + self._itemheight*i + 17, self._display(l), align=1)
     
     def _move(self, i, j):
-        if 0 < j < len(self._LIST):
-            self._LIST.insert(j, self._LIST.pop(i))
-            self._LIST[0] = j - 1
+        if 0 <= j < len(self._DB_ordered):
+            self._DB_ordered.insert(j, self._DB_ordered.pop(i))
+            self._DB.active = j
     
     def _add(self):
-        self._LIST.append(self._new(self._LIST))
-        self._LIST[0] = len(self._LIST) - 2
+        if self._DB_ordered:
+            O = self._DB_ordered[self._DB.active]
+        else:
+            O = styles.T_UNDEFINED
+        self._DB_ordered.append(O.copy(O.next_name()))
+        self._DB.active  = len(self._DB_ordered) - 1
+        self._DB.update_map()
     
     def hover(self, x, y):
         y -= self._y
         i = int(y // self._itemheight)
-        if i >= len(self._LIST):
-            i = len(self._LIST) - 1
+        if i > len(self._DB_ordered):
+            i = len(self._DB_ordered)
         
         if x > self._x_right - 25:
             j = 4
@@ -893,32 +888,32 @@ class Orderable(Base_kookie):
     def focus(self, x, y):
         F, C = self.hover(x, y)
 
-        if F == len(self._LIST) - 1:
+        if F == len(self._DB_ordered):
             self._BEFORE()
             self._add()
             self._SYNCHRONIZE()
             self._AFTER()
         else:
             if C == 1:
-                self._LIST[0] = F
+                self._DB.active = F
 
             elif C == 2:
                 self._BEFORE()
-                self._move(F + 1, F)
+                self._move(F, F - 1)
                 self._SYNCHRONIZE()
 
             elif C == 3:
                 self._BEFORE()
-                self._move(F + 1, F + 2)
+                self._move(F, F + 1)
                 self._SYNCHRONIZE()
 
             elif C == 4:
                 self._BEFORE()
-                del self._LIST[F + 1]
+                del self._DB_ordered[F]
                 
-                if self._LIST[0] >= len(self._LIST) - 1:
-                    self._LIST[0] = len(self._LIST) - 2
-                
+                if self._DB.active >= len(self._DB_ordered):
+                    self._DB.active = len(self._DB_ordered) - 1
+                self._DB.update_map()
                 self._SYNCHRONIZE()
             
             self._AFTER()
@@ -931,7 +926,7 @@ class Orderable(Base_kookie):
         
         y1 = self._y
         for i, l in enumerate(self._texts):
-            if i == self._LIST[0]:
+            if i == self._DB.active:
                 cr.set_source_rgb(1, 0.2, 0.6)
 
                 radius = 5
@@ -1006,7 +1001,7 @@ class Orderable(Base_kookie):
 
             y1 += self._itemheight
         
-        if hover[1] is not None and hover[1][0] == len(self._LIST) - 1:
+        if hover[1] is not None and hover[1][0] == len(self._DB_ordered):
             cr.set_source_rgb(1, 0.2, 0.6)
         else:
             cr.set_source_rgba(0, 0, 0, 0.7)
@@ -1135,6 +1130,121 @@ class Unorderable(Base_kookie):
         
         cr.fill()
 
+class Subset_table(Base_kookie):
+    def __init__(self, x, y, width, height, datablock, superset, params = (), before=lambda: None, after=lambda: None):
+        self._itemheight = 26
+        self._BEFORE = before
+        self._AFTER = after
+        self._params = params
+
+        Base_kookie.__init__(self, x, y, width, height, font=styles.FONTSTYLES['_interface:STRONG'])
+
+        self._DB = datablock
+        self._SS = superset
+
+        # set hover function equal to press function
+        self.is_over_hover = self.is_over
+
+        self._SYNCHRONIZE = self._ACQUIRE_REPRESENT
+        self._SYNCHRONIZE()
+
+    def _ACQUIRE_REPRESENT(self):
+        self._map = list(self._SS.keys())
+        
+        self._texts = []
+        self._map.sort()
+        for i, l in enumerate(self._map):
+            self._add_static_text(self._x + 10, self._y + self._itemheight*i + 17, l, align=1)
+
+    def hover(self, x, y):
+        y -= self._y
+        i = int(y // self._itemheight)
+        if i >= len(self._SS):
+            i = len(self._SS) - 1
+        
+        if x > self._x_right - 25:
+            j = 4
+        else:
+            j = 1
+        return i, j
+
+    def focus(self, x, y):
+        F, C = self.hover(x, y)
+
+        key = self._map[F]
+        if C == 1 and key in self._DB.elements:
+            self._DB.active = key
+            self._AFTER()
+
+        elif C == 4:
+            self._BEFORE()
+            if key in self._DB.elements:
+                self._DB.delete_slot(key)
+            else:
+                self._DB.add_slot(key)
+            self._SYNCHRONIZE()
+            self._AFTER()
+    
+    def draw(self, cr, hover=(None, None)):
+        self._render_fonts(cr)
+        cr.set_line_width(1.5)
+        y1 = self._y
+        
+        for i, l in enumerate(self._texts):
+            key = self._map[i]
+            if key == self._DB.active:
+                cr.set_source_rgb(1, 0.2, 0.6)
+
+                radius = 5
+
+                y2 = y1 + self._itemheight
+                cr.arc(self._x + radius, y1 + radius, radius, 2*(pi/2), 3*(pi/2))
+                cr.arc(self._x_right - radius, y1 + radius, radius, 3*(pi/2), 4*(pi/2))
+                cr.arc(self._x_right - radius, y2 - radius, radius, 0*(pi/2), 1*(pi/2))
+                cr.arc(self._x + radius, y2 - radius, radius, 1*(pi/2), 2*(pi/2))
+                cr.close_path()
+
+                cr.fill()
+
+                if hover[1] == (i, 4):
+                    cr.set_source_rgba(1, 1, 1, 0.9)
+                else:
+                    cr.set_source_rgb(1, 1, 1)
+                cr.arc(self._x_right - 15, y1 + 13, 6, 0, 2*pi)
+                cr.fill()
+
+                cr.set_source_rgb(1, 1, 1)
+
+            elif hover[1] is not None and hover[1][0] == i:
+                
+                if hover[1][1] == 4:
+                    cr.set_source_rgb(1, 0.2, 0.6)
+                else:
+                    cr.set_source_rgba(0, 0, 0, 0.7)
+                
+                if key in self._DB.elements:
+                    cr.arc(self._x_right - 15, y1 + 13, 6, 0, 2*pi)
+                    cr.fill()
+                    cr.set_source_rgb(1, 0.2, 0.6)
+                else:
+                    cr.arc(self._x_right - 15, y1 + 13, 5.5, 0, 2*pi)
+                    cr.stroke()
+                    cr.set_source_rgba(0, 0, 0, 0.4)
+
+            elif key in self._DB.elements:
+                cr.set_source_rgba(0, 0, 0, 0.7)
+                cr.arc(self._x_right - 15, y1 + 13, 6, 0, 2*pi)
+                cr.fill()
+            else:
+                cr.set_source_rgba(0, 0, 0, 0.7)
+                cr.arc(self._x_right - 15, y1 + 13, 5.5, 0, 2*pi)
+                cr.stroke()
+                cr.set_source_rgba(0, 0, 0, 0.4)
+                
+            cr.show_glyphs(l)
+            y1 += self._itemheight
+
+
 class Binary_table(Base_kookie):
     def __init__(self, x, y, width, height, cellsize, callback, states_acquire, params = (), before=lambda: None, after=lambda: None):
         self._BEFORE = before
@@ -1204,14 +1314,6 @@ class Binary_table(Base_kookie):
             if self._STATES[i]:
                 cr.set_source_rgb(1, 0.2, 0.6)
 
-#                radius = 5
-                
-#                x1, x2, y1, y2 = cell
-#                cr.arc(x1 + radius, y1 + radius, radius, 2*(pi/2), 3*(pi/2))
-#                cr.arc(x2 - radius, y1 + radius, radius, 3*(pi/2), 4*(pi/2))
-#                cr.arc(x2 - radius, y2 - radius, radius, 0*(pi/2), 1*(pi/2))
-#                cr.arc(x1 + radius, y2 - radius, radius, 1*(pi/2), 2*(pi/2))
-#                cr.close_path()
                 cr.rectangle( * cell)
                 cr.fill()
                 

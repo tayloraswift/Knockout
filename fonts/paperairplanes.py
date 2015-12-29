@@ -1,5 +1,4 @@
 import itertools
-# PARAGRAPH STYLES
 
 def read_binomial(C, SIGN, K):
     if K:
@@ -58,32 +57,3 @@ def pack_binomial(value):
         SIGN = 1
     
     return C, SIGN, K
-
-# TAGS
-
-def tags_and_subtags(p):
-    TT = []
-    for tag in fonts.TAGS[fonts.paragraph_classes[p]['tags']][1:]:
-        if tag['subtags']:
-            subtags = list(tag['subtags'].keys())
-            subtags.remove('_ACTIVE')
-            TT += subtags
-        else:
-            TT.append(tag['name'])
-
-    return TT
-
-# Q
-
-def tags_push_subtag_name(name, p):
-    li = fonts.TAGS[ fonts.paragraph_classes[p]['tags'] ]
-    ST = li [li[0] + 1]['subtags']
-    ST[name] = ST.pop(ST['_ACTIVE'])
-    ST['_ACTIVE'] = name
-
-# PEGS
-
-def pegs_push_tag(tag, G):
-    fonts.PEGS[G] [tag] = fonts.PEGS[G].pop(fonts.PEGS[G]['_ACTIVE'])
-    fonts.PEGS[G]['_ACTIVE'] = tag
-

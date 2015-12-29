@@ -1,9 +1,9 @@
 from copy import deepcopy
 
-from fonts import fonts
+from fonts import styles
 
 from model.meredith import mipsy
-from model import penclick
+from model import penclick, kevin
 
 
 class UN(object):
@@ -18,11 +18,20 @@ class UN(object):
             del self._history[:89]
             self._i -= 89
         
-        kitty = [{'text': tuple(t.text), 'spelling': t.misspellings[:], 'outline': deepcopy(t.channels.channels), 'cursors': (t.cursor.cursor, t.select.cursor)} for t in mipsy.tracts]
+        kitty = [{'text': kevin.serialize(t.text), 'spelling': t.misspellings[:], 'outline': deepcopy(t.channels.channels), 'cursors': (t.cursor.cursor, t.select.cursor)} for t in mipsy.tracts]
         page_xy = (penclick.page.WIDTH, penclick.page.HEIGHT)
         if len(self._history) > self._i:
             del self._history[self._i:]
-        self._history.append({'kitty': kitty, 'styles': None, 'page': page_xy})
+        
+        # save styles
+        PPP = {N: P.polaroid() for N, P in styles.PARASTYLES.items()}
+        FFF = {N: F.polaroid() for N, F in styles.FONTSTYLES.items()}
+        
+        GGG = {N: G.polaroid() for N, G in styles.PEGS.items()}
+        MMM = {N: M.polaroid() for N, M in styles.MAPS.items()}
+        TTT = [styles.TAGLIST.active] + [T.polaroid() for T in styles.TAGLIST.ordered]
+        
+        self._history.append({'kitty': kitty, 'styles': {'PARASTYLES': PPP, 'FONTSTYLES': FFF, 'PEGS': GGG, 'MAPS': MMM, 'TAGLIST': TTT}, 'page': page_xy})
         self._i = len(self._history)
     
     def pop(self):
@@ -30,11 +39,12 @@ class UN(object):
         self._i = len(self._history)
         
     def _restore(self, i):
-        fonts.paragraph_classes = self._history[i]['styles']
+        styles.faith(self._history[i]['styles'])
+        
         penclick.page.WIDTH, penclick.page.HEIGHT = self._history[i]['page']
 
         for t in range(len(mipsy.tracts)):
-            mipsy.tracts[t].text = list(self._history[i]['kitty'][t]['text'])
+            mipsy.tracts[t].text = kevin.deserialize(self._history[i]['kitty'][t]['text'])
             mipsy.tracts[t].misspellings = self._history[i]['kitty'][t]['spelling']
             mipsy.tracts[t].cursor.cursor = self._history[i]['kitty'][t]['cursors'][0]
             mipsy.tracts[t].select.cursor = self._history[i]['kitty'][t]['cursors'][1]

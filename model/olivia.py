@@ -92,9 +92,7 @@ def _assemble_line(letters, startindex, l, anchor, stop, y, leading, COLLAPSE, F
             else:
                 F.append(TAG)
                 F.sort()
-            
-            FSTYLE = _retrieve_fontclass(F, FONTMAP, l)
-            
+
             # calculate pegging
             G = FSTYLE.pegs.elements
             if TAG in G:
@@ -112,6 +110,10 @@ def _assemble_line(letters, startindex, l, anchor, stop, y, leading, COLLAPSE, F
                 y -= gy
                 x += gx
             
+            elif effective_peg not in G:
+                effective_peg = None
+            
+            FSTYLE = _retrieve_fontclass(F, FONTMAP, l)
             GLYPHS.append((-4, x, y, FSTYLE, tuple(F), x))
             
         elif CHAR == '</f>':
@@ -121,8 +123,6 @@ def _assemble_line(letters, startindex, l, anchor, stop, y, leading, COLLAPSE, F
             except ValueError:
                 F.append('~' + TAG)
                 F.sort()
-
-            FSTYLE = _retrieve_fontclass(F, FONTMAP, l)
 
             # depeg
             if TAG == effective_peg:
@@ -136,6 +136,8 @@ def _assemble_line(letters, startindex, l, anchor, stop, y, leading, COLLAPSE, F
                     x = front
                 else:
                     front = x
+            
+            FSTYLE = _retrieve_fontclass(F, FONTMAP, l)
             GLYPHS.append((-5, x, y, FSTYLE, tuple(F), x))
             
         elif CHAR == '<p>':
@@ -730,7 +732,7 @@ class Text(object):
             self.select.cursor = len(self.text) - 1
         else:
             self.select.cursor += self.text[self.select.cursor:].index('</p>')
-            self.cursor.cursor = self.text_index_location(self.cursor.cursor)[2][1] + 1
+            self.cursor.cursor = self.pp_at(self.cursor.cursor)[1] + 1
     
     def expand_cursors_word(self):
 

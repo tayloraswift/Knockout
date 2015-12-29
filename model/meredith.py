@@ -141,7 +141,6 @@ class Meredith(object):
     
     def add_tract(self):
         self.tracts.append( olivia.Text('<p>{new}</p>', george.Washington([self.tracts[-1].channels.generate_channel()]), 1, 1 ) )
-        self.t = len(self.tracts) - 1
         self.recalculate_all()
     
     def rename_paragraph_class(self, old, new):

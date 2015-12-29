@@ -24,7 +24,7 @@
                               'fontsize': (True, 'body:REGULAR'),
                               'path': (False,
                                        '/home/kelvin/.fonts/FiraSans-Bold.otf'),
-                              'pegs': 'Standard pegs',
+                              'pegs': 'Standard pegs.001',
                               'tracking': (False, 0)},
                 'body:BOLDITALIC': {'color': (True, 'body:REGULAR'),
                                     'fontsize': (True, 'body:REGULAR'),
@@ -38,7 +38,7 @@
                                          '/home/kelvin/.fonts/FiraSans-BookItalic.otf'),
                                 'pegs': 'Standard pegs',
                                 'tracking': (True, 'body:REGULAR')},
-                'body:REGULAR': {'color': (False, (0.3, 0.2, 0.7, 1)),
+                'body:REGULAR': {'color': (False, (0, 0, 0, 1)),
                                  'fontsize': (False, 13),
                                  'path': (False,
                                           '/home/kelvin/.fonts/FiraSans-Book.otf'),
@@ -53,7 +53,7 @@
                 'body:REGULAR SMALL BOLD': {'color': (True, 'body:REGULAR'),
                                             'fontsize': (False, 8),
                                             'path': (False,
-                                                     '/home/kelvin/.fonts/FiraSans-Heavy.otf'),
+                                                     '/home/kelvin/.fonts/FiraSans-HeavyItalic.otf'),
                                             'pegs': 'Standard pegs',
                                             'tracking': (False, 0.1)},
                 'body:REGULAR SMALL ITALIC': {'color': (True, 'body:REGULAR'),
@@ -76,10 +76,12 @@
                                                '/home/kelvin/.fonts/Kabel.otf'),
                                       'pegs': 'Standard pegs',
                                       'tracking': (True, 'h1:DISPLAY')}},
- 'MAPS': {'Body map': {'_ACTIVE': ('emphasis',),
+ 'MAPS': {'Body map': {'_ACTIVE': ('*SCRIPT', 'emphasis', 'strong'),
                        (): 'body:REGULAR',
                        ('*SCRIPT',): 'body:REGULAR SMALL',
                        ('*SCRIPT', 'emphasis'): 'body:REGULAR SMALL ITALIC',
+                       ('*SCRIPT', 'emphasis', 'strong'): 'body:REGULAR SMALL '
+                                                          'BOLD',
                        ('*SCRIPT', 'strong'): 'body:REGULAR SMALL BOLD',
                        ('caption',): '_interface:REGULAR',
                        ('emphasis',): 'body:ITALIC',
@@ -104,7 +106,7 @@
                                'margin_top': (False, 0)},
                 'body': {'fontclasses': 'Body map',
                          'hyphenate': (False, True),
-                         'indent': (False, (0, -1, 4)),
+                         'indent': (False, (0, 1, 0)),
                          'indent_range': (False, {0}),
                          'leading': (False, 20),
                          'margin_bottom': (False, 8),
@@ -123,7 +125,12 @@
  'PEGS': {'Standard pegs': ('',
                             {'_ACTIVE': 'sup',
                              'sub': [0, -0.2],
-                             'sup': [0, 0.4]})},
+                             'sup': [0, 0.4]}),
+          'Standard pegs.001': ('',
+                                {'_ACTIVE': 'emphasis',
+                                 'emphasis': [0, 1],
+                                 'sub': [0, -0.2],
+                                 'sup': [0, 0.4]})},
  'TAGLIST': [3,
              {'_active': None,
               'collapse': False,
@@ -139,7 +146,7 @@
               'collapse': True,
               'exclusive': False,
               'name': '*SCRIPT',
-              'subtags': ['sub', 'sup']},
+              'subtags': ['sup', 'sub']},
              {'_active': None,
               'collapse': False,
               'exclusive': False,
@@ -157,34 +164,47 @@
               'subtags': []}],
  'contexts': {'c': 0, 'p': 0},
  'grid': [[], []],
- 'kitty': [{'cursors': (137, 137),
+ 'kitty': [{'cursors': (390, 390),
             'outline': [[[[90, 80, False], [90, 910, False]],
                          [[370, 80, False], [370, 910, False]],
                          0],
-                        [[[400, 80, False], [400, 910, True]],
-                         [[680, 80, False], [680, 910, True]],
+                        [[[400, 560, True], [400, 910, False]],
+                         [[680, 560, True], [680, 910, False]],
                          0]],
             'text': '<p class="h1">We begin our story in <strong>New '
                     'York</strong>.</p><p>There once was a girl known by '
-                    '</p><p>everyone <em>and</em></p><p>no one. Her heart '
-                    'belonged to someone who couldn’t stay. They loved each '
-                    'other recklessly. They paid the price. She danced to '
-                    'forget him. He drove past her <em>street every night. She '
-                    'made friends and enemies. <strong>She only saw him</em> '
-                    'in his dreams.</strong> Then one day he came back. Timing '
-                    'is a funny thing. But everyone was watching. She lost him '
-                    'but she found herself and somehow that was '
+                    '</p><p>everyone <em>and</em> no one. Her heart belonged '
+                    'to someone who couldn’t stay. They loved each other '
+                    'recklessly. They paid the price. She danced to forget '
+                    'him. He drove past her <em>street every night. She made '
+                    'friends and enemies. <strong>She only saw him</em> in his '
+                    'dreams.</strong> Then one day he came back. Timing is a '
+                    'funny thing. But everyone was watching. She lost him but '
+                    'she found herself and somehow that was '
                     'everything.</p><p>1.  <em>x</em><f class="sup">2</f '
                     'class="sup"> + 2<em>x</em> – 3</p><p>2.  A<f '
                     'class="sub"><em>n</em></f class="sub"> = 6<em>n</em> + '
                     'A<f class="sub"><em>n</em> – 1</f class="sub"> + '
                     '1</p><p>3.  ∫<f class="sub">13</f class="sub"><f '
                     'class="sup">x</f class="sup"> <em>x</em> + 2 d<em>x</em> '
-                    '</p>'}],
+                    '</p><p>13. If a spo<strong>tli<em>g</strong>ht '
+                    '</em>isu<em>n</em>ted <em>h</em> feet above the stadium '
+                    'floor, has a cone angle of <em>g</em> and is pointed θ '
+                    'r<f class="sup">adi<strong>ans aw</strong>ay<em> from '
+                    'th<strong>e ve</f class="sup">rti</strong>cal, th</em>e '
+                    'length <em>a</em> and width <em>b</em> of the ellipse it '
+                    'casts on the floor is given by:</p><p><em>a</em> = '
+                    '<em>h</em> ( tan (θ + <em>g</em>) – tan (θ – <em>g</em>)) '
+                    '</p><p><em>b</em> = 2<em>h</em> tan <em>g</em> csc '
+                    'θ</p><p><em>A</em> = π<em>ab</em></p><p>If <em>h</em> = '
+                    '220 feet, <em>g</em> = π/12, and the angle the spotlight '
+                    'makes with horizon is closing at π/22 rad per second, at '
+                    'what rate is the size of the light on the floor changing '
+                    'when the spotlight is π/3 rad from the vertical?</p>'}],
  'page': {'dimensions': (765, 990), 'dual': False},
- 'view': {'H': 296,
-          'Hc': 520.3101196289062,
-          'K': 35,
-          'Kc': 456.08746337890625,
-          'Zoom': 11,
+ 'view': {'H': 177,
+          'Hc': 408.48333740234375,
+          'K': -127,
+          'Kc': 364.778564453125,
+          'Zoom': 14,
           'mode': 'text'}}

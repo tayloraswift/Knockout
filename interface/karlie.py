@@ -274,23 +274,43 @@ class Properties(_Properties_panel):
                 y += 30
                 self._items.append(_create_f_inherit( 15, y, width=250, attribute='tracking', after=self.synchronize, source=self._partition))
                 y += 30
-                """
-                g = fonts.TEXTURES[key]['pegs']
-                self._items.append(kookies.Unordered( 15, y, 250, 100,
-                        dict_acquire=lambda: fonts.PEGS[g],
-                        new = lambda L: ('{new}', [0.13, 0.22]),
-                        display = lambda l: str(l),
-                        before=un.history.save, after=self._TURNOVER_WITH_REFRESH_F, after_delete=self._TURNOVER_WITH_REFRESH_F))
-                y += 100
-                if '_ACTIVE' in fonts.PEGS[g]:
-                    self._items.append(kookies.Selection_menu(15, y, width=250, height=15, menu_callback = plane.pegs_push_tag, 
-                                options_acquire=lambda: (('{new}', 'None'),) + tuple((k, k) for k in plane.tags_and_subtags(p[0])), 
-                                value_acquire = lambda G: fonts.PEGS[G]['_ACTIVE'], 
-                                params = (g,),
-                                before = un.history.save, after=self._TURNOVER_WITH_REFRESH_F,
-                                source=self._partition))
+        
+        elif self._tab == 'pegs':
+            G = contexts.Pegs.pegs
+            if G is None:
+                self._items.append(kookies.New_object_menu(15, y, 250,
+                            value_push = ops.Fontstyle.link_pegs, 
+                            library = styles.PEGS, 
+                            before = un.history.save, after = self.refresh, name='PEGS', source=self._partition))
+
+            else:
+                self._items.append(kookies.Object_menu(15, y, 250,
+                            value_acquire = lambda: contexts.Pegs.pegs, 
+                            value_push = ops.Fontstyle.link_pegs, 
+                            library = styles.PEGS, 
+                            before = un.history.save, after = self.refresh, name='PEGS', source=self._partition))
+                y += 45
+                self._items.append(kookies.Subset_table( 15, y, 250, 250,
+                        datablock = G,
+                        superset = styles.TAGLIST,
+                        before=un.history.save, after=self.refresh))
+                y += 250
+                
+                if G.active is not None:
+
+                    _a = kookies.Numeric_field(15, y, 120, 
+                                callback = ops.Pegs.set_active_x,
+                                value_acquire = lambda: G.elements[G.active][0],
+                                before = un.history.save, after = meredith.mipsy.recalculate_all, name = 'X' )
+                    _b = kookies.Numeric_field(145, y, 120, 
+                                callback = ops.Pegs.set_active_y,
+                                value_acquire = lambda: G.elements[G.active][1],
+                                before = un.history.save, after = meredith.mipsy.recalculate_all, name = 'Y' )
+
+                    self._items.append( _TWO_COLUMN(_a, _b))
+                    self._items += [_a, _b]
                     y += 45
-                    """
+                    
         elif self._tab == 'paragraph':
 
             self._items.append(kookies.Object_menu( 15, y, 250, 
@@ -344,47 +364,51 @@ class Properties(_Properties_panel):
             self._items.append(_create_p_field(kookies.Checkbox, 15, y + 15, 100, 'hyphenate', after=self.synchronize, name='HYPHENATE') )
             y += 30
             self._items.append(_create_p_inherit(15, y, width=250, attribute='hyphenate', after=self.refresh, source=self._partition))
-            """
+
+        elif self._tab == 'tags':
+            
             y += 30
-            self._items.append(kookies.Orderable( 15, y, 200, 180,
-                        list_acquire=lambda: fonts.TAGS[fonts.paragraph_classes[p[0]]['tags']], 
-                        new = lambda L: {'subtags': {}, 'collapse': False ,'exclusive': False, 'name': '{new}'},
-                        display = lambda l: l['name'],
-                        before=un.history.save, after=self.refresh ))
-            y += 180
+            self._items.append(kookies.Orderable( 15, y, 200, 200,
+                        datablock = styles.TAGLIST, 
+                        display = lambda l: l.name,
+                        before=un.history.save, after = lambda: (contexts.Tag.update(), self.refresh()) ))
+            
+            y += 200
             self._items.append(kookies.Blank_space(15, y, width=250, 
-                    callback=fonts.q_set, 
-                    value_acquire=fonts.q_read, 
-                    params = ('name', p[0]), before=un.history.save, after=self.synchronize, name='TAG NAME'))
+                    callback = contexts.Tag.tag.rename, 
+                    value_acquire = lambda: contexts.Tag.tag.name, 
+                    before=un.history.save, after=self.synchronize, name='TAG NAME'))
 
             y += 45
-            self._items.append(kookies.Checkbox( 15, y + 15, 100, callback=fonts.q_set, 
-                            value_acquire = fonts.q_read, params = ('exclusive', p[0]),
+            self._items.append(kookies.Checkbox( 15, y + 15, 100, callback = ops.Tag.t_set_attribute, 
+                            value_acquire = lambda A: getattr(contexts.Tag.tag, A), 
+                            params = ('exclusive',),
                             before = un.history.save,
-                            after = self._TURNOVER_WITH_RERENDER_P,
+                            after = self.synchronize,
                             name = 'EXCLUSIVE') )
             y += 45
-
-            self._items.append(kookies.Unordered( 15, y, 250, 100,
-                        dict_acquire=lambda: fonts.q_read('subtags', p[0]) ,
-                        new = lambda L: ('{new}', None),
+            
+            self._items.append(kookies.Unorderable( 15, y, 250, 100,
+                        datablock = contexts.Tag.tag,
                         display = lambda l: l,
-                        before=un.history.save, after=self._TURNOVER_WITH_REFRESH_F, after_delete=self._TURNOVER_WITH_REFRESH_F))
+                        before=un.history.save, after=self.synchronize))
 
             y += 100
-            if fonts.q_read('subtags', p[0]):
+            
+            if contexts.Tag.tag.elements:
                 self._items.append(kookies.Blank_space(15, y, width=250, 
-                        callback=plane.tags_push_subtag_name, 
-                        value_acquire= lambda P: fonts.q_read('subtags', P)['_ACTIVE'], 
-                        params = (p[0],), before=un.history.save, after=self.synchronize, name='SUBTAG NAME'))
+                        callback = ops.Tag.rename_active_subtag, 
+                        value_acquire = lambda: contexts.Tag.tag.active, 
+                        before=un.history.save, after=self.synchronize, name='SUBTAG NAME'))
 
                 y += 45
-                self._items.append(kookies.Checkbox( 15, y + 15, 100, callback=fonts.q_set, 
-                                value_acquire = fonts.q_read, params = ('collapse', p[0]),
+                self._items.append(kookies.Checkbox( 15, y + 15, 100, callback = ops.Tag.t_set_attribute, 
+                                value_acquire = lambda A: getattr(contexts.Tag.tag, A), 
+                                params = ('collapse',),
                                 before = un.history.save,
-                                after = self._TURNOVER_WITH_RERENDER_P,
+                                after = self.synchronize,
                                 name = 'COLLAPSE') )
-            """
+
         elif self._tab == 'page':
             self._items.append(kookies.Integer_field( 15, y, 250, 
                         callback = penclick.page.set_width,
@@ -422,11 +446,11 @@ class Properties(_Properties_panel):
         self._stack()
         
     def _swap_reconstruct(self, to):
-        width = 140
+        width = 160
 
         if to == 'text':
-            tabs = (('page', 'M'), ('paragraph', 'P'), ('font', 'F'), ('', '?'))
-            default = 1
+            tabs = (('page', 'M'), ('tags', 'T'), ('paragraph', 'P'), ('font', 'F'), ('pegs', 'G'))
+            default = 2
             self._tabstrip = kookies.Tabs( (constants.window.get_h() - constants.UI[self._partition] - width)//2 , 50, width, 30, default=default, callback=self._tab_switch, signals=tabs)
             self._tab = tabs[default][0]
             self._reconstruct = self._reconstruct_text_properties
@@ -441,5 +465,5 @@ class Properties(_Properties_panel):
         self._reconstruct()
 
 
-klossy = Properties(tabs = (('page', 'M'), ('paragraph', 'P'), ('font', 'F'), ('', '?')), default=1, partition=1 )
+klossy = Properties(tabs = (('page', 'M'), ('tags', 'T'), ('paragraph', 'P'), ('font', 'F'), ('pegs', 'G')), default=2, partition=1 )
 

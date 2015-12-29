@@ -23,15 +23,6 @@ from interface import kookies
 from interface import caramel
 from interface import menu, ui
 
-def check_paragraph_context_changed(previous=[None]):
-    p = meredith.mipsy.paragraph_at()
-    if p != previous[0]:
-        previous[0] = p
-        contexts.Text.update_p(p)
-        return True
-    else:
-        return False
-
 class Tabs_round(kookies.Tabs):
     def __init__(self, x, y, width, height, default=0, callback=None, signals=(), longstrings=None):
         kookies.Tabs.__init__(self, x, y, width, height, default=default, callback=callback, signals=signals)
@@ -187,17 +178,14 @@ class Document_toolbar(object):
         self._items.append(kookies.Button(5, y, 90, 30, callback=meredith.mipsy.add_tract, string='Add tract'))
 
         y += 50
-        self._items.append(kookies.Button(5, y, 90, 30, callback=place_tags, string='Emphasis', params=(styles.TAGLIST.elements['emphasis'],) ))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=place_tags, string='Emphasis', params=(styles.TAGLIST['emphasis'],) ))
         y += 30
-        self._items.append(kookies.Button(5, y, 90, 30, callback=punch_tags, string='x Emphasis', params=(styles.TAGLIST.elements['emphasis'],) ))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=punch_tags, string='x Emphasis', params=(styles.TAGLIST['emphasis'],) ))
 
         y += 40
-        self._items.append(kookies.Button(5, y, 90, 30, callback=place_tags, string='Strong', params=(styles.TAGLIST.elements['strong'],) ))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=place_tags, string='Strong', params=(styles.TAGLIST['strong'],) ))
         y += 30
-        self._items.append(kookies.Button(5, y, 90, 30, callback=punch_tags, string='x Strong', params=(styles.TAGLIST.elements['strong'],) ))
-
-        y += 40
-        self._items.append(kookies.Button(5, y, 90, 30, callback=lambda: meredith.mipsy.tracts[0].insert(['</p>', ('<p>',  ('IMAGE', '_graph') ) ]), string='Image'))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=punch_tags, string='x Strong', params=(styles.TAGLIST['strong'],) ))
 
         y += 50
         self._items.append(kookies.Checkbox(15, y, 80, callback=penclick.page.toggle_dual, value_acquire=lambda: penclick.page.dual, name='Dual'.upper()))
@@ -358,8 +346,7 @@ class Document_view(ui.Cell):
         if self._mode == 'text':
             clipboard = typing.type_document(name, char)
             # check if paragraph context changed
-            if check_paragraph_context_changed():
-                noticeboard.refresh_properties_stack.push_change()
+            contexts.Text.update()
             
             return clipboard
             
@@ -392,8 +379,7 @@ class Document_view(ui.Cell):
                     # occurs if an empty channel is selected
                     pass
                 # check if paragraph context changed
-                if check_paragraph_context_changed():
-                    noticeboard.refresh_properties_stack.push_change()
+                contexts.Text.update()
                 
                 # count words
                 meredith.mipsy.stats()
@@ -450,8 +436,7 @@ class Document_view(ui.Cell):
                     # occurs if an empty channel is selected
                     pass
                 # check if paragraph context changed
-                if check_paragraph_context_changed():
-                    noticeboard.refresh_properties_stack.push_change()
+                contexts.Text.update()
 
         
     def press_motion(self, x, y):
@@ -579,6 +564,7 @@ class Document_view(ui.Cell):
 
     def change_mode(self, mode):
         self._mode = mode
+        contexts.Text.update()
         noticeboard.refresh_properties_stack.push_change()
         noticeboard.refresh_properties_type.push_change(mode)
     

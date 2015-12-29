@@ -30,7 +30,7 @@ def save():
     
     GGG = {N: G.polaroid() for N, G in styles.PEGS.items()}
     MMM = {N: M.polaroid() for N, M in styles.MAPS.items()}
-    TTT = [styles.TAGLIST.ordered.index(styles.TAGLIST.active)] + [T.polaroid() for T in styles.TAGLIST.ordered]
+    TTT = [styles.TAGLIST.active] + [T.polaroid() for T in styles.TAGLIST.ordered]
 
     doc = {'kitty': kitty, 'grid': grid, 'contexts': contexts, 'PARASTYLES': PPP, 'FONTSTYLES': FFF, 'MAPS': MMM, 'TAGLIST': TTT, 'PEGS': GGG, 'view': taylor.becky.read_display_state(), 'page': page}
     
@@ -46,6 +46,7 @@ def load(name):
         with open(name, 'rb') as fi:
             constants.filename = name
             doc = pickle.load(fi)
+    styles.daydream()
     styles.faith(doc)
     
     penclick.page = penclick.Page(doc['page'])

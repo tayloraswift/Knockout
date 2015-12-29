@@ -2,6 +2,20 @@ from state import contexts
 from model import meredith
 from fonts import styles
 
+class Tag_ops(object):
+    def __init__(self):
+        self.context = contexts.Tag
+    
+    def t_set_attribute(self, value, A):
+        setattr(self.context.tag, A, value)
+        styles.PARASTYLES.update_tables()
+        meredith.mipsy.recalculate_all()
+    
+    def rename_active_subtag(self, name):
+        T = self.context.tag
+        T.elements[name] = T.elements.pop(T.active)
+        T.active = name
+
 class Text_ops(object):
     def __init__(self):
         self.context = contexts.Text
@@ -91,9 +105,28 @@ class Font_ops(object):
                 styles.FONTSTYLES.update_tables()
         
         meredith.mipsy.recalculate_all()
+
+    def link_pegs(self, G):
+        self.context.fontstyle.pegs = G
+        contexts.Pegs.update(G)
+#        styles.PARASTYLES.update_tables()
+
+class Pegs_ops(object):
+    def __init__(self):
+        self.context = contexts.Pegs
     
+    def set_active_x(self, x):
+        G = contexts.Pegs.pegs
+        G.elements[G.active][0] = x
+
+    def set_active_y(self, y):
+        G = contexts.Pegs.pegs
+        G.elements[G.active][1] = y
+
 Text = Text_ops()
 Parastyle = Para_ops()
 Keymap = Keymap_ops()
 Fontstyle = Font_ops()
+Pegs = Pegs_ops()
 
+Tag = Tag_ops()

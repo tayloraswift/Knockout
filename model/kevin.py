@@ -55,13 +55,13 @@ def deserialize(string):
         elif entity == '/p':
             entity = '</p>'
         elif entity == 'em':
-            entity = ('<f>', styles.TAGLIST.elements['emphasis'])
+            entity = ('<f>', styles.TAGLIST['emphasis'])
         elif entity == '/em':
-            entity = ('</f>', styles.TAGLIST.elements['emphasis'])
+            entity = ('</f>', styles.TAGLIST['emphasis'])
         elif entity == 'strong':
-            entity = ('<f>', styles.TAGLIST.elements['strong'])
+            entity = ('<f>', styles.TAGLIST['strong'])
         elif entity == '/strong':
-            entity = ('</f>', styles.TAGLIST.elements['strong'])
+            entity = ('</f>', styles.TAGLIST['strong'])
 
         else:
             tag = entity.split()[0]
@@ -75,11 +75,13 @@ def deserialize(string):
                 
                 if tag == 'p':
                     data = styles.PARASTYLES[data]
+                    entity = ['<' + tag + '>', data]
                 
-                elif tag in {'f', '/f'}:
-                    data = styles.TAGLIST.elements[data]
+                else:
+                    if tag in {'f', '/f'}:
+                        data = styles.TAGLIST[data]
 
-                entity = ('<' + tag + '>', data)
+                    entity = ('<' + tag + '>', data)
 
             except ValueError:
                 entity = '<' + tag + '>'

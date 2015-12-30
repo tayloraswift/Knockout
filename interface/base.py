@@ -4,6 +4,8 @@ from state import constants
 
 from fonts import styles
 
+accent = (1, 0.22, 0.50)
+
 class Base_kookie(object):
     def __init__(self, x, y, width, height, font=None):
         self._x = x
@@ -135,7 +137,7 @@ class Menu(Base_kookie):
     def draw(self, cr, hover=None):
         self._render_fonts(cr)
         
-        cr.set_source_rgba(0.8, 0.8, 0.8, 1)
+        cr.set_source_rgb(0.8, 0.8, 0.8)
         cr.rectangle(self._x, self._y, self._width, self._height)
         cr.fill()
         cr.set_source_rgba(1, 1, 1, 1)
@@ -144,11 +146,11 @@ class Menu(Base_kookie):
         
         for i, label in enumerate(self._texts):
             if i == hover:
-                cr.set_source_rgba(1, 0.2, 0.6, 1)
+                cr.set_source_rgb( * accent)
                 cr.rectangle(self._x, self._y + i*self._item_height, self._width, self._item_height)
                 cr.fill()
                 cr.set_source_rgb(1, 1, 1)
             else:
-                cr.set_source_rgb(0,0,0)
+                cr.set_source_rgb(0.1,0.1,0.1)
             cr.show_glyphs(label)
 

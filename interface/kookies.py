@@ -5,8 +5,9 @@ from math import pi
 from fonts import styles
 from fonts import paperairplanes as plane
 
-from interface.base import Base_kookie
+from interface.base import Base_kookie, accent
 from interface import menu
+
 
 
 class Button(Base_kookie):
@@ -37,7 +38,7 @@ class Button(Base_kookie):
         self._render_fonts(cr)
         
         if self._active:
-            cr.set_source_rgba(1, 0.2, 0.6, 1)
+            cr.set_source_rgb( * accent)
 
             radius = 5
             y1, y2, x1, x2 = self._y, self._y_bottom, self._x, self._x_right
@@ -52,7 +53,7 @@ class Button(Base_kookie):
             cr.set_source_rgb(1,1,1)
             
         elif hover[1]:
-            cr.set_source_rgba(1, 0.2, 0.6, 1)
+            cr.set_source_rgb( * accent)
 
         else:
             cr.set_source_rgb(0,0,0)
@@ -144,7 +145,7 @@ class Tabs(Base_kookie):
         
         for i, button in enumerate(self._x_left):
             if i == self._active:
-                cr.set_source_rgba(1, 0.2, 0.6, 1)
+                cr.set_source_rgb( * accent)
 
                 radius = 5
                 y1, y2, x1, x2 = self._y, self._y_bottom, button, button + int(round(self._button_width))
@@ -159,7 +160,7 @@ class Tabs(Base_kookie):
                 cr.set_source_rgb(1,1,1)
                 
             elif i == hover[1]:
-                cr.set_source_rgba(1, 0.2, 0.6, 1)
+                cr.set_source_rgb( * accent)
 
             else:
                 cr.set_source_rgb(0,0,0)
@@ -456,7 +457,7 @@ class Blank_space(Base_kookie):
         
         if self._active:
             # print cursors
-            cr.set_source_rgb(1, 0.2, 0.6)
+            cr.set_source_rgb( * accent)
             cr.rectangle(round(self._template[self._i][1] - 1), 
                         self._y + 5, 
                         2, 
@@ -601,7 +602,7 @@ class Selection_menu(Base_kookie):
         self._render_fonts(cr)
         
         if hover[1] == 1:
-            cr.set_source_rgb(1, 0.2, 0.6)
+            cr.set_source_rgb( * accent)
         else:
             cr.set_source_rgba(0, 0, 0, 0.7)
             
@@ -691,9 +692,9 @@ class New_object_menu(Base_kookie):
     def draw(self, cr, hover=(None, None)):
         cr.set_line_width(2)
         if self._dropdown_active:
-            cr.set_source_rgb(1, 0.2, 0.6)
+            cr.set_source_rgb( * accent)
         elif hover[1] == 2:
-            cr.set_source_rgb(1, 0.2, 0.6)
+            cr.set_source_rgb( * accent)
         else:
             cr.set_source_rgba(0, 0, 0, 0.7)
         
@@ -705,7 +706,7 @@ class New_object_menu(Base_kookie):
 
         # +
         if hover[1] == 3:
-            cr.set_source_rgb(1, 0.2, 0.6)
+            cr.set_source_rgb( * accent)
         else:
             cr.set_source_rgba(0, 0, 0, 0.7)
         cr.rectangle(self._x_right - 40, self._y + 7, 2, 10)
@@ -800,9 +801,9 @@ class Object_menu(Blank_space):
     def _sup_draw(self, cr, hover=(None, None)):
         cr.set_line_width(2)
         if self._dropdown_active:
-            cr.set_source_rgb(1, 0.2, 0.6)
+            cr.set_source_rgb( * accent)
         elif hover[1] == 2:
-            cr.set_source_rgb(1, 0.2, 0.6)
+            cr.set_source_rgb( * accent)
         else:
             cr.set_source_rgba(0, 0, 0, 0.7)
         
@@ -814,7 +815,7 @@ class Object_menu(Blank_space):
 
         # +
         if hover[1] == 3:
-            cr.set_source_rgb(1, 0.2, 0.6)
+            cr.set_source_rgb( * accent)
         else:
             cr.set_source_rgba(0, 0, 0, 0.7)
         cr.rectangle(self._x_right - 40, self._y + 7, 2, 10)
@@ -823,7 +824,7 @@ class Object_menu(Blank_space):
 
         # x
         if hover[1] == 4:
-            cr.set_source_rgb(1, 0.2, 0.6)
+            cr.set_source_rgb( * accent)
         else:
             cr.set_source_rgba(0, 0, 0, 0.7)
         cr.move_to(self._x_right - 9, self._y + 8)
@@ -927,7 +928,7 @@ class Orderable(Base_kookie):
         y1 = self._y
         for i, l in enumerate(self._texts):
             if i == self._DB.active:
-                cr.set_source_rgb(1, 0.2, 0.6)
+                cr.set_source_rgb( * accent)
 
                 radius = 5
 
@@ -962,13 +963,13 @@ class Orderable(Base_kookie):
                 cr.set_source_rgba(0, 0, 0, 0.7)
             elif hover[1] is not None and hover[1][0] == i:
                 if hover[1][1] == 1:
-                    cr.set_source_rgb(1, 0.2, 0.6)
+                    cr.set_source_rgb( * accent)
                 else:
                     cr.set_source_rgba(0, 0, 0, 0.7)
                 cr.show_glyphs(l)
 
                 if hover[1][1] == 3:
-                    cr.set_source_rgb(1, 0.2, 0.6)
+                    cr.set_source_rgb( * accent)
                 else:
                     cr.set_source_rgba(0, 0, 0, 0.7)
                 cr.move_to(self._x_right - 30 - 10, y1 + 10)
@@ -977,7 +978,7 @@ class Orderable(Base_kookie):
                 cr.stroke()
 
                 if hover[1][1] == 2:
-                    cr.set_source_rgb(1, 0.2, 0.6)
+                    cr.set_source_rgb( * accent)
                 else:
                     cr.set_source_rgba(0, 0, 0, 0.7)
                 cr.move_to(self._x_right - 54 - 10, y1 + 15)
@@ -986,7 +987,7 @@ class Orderable(Base_kookie):
                 cr.stroke()
 
                 if hover[1][1] == 4:
-                    cr.set_source_rgb(1, 0.2, 0.6)
+                    cr.set_source_rgb( * accent)
                 else:
                     cr.set_source_rgba(0, 0, 0, 0.7)
                 cr.move_to(self._x_right - 9, y1 + 9)
@@ -1002,7 +1003,7 @@ class Orderable(Base_kookie):
             y1 += self._itemheight
         
         if hover[1] is not None and hover[1][0] == len(self._DB_ordered):
-            cr.set_source_rgb(1, 0.2, 0.6)
+            cr.set_source_rgb( * accent)
         else:
             cr.set_source_rgba(0, 0, 0, 0.7)
         cr.rectangle(self._x + 16, y1 + 7, 2, 10)
@@ -1077,7 +1078,7 @@ class Unorderable(Base_kookie):
         for i, l in enumerate(self._texts):
             key = self._map[i]
             if key == self._DB.active:
-                cr.set_source_rgb(1, 0.2, 0.6)
+                cr.set_source_rgb( * accent)
 
                 radius = 5
 
@@ -1102,7 +1103,7 @@ class Unorderable(Base_kookie):
             elif hover[1] is not None and hover[1][0] == i:
                 if key not in self._protect:
                     if hover[1][1] == 4:
-                        cr.set_source_rgb(1, 0.2, 0.6)
+                        cr.set_source_rgb( * accent)
                     else:
                         cr.set_source_rgba(0, 0, 0, 0.7)
                     cr.move_to(self._x_right - 9, y1 + 9)
@@ -1112,7 +1113,7 @@ class Unorderable(Base_kookie):
                     cr.stroke()
 
                 if hover[1][1] == 1:
-                    cr.set_source_rgb(1, 0.2, 0.6)
+                    cr.set_source_rgb( * accent)
                 else:
                     cr.set_source_rgba(0, 0, 0, 0.7)
 
@@ -1122,7 +1123,7 @@ class Unorderable(Base_kookie):
             y1 += self._itemheight
 
         if hover[1] is not None and hover[1][0] == len(self._DB.elements):
-            cr.set_source_rgb(1, 0.2, 0.6)
+            cr.set_source_rgb( * accent)
         else:
             cr.set_source_rgba(0, 0, 0, 0.7)
         cr.rectangle(self._x + 16, y1 + 7, 2, 10)
@@ -1193,7 +1194,7 @@ class Subset_table(Base_kookie):
         for i, l in enumerate(self._texts):
             key = self._map[i]
             if key == self._DB.active:
-                cr.set_source_rgb(1, 0.2, 0.6)
+                cr.set_source_rgb( * accent)
 
                 radius = 5
 
@@ -1218,14 +1219,14 @@ class Subset_table(Base_kookie):
             elif hover[1] is not None and hover[1][0] == i:
                 
                 if hover[1][1] == 4:
-                    cr.set_source_rgb(1, 0.2, 0.6)
+                    cr.set_source_rgb( * accent)
                 else:
                     cr.set_source_rgba(0, 0, 0, 0.7)
                 
                 if key in self._DB.elements:
                     cr.arc(self._x_right - 15, y1 + 13, 6, 0, 2*pi)
                     cr.fill()
-                    cr.set_source_rgb(1, 0.2, 0.6)
+                    cr.set_source_rgb( * accent)
                 else:
                     cr.arc(self._x_right - 15, y1 + 13, 5.5, 0, 2*pi)
                     cr.stroke()
@@ -1312,7 +1313,7 @@ class Binary_table(Base_kookie):
         
         for i, cell in enumerate(self._cells):
             if self._STATES[i]:
-                cr.set_source_rgb(1, 0.2, 0.6)
+                cr.set_source_rgb( * accent)
 
                 cr.rectangle( * cell)
                 cr.fill()
@@ -1320,7 +1321,7 @@ class Binary_table(Base_kookie):
                 cr.set_source_rgb(1, 1, 1)
             
             elif hover[1] == i:
-                cr.set_source_rgb(1, 0.2, 0.6)
+                cr.set_source_rgb( * accent)
             else:
                 cr.set_source_rgba(0, 0, 0, 0.7)
             cr.show_glyphs(self._texts[i])

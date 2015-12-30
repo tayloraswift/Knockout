@@ -22,6 +22,9 @@ from typing import typing
 from interface import kookies
 from interface import caramel
 from interface import menu, ui
+from interface.base import accent
+
+accent_light = caramel.accent
 
 class Tabs_round(kookies.Tabs):
     def __init__(self, x, y, width, height, default=0, callback=None, signals=(), longstrings=None):
@@ -44,7 +47,7 @@ class Tabs_round(kookies.Tabs):
         for i, button in enumerate(self._x_left):
 
             if i == hover[1] or i == self._active:
-                cr.set_source_rgba(1, 0.2, 0.6, 1)
+                cr.set_source_rgb( * accent)
 
             else:
                 cr.set_source_rgb(0,0,0)
@@ -68,7 +71,7 @@ class Tabs_round(kookies.Tabs):
                 cr.fill()
                 
                 if i == hover[1]:
-                    cr.set_source_rgba(1, 0.2, 0.6, 1)
+                    cr.set_source_rgb( * accent)
 
                 else:
                     cr.set_source_rgb(0,0,0)
@@ -658,7 +661,7 @@ class Document_view(ui.Cell):
         for pp in range(max_page + 1):
             #draw page border
             if pp == meredith.mipsy.page_context:
-                cr.set_source_rgba(1, 0.2, 0.6, 0.7)
+                cr.set_source_rgba( * accent_light, 0.7)
             else:
                 cr.set_source_rgba(0, 0, 0, 0.2)
 
@@ -718,7 +721,7 @@ class Document_view(ui.Cell):
             fontsize = F.u_fontsize * self._A
 
             if p_i == meredith.mipsy.paragraph_at()[1]:
-                cr.set_source_rgba(1, 0.2, 0.6, 0.7)
+                cr.set_source_rgba( * accent_light, 0.7)
             else:
                 cr.set_source_rgba(0, 0, 0, 0.4)
             

@@ -4,6 +4,8 @@ from state import noticeboard
 
 from model import meredith, penclick
 
+accent = (1, 0.22, 0.55)
+
 class Sprinkles(object):
     def __init__(self):
         self._grid = meredith.mipsy.page_grid
@@ -92,7 +94,7 @@ class Sprinkles(object):
     def render(self, cr, px, py, p_h, p_k, A):
         for n, notch in enumerate(self._grid[0]):
             if n == self.grid_selected[1] and self.grid_selected[0] == 0:
-                cr.set_source_rgba(1, 0.2, 0.6, 0.7)
+                cr.set_source_rgba( * accent, 0.7)
                 cr.move_to(px + int(round(notch*A)), py - int(round(10*A)))
                 cr.rel_line_to(1, 0)
                 cr.rel_line_to(1, -int(round(8*A)))
@@ -120,7 +122,7 @@ class Sprinkles(object):
 
         for n, notch in enumerate(self._grid[1]):
             if n == self.grid_selected[1] and self.grid_selected[0] == 1:
-                cr.set_source_rgba(1, 0.2, 0.6, 0.7)
+                cr.set_source_rgba( * accent, 0.7)
                 cr.move_to(px - int(round(10*A)), py + int(round(notch*A)))
                 cr.rel_line_to(0, 1)
                 cr.rel_line_to(-int(round(8*A)), 1)

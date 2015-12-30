@@ -47,6 +47,8 @@ def _retrieve_fontclass(F, FONTMAP, l):
     return FSTYLE
             
 def _assemble_line(letters, startindex, l, anchor, stop, y, leading, COLLAPSE, FONTMAP, F, hyphenate=False):
+    if stop < anchor:
+        stop, anchor = anchor, stop
     LINE = {
             'l': l,
             'i': startindex,
@@ -191,9 +193,9 @@ def _assemble_line(letters, startindex, l, anchor, stop, y, leading, COLLAPSE, F
 
             # work out line breaks
             if x > stop:
+                n = len(GLYPHS)
                 if CHAR not in _BREAK_WHITESPACE:
-                
-                    n = len(GLYPHS)
+
                     LN = letters[:n]
 
                     try:
@@ -214,6 +216,8 @@ def _assemble_line(letters, startindex, l, anchor, stop, y, leading, COLLAPSE, F
                             j = i + next(i for i, v in enumerate(letters[i:]) if v in _BREAK_P)
                         except StopIteration:
                             j = i + 1989
+                        except TypeError:
+                            j = i
                         
                         word = ''.join([c if len(c) == 1 and c.isalpha() else "'" if c in _APOSTROPHES else ' ' for c in letters[i:j] ])
 
@@ -246,13 +250,16 @@ def _assemble_line(letters, startindex, l, anchor, stop, y, leading, COLLAPSE, F
                                         )
                                 break
                     ####################
-                    del GLYPHS[i:]
+                    if i:
+                        del GLYPHS[i:]
 
+                elif letters[n] == '</p>':
+                    continue
                 break
                 
             else:
                 x += FSTYLE.u_tracking
-    # n changes
+
     LINE['j'] = startindex + len(GLYPHS)
     LINE['GLYPHS'] = GLYPHS
     try:

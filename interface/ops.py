@@ -22,7 +22,7 @@ class Text_ops(object):
     
     def link_parastyle(self, P):
         self.context.paragraph[1] = P
-        contexts.Parastyle.update(P)
+        contexts.Text.update_force()
 
 class Para_ops(object):
     def __init__(self):

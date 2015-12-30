@@ -10,7 +10,6 @@ def redo():
         styles.PARASTYLES.update_tables()
         contexts.Text.update_force()
         contexts.Tag.update()
-        mipsy.recalculate_all()
 
 def undo():
     if un.history.back():
@@ -18,4 +17,3 @@ def undo():
         styles.PARASTYLES.update_tables()
         contexts.Text.update_force()
         contexts.Tag.update()
-        mipsy.recalculate_all()

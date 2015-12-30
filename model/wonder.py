@@ -23,10 +23,11 @@ def check_spelling(word):
     else:
         if word[-2:] in ('’s', '\'s'):
             word = word[:-2]
-            if word.islower():
-                return struck.check(word)
-            elif word.lower().capitalize() == word:
-                return struck.check(word)
+            if word:
+                if word.islower():
+                    return struck.check(word)
+                elif word.lower().capitalize() == word:
+                    return struck.check(word)
     return True
 
 def words(text, startindex=0, spell=False):

@@ -248,7 +248,7 @@ class Display(Gtk.Window):
                 tree.take_event(0, 0, 'All', key=True)
 
             elif name not in {'Shift_L', 'Shift_R'}:
-                tree.take_event(0, 0, 'Ctrl ' + name, key=True)
+                tree.take_event(0, 0, 'Ctrl ' + name, char = chr(Gdk.keyval_to_unicode(e.keyval)), key=True)
         
         elif name in _special_keys:
 

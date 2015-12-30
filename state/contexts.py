@@ -34,11 +34,12 @@ class Text_context(object):
 
     def update_force(self):
         self.tract = meredith.mipsy.tracts[0]
+        meredith.mipsy.recalculate_all()
         P, P_i = meredith.mipsy.paragraph_at()
         self.paragraph =  self.tract.text[P_i]
-        self._previous_pi = P_i
+        self._previous_pi = None
         self._previous_t = self.tract
-        self._previous_p = P
+        self._previous_p = None
         Parastyle.update(self.paragraph[1])
         noticeboard.refresh_properties_stack.push_change()
 

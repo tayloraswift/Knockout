@@ -5,6 +5,7 @@ from state import constants
 from state import noticeboard
 
 from interface import poptarts
+accent = poptarts.accent
 
 from model import meredith, penclick
 from model import un
@@ -216,13 +217,13 @@ class Channels_controls(object):
                         )
                 # draw railings
                 if c == self._selected_point[0]:
-                    cr.set_source_rgba(1, 0.2, 0.6, 1)
+                    cr.set_source_rgba( * accent)
                     w = 2
                 elif c == self._hover_point[0]:
-                    cr.set_source_rgba(1, 0.2, 0.6, 0.7)
+                    cr.set_source_rgba( * accent, 0.7)
                     w = 1
                 else:
-                    cr.set_source_rgba(1, 0.2, 0.6, 0.5)
+                    cr.set_source_rgba( * accent, 0.5)
                     w = 1
                 
                 for r, railing in enumerate(channel.railings):
@@ -240,9 +241,9 @@ class Channels_controls(object):
                     for i, p in enumerate(railing):
                         cr.arc( Tx(p[0], page), Ty(p[1], page), 3, 0, 2*pi)
                         if (c, r, i) == self._hover_point:
-                            cr.set_source_rgba(1, 0.2, 0.6, 0.5)
+                            cr.set_source_rgba( * accent, 0.5)
                             cr.fill()
-                            cr.set_source_rgba(1, 0.2, 0.6, 0.7)
+                            cr.set_source_rgba( * accent, 0.7)
                         else:
                             cr.fill()
                         if p[2]:

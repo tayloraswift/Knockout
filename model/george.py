@@ -21,7 +21,11 @@ class Swimming_pool(object):
         try:
             xbelow = self.railings[r][i][0]
         except IndexError:
-            return self.railings[r][-1]
+            anchor = self.railings[0][-1][0]
+            if r:
+                return anchor + 1989989, i
+            else:
+                return anchor, i
         xabove = self.railings[r][i - 1][0]
         factor = (y - self.railings[r][i - 1][1])/(self.railings[r][i][1] - self.railings[r][i - 1][1])
         # returns an x coordinate, and the index of the point

@@ -313,6 +313,15 @@ class Text(object):
         self.word_count = '—'
         self.misspellings = []
     
+    def _paginate(self, page, l1, l2):
+        try:
+            if self._page_intervals[page] and self._page_intervals[page][-1][1] == -1:
+                self._page_intervals[page][-1] = (self._page_intervals[page][-1][0], l2)
+            else:
+                self._page_intervals[page].append( (l1, l2) )
+        except KeyError:
+            self._page_intervals[page] = [ (l1, l2) ]
+        
     def _TYPESET(self, l, i):
         if not l:
             self._glyphs = []
@@ -363,15 +372,7 @@ class Text(object):
                 # PAGINATION
                 page_new = self.channels.channels[c].page
                 if page_new != page:
-                    if page not in self._page_intervals:
-                        self._page_intervals[page] = [ (page_start_l, l) ]
-                        
-                    elif type(self._page_intervals[page][-1]) is int:
-                        self._page_intervals[page][-1] = (self._page_intervals[page][-1], l)
-                        
-                    else:
-                        self._page_intervals[page].append( (page_start_l, l) )
-                    
+                    self._paginate(page, page_start_l, l)
                     page = page_new
                     page_start_l = l
                 #############
@@ -460,15 +461,7 @@ class Text(object):
             l += 1
             self._glyphs.append(LINE)
 
-        if page not in self._page_intervals:
-            self._page_intervals[page] = [ (page_start_l, l + 1) ]
-            
-        elif type(self._page_intervals[page][-1]) is int:
-            self._page_intervals[page][-1] = (self._page_intervals[page][-1], l + 1)
-            
-        else:
-            self._page_intervals[page].append( (page_start_l, l + 1) )
-
+        self._paginate(page, page_start_l, l + 1)
 
         self._line_startindices = [line['i'] for line in self._glyphs]
         self._line_yl = { cc: list(h[:2] for h in list(g)) for cc, g in groupby( ((LINE['y'], LINE['l'], LINE['c']) for LINE in self._glyphs if LINE['GLYPHS']), key=lambda k: k[2]) }
@@ -484,9 +477,10 @@ class Text(object):
             if l < 0:
                 l = 0
             
+            print(self._page_intervals)
             self._page_intervals = { page: [I for I in 
-                    [ interval if interval[1] <= l else interval[0] if interval[0] <= l else None for interval in intervals]
-                    if I is not None] for page, intervals in self._page_intervals.items() if intervals[0][0] < l}    
+                    [ interval if interval[1] <= l else (interval[0], -1) if interval[0] <= l else None for interval in intervals]
+                    if I is not None] for page, intervals in self._page_intervals.items()}    
             
             i = self._glyphs[l]['i']
             self._glyphs = self._glyphs[:l + 1]
@@ -499,9 +493,9 @@ class Text(object):
 
     def deep_recalculate(self):
         # clear sorts
-        self._glyphs = []
-        self._sorted_pages = {}
-        self._page_intervals = {}
+        self._glyphs.clear()
+        self._sorted_pages.clear()
+        self._page_intervals.clear()
         
         self._TYPESET(0, 0)
         

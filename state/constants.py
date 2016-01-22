@@ -30,3 +30,20 @@ class Window(object):
         self.k = k
 
 window = Window(1200, 800)
+
+
+interface_fstyles = {'_interface:LABEL': {'fontsize': 11,
+                                     'path': '/home/kelvin/.fonts/NeueFrutiger45.otf',
+                                     'tracking': 1},
+                '_interface:REGULAR': {'color': (0, 0, 0, 1),
+                                       'fontsize': 13,
+                                       'path': '/home/kelvin/.fonts/NeueFrutiger45.otf',
+                                       'tracking': 0},
+                '_interface:STRONG': {'path': '/home/kelvin/.fonts/NeueFrutiger65.otf',
+                                      'tracking': 1},
+                '_interface:TITLE': {'fontsize': 18, 'tracking': 4}}
+
+interface_pstyle = [((), '_interface:REGULAR'),
+                          (('label',), '_interface:LABEL'),
+                          (('strong',), '_interface:STRONG'),
+                          (('title',), '_interface:TITLE')]

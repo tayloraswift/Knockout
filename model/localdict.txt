@@ -60,3 +60,8 @@ codebases
 mathletes
 github
 libre
+preacquired
+swiftie
+swifties
+hashtag
+uncondensed

@@ -1,49 +1,60 @@
 import itertools
+from bulletholes.counter import TCounter as Counter
 
 from fonts import fonts
+from state import constants
 from freetype import ft_errors
 
-class I_TREES(dict):
-    def update_tables(self):
-        for P in self.values():
-            P.update_table()
+def _sign_counter(counter):
+    return ''.join(K.name + str(V) for K, V in sorted(counter.items(), key=lambda T: T[0].name))
 
-class Subtag(object):
-    def __init__(self, name):
-        self.name = name
+def _new_name(name, namelist):
+    if name in namelist:
+        if not (len(name) > 3 and name[-4] == '.' and len([c for c in name[-3:] if c in '1234567890']) == 3):
+            name = name + '.001'
+        
+        serialnumber = int(name[-3:])
+        while True:
+            if name not in namelist:
+                break
+            serialnumber += 1
+            name = name[:-3] + str(serialnumber).zfill(3)
+    return name
+
+class Layer(dict):
+    def __init__(self, DNA):
+        dict.__init__(self, DNA)
+        self.Z = {A: None for A in DNA}
+        self.members = []
+    
+    def overlay(self, D, B):
+        for A, V in D.items():
+            self[A] = V
+            self.Z[A] = B
+
+class Active_list(list):
+    def __init__(self, active, template, * args, ** kwargs):
+        self.active = active
+        self.template = template
+        list.__init__(self, * args, ** kwargs)
 
 class _DB(object):
     def __init__(self, name, library):
-        self.name = name
         self._LIBRARY = library
+        self.name = _new_name(name, self._LIBRARY)
 
     def rename(self, name):
-        # rename on parent
-        if name not in self._LIBRARY:
-            self._LIBRARY[name] = self._LIBRARY.pop(self.name)
-            self.name = name
-    
-    def next_name(self, name=None):
-        if name is None:
-            name = self.name
-        if len(name) > 3 and name[-4] == '.' and len([c for c in name[-3:] if c in '1234567890']) == 3:
-                serialnumber = int(name[-3:])
-                while True:
-                    serialnumber += 1
-                    name = name[:-3] + str(serialnumber).zfill(3)
+        name = _new_name(name, self._LIBRARY)
+        self._LIBRARY[name] = self._LIBRARY.pop(self.name)
+        self.name = name
 
-                    if name not in self._LIBRARY:
-                        break
-        else:
-            name = name + '.001'
-        
-        return name
-    
-    def copy(self, name=None):
-        if name is None:
-            name = self.name
-        CC = type(self)(self.polaroid(), name)
-        return CC
+    def clone(self):
+        name = _new_name(self.name, self._LIBRARY)
+        self._LIBRARY[name] = self._copy(name)
+        return self._LIBRARY[name]
+
+    def _copy(self, name):
+        return type(self)(self.polaroid(), name)
 
 class _DB_with_dict(_DB):
     def __init__(self, elements, active, name, library):
@@ -65,50 +76,10 @@ class _DB_with_dict(_DB):
         else:
             del self.elements[key]
 
-class DB_Tag(_DB_with_dict):
-    def __init__(self, tdict, name):
-        self.collapse = tdict['collapse']
-        self.exclusive = tdict['exclusive']
-
-        ACT = tdict['_active']
-        E = {s: Subtag(s) for s in tdict['subtags']}
-        
-        _DB_with_dict.__init__(self, E, ACT, name, TAGLIST)
-
-    def add_slot(self):
-        k = '{New}'
-        self.elements[k] = Subtag(k)
-        self.active = k
-    
-    def delete_slot(self, key=None):
-        self._delete_element(key)
-        TAGLIST.update_map()
-
-    def polaroid(self):
-        return {'name': self.name,
-                'collapse': self.collapse,
-                'exclusive': self.exclusive,
-                '_active': self.active,
-                'subtags': list(self.elements.keys())
-                }
-
-class DB_TAGLIST(dict):
-    def populate(self, taglist):
-        self.active = taglist.pop(0)
-        self.ordered = [DB_Tag(t, t['name']) for t in taglist]
-        self.update_map()
-
-    def update_map(self):
-        self.clear()
-        self.update({t.name: t for t in self.ordered})
-        self.update(dict(itertools.chain.from_iterable(t.elements.items() for t in self.ordered)))
-
-# Peg() is just a 2-element list
-
 class DB_Pegs(_DB_with_dict):
-    def __init__(self, pegs, name):
-        ACT = pegs[1].pop('_ACTIVE')
-        E = pegs[1]
+    def __init__(self, pegs=('', {}), name='New peg set'):
+        ACT = None
+        E = {FTAGS[k]: v for k, v in pegs[1].items()}
         _DB_with_dict.__init__(self, E, ACT, name, PEGS)
 
         if pegs[0]:
@@ -118,212 +89,227 @@ class DB_Pegs(_DB_with_dict):
 
     def add_slot(self, key=None):
         self.elements[key] = [0, 0]
-        self.active = key
+        self.active = self.elements[key]
     
     def delete_slot(self, key=None):
         self._delete_element(key)
 
     def polaroid(self):
-        D = {k: v.copy() for k, v in self.elements.items()}
-        D['_ACTIVE'] = self.active
+        D = {k.name: v.copy() for k, v in self.elements.items()}
         if self.applies_to:
             C = ''.join(self.applies_to)
         else:
             C = ''
         return (C, D)
 
-class _DB_with_inherit(_DB):
-    def __init__(self, xdict, I, B, name, library):
-        _DB.__init__(self, name, library)
-        self._xdict = xdict
-        self._i_attributes = I
-        self._b_attributes = tuple(b[0] for b in B)
-
-        # link datablocks
-        for b, L in B:
-            setattr(self, b, L[xdict[b]])
-
-    def _link_inheritance(self, value):
-        # inherit
-        if value[0]:
-            return (True, self._LIBRARY[value[1]])
-        else:
-            return value
-
-    def link_inheritable(self):
-        for A in self._i_attributes:
-            setattr(self, A, self._link_inheritance(self._xdict[A]))
-        del self._xdict
-
-    def get_i_attribute(self, A):
-        V = getattr(self, A)
-        if V[0]:
-            return V[1].get_i_attribute(A)
-        else:
-            return V[1]
- 
-    def read_inherit_name(self, A):
-        V = getattr(self, A)
-        if V[0]:
-            return V[1].name
-        else:
-            return '—'
-
-    def polaroid(self):
-        E = ((A, getattr(self, A)) for A in self._i_attributes)
-        D = {A : (True, V[1].name) if V[0] else V for A, V in E}
-        for b in self._b_attributes:
-            D[b] = getattr(self, b).name
-        return D
-
-    def copy(self, name=None):
-        if name is None:
-            name = self.name
-        CC = type(self)(self.polaroid(), name)
-        CC.link_inheritable()
-        CC.update_table()
-        return CC
-
-class DB_Fontstyle(_DB_with_inherit):
-    def __init__(self, fdict, name):
-        _DB_with_inherit.__init__(self, 
-                xdict = fdict, 
-                I = ('path', 'fontsize', 'tracking', 'color'),
-                B = (('pegs', PEGS),),
-                name = name,
-                library = FONTSTYLES)
+class P_Library(list):
+    def __init__(self, *args, **kwargs):
+        list.__init__(self, *args, **kwargs)
+        self._projections = {}
+        self._font_projections = {}
+        
+        self.active = None
+        
+        self.update_f = self._font_projections.clear
     
-    def update_table(self):
-        # update flattened image of attributes for fast access
-        for A in self._i_attributes:
-            setattr(self, 'u_' + A, self.get_i_attribute(A))
+    def project_p(self, P):
+        hp = _sign_counter(P)
+        try:
+            return self._projections[hp]
+        except KeyError:
+            # iterate through stack
+            projection = Layer(P_DNA)
+            for B in (b for b in self if b.tags <= P):
+                projection.overlay(B.attributes, B)
+                projection.members.append(B)
+            
+            self._projections[hp] = projection
+            return projection
+    
+    def project_f(self, P, F):
+        hf = _sign_counter(F)
+        hp = _sign_counter(P)
+
+        # add tag groups
+        F = F + Counter(itertools.chain.from_iterable((FTAGS[G] for G in T.groups) for T, n in F.items() if n))
+            
+        try:
+            return self._font_projections[(hp, hf)]
+        except KeyError:
+            # iterate through stack
+            projection = Layer(F_DNA)
+
+            for B in (b for b in self if b.tags <= P):
+                for C in (c for c in B.layerable if c.tags <= F and c.F is not None):
+                    projection.overlay(C.F.attributes, C)
+                    projection.members.append(C)
+
+            # set up fonts
+            try:
+                projection['fontmetrics'] = fonts.Memo_font(projection['path'])
+                projection['font'] = fonts.get_cairo_font(projection['path'])
+            except ft_errors.FT_Exception:
+                path = F_DNA['path']
+                projection['color'] = F_DNA['color']
+                projection['fontmetrics'] = fonts.Memo_font(path)
+                projection['font'] = fonts.get_cairo_font(path)
+            
+            projection['hash'] = hash(hp + hf)
+            
+            self._font_projections[(hp, hf)] = projection
+            return projection
+    
+    def update_p(self):
+        self._projections.clear()
+        self._font_projections.clear()
+
+class DB_Fontstyle(_DB):
+    def __init__(self, fdict={}, name='New fontclass'):
+        _DB.__init__(self, name, library=FONTSTYLES)
+
+        if 'pegs' in fdict:
+            fdict['pegs'] = PEGS[fdict['pegs']]
+        self.attributes = fdict
+        
+#        ('path', 'fontsize', 'tracking', 'color')
+    def polaroid(self):
+        fdict = self.attributes.copy()
+        if 'pegs' in fdict:
+            fdict['pegs'] = fdict['pegs'].name
+        return fdict
+
+class _F_container(object):
+    def __init__(self, F=None, count=Counter()):
+        self.F = F
+        self.tags = count
+    
+    def copy(self):
+        return type(self)(F, self.tags.copy())
+
+class DB_Parastyle(object):
+    def __init__(self, pdict={}, count=Counter()):
+        self.tags = count
+        if 'fontclasses' in pdict:
+            E = pdict.pop('fontclasses')
+            # link fontstyle objects
+            self.layerable = Active_list(None, _F_container(), (_F_container(FONTSTYLES[F], Counter(FTAGS[T] for T in tags)) for tags, F in E))
+        else:
+            self.layerable = Active_list(None, _F_container())
+        self.attributes = pdict
+        
+#        ('leading', 'indent', 'indent_range', 'margin_bottom', 'margin_top', 'margin_left', 'margin_right', 'hyphenate')
+    def polaroid(self):
+        pdict = self.attributes.copy()
+        if self.layerable:
+            pdict['fontclasses'] = [({T.name: V for T, V in F.tags.items()} , F.F.name) for F in self.layerable]
+        return pdict, {T.name: V for T, V in self.tags.items()}
+
+    def copy(self):
+        P = self.polaroid()[0]
+        return type(self)(P, self.tags.copy())
+
+class Tag(_DB):
+    def __init__(self, library, name, groups, is_group = False):
+        _DB.__init__(self, name, library)
+        self.groups = groups
+        self.is_group = is_group
+    def polaroid(self):
+        return (self.name, self.groups)
+    
+
+class T_Library(dict):
+    def __init__(self, * args, ** kwargs):
+        dict.__init__(self, * args, ** kwargs)
+        self.active = None
+
+    def populate(self, L):
+        self.clear()
+        D = {T[0]: Tag(self, * T) for T in L}
+        groups = set(itertools.chain.from_iterable(G for T, G in L))
+        D.update({G: Tag(self, G, [G], True) for G in groups})
+        self.update(D)
+    
+    def add_slot(self):
+        if self.active is not None:
+            current = self.active.name
+        else:
+            current = 'New tag.000'
+        name = _new_name(current, self)
+        self[name] = Tag(self, name, [])
+    
+    def delete_slot(self, key):
+        del self[key]
+
+P_DNA = {}
+F_DNA = {}
+
+PEGS = {}
+
+FTAGS = T_Library()
+PTAGS = T_Library()
+FONTSTYLES = {}
+PARASTYLES = P_Library()
+
+ISTYLES = {}
+
+# interface styles
+def _create_interface():
+    font_projections = {}
+    FD = TREES(DB_Fontstyle, constants.interface_fstyles)
+    P = [_F_container(FD[F], Counter(tags)) for tags, F in constants.interface_pstyle]
+    ui_styles = ((), ('title',), ('strong',), ('label',))
+    for U in ui_styles:
+        F = Counter(U)
+        # iterate through stack
+        projection = F_DNA.copy()
+
+        for C in (c.F for c in P if c.tags <= F):
+            projection.update(C.attributes)
 
         # set up fonts
         try:
-            self.u_fontmetrics = fonts.Memo_font(self.u_path)
-            self.u_font = fonts.get_cairo_font(self.u_path)
-            self.u_path_valid = True
+            projection['fontmetrics'] = fonts.Memo_font(projection['path'])
+            projection['font'] = fonts.get_cairo_font(projection['path'])
         except ft_errors.FT_Exception:
             path = F_UNDEFINED.u_path
-            self.u_fontmetrics = fonts.Memo_font(path)
-            self.u_font = fonts.get_cairo_font(path)
-            self.u_path_valid = False
-
-class DB_Map(_DB_with_dict):
-    def __init__(self, mdict, name):
-        ACT = mdict.pop('_ACTIVE')
-        # link fontstyle datablocks
-        E = {k: FONTSTYLES[v] if v is not None else None for k, v in mdict.items()}
-        _DB_with_dict.__init__(self, E, ACT, name, MAPS)
-    
-    def add_slot(self):
-        k = ('{New}',)
-        self.elements[k] = None
-        self.active = k
-    
-    def delete_slot(self, key=None):
-        self._delete_element(key)
-        PARASTYLES.update_tables()
-
-    def polaroid(self):
-        D = {k: v.name if v is not None else None for k, v in self.elements.items()}
-        D['_ACTIVE'] = self.active
-        return D
-
-class DB_Parastyle(_DB_with_inherit):
-    def __init__(self, pdict, name):
-        _DB_with_inherit.__init__(self, 
-                xdict=pdict, 
-                I = ('leading', 'indent', 'indent_range', 'margin_bottom', 'margin_top', 'margin_left', 'margin_right', 'hyphenate'),
-                B = (('fontclasses', MAPS),),
-                name = name,
-                library = PARASTYLES)
+            projection['fontmetrics'] = fonts.Memo_font(path)
+            projection['font'] = fonts.get_cairo_font(path)
         
-    def update_table(self):
-        # update flattened image of attributes for fast access
-        for A in self._i_attributes:
-            setattr(self, 'u_' + A, self.get_i_attribute(A))
-
-        _tags = TAGLIST.ordered
-        # Resolve subtag permutations
-        fmap = {K: F if F is not None else F_UNDEFINED for K, F in self.fontclasses.elements.items()} # Map dict
-        for tag in (t for t in _tags if t.elements): #only take ones with subtags
-            subtags = list(tag.elements.keys())
-            for FF in list(fmap.keys()):
-                if tag.name in FF:
-                    EL = list(FF)
-                    EL.remove(tag.name)
-                    
-                    fmap.update({tuple(sorted( EL + [st] )) : fmap[FF] for st in subtags})
-
-        self.u_stylemap = fmap
-        
-        # Resolve collapsible tags
-        _CPS = [t.elements for t in _tags if t.collapse]
-        self.u_collapsible = (set(itertools.chain.from_iterable(_CPS)), _CPS)
-
+        font_projections[U] = projection
+    return font_projections
 
 def TREES(DB_TYPE, tree):
     return {name: DB_TYPE(v, name) for name, v in tree.items()}
 
-#   PARASTYLE <
-#       ...
-#       MAP <
-#           elements {
-#               FONTSTYLE <
-#                   ...
-#                   PEGS <>
-#               >
-#           }
-#       >
-#
-#   >
-
-TAGLIST = DB_TAGLIST()
-PEGS = {}
-FONTSTYLES = I_TREES()
-MAPS = {}
-PARASTYLES = I_TREES()
-
 def faith(woods):
-    TAGLIST.clear()
+    FTAGS.populate(woods['FTAGLIST'])
+    PTAGS.populate(woods['PTAGLIST'])
     PEGS.clear()
     FONTSTYLES.clear()
-    MAPS.clear()
     PARASTYLES.clear()
 
-    TAGLIST.populate(woods['TAGLIST'])
     PEGS.update(TREES(DB_Pegs, woods['PEGS']))
+
     FONTSTYLES.update(TREES(DB_Fontstyle, woods['FONTSTYLES']))
-    MAPS.update(TREES(DB_Map, woods['MAPS']))
-    PARASTYLES.update(TREES(DB_Parastyle, woods['PARASTYLES']))
-
-    # link heritable
-    for P in PARASTYLES.values():
-        P.link_inheritable()
-    PARASTYLES.update_tables()
-
-    for F in FONTSTYLES.values():
-        F.link_inheritable()
-    FONTSTYLES.update_tables()
+    PARASTYLES[:] = [DB_Parastyle(P, Counter({PTAGS[T]: V for T, V in count.items()})) for P, count in woods['PARASTYLES']]
 
 def daydream():
     # set up emergency undefined classes
-    PEGS['_undefined'] = DB_Pegs(('',
-                            {'_ACTIVE': 'sup',
-                             'sub': [0, -0.2],
-                             'sup': [0, 0.4]}), '_undefined')
+    _G_DNA = DB_Pegs(('', {}), '_undefined')
     
-    global F_UNDEFINED
-    F_UNDEFINED = DB_Fontstyle({'fontsize': (False, 13),
-                 'path': (False, 'fonts/FreeMono.ttf'),
-                 'pegs': '_undefined',
-                 'tracking': (False, 0),
-                 'color': (False, (1, 0.15, 0.2, 1))}, '_undefined')
-    F_UNDEFINED.link_inheritable()
-    F_UNDEFINED.update_table()
+    F_DNA.update({'fontsize': 13,
+            'path': 'fonts/FreeMono.ttf',
+            'pegs': _G_DNA,
+            'tracking': 0,
+            'color': (1, 0.15, 0.2, 1)})
     
-    PEGS.clear()
-    
-    global T_UNDEFINED
-    T_UNDEFINED = DB_Tag({'_active': None, 'subtags': [], 'collapse': False ,'exclusive': False}, '_undefined')
+    P_DNA.update({'hyphenate': False,
+            'indent': (0, 0, 0),
+            'indent_range': {0},
+            'leading': 22,
+            'margin_bottom': 0,
+            'margin_left': 0,
+            'margin_right': 0,
+            'margin_top': 0})
+
+    ISTYLES.update(_create_interface())

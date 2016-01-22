@@ -41,8 +41,8 @@ class Tabs_round(kookies.Tabs):
         self._add_static_text(self._x + self._width//2, self._y_bottom + 20, self._longstrings[self._active], align=0)
         
     def draw(self, cr, hover=(None, None)):
-        cr.set_font_size(self.font.u_fontsize)
-        cr.set_font_face(self.font.u_font)
+        cr.set_font_size(self.font['fontsize'])
+        cr.set_font_face(self.font['font'])
         
         for i, button in enumerate(self._x_left):
 
@@ -141,7 +141,7 @@ def PDF():
         try:
             becky.print_page(cr, p, classes)
         except KeyError:
-            pass
+            print('page undefined')
         cr.show_page()
 
 def place_tags(tag):
@@ -181,14 +181,14 @@ class Document_toolbar(object):
         self._items.append(kookies.Button(5, y, 90, 30, callback=meredith.mipsy.add_tract, string='Add tract'))
 
         y += 50
-        self._items.append(kookies.Button(5, y, 90, 30, callback=place_tags, string='Emphasis', params=(styles.TAGLIST['emphasis'],) ))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=place_tags, string='Emphasis', params=(typing.emphasis,) ))
         y += 30
-        self._items.append(kookies.Button(5, y, 90, 30, callback=punch_tags, string='x Emphasis', params=(styles.TAGLIST['emphasis'],) ))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=punch_tags, string='x Emphasis', params=(typing.emphasis,) ))
 
         y += 40
-        self._items.append(kookies.Button(5, y, 90, 30, callback=place_tags, string='Strong', params=(styles.TAGLIST['strong'],) ))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=place_tags, string='Strong', params=(typing.strong,) ))
         y += 30
-        self._items.append(kookies.Button(5, y, 90, 30, callback=punch_tags, string='x Strong', params=(styles.TAGLIST['strong'],) ))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=punch_tags, string='x Strong', params=(typing.strong,) ))
 
         y += 50
         self._items.append(kookies.Checkbox(15, y, 80, callback=penclick.page.toggle_dual, value_acquire=lambda: penclick.page.dual, name='Dual'.upper()))
@@ -348,7 +348,7 @@ class Document_view(ui.Cell):
     def key_input(self, name, char):
         if self._mode == 'text':
             clipboard = typing.type_document(name, char)
-            # check if paragraph context changed
+            # check if paragraph and font context changed
             contexts.Text.update()
             
             return clipboard
@@ -572,11 +572,10 @@ class Document_view(ui.Cell):
         noticeboard.refresh_properties_type.push_change(mode)
     
     def _print_sorted(self, cr, classed_glyphs):
-        for name, L in (item for item in classed_glyphs.items() if isinstance(item[0], str)):
-            font, glyphs = L
-            cr.set_source_rgba( * font.u_color)
-            cr.set_font_size(font.u_fontsize)
-            cr.set_font_face(font.u_font)
+        for font, glyphs in (L for name, L in classed_glyphs.items() if isinstance(name, int)):
+            cr.set_source_rgba( * font['color'])
+            cr.set_font_size(font['fontsize'])
+            cr.set_font_face(font['font'])
             cr.show_glyphs(glyphs)
     
     def page_classes(self):
@@ -587,15 +586,15 @@ class Document_view(ui.Cell):
         for dictionary in jumbled_pages:
             for page, sorted_glyphs in dictionary.items():
                 if page in classed_pages:
-                    for style, glyphs in sorted_glyphs.items():
-                        classed_pages[page].setdefault(style, []).extend(glyphs)
+                    for name, font, glyphs in ((item[0], * item[1]) for item in sorted_glyphs.items() if isinstance(item[0], int)):
+                        classed_pages[page].setdefault(name, (font, []))[1].extend(glyphs)
                 else:
-                    classed_pages[page] = sorted_glyphs.copy()
+                    classed_pages[page] = {name: L for name, L in sorted_glyphs.items() if isinstance(name, int)}
         
         return classed_pages
     
     def print_page(self, cr, p, classed_pages):
-        self._draw_images(cr, classed_pages[p][('_images',)])
+#        self._draw_images(cr, classed_pages[p]['_images'])
         self._print_sorted(cr, classed_pages[p])
             
     def _draw_by_page(self, cr, mx_cx, my_cy, cx, cy, A=1, refresh=False):
@@ -642,21 +641,21 @@ class Document_view(ui.Cell):
                 cr.translate(A*penclick.page.map_X(mx_cx, page) + cx, A*penclick.page.map_Y(my_cy, page) + cy)
                 cr.scale(A, A)
 
-                self._draw_images(cr, sorted_glyphs[('_images',)])
+                self._draw_images(cr, sorted_glyphs['_images'])
                 self._print_sorted(cr, sorted_glyphs)
 
                 cr.restore()
                 
                 # only annotate active tract
                 if t == 0 and self._mode == 'text':
-                    self._draw_annotations(cr, sorted_glyphs[('_annot',)], page)
+                    self._draw_annotations(cr, sorted_glyphs['_annot'], page)
                     
                     # this is how we know what page the cursor is on
-                    if self._highlight(cr, sorted_glyphs[('_intervals',)], page, self._selection_highlight, 0.75, start, stop, l1, l2, i, j):
+                    if self._highlight(cr, sorted_glyphs['_intervals'], page, self._selection_highlight, 0.75, start, stop, l1, l2, i, j):
                         meredith.mipsy.page_context = page
                     
                     for red_line in annoying_red_lines:
-                        self._highlight(cr, sorted_glyphs[('_intervals',)], page, self._spelling_highlight, 1, * red_line)
+                        self._highlight(cr, sorted_glyphs['_intervals'], page, self._spelling_highlight, 1, * red_line)
 
         for pp in range(max_page + 1):
             #draw page border
@@ -718,7 +717,7 @@ class Document_view(ui.Cell):
             x = self._X_to_screen(x, page)
             y = self._Y_to_screen(y, page)
             
-            fontsize = F.u_fontsize * self._A
+            fontsize = F['fontsize'] * self._A
 
             if p_i == meredith.mipsy.paragraph_at()[1]:
                 cr.set_source_rgba( * accent_light, 0.7)
@@ -890,10 +889,10 @@ class Document_view(ui.Cell):
         
         # draw stats
         cr.set_source_rgba(0, 0, 0, 0.8)
-        font = styles.FONTSTYLES['_interface:STRONG']
+        font = styles.ISTYLES[('strong',)]
         
-        cr.set_font_size(font.u_fontsize)
-        cr.set_font_face(font.u_font)
+        cr.set_font_size(font['fontsize'])
+        cr.set_font_face(font['font'])
 
         if noticeboard.composition_sequence:
             cr.move_to(130, 40)

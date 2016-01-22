@@ -1,0 +1,146 @@
+{'FONTSTYLES': {'body:BOLD': {'path': '/home/kelvin/.fonts/FiraSans-Bold.otf',
+                              'tracking': 1},
+                'body:BOLDITALIC': {'path': '/home/kelvin/.fonts/FiraSans-BoldItalic.otf'},
+                'body:ITALIC': {'path': '/home/kelvin/.fonts/FiraSans-BookItalic.otf'},
+                'body:REGULAR': {'color': (0, 0, 0, 1),
+                                 'fontsize': 13,
+                                 'path': '/home/kelvin/.fonts/FiraSans-Book.otf',
+                                 'pegs': 'Standard pegs',
+                                 'tracking': 0},
+                'body:SMALL': {'fontsize': 10,
+                               'path': '/home/kelvin/.fonts/FiraSans-Regular.otf'},
+                'body:SMALL ITALIC': {'path': '/home/kelvin/.fonts/FiraSans-Italic.otf'},
+                'h1:DISPLAY': {'color': (0, 0, 0, 1),
+                               'fontsize': 36,
+                               'path': '/home/kelvin/.fonts/Kabel Light.otf',
+                               'pegs': 'Standard pegs',
+                               'tracking': 0},
+                'h1:DISPLAY STRONG': {'path': '/home/kelvin/.fonts/Kabel.otf'}},
+ 'FTAGLIST': [('strong', []),
+              ('sub', ['small']),
+              ('caption', []),
+              ('sup', ['small']),
+              ('emphasis', [])],
+ 'PARASTYLES': [({'fontclasses': [({}, 'body:REGULAR'),
+                                  ({'caption': 1}, 'body:REGULAR'),
+                                  ({'emphasis': 1}, 'body:ITALIC'),
+                                  ({'strong': 1}, 'body:BOLD'),
+                                  ({'emphasis': 1, 'strong': 1},
+                                   'body:BOLDITALIC'),
+                                  ({'small': 1}, 'body:SMALL'),
+                                  ({'emphasis': 1, 'small': 1},
+                                   'body:SMALL ITALIC')],
+                  'hyphenate': True,
+                  'indent': (0, -1, 6),
+                  'indent_range': {0},
+                  'leading': 20,
+                  'margin_bottom': 8,
+                  'margin_left': 0,
+                  'margin_right': 0,
+                  'margin_top': 0},
+                 {'body': 1}),
+                ({'indent': (0, -1, 4), 'margin_bottom': 9, 'margin_left': 30},
+                 {'answers': 1}),
+                ({'fontclasses': [({}, 'h1:DISPLAY'),
+                                  ({'strong': 1}, 'h1:DISPLAY STRONG')],
+                  'hyphenate': True,
+                  'indent': (0, 0, 0),
+                  'indent_range': {0},
+                  'leading': 48,
+                  'margin_bottom': 10,
+                  'margin_left': 0,
+                  'margin_right': 0,
+                  'margin_top': 0},
+                 {'h1': 1})],
+ 'PEGS': {'Standard pegs': ('', {'sub': [0, -0.2], 'sup': [0, 0.3]})},
+ 'PTAGLIST': [('answers', []), ('body', []), ('h1', []), ('h2', [])],
+ 'contexts': {'c': 0, 'p': 0},
+ 'grid': [[90, 370, 410, 690], [80, 910]],
+ 'kitty': [{'cursors': (561, 561),
+            'outline': [[[[90, 80, False], [90, 910, False]],
+                         [[370, 80, False], [370, 910, False]],
+                         0],
+                        [[[410, 80, False], [410, 910, False]],
+                         [[690, 80, False], [690, 910, False]],
+                         0],
+                        [[[90, 80, False], [90, 910, False]],
+                         [[370, 80, False], [370, 910, False]],
+                         1],
+                        [[[410, 80, False], [410, 910, False]],
+                         [[690, 80, False], [690, 910, False]],
+                         1],
+                        [[[90, 80, False], [90, 910, False]],
+                         [[370, 80, False], [370, 910, False]],
+                         2],
+                        [[[410, 80, False], [410, 910, True]],
+                         [[690, 80, False], [690, 910, True]],
+                         2]],
+            'text': '<p class="h1"><strong>AP CALCULUS</strong> CREATE THE '
+                    'QUIZ</p><p class="body"><strong>1</strong>   Find the '
+                    'derivative of ln|cos √(<em>x</em> − 13)|.</p><p '
+                    'class="answers&body">A.  − tan √(<em>x</em> − 13) / '
+                    '2√(<em>x</em> − 13)</p><p class="answers&body">B.  sin '
+                    '√(<em>x</em> − 13) sec √(<em>x</em> − 13) / 2√(<em>x</em> '
+                    '− 13)</p><p class="answers&body">C.  − tan √(<em>x</em> − '
+                    '13)</p><p class="answers&body">D.  sec √(<em>x</em> − 13) '
+                    '/ 2√(<em>x</em> − 13)</p><p '
+                    'class="body"><strong>3</strong>   Let '
+                    '<em>f</em>(<em>x</em>) = (<em>e<f class="sup">x</em></f '
+                    'class="sup"> + <em>e<f class="sup"></em>−<em>x</em></f '
+                    'class="sup"> + 2) / (<em>e<f class="sup">x</em></f '
+                    'class="sup"> + 1). What is <em>f</em>′(<em>x</em>)?</p><p '
+                    'class="answers&body">A.  <em>e<f class="sup">x</em></f '
+                    'class="sup"> − 2<em>e<f class="sup"></em>−<em>x</em></f '
+                    'class="sup"></p><p class="answers&body">B.  <em>e<f '
+                    'class="sup"></em>−<em>x</em></f class="sup"></p><p '
+                    'class="answers&body">C.  −<em>e<f class="sup">x</em></f '
+                    'class="sup"></p><p class="answers&body">D.  −<em>e<f '
+                    'class="sup"></em>−<em>x</em></f class="sup"></p><p '
+                    'class="body"><strong>4</strong>   Apple Music released '
+                    'the 1989 Tour Movie on Dec. 20. Normally, the rate '
+                    '(streams/day) that swifties stream the movie can be '
+                    'modeled by <em>S</em>(<em>t</em>) = 600<em>e<f '
+                    'class="sup"></em>−<em>x</em>/70</f class="sup"> + cos(2/7 '
+                    '<em>πx</em>) + 1 , where <em>t</em> is the <em>number of '
+                    'days since the release. This model do<strong>es not work '
+                    'for</em> the holiday period from</strong> Dec. 20 to Jan. '
+                    '3 (<em>t</em> = [0, 14]), but Apple’s servers counted '
+                    '22,000 streams during this interval. Usin<strong>g '
+                    'calcul</strong>us, w</strong>hich is t<strong>he<strong>n '
+                    'th</strong>e best prediction for the total number of '
+                    'streams the 1989 Movie will have by May 8th (<em>t</em> = '
+                    '140)?</p><p class="answers&body">A.  42,000/⁵√<em>e</em> '
+                    '− 42,000/<em>e</em>² + 126</p><p class="answers&body">B.  '
+                    '42,000/⁵√<em>e</em> − 42,000/<em>e</em>² + 22126</p><p '
+                    'class="answers&body">C.  42,000/⁵√<em>e</em> − '
+                    '42,000/<em>e</em>² + 140</p><p class="answers&body">D.  '
+                    '−42000/<em>e</em>² + 7/2<em>π</em> sin(40<em>π</em>) + '
+                    '140</p><p class="body"><strong>Correct answer: '
+                    'B</strong></p><p class="body">∫<em>S</em>(<em>t</em>) = '
+                    '−42000<em>e<f class="sup"></em>−<em>x</em>/70</f '
+                    'class="sup"> + 7/2<em>π</em> sin(2/7 <em>πx</em>) + '
+                    '<em>x</em> + <em>c</em></p><p class="body">∫<f '
+                    'class="sub">0</f class="sub"><f class="sup">14<em></f '
+                    'class="sup">S</em>(<em>t</em>) = 22000</p><p '
+                    'class="body">∫<f class="sub">14</f class="sub"><f '
+                    'class="sup">140<em></f class="sup">S</em>(<em>t</em>) = '
+                    '(−42000/<em>e</em>² + 7/2<em>π</em> sin(40<em>π</em>) + '
+                    '140) − <br>               (−42,000/⁵√<em>e</em> + '
+                    '7/2<em>π</em> sin(4<em>π</em>) + 14)<br>            = '
+                    '42,000/⁵√<em>e</em> − 42,000/<em>e</em>² + 126</p><p '
+                    'class="body">∫<f class="sub">0</f class="sub"><f '
+                    'class="sup">140<em></f class="sup">S</em>(<em>t</em>) = '
+                    '∫<f class="sub">0</f class="sub"><f class="sup">14<em></f '
+                    'class="sup">S</em>(<em>t</em>) + ∫<f class="sub">14</f '
+                    'class="sub"><f class="sup">140<em></f '
+                    'class="sup">S</em>(<em>t</em>) <br>            = 22000 + '
+                    '42,000/⁵√<em>e</em> − 42,000/<em>e</em>² + '
+                    '126<br>            = 42,000/⁵√<em>e</em> − '
+                    '42,000/<em>e</em>² + 22126</p>'}],
+ 'page': {'dimensions': (765, 990), 'dual': False},
+ 'view': {'H': 204,
+          'Hc': 404.48883056640625,
+          'K': -67,
+          'Kc': 493.390869140625,
+          'Zoom': 14,
+          'mode': 'text'}}

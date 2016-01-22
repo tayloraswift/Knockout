@@ -1,5 +1,5 @@
 import bisect
-
+import itertools
 from state import constants, contexts
 from state import noticeboard
 
@@ -10,51 +10,33 @@ from interface import kookies, caramel, ui, ops
 from model import meredith, penclick
 from model import un
 
-class _Font_file_Field(kookies.Blank_space):
-    def __init__(self, x, y, width, after, name=None):
-        kookies.Blank_space.__init__(self, x, y, width, callback = ops.Fontstyle.f_set_attribute, 
-                value_acquire = self._value_acquire, 
-                params=('path',), 
-                before=un.history.save, 
-                after=after, name=name)
-
-    def _value_acquire(self, A):
-        self.broken = not contexts.Fontstyle.fontstyle.u_path_valid
-        return contexts.Fontstyle.fontstyle.u_path
-
 def _create_f_field(TYPE, x, y, width, attribute, after, name='', **kwargs):
-    return TYPE(x, y, width,
-            callback= ops.Fontstyle.f_set_attribute, 
-            value_acquire = lambda A: getattr(contexts.Fontstyle.fontstyle, 'u_' + A),
+    if TYPE == kookies.Checkbox:
+        z_y = y
+    else:
+        z_y = y + 7
+    ZI = kookies.Z_indicator(x, z_y, 10, height=24, get_projection = lambda: contexts.Fontstyle.fontstyle, get_attributes = lambda LIB: LIB.active.F.attributes, A = attribute, library=styles.PARASTYLES.active.layerable)
+    return [ZI, TYPE(x + 25, y, width - 25,
+            callback= ops.f_set_attribute, 
+            value_acquire = lambda A: styles.PARASTYLES.active.layerable.active.F.attributes[A] if A in styles.PARASTYLES.active.layerable.active.F.attributes else contexts.Fontstyle.fontstyle[A],
             params = (attribute,), 
             before=un.history.save,
             after=after,
-            name=name, **kwargs)
+            name=name, **kwargs)]
             
 def _create_p_field(TYPE, x, y, width, attribute, after, name='', **kwargs):
-    return TYPE(x, y, width,
-            callback = ops.Parastyle.p_set_attribute, 
-            value_acquire= lambda A: getattr(contexts.Parastyle.parastyle, 'u_' + A),
+    if TYPE == kookies.Checkbox:
+        z_y = y
+    else:
+        z_y = y + 7
+    ZI = kookies.Z_indicator(x, z_y, 10, height=24, get_projection = lambda: contexts.Parastyle.parastyle, get_attributes = lambda LIB: LIB.active.attributes, A = attribute, library=styles.PARASTYLES)
+    return [ZI, TYPE(x + 25, y, width - 25,
+            callback = ops.p_set_attribute, 
+            value_acquire= lambda A: styles.PARASTYLES.active.attributes[A] if A in styles.PARASTYLES.active.attributes else contexts.Parastyle.parastyle[A],
             params = (attribute,), 
             before=un.history.save,
             after=after,
-            name=name, **kwargs)
-
-def _create_f_inherit(x, y, width, attribute, after, source=0):
-    return kookies.Datablock_selection_menu(x, y, width=width, height=15, menu_callback = ops.Fontstyle.f_link_inheritance, 
-            options_acquire = lambda: ((None, 'None'),) + tuple( (l, l.name) for l in sorted(styles.FONTSTYLES.values(), key=lambda k: k.name) ),
-            value_acquire = lambda A: contexts.Fontstyle.fontstyle.read_inherit_name(A), 
-            params = (attribute,),
-            before = un.history.save, after=after,
-            source=source)
-            
-def _create_p_inherit(x, y, width, attribute, after, source=0):
-    return kookies.Datablock_selection_menu(x, y, width=width, height=15, menu_callback = ops.Parastyle.p_link_inheritance, 
-            options_acquire = lambda: ((None, 'None'),) + tuple( (l, l.name) for l in sorted(styles.PARASTYLES.values(), key=lambda k: k.name) ),
-            value_acquire = lambda A: contexts.Parastyle.parastyle.read_inherit_name(A), 
-            params = (attribute,),
-            before = un.history.save, after=after,
-            source=source)
+            name=name, **kwargs)]
 
 class _F_preview(kookies.Heading):
     def __init__(self, x, y, width, height, text, f):
@@ -74,15 +56,17 @@ class _F_preview(kookies.Heading):
         cr.show_glyphs(self._texts[0])
 
 
-class _TWO_COLUMN(object):
-    def __init__(self, left, right):
-        lbb = left.bounding_box()
-        rbb = right.bounding_box()
-        self.partition = (lbb[1] + rbb[0]) // 2
-        self.y = max((lbb[3], rbb[3]))
+class _MULTI_COLUMN(object):
+    def __init__(self, * args):
+        BB = [W.bounding_box() for W in args]
+        self.partitions = [(BB[i][1] + BB[i + 1][0]) // 2 for i in range(len(BB) - 1)]
+        self.y = max((B[3] for B in BB))
         
         self.draw = lambda cr: None
         self._SYNCHRONIZE = lambda: None
+
+def _columns(columns):
+    return [_MULTI_COLUMN( * columns), * columns]
 
 # do not instantiate directly, requires a _reconstruct
 class _Properties_panel(ui.Cell):
@@ -112,11 +96,8 @@ class _Properties_panel(ui.Cell):
             i -= 1
             item = self._items[i]
         
-        if isinstance(item, _TWO_COLUMN):
-            if x < item.partition:
-                i += 1
-            else:
-                i += 2
+        if isinstance(item, _MULTI_COLUMN):
+            i += bisect.bisect(item.partitions, x) + 1
         return i
 
     def refresh(self):
@@ -196,6 +177,12 @@ class _Properties_panel(ui.Cell):
             hovered[0] = self._hover_box_ij
             noticeboard.redraw_klossy.push_change()
 
+def _print_counter(counter):
+    items = [k.name if v == 1 else k.name + ' (' + str(v) + ')' for k, v in counter.tags.items() if v]
+    if items:
+        return ', '.join(items)
+    else:
+        return '{none}'
 
 class Properties(_Properties_panel):
     def __init__(self, tabs = (), default=0, partition=1 ):
@@ -206,210 +193,162 @@ class Properties(_Properties_panel):
     def _reconstruct_text_properties(self):
         # ALWAYS REQUIRES CALL TO _stack()
         print('reconstruct')
-
-        p = contexts.Text.paragraph
         
         self._items = [self._tabstrip]
         self._active_box_i = None
         self._hover_box_ij = (None, None)
         
         y = 145
-        
-        self._items.append(kookies.Heading( 15, 90, 250, 30, p[1].name, upper=True))
-               
+
         if self._tab == 'font':
-
-            self._items.append(kookies.Object_menu(15, y, 250, 
-                        value_acquire = lambda: contexts.Keymap.keymap, 
-                        value_push = ops.Parastyle.link_keymap, 
-                        library = styles.MAPS, 
-                        before=un.history.save, after = self.refresh, name='RENAME KEYMAP', source=self._partition))
-            y += 45
-            
-            self._items.append(kookies.Unorderable(15, y, 250, 250,
-                        datablock = contexts.Keymap.keymap, 
-                        protect = set(((),)),
-                        display = lambda l: ', '.join(l) if l else '{none}',
-                        before=un.history.save, after= lambda: (contexts.Fontstyle.update(), self.refresh())))
-            
-            y += 250
-            self._items.append(kookies.Binary_table(15, y, 250, 100, (80, 26), 
-                        callback= ops.Keymap.remap_active,
-                        states_acquire = lambda: [ (T.name in set(contexts.Keymap.keymap.active), T.name ) for T in styles.TAGLIST.ordered ], 
-                        before = un.history.save, after = self.refresh))
-            
-            y += 100
-            
-            key = contexts.Fontstyle.fontstyle
-            if key is None:
-                self._items.append(kookies.New_object_menu(15, y, 250,
-                            value_push = ops.Keymap.link_fontstyle, 
-                            library = styles.FONTSTYLES, 
-                            before = un.history.save, after = self.refresh, name='FONTSTYLE', source=self._partition))
-
-            else:
-                self._items.append(kookies.Object_menu(15, y, 250,
-                            value_acquire = lambda: contexts.Fontstyle.fontstyle, 
-                            value_push = ops.Keymap.link_fontstyle, 
-                            library = styles.FONTSTYLES, 
-                            before = un.history.save, after = self.refresh, name='FONTSTYLE', source=self._partition))
-
-                y += 55
-
-                self._items.append(_F_preview( 16, y, 250, 0, 'Preview  ( ' + key.name + ' )', key ))
-                y += 30
+            if styles.PARASTYLES.active is not None:
                 
-                self._items.append(_Font_file_Field( 15, y, 250, after=self.synchronize, name='FONT FILE' ))
-                y += 30
-                self._items.append(_create_f_inherit( 15, y, width=250, attribute='path', after=self.synchronize, source=self._partition))
-                y += 15
-                
-                self._items.append(_create_f_field(kookies.Numeric_field, 15, y, 250, 'fontsize', after=self.synchronize, name='FONT SIZE') )
-
-                y += 30
-                self._items.append(_create_f_inherit( 15, y, width=250, attribute='fontsize', after=self.synchronize, source=self._partition))
-                y += 15
-                
-                self._items.append(_create_f_field(kookies.Numeric_field, 15, y, 250, 'tracking', after=self.synchronize, name='TRACKING') )
-                y += 30
-                self._items.append(_create_f_inherit( 15, y, width=250, attribute='tracking', after=self.synchronize, source=self._partition))
-                y += 30
-        
-        elif self._tab == 'pegs':
-            G = contexts.Pegs.pegs
-            if G is None:
-                self._items.append(kookies.New_object_menu(15, y, 250,
-                            value_push = ops.Fontstyle.link_pegs, 
-                            library = styles.PEGS, 
-                            before = un.history.save, after = self.refresh, name='PEGS', source=self._partition))
-
-            else:
-                self._items.append(kookies.Object_menu(15, y, 250,
-                            value_acquire = lambda: contexts.Pegs.pegs, 
-                            value_push = ops.Fontstyle.link_pegs, 
-                            library = styles.PEGS, 
-                            before = un.history.save, after = self.refresh, name='PEGS', source=self._partition))
-                y += 45
-                self._items.append(kookies.Subset_table( 15, y, 250, 250,
-                        datablock = G,
-                        superset = styles.TAGLIST,
-                        before=un.history.save, after=self.refresh))
+                self._items.append(kookies.Heading( 15, 90, 250, 30, ', '.join(T.name for T in styles.PARASTYLES.active.tags), upper=True))
+                self._items.append(kookies.Ordered(15, y, 250, 250,
+                            library = styles.PARASTYLES.active.layerable, 
+                            display = _print_counter,
+                            before = un.history.save, after = lambda: (styles.PARASTYLES.update_f(), meredith.mipsy.recalculate_all(), self._reconstruct()), refresh = self._reconstruct))
                 y += 250
                 
-                if G.active is not None:
+                if styles.PARASTYLES.active.layerable.active is not None:
+                    self._items.append(kookies.Counter_editor(15, y, 250, 100, (125, 28),
+                                get_counter = lambda: styles.PARASTYLES.active.layerable.active.tags,
+                                superset = styles.FTAGS,
+                                before = un.history.save, after = lambda: (styles.PARASTYLES.update_f(), meredith.mipsy.recalculate_all(), self.synchronize())))
+                    y += 100
 
-                    _a = kookies.Numeric_field(15, y, 120, 
-                                callback = ops.Pegs.set_active_x,
-                                value_acquire = lambda: G.elements[G.active][0],
-                                before = un.history.save, after = meredith.mipsy.recalculate_all, name = 'X' )
-                    _b = kookies.Numeric_field(145, y, 120, 
-                                callback = ops.Pegs.set_active_y,
-                                value_acquire = lambda: G.elements[G.active][1],
-                                before = un.history.save, after = meredith.mipsy.recalculate_all, name = 'Y' )
+                    _after_ = lambda: (styles.PARASTYLES.update_f(), meredith.mipsy.recalculate_all(), contexts.Fontstyle.update(meredith.mipsy.tracts[0].styling_at()[1]), self._reconstruct())
+                    if styles.PARASTYLES.active.layerable.active.F is None:
+                        self._items.append(kookies.New_object_menu(15, y, 250,
+                                    value_push = ops.link_fontstyle, 
+                                    library = styles.FONTSTYLES,
+                                    TYPE = styles.DB_Fontstyle,
+                                    before = un.history.save, after = _after_, name='FONTSTYLE', source=self._partition))
+                    else:
+                        self._items.append(kookies.Object_menu(15, y, 250,
+                                    value_acquire = lambda: styles.PARASTYLES.active.layerable.active.F, 
+                                    value_push = ops.link_fontstyle, 
+                                    library = styles.FONTSTYLES, 
+                                    before = un.history.save, after = _after_, name='FONTSTYLE', source=self._partition))
 
-                    self._items.append( _TWO_COLUMN(_a, _b))
-                    self._items += [_a, _b]
+                        y += 55
+#                        self._items.append(_F_preview( 16, y, 250, 0, 'Preview  ( ' + key.name + ' )', key ))
+#                        y += 30
+                        self._items += _columns(_create_f_field(kookies.Blank_space, 15, y, 250, 'path', after=self.synchronize, name='FONT FILE'))
+                        y += 45
+                        self._items += _columns(_create_f_field(kookies.Numeric_field, 15, y, 250, 'fontsize', after=self.synchronize, name='FONT SIZE'))
+                        y += 45
+                        self._items += _columns(_create_f_field(kookies.Numeric_field, 15, y, 250, 'tracking', after=self.synchronize, name='TRACKING'))
+            else:
+                self._items.append(kookies.Heading( 15, 90, 250, 30, '', upper=True))
+
+        elif self._tab == 'pegs':
+            if styles.PARASTYLES.active is not None and styles.PARASTYLES.active.layerable.active is not None and styles.PARASTYLES.active.layerable.active.F is not None:
+                self._items.append(kookies.Heading( 15, 90, 250, 30, styles.PARASTYLES.active.layerable.active.F.name, upper=True))
+                
+                FG = lambda: styles.PARASTYLES.active.layerable.active.F.attributes['pegs'] if 'pegs' in styles.PARASTYLES.active.layerable.active.F.attributes else None
+                G = FG()
+                if G is None:
+                    self._items.append(kookies.New_object_menu(15, y, 250,
+                                value_push = ops.link_pegs, 
+                                library = styles.PEGS, 
+                                TYPE = styles.DB_Pegs,
+                                before = un.history.save, after = self.refresh, name='PEGS', source=self._partition))
+
+                else:
+                    self._items.append(kookies.Object_menu(15, y, 250,
+                                value_acquire = FG, 
+                                value_push = ops.link_pegs, 
+                                library = styles.PEGS, 
+                                before = un.history.save, after = self.refresh, name='PEGS', source=self._partition))
                     y += 45
                     
-        elif self._tab == 'paragraph':
+                    self._items.append(kookies.Subset_table( 15, y, 250, 250,
+                            datablock = G,
+                            superset = styles.FTAGS,
+                            before=un.history.save, after=self.refresh, refresh=self.refresh))
+                    y += 250
+                    
+                    if G.active is not None:
+                        _after_ = lambda: (styles.PARASTYLES.update_f(), meredith.mipsy.recalculate_all(), self.synchronize())
+                        self._items += _columns([kookies.Numeric_field(15, y, 120, 
+                                    callback = ops.g_set_active_x,
+                                    value_acquire = lambda: G.active[0],
+                                    before = un.history.save, after = _after_, name = 'X' ) ,
+                            kookies.Numeric_field(145, y, 120, 
+                                    callback = ops.g_set_active_y,
+                                    value_acquire = lambda: G.active[1],
+                                    before = un.history.save, after = _after_, name = 'Y' )])
+                        y += 45
+            else:
+                self._items.append(kookies.Heading( 15, 90, 250, 30, '', upper=True))
+        
+        if self._tab == 'paragraph':
+            self._items.append(kookies.Heading( 15, 90, 250, 30, ', '.join(T.name if V == 1 else T.name + ' (' + str(V) + ')' for T, V in contexts.Text.paragraph[1].items() if V), upper=True))
 
-            self._items.append(kookies.Object_menu( 15, y, 250, 
-                        value_acquire=lambda: p[1], 
-                        value_push=ops.Text.link_parastyle, 
-                        library=styles.PARASTYLES, 
-                        params = (), before=un.history.save, after=self.refresh, name='RENAME CLASS', source=self._partition))
-            y += 45
+            self._items.append(kookies.Para_control_panel(15, y, 250, 200, 
+                    get_paragraph = lambda: contexts.Text.paragraph, 
+                    display = _print_counter,
+                    library = styles.PARASTYLES,
+                    before = un.history.save, after = lambda: (meredith.mipsy.recalculate_all(), self._reconstruct()), refresh = self._reconstruct))
+            y += 200
             
-            self._items.append(_create_p_field(kookies.Numeric_field, 15, y, 250, 'leading', after=self.synchronize, name='LEADING') )
-            y += 30
-            
-            self._items.append(_create_p_inherit(15, y, width=250, attribute='leading', after=self.synchronize, source=self._partition))
-            
-            y += 15
-            _tc_ = [_create_p_field(kookies.Binomial_field, 15, y, 175, 'indent', after=self.synchronize, name='INDENT', letter='K'), 
-                    _create_p_field(kookies.Enumerate_field, 200, y, 65, 'indent_range', after=self.synchronize, name='FOR LINES') ]
-            self._items.append( _TWO_COLUMN( * _tc_))
-            self._items += _tc_
-            
-            y += 45
-            _tc_ = [_create_p_inherit(15, y, width=175, attribute='indent', after=self.synchronize, source=self._partition), 
-                    _create_p_inherit(200, y, width=65, attribute='indent_range', after=self.synchronize, source=self._partition) ]
-            self._items.append( _TWO_COLUMN( * _tc_))
-            self._items += _tc_
-            
-            y += 15
-            _tc_ = [_create_p_field(kookies.Numeric_field, 15, y, 120, 'margin_left', after=self.synchronize, name='LEFT MARGIN'),
-                    _create_p_field(kookies.Numeric_field, 145, y, 120, 'margin_right', after=self.synchronize, name='RIGHT MARGIN')]
-            self._items.append( _TWO_COLUMN( * _tc_))
-            self._items += _tc_
-            y += 45
-            _tc_ = [_create_p_inherit( 15, y, width=120, attribute='margin_left', after=self.synchronize, source=self._partition), 
-                    _create_p_inherit( 145, y, width=120, attribute='margin_right', after=self.synchronize, source=self._partition) ]
-            self._items.append( _TWO_COLUMN( * _tc_))
-            self._items += _tc_
-            
-            y += 15
-            _tc_ = [_create_p_field(kookies.Numeric_field, 15, y, 120, 'margin_top', after=self.synchronize, name='TOP MARGIN'),
-                    _create_p_field(kookies.Numeric_field, 145, y, 120, 'margin_bottom', after=self.synchronize, name='BOTTOM MARGIN')]
-            self._items.append( _TWO_COLUMN( * _tc_))
-            self._items += _tc_
+            if styles.PARASTYLES.active is not None:
+                self._items.append(kookies.Counter_editor(15, y, 250, 100, (125, 28),
+                            get_counter = lambda: styles.PARASTYLES.active.tags,
+                            superset = styles.PTAGS,
+                            before = un.history.save, after = lambda: (styles.PARASTYLES.update_p(), meredith.mipsy.recalculate_all(), self.synchronize())))
+                y += 100
+                
+                self._items += _columns(_create_p_field(kookies.Numeric_field, 15, y, 255, 'leading', after=self.synchronize, name='LEADING'))
+                y += 45
 
-            y += 45
-            _tc_ = [_create_p_inherit( 15, y, width=120, attribute='margin_top', after=self.synchronize, source=self._partition), 
-                    _create_p_inherit( 145, y, width=120, attribute='margin_bottom', after=self.synchronize, source=self._partition) ]
-            self._items.append( _TWO_COLUMN( * _tc_))
-            self._items += _tc_
-            
-            y += 15
-            self._items.append(_create_p_field(kookies.Checkbox, 15, y + 15, 100, 'hyphenate', after=self.synchronize, name='HYPHENATE') )
-            y += 30
-            self._items.append(_create_p_inherit(15, y, width=250, attribute='hyphenate', after=self.refresh, source=self._partition))
+                self._items += _columns(_create_p_field(kookies.Binomial_field, 15, y, 145, 'indent', after=self.synchronize, name='INDENT', letter='K') +
+                                _create_p_field(kookies.Enumerate_field, 175, y, 95, 'indent_range', after=self.synchronize, name='FOR LINES'))
+                y += 45
 
+                self._items += _columns(_create_p_field(kookies.Numeric_field, 15, y, 120, 'margin_left', after=self.synchronize, name='LEFT MARGIN') + 
+                                _create_p_field(kookies.Numeric_field, 150, y, 120, 'margin_right', after=self.synchronize, name='RIGHT MARGIN'))
+                y += 45
+
+                self._items += _columns(_create_p_field(kookies.Numeric_field, 15, y, 120, 'margin_top', after=self.synchronize, name='TOP MARGIN') +
+                                _create_p_field(kookies.Numeric_field, 150, y, 120, 'margin_bottom', after=self.synchronize, name='BOTTOM MARGIN'))
+                y += 60
+
+                self._items += _columns(_create_p_field(kookies.Checkbox, 15, y, 100, 'hyphenate', after=self.synchronize, name='HYPHENATE'))
+                y += 45
+                
+        
         elif self._tab == 'tags':
+            self._items.append(kookies.Heading( 15, 90, 250, 30, '', upper=True))
             
-            y += 30
-            self._items.append(kookies.Orderable( 15, y, 200, 200,
-                        datablock = styles.TAGLIST, 
+            self._items.append(kookies.Unordered( 15, y, 200, 200,
+                        library = styles.PTAGS, 
                         display = lambda l: l.name,
-                        before=un.history.save, after = lambda: (contexts.Tag.update(), self.refresh()) ))
+                        before = un.history.save, after = lambda: (meredith.mipsy.recalculate_all(), self._reconstruct()), refresh = self._reconstruct))
             
             y += 200
-            self._items.append(kookies.Blank_space(15, y, width=250, 
-                    callback = contexts.Tag.tag.rename, 
-                    value_acquire = lambda: contexts.Tag.tag.name, 
-                    before=un.history.save, after=self.synchronize, name='TAG NAME'))
-
-            y += 45
-            self._items.append(kookies.Checkbox( 15, y + 15, 100, callback = ops.Tag.t_set_attribute, 
-                            value_acquire = lambda A: getattr(contexts.Tag.tag, A), 
-                            params = ('exclusive',),
-                            before = un.history.save,
-                            after = self.synchronize,
-                            name = 'EXCLUSIVE') )
-            y += 45
-            
-            self._items.append(kookies.Unorderable( 15, y, 250, 100,
-                        datablock = contexts.Tag.tag,
-                        display = lambda l: l,
-                        before=un.history.save, after=self.synchronize))
-
-            y += 100
-            
-            if contexts.Tag.tag.elements:
+            if styles.PTAGS.active is not None:
                 self._items.append(kookies.Blank_space(15, y, width=250, 
-                        callback = ops.Tag.rename_active_subtag, 
-                        value_acquire = lambda: contexts.Tag.tag.active, 
-                        before=un.history.save, after=self.synchronize, name='SUBTAG NAME'))
-
-                y += 45
-                self._items.append(kookies.Checkbox( 15, y + 15, 100, callback = ops.Tag.t_set_attribute, 
-                                value_acquire = lambda A: getattr(contexts.Tag.tag, A), 
-                                params = ('collapse',),
-                                before = un.history.save,
-                                after = self.synchronize,
-                                name = 'COLLAPSE') )
-
+                        callback = lambda * args: styles.PTAGS.active.rename( * args), 
+                        value_acquire = lambda: styles.PTAGS.active.name, 
+                        before=un.history.save, after=self.synchronize, name='TAG NAME'))
+            y += 60
+            
+            self._items.append(kookies.Unordered( 15, y, 200, 200,
+                        library = styles.FTAGS, 
+                        display = lambda l: l.name,
+                        before = un.history.save, after = lambda: (meredith.mipsy.recalculate_all(), self._reconstruct()), refresh = self._reconstruct))
+            
+            y += 200
+            if styles.FTAGS.active is not None:
+                self._items.append(kookies.Blank_space(15, y, width=250, 
+                        callback = lambda * args: styles.FTAGS.active.rename( * args), 
+                        value_acquire = lambda: styles.FTAGS.active.name, 
+                        before=un.history.save, after=self.synchronize, name='TAG NAME'))
+            
         elif self._tab == 'page':
+            self._items.append(kookies.Heading( 15, 90, 250, 30, '', upper=True))
             self._items.append(kookies.Integer_field( 15, y, 250, 
                         callback = penclick.page.set_width,
                         value_acquire = lambda: penclick.page.WIDTH,
@@ -420,6 +359,7 @@ class Properties(_Properties_panel):
                         callback = penclick.page.set_height,
                         value_acquire = lambda: penclick.page.HEIGHT,
                         name = 'HEIGHT' ))
+        
         self._stack()
 
     def _reconstruct_channel_properties(self):

@@ -116,7 +116,7 @@ class Meredith(object):
 
     def at_absolute(self, i):
         return character(self.tracts[0].text[i])
-    
+        
     def paragraph_at(self):
         return self.tracts[0].pp_at(self.tracts[0].cursor.cursor)
             

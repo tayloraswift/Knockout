@@ -6,14 +6,10 @@ from state import contexts
     
 def redo():
     if un.history.forward():
-        styles.FONTSTYLES.update_tables()
-        styles.PARASTYLES.update_tables()
+        styles.PARASTYLES.update_p()
         contexts.Text.update_force()
-        contexts.Tag.update()
 
 def undo():
     if un.history.back():
-        styles.FONTSTYLES.update_tables()
-        styles.PARASTYLES.update_tables()
+        styles.PARASTYLES.update_p()
         contexts.Text.update_force()
-        contexts.Tag.update()

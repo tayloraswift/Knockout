@@ -1,6 +1,6 @@
-from copy import deepcopy
 import html, itertools
 
+from bulletholes.counter import TCounter as Counter
 from fonts import styles
 
 def serialize(text):
@@ -24,8 +24,8 @@ def serialize(text):
                     b[e] = '</f class="' + entity[1].name + '">'
             
             elif entity[0] == '<p>':
-                if entity[1].name != 'body':
-                    b[e] = '<p class="' + entity[1].name + '">'
+                if entity[1] != {styles.PTAGS['body']}:
+                    b[e] = '<p class="' + '&'.join(P.name for P in entity[1]) + '">'
                 else:
                     b[e] = '<p>'
 
@@ -40,6 +40,7 @@ def serialize(text):
     return ''.join(b)
 
 def deserialize(string):
+
     b = list(string)
     while True:
         try:
@@ -51,17 +52,17 @@ def deserialize(string):
         entity = ''.join(b[opentag + 1:closetag])
         
         if entity == 'p':
-            entity = ['<p>', styles.PARASTYLES['body'] ]
+            entity = ['<p>', Counter({styles.PTAGS['body']: 1}) ]
         elif entity == '/p':
             entity = '</p>'
         elif entity == 'em':
-            entity = ('<f>', styles.TAGLIST['emphasis'])
+            entity = ('<f>', styles.FTAGS['emphasis'])
         elif entity == '/em':
-            entity = ('</f>', styles.TAGLIST['emphasis'])
+            entity = ('</f>', styles.FTAGS['emphasis'])
         elif entity == 'strong':
-            entity = ('<f>', styles.TAGLIST['strong'])
+            entity = ('<f>', styles.FTAGS['strong'])
         elif entity == '/strong':
-            entity = ('</f>', styles.TAGLIST['strong'])
+            entity = ('</f>', styles.FTAGS['strong'])
 
         else:
             tag = entity.split()[0]
@@ -74,12 +75,12 @@ def deserialize(string):
                 data = eval(data)
                 
                 if tag == 'p':
-                    data = styles.PARASTYLES[data]
-                    entity = ['<' + tag + '>', data]
+                    ptags = Counter(styles.PTAGS[T.strip()] for T in data.split('&'))
+                    entity = ['<' + tag + '>', ptags]
                 
                 else:
                     if tag in {'f', '/f'}:
-                        data = styles.TAGLIST[data]
+                        data = styles.FTAGS[data]
 
                     entity = ('<' + tag + '>', data)
 
@@ -96,6 +97,6 @@ def deserialize(string):
         elif k == 1:
             d += g
         elif k == 2:
-            d += ['</p>', ['<p>', styles.PARASTYLES['body']]]
+            d += ['</p>', ['<p>', Counter({styles.PTAGS['body']: 1})]]
 
     return d

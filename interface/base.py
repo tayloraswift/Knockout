@@ -1,10 +1,14 @@
 from math import floor
+import bisect
 
 from state import constants
 
 from fonts import styles
 
 accent = (1, 0.22, 0.50)
+
+def xhover(self, x, y):
+    return self._sdkeys[bisect.bisect(self._subdivisions, x)]
 
 class Base_kookie(object):
     def __init__(self, x, y, width, height, font=None):
@@ -18,9 +22,9 @@ class Base_kookie(object):
         self._texts = []
         
         if font is None:
-            self.font = styles.FONTSTYLES['_interface:REGULAR']
+            self.font = styles.ISTYLES[()]
         else:
-            self.font = font
+            self.font = styles.ISTYLES[font]
         
         self._x_right = x + width
         self._y_bottom = y + height
@@ -30,20 +34,23 @@ class Base_kookie(object):
     def _SYNCHRONIZE(self):
         pass
 
+    def _make_sd(self, subdivisions, cap):
+        self._subdivisions, self._sdkeys = zip( * subdivisions)
+        self._sdkeys += (cap,)
+
     def _build_line(self, x, y, text, font, fontsize=None, align=1, sub_minus=False):
         if fontsize is None:
-            fontsize = font.u_fontsize
+            fontsize = font['fontsize']
         xo = x
         line = []
         for character in text:
             if sub_minus and character == '-':
                 character = '–'
             try:
-                line.append((font.u_fontmetrics.character_index(character), x, y))
-
-                x += (font.u_fontmetrics.advance_pixel_width(character)*fontsize + font.u_tracking)
+                line.append((font['fontmetrics'].character_index(character), x, y))
+                x += (font['fontmetrics'].advance_pixel_width(character)*fontsize + font['tracking'])
             except TypeError:
-                line.append((None, x, y))
+                line.append((-1, x, y))
 
         if align == 0:
             dx = (xo - x)/2
@@ -87,8 +94,8 @@ class Base_kookie(object):
         pass
     
     def _render_fonts(self, cr):
-        cr.set_font_size(self.font.u_fontsize)
-        cr.set_font_face(self.font.u_font)
+        cr.set_font_size(self.font['fontsize'])
+        cr.set_font_face(self.font['font'])
     
     def bounding_box(self):
         return self._x, self._x_right,self._y, self._y_bottom

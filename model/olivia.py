@@ -1,6 +1,7 @@
 import bisect
 
 from itertools import chain, groupby
+from bulletholes.counter import TCounter as Counter
 
 from pyphen import pyphen
 pyphen.language_fallback('en_US')
@@ -10,7 +11,7 @@ from fonts import styles
 from state import noticeboard
 
 from model import kevin
-from model import errors
+#from model import errors
 from model.wonder import words, character, _breaking_chars
 
 hy = pyphen.Pyphen(lang='en_US')
@@ -26,7 +27,6 @@ _BREAK_P = _BREAK | set(('</p>',))
 
 _APOSTROPHES = set("'’")
 
-
 def outside_tag(sequence):
     for i in reversed(range(len(sequence) - 1)):
 
@@ -35,18 +35,7 @@ def outside_tag(sequence):
 
     return sequence
 
-def _retrieve_fontclass(F, FONTMAP, l):
-    F = tuple(F)
-    try:
-        FSTYLE = FONTMAP[F]
-    except KeyError:
-        # happens if requested style is not defined
-        errors.styleerrors.add_style_error(F, l)
-        FSTYLE = styles.F_UNDEFINED
-    
-    return FSTYLE
-            
-def _assemble_line(letters, startindex, l, anchor, stop, y, leading, COLLAPSE, FONTMAP, F, hyphenate=False):
+def _assemble_line(letters, startindex, l, anchor, stop, y, leading, P, F, hyphenate=False):
     if stop < anchor:
         stop, anchor = anchor, stop
     LINE = {
@@ -61,7 +50,7 @@ def _assemble_line(letters, startindex, l, anchor, stop, y, leading, COLLAPSE, F
             'hyphen': None,
             
             'P_BREAK': False,
-            'F': tuple(F)
+            'F': F
             }
     
     # list that contains glyphs
@@ -71,7 +60,8 @@ def _assemble_line(letters, startindex, l, anchor, stop, y, leading, COLLAPSE, F
     x = anchor
 
     # retrieve font style
-    FSTYLE = _retrieve_fontclass(F, FONTMAP, l)
+    fstat = F.copy()
+    FSTYLE = styles.PARASTYLES.project_f(P, F)
 
     # blank pegs
     glyphwidth = 0
@@ -79,7 +69,15 @@ def _assemble_line(letters, startindex, l, anchor, stop, y, leading, COLLAPSE, F
     gy = 0
     effective_peg = None
     
-    root = x
+    # style brackets
+    brackets = {}
+    for f, count in F.items():
+        for V in [f.name] + f.groups:
+            if V not in brackets:
+                brackets[V] = [[0, False] for c in range(count)]
+            else:
+                brackets[V] += [[0, False] for c in range(count)]
+
     root_for = set()
     front = x
 
@@ -87,27 +85,20 @@ def _assemble_line(letters, startindex, l, anchor, stop, y, leading, COLLAPSE, F
         CHAR = character(letter)
 
         if CHAR == '<f>':
-            TAG = letter[1].name
-            # look for negative classes
-            if '~' + TAG in F:
-                F.remove('~' + TAG)
-            else:
-                F.append(TAG)
-                F.sort()
-
+            T = letter[1]
+            TAG = T.name
+            
+            # increment tag count
+            F[T] += 1
+            fstat = F.copy()
+            
             # calculate pegging
-            G = FSTYLE.pegs.elements
-            if TAG in G:
-                if TAG in COLLAPSE[0]:
-                    if TAG in root_for:
-                        x = root
-                    else:
-                        root = x
-                
-                gx, gy = G[TAG]
+            G = FSTYLE['pegs'].elements
+            if T in G:                
+                gx, gy = G[T]
                 gx = gx * glyphwidth
                 gy = gy * leading
-                effective_peg = TAG
+                effective_peg = T
                 
                 y -= gy
                 x += gx
@@ -115,32 +106,53 @@ def _assemble_line(letters, startindex, l, anchor, stop, y, leading, COLLAPSE, F
             elif effective_peg not in G:
                 effective_peg = None
             
-            FSTYLE = _retrieve_fontclass(F, FONTMAP, l)
-            GLYPHS.append((-4, x, y, FSTYLE, tuple(F), x))
+            if root_for:
+                for group in T.groups:
+                    if group in root_for:
+                        x = brackets[group][-1][0]
+                        root_for = set()
+            
+            # collapsibility
+            for V in [TAG] + T.groups:
+                if V not in brackets:
+                    brackets[V] = [[x, False]]
+                else:
+                    brackets[V].append([x, False])
+            
+            FSTYLE = styles.PARASTYLES.project_f(P, F)
+            GLYPHS.append((-4, x, y, FSTYLE, fstat, x))
             
         elif CHAR == '</f>':
-            TAG = letter[1].name
-            try:
-                F.remove(TAG)
-            except ValueError:
-                F.append('~' + TAG)
-                F.sort()
+            T = letter[1]
+            TAG = T.name
+            
+            # increment tag count
+            F[T] -= 1
+            fstat = F.copy()
 
             # depeg
-            if TAG == effective_peg:
+            if T is effective_peg:
                 y += gy
 
+            for V in [TAG] + T.groups:
+                try:
+                    if brackets[V][-1][1]:
+                        del brackets[V][-1]
+                    brackets[V][-1][1] = True
+                except IndexError:
+                    print('line begins with close tag character')
+            root_for.update(set(T.groups))
+            
             # calculate pegging
-            G = FSTYLE.pegs.elements
-            if TAG in G and TAG in COLLAPSE[0]:
-                root_for = set(chain.from_iterable(s for s in COLLAPSE[1] if TAG in s))
+            G = FSTYLE['pegs'].elements
+            if TAG in G:
                 if front > x:
                     x = front
                 else:
                     front = x
             
-            FSTYLE = _retrieve_fontclass(F, FONTMAP, l)
-            GLYPHS.append((-5, x, y, FSTYLE, tuple(F), x))
+            FSTYLE = styles.PARASTYLES.project_f(P, F)
+            GLYPHS.append((-5, x, y, FSTYLE, fstat, x))
             
         elif CHAR == '<p>':
             if GLYPHS:
@@ -148,43 +160,43 @@ def _assemble_line(letters, startindex, l, anchor, stop, y, leading, COLLAPSE, F
             else:
                 # we don’t load the style because the outer function takes care of that
                 GLYPHS.append((
-                        -2,                     # 0
-                        x - FSTYLE.u_fontsize,  # 1
-                        y,                      # 2
+                        -2,                      # 0
+                        x - FSTYLE['fontsize'],  # 1
+                        y,                       # 2
                         
-                        FSTYLE,                 # 3
-                        tuple(F),               # 4
-                        x - FSTYLE.u_fontsize   # 5
+                        FSTYLE,                  # 3
+                        fstat,                   # 4
+                        x - FSTYLE['fontsize']   # 5
                         ))
         
         elif CHAR == '</p>':
             LINE['P_BREAK'] = True
-            GLYPHS.append((-3, x, y, FSTYLE, tuple(F), x))
+            GLYPHS.append((-3, x, y, FSTYLE, fstat, x))
             break
         
         elif CHAR == '<br>':
             root_for = set()
-            GLYPHS.append((-6, x, y, FSTYLE, tuple(F), x))
+            GLYPHS.append((-6, x, y, FSTYLE, fstat, x))
             break
         
         elif CHAR == '<image>':
             root_for = set()
             IMAGE = letter[1]
                                                                                 # additional fields
-            GLYPHS.append((-13, x, y - leading, FSTYLE, tuple(F), x + IMAGE[1], IMAGE ))
+            GLYPHS.append((-13, x, y - leading, FSTYLE, fstat, x + IMAGE[1], IMAGE ))
             x += IMAGE[1]
         
         else:
             root_for = set()
-            glyphwidth = FSTYLE.u_fontmetrics.advance_pixel_width(CHAR) * FSTYLE.u_fontsize
+            glyphwidth = FSTYLE['fontmetrics'].advance_pixel_width(CHAR) * FSTYLE['fontsize']
             
             GLYPHS.append((
-                    FSTYLE.u_fontmetrics.character_index(CHAR),     # 0
+                    FSTYLE['fontmetrics'].character_index(CHAR),    # 0
                     x,                                              # 1
                     y,                                              # 2
                     
                     FSTYLE,                                         # 3
-                    tuple(F),                                       # 4
+                    fstat,                                          # 4
                     x + glyphwidth                                  # 5
                     ))
 
@@ -235,14 +247,13 @@ def _assemble_line(letters, startindex, l, anchor, stop, y, leading, COLLAPSE, F
                             # check if the hyphen overflows
 
                             h_F = GLYPHS[i - 1 + k][4]
-                            
-                            HFS = _retrieve_fontclass(h_F, FONTMAP, l)
+                            HFS = styles.PARASTYLES.project_f(P, h_F)
                                 
-                            if GLYPHS[i - 1 + k][5] + HFS.u_fontmetrics.advance_pixel_width('-') * HFS.u_fontsize < stop:
+                            if GLYPHS[i - 1 + k][5] + HFS['fontmetrics'].advance_pixel_width('-') * HFS['fontsize'] < stop:
                                 i = i + k
 
                                 LINE['hyphen'] = (
-                                        HFS.u_fontmetrics.character_index('-'), 
+                                        HFS['fontmetrics'].character_index('-'), 
                                         GLYPHS[i - 1][5], # x
                                         GLYPHS[i - 1][2], # y
                                         HFS,
@@ -258,17 +269,17 @@ def _assemble_line(letters, startindex, l, anchor, stop, y, leading, COLLAPSE, F
                 break
                 
             else:
-                x += FSTYLE.u_tracking
+                x += FSTYLE['tracking']
 
     LINE['j'] = startindex + len(GLYPHS)
     LINE['GLYPHS'] = GLYPHS
+    
     try:
         LINE['F'] = GLYPHS[-1][4]
-    except:
+    except IndexError:
         pass
     
     return LINE
-
 
 class Cursor(object):
     def __init__(self, i):
@@ -328,8 +339,9 @@ class Text(object):
             # which happens if nothing has yet been rendered
             c = 0
             P = self.text[0][1]
+            PSTYLE = styles.PARASTYLES.project_p(P)
             P_i = 0
-            F = []
+            F = Counter()
             
             R = 0
             y = self.channels.channels[c].railings[0][0][1]
@@ -343,22 +355,23 @@ class Text(object):
             if LASTLINE['P_BREAK']:
                 P = self.text[i][1]
                 P_i = i
-                F = []
+                F = Counter()
 
             else:
                 P, P_i = LASTLINE['PP']
-                F = list(LASTLINE['F'])
+                F = LASTLINE['F'].copy()
+            PSTYLE = styles.PARASTYLES.project_p(P)
             
             R = CURRENTLINE['R']
             
             c = CURRENTLINE['c']
-            y = CURRENTLINE['y'] - P.u_leading
+            y = CURRENTLINE['y'] - PSTYLE['leading']
         
         page = self.channels.channels[c].page
         page_start_l = l
         K_x = None
         
-        displacement = P.u_leading
+        displacement = PSTYLE['leading']
 
         while True:
             y += displacement
@@ -380,8 +393,8 @@ class Text(object):
 
             # calculate indentation
 
-            if R in P.u_indent_range:
-                D, SIGN, K = P.u_indent
+            if R in PSTYLE['indent_range']:
+                D, SIGN, K = PSTYLE['indent']
                 if K:
                     if K_x is None:
                         INDLINE = _assemble_line(
@@ -392,23 +405,21 @@ class Text(object):
                             0, 
                             1989, 
                             0, 
-                            0, 
-                            
-                            P.u_collapsible,
-                            P.u_stylemap,
-                            F[:], 
+                            0,
+                            P,
+                            F.copy(), 
                             
                             hyphenate = False
                             )
                         K_x = INDLINE['GLYPHS'][-1][5] * SIGN
                     
-                    L_indent = P.u_margin_left + D + K_x
+                    L_indent = PSTYLE['margin_left'] + D + K_x
                 else:
-                    L_indent = P.u_margin_left + D
+                    L_indent = PSTYLE['margin_left'] + D
             else:
-                L_indent = P.u_margin_left
+                L_indent = PSTYLE['margin_left']
             
-            R_indent = P.u_margin_right
+            R_indent = PSTYLE['margin_right']
 
             # generate line objects
             LINE = _assemble_line(
@@ -419,13 +430,11 @@ class Text(object):
                     self.channels.channels[c].edge(0, y)[0] + L_indent, 
                     self.channels.channels[c].edge(1, y)[0] - R_indent, 
                     y, 
-                    P.u_leading, 
+                    PSTYLE['leading'],
+                    P,
+                    F.copy(), 
                     
-                    P.u_collapsible,
-                    P.u_stylemap,
-                    F, 
-                    
-                    hyphenate = P.u_hyphenate
+                    hyphenate = PSTYLE['hyphenate']
                     )
             # stamp R line number
             LINE['R'] = R
@@ -442,20 +451,21 @@ class Text(object):
                     # this is the end of the document
                     break
                 
-                y += P.u_margin_bottom
+                y += PSTYLE['margin_bottom']
 
                 P = self.text[i][1]
+                PSTYLE = styles.PARASTYLES.project_p(P)
                 P_i = i
-                F = []
+                F = Counter()
                 R = 0
                 K_x = None
                 
-                y += P.u_margin_top
-                
-                displacement = P.u_leading
+                y += PSTYLE['margin_top']
+
+                displacement = PSTYLE['leading']
 
             else:
-                F = list(LINE['F'])
+                F = LINE['F']
                 R += 1
             
             l += 1
@@ -800,6 +810,18 @@ class Text(object):
         y = self._glyphs[l]['y']
         return anchor, stop, leading, y
     
+    def styling_at(self):
+        i = self.cursor.cursor
+        l = self.index_to_line(i)
+        try:
+            glyph = self._glyphs[l]['GLYPHS'][i - self._glyphs[l]['i']]
+        except IndexError:
+            glyph = self._glyphs[l]['GLYPHS'][-1]
+            print ('ahead')
+            ahead = True
+
+        return self._glyphs[l]['PP'], glyph[3]
+    
     def pp_at(self, i):
         return self._glyphs[self.index_to_line(i)]['PP']
 
@@ -811,7 +833,7 @@ class Text(object):
         if not self._sorted_pages:
 
             for page, intervals in self._page_intervals.items():
-                sorted_page = {('_annot',): [], ('_images',): [], ('_intervals',): intervals}
+                sorted_page = {'_annot': [], '_images': [], '_intervals': intervals}
                 
                 for line in chain.from_iterable(self._glyphs[slice( * interval)] for interval in intervals):
 
@@ -822,14 +844,14 @@ class Text(object):
                         
                         if glyph[0] < 0:
                             if glyph[0] == -6:
-                                sorted_page[('_annot',)].append( (glyph[0], line['anchor'], line['y'] + line['leading'], p_i, glyph[3]))
+                                sorted_page['_annot'].append( (glyph[0], line['anchor'], line['y'] + line['leading'], p_i, glyph[3]))
                             elif glyph[0] == -13:
-                                sorted_page[('_images',)].append( (glyph[6], glyph[1], glyph[2]) )
+                                sorted_page['_images'].append( (glyph[6], glyph[1], glyph[2]) )
                             else:
-                                sorted_page[('_annot',)].append(glyph[:3] + (p_i, glyph[3]))
+                                sorted_page['_annot'].append(glyph[:3] + (p_i, glyph[3]))
                         else:
                             K = glyph[0:3]
-                            N = glyph[3].name
+                            N = glyph[3]['hash']
                             try:
                                 sorted_page[N][1].append(K)
                             except KeyError:
@@ -837,7 +859,7 @@ class Text(object):
 
                     if hyphen is not None:
                         H = hyphen[0:3]
-                        N = hyphen[3].name
+                        N = hyphen[3]['hash']
                         try:
                             sorted_page[N][1].append(H)
                         except KeyError:

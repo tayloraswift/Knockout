@@ -6,12 +6,13 @@ from model import meredith
 
 from model import un
 
-sup = styles.TAGLIST['sup']
-sub = styles.TAGLIST['sub']
-emphasis = styles.TAGLIST['emphasis']
-strong = styles.TAGLIST['strong']
-specials = {'Ctrl equal': [('<f>', sup)], 'Ctrl minus': [('<f>', sub)], 'Ctrl underscore': [('</f>', sub)], 'Ctrl plus': [('</f>', sup)]}
-special_names = set(specials)
+sup = styles.FTAGS['sup']
+sub = styles.FTAGS['sub']
+emphasis = styles.FTAGS['emphasis']
+strong = styles.FTAGS['strong']
+_OPEN = {'Ctrl equal': sup, 'Ctrl minus': sub, 'Ctrl b': strong, 'Ctrl i': emphasis }
+_CLOSE = {'Ctrl underscore': sub, 'Ctrl plus': sup, 'Ctrl B': strong, 'Ctrl I': emphasis }
+special_names = set(_OPEN) | set(_CLOSE)
 
 def type_document(name, char, lastpress=[0], direction=[0]):
 
@@ -93,10 +94,10 @@ def type_document(name, char, lastpress=[0], direction=[0]):
     
     elif name == 'paragraph':
         un.history.undo_save(2)
-        name = meredith.mipsy.paragraph_at()[0].name
-        if name[0] == 'h' and name[1].isdigit() and meredith.mipsy.at_absolute(CURSOR) == '</p>' and 'body' in styles.PARASTYLES:
-            name = 'body'
-        MT.insert(['</p>', ['<p>', styles.PARASTYLES[name]]])
+#        name = meredith.mipsy.paragraph_at()[0].name
+#        if name[0] == 'h' and name[1].isdigit() and meredith.mipsy.at_absolute(CURSOR) == '</p>' and 'body' in styles.PARASTYLES:
+#            name = 'body'
+        MT.insert(['</p>', ['<p>', meredith.mipsy.paragraph_at()[0].copy() ]])
         
     elif name == 'Return':
         un.history.undo_save(1)
@@ -123,29 +124,22 @@ def type_document(name, char, lastpress=[0], direction=[0]):
         
             return sel
     
-    # encapsulating
-    elif name == 'Ctrl i':
-        un.history.undo_save(3)
-        if not MT.bridge(emphasis, True):
-            un.history.pop()
-    elif name == 'Ctrl b':
-        un.history.undo_save(3)
-        if not MT.bridge(strong, True):
-            un.history.pop()
 
-    elif name == 'Ctrl I':
-        un.history.undo_save(3)
-        if not MT.bridge(emphasis, False):
-            un.history.pop()
-    elif name == 'Ctrl B':
-        un.history.undo_save(3)
-        if not MT.bridge(strong, False):
-            un.history.pop()
-    
-    # inserting
-    else:
-        un.history.undo_save(1)
-        if name in special_names:
-            MT.insert(specials[name])
+    elif name in special_names:
+        if name in _OPEN:
+            T = _OPEN[name]
+            B = True
+            F = '<f>'
         else:
-            MT.insert([char])
+            T = _CLOSE[name]
+            B = False
+            F = '</f>'
+        if MT.take_selection():
+            un.history.undo_save(3)
+            if not MT.bridge(T, B):
+                un.history.pop()
+        else:
+            un.history.undo_save(1)
+            MT.insert([(F, T)])
+    else:
+        MT.insert([char])

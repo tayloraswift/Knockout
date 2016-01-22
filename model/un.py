@@ -24,16 +24,16 @@ class UN(object):
             del self._history[self._i:]
         
         # save styles
-        PPP = {N: P.polaroid() for N, P in styles.PARASTYLES.items()}
+        PPP = [P.polaroid() for P in styles.PARASTYLES]
         FFF = {N: F.polaroid() for N, F in styles.FONTSTYLES.items()}
         
         GGG = {N: G.polaroid() for N, G in styles.PEGS.items()}
-        MMM = {N: M.polaroid() for N, M in styles.MAPS.items()}
-        TTT = [styles.TAGLIST.active] + [T.polaroid() for T in styles.TAGLIST.ordered]
+        PTT = [T.polaroid() for T in styles.PTAGS.values() if not T.is_group]
+        FTT = [T.polaroid() for T in styles.FTAGS.values() if not T.is_group]
         
-        self._history.append({'kitty': kitty, 'styles': {'PARASTYLES': PPP, 'FONTSTYLES': FFF, 'PEGS': GGG, 'MAPS': MMM, 'TAGLIST': TTT}, 'page': page_xy})
+        self._history.append({'kitty': kitty, 'styles': {'PARASTYLES': PPP, 'FONTSTYLES': FFF, 'PTAGLIST': PTT, 'FTAGLIST': FTT, 'PEGS': GGG}, 'page': page_xy})
         self._i = len(self._history)
-    
+
     def pop(self):
         del self._history[-1]
         self._i = len(self._history)

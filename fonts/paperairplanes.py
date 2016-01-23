@@ -38,16 +38,10 @@ def pack_binomial(value):
                 if g[0] == 'K':
                     coefficient = 1
                 else:
-                    coefficient = int(float(g[:g.find('K')]))
+                    coefficient = interpret_int(g[:g.find('K')])
                 K += coefficient*sgn
             else:
-                if '.' in g:
-                    if g.count('.') > 1:
-                        dot = g.find('.')
-                        g = ''.join(g[:dot + 1]) + ''.join([d for d in g[dot + 1:] if d != '.'])
-                    constant = float(g)
-                else:
-                    constant = int(g)
+                constant = interpret_float(g)
                 C += constant*sgn
     
     if K < 0:
@@ -55,10 +49,36 @@ def pack_binomial(value):
         K = abs(K)
     else:
         SIGN = 1
-    
+
     return C, SIGN, K
 
-def _interpret_rgba(C):
+def interpret_int(n):
+    if '.' in n:
+        v = int(round(interpret_float(n)))
+    else:
+        i = '0123456789'
+        integer = ''.join(c for c in n if c in i)
+        if integer:
+            v = int(integer)
+        else:
+            v = 0
+    return v
+    
+def interpret_float(f):
+    i = '0123456789'
+    if '.' not in f:
+        v = interpret_int(f)
+    else:
+        point = f.find('.')
+        integer = ''.join(c for c in f[:point] if c in i)
+        sawtooth = ''.join(c for c in f[point:] if c in i)
+        if integer or sawtooth:
+            v = float(integer + '.' + sawtooth)
+        else:
+            v = 0
+    return v
+    
+def interpret_rgba(C):
     hx = '0123456789abcdef'
     numeric = '0123456789., '
     flo = '0123456789.'
@@ -67,21 +87,7 @@ def _interpret_rgba(C):
     # rgba
     if all(c in numeric for c in C):
         for pos, channel in enumerate(C.split(',')[:4]):
-            try:
-                # if int
-                if '.' not in channel:
-                    v = int(''.join(c for c in channel if c in i))
-                else:
-                    point = channel.find('.')
-                    integer = ''.join(c for c in channel[:point] if c in i)
-                    sawtooth = ''.join(c for c in channel[point:] if c in flo)
-                    v = float(integer + sawtooth)
-            except ValueError:
-                if pos == 3:
-                    v = 1
-                else:
-                    v = 0
-            RGBA[pos] = v
+            RGBA[pos] = interpret_float(channel)
     # hex
     else:
         colorstring = ''.join(c for c in C if c in hx)

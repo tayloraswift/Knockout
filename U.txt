@@ -1,16 +1,26 @@
-{'FONTSTYLES': {'Light': {'color': (0, 0, 0, 0.4)},
-                'body:BOLD': {'path': '/home/kelvin/.fonts/FiraSans-Bold.otf',
+{'FONTSTYLES': {'Fira Bold': {'color': (0, 0, 0, 1),
+                              'path': '/home/kelvin/.fonts/FiraSans-Bold.otf',
                               'tracking': 1},
-                'body:BOLDITALIC': {'path': '/home/kelvin/.fonts/FiraSans-BoldItalic.otf'},
-                'body:ITALIC': {'path': '/home/kelvin/.fonts/FiraSans-BookItalic.otf'},
-                'body:REGULAR': {'color': (0, 0, 0, 1),
-                                 'fontsize': 13,
-                                 'path': '/home/kelvin/.fonts/FiraSans-Book.otf',
-                                 'pegs': 'Standard pegs',
-                                 'tracking': 0},
-                'body:SMALL': {'fontsize': 10,
-                               'path': '/home/kelvin/.fonts/FiraSans-Regular.otf'},
-                'body:SMALL ITALIC': {'path': '/home/kelvin/.fonts/FiraSans-Italic.otf'},
+                'Fira Bold Italic': {'path': '/home/kelvin/.fonts/FiraSans-BoldItalic.otf'},
+                'Fira Book': {'color': (0, 0, 0, 1),
+                              'fontsize': 13,
+                              'path': '/home/kelvin/.fonts/FiraSans-Book.otf',
+                              'pegs': 'Standard pegs',
+                              'tracking': 0},
+                'Fira Italic': {'path': '/home/kelvin/.fonts/FiraSans-BookItalic.otf'},
+                'Fira Light': {'color': (1, 0.1, 0.2, 1),
+                               'path': '/home/kelvin/.fonts/FiraSans-Light.otf',
+                               'tracking': 1},
+                'Fira Superbold': {'path': '/home/kelvin/.fonts/FiraSans-Ultra.otf'},
+                'Light': {'color': (0, 0, 0, 0.4)},
+                'Small': {'fontsize': 10,
+                          'path': '/home/kelvin/.fonts/FiraSans-Regular.otf'},
+                'Small Italic': {'path': '/home/kelvin/.fonts/FiraSans-Italic.otf'},
+                'Subtitle': {'color': (0, 0, 0, 1),
+                             'fontsize': 22,
+                             'path': '/home/kelvin/.fonts/Kabel.otf',
+                             'pegs': 'Standard pegs',
+                             'tracking': 2},
                 'h1:DISPLAY': {'color': (0.4, 0.4, 0.9, 1),
                                'fontsize': 36,
                                'path': '/home/kelvin/.fonts/Kabel Light.otf',
@@ -23,16 +33,17 @@
               ('sup', ['small']),
               ('strong', []),
               ('sub', ['small'])],
- 'PARASTYLES': (1,
-                [({'fontclasses': (3,
-                                   [('body:REGULAR', {}),
-                                    ('body:REGULAR', {'caption': 1}),
-                                    ('body:ITALIC', {'emphasis': 1}),
-                                    ('body:BOLD', {'strong': 1}),
-                                    ('body:BOLDITALIC',
+ 'PARASTYLES': (0,
+                [({'fontclasses': (2,
+                                   [('Fira Book', {}),
+                                    ('Fira Italic', {'emphasis': 1}),
+                                    ('Fira Light', {'strong': -1}),
+                                    ('Fira Bold', {'strong': 1}),
+                                    ('Fira Superbold', {'strong': 2}),
+                                    ('Fira Bold Italic',
                                      {'emphasis': 1, 'strong': 1}),
-                                    ('body:SMALL', {'small': 1}),
-                                    ('body:SMALL ITALIC',
+                                    ('Small', {'small': 1}),
+                                    ('Small Italic',
                                      {'emphasis': 1, 'small': 1})]),
                    'hyphenate': True,
                    'indent': (0, -1, 6),
@@ -59,12 +70,14 @@
                    'margin_left': 0,
                    'margin_right': 0,
                    'margin_top': 0},
-                  {'h1': 1})]),
+                  {'h1': 1}),
+                 ({'fontclasses': (0, [('Subtitle', {})]), 'leading': 24},
+                  {'h2': 1})]),
  'PEGS': {'Standard pegs': ('', {'sub': [0, -0.2], 'sup': [0, 0.3]})},
- 'PTAGLIST': [('h1', []), ('body', []), ('answers', []), ('h2', [])],
+ 'PTAGLIST': [('h1', []), ('h2', []), ('body', []), ('answers', [])],
  'contexts': {'c': 0, 'p': 0},
  'grid': [[90, 370, 410, 690], [80, 910]],
- 'kitty': [{'cursors': (500, 500),
+ 'kitty': [{'cursors': (529, 529),
             'outline': [[[[90, 80, False], [90, 910, False]],
                          [[370, 80, False], [370, 910, False]],
                          0],
@@ -84,7 +97,8 @@
                          [[690, 80, False], [690, 910, True]],
                          2]],
             'text': '<p class="h1"><strong>AP CALCULUS</strong> CREATE THE '
-                    'QUIZ</p><p class="body"><strong>1</strong>   Find the '
+                    'QUIZ</p><p class="h1&h2">We begin our Story in New '
+                    'York</p><p class="body"><strong>1</strong>   Find the '
                     'derivative of ln|cos √(<em>x</em> − 13)|.</p><p '
                     'class="answers&body">A.  − tan √(<em>x</em> − 13) / '
                     '2√(<em>x</em> − 13)</p><p class="answers&body">B.  sin '
@@ -111,14 +125,15 @@
                     'class="sup"></em>−<em>x</em>/70</f class="sup"> + cos(2/7 '
                     '<em>πx</em>) + 1 , where <em>t</em> is the <em>number of '
                     'days since the release. This model do<strong>es not work '
-                    'for</em> the holiday period from</strong> Dec. 20 to Jan. '
-                    '3 (<em>t</em> = [0, 14]), but Apple’s servers counted '
-                    '22,000 streams during this interval. Usin<strong>g '
-                    'calcul</strong>us, w</strong>hich is t<strong>he<strong>n '
-                    'th</strong>e best prediction for the total number of '
-                    'streams the 1989 Movie will have by May 8th (<em>t</em> = '
-                    '140)?</p><p class="answers&body">A.  42,000/⁵√<em>e</em> '
-                    '− 42,000/<em>e</em>² + 126</p><p class="answers&body">B.  '
+                    'for</em> the h<strong>oliday p</strong>eriod '
+                    'from</strong> Dec. 20 to Jan. 3 (<em>t</em> = [0, 14]), '
+                    'but Apple’s servers counted 22,000 streams during this '
+                    'interval. Usin<strong>g calcul</strong>us, w</strong>hich '
+                    'is t<strong>he<strong>n th</strong>e best prediction for '
+                    'the total number of streams the 1989 Movie will have by '
+                    'May 8th (<em>t</em> = 140)?</p><p '
+                    'class="answers&body">A.  42,000/⁵√<em>e</em> − '
+                    '42,000/<em>e</em>² + 126</p><p class="answers&body">B.  '
                     '42,000/⁵√<em>e</em> − 42,000/<em>e</em>² + 22126</p><p '
                     'class="answers&body">C.  42,000/⁵√<em>e</em> − '
                     '42,000/<em>e</em>² + 140</p><p class="answers&body">D.  '
@@ -146,9 +161,9 @@
                     '126<br>            = 42,000/⁵√<em>e</em> − '
                     '42,000/<em>e</em>² + 22126</p>'}],
  'page': {'dimensions': (765, 990), 'dual': False},
- 'view': {'H': 260,
-          'Hc': 658.1456909179688,
-          'K': -141,
-          'Kc': 232.28115844726562,
-          'Zoom': 13,
+ 'view': {'H': 245,
+          'Hc': 429.78857421875,
+          'K': -192,
+          'Kc': 173.644775390625,
+          'Zoom': 12,
           'mode': 'text'}}

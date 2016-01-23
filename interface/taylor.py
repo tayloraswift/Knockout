@@ -431,7 +431,7 @@ class Document_view(ui.Cell):
                         # used to keep track of ui redraws
                         self._sel_cursor = meredith.mipsy.tracts[0].select.cursor
                         meredith.mipsy.tracts[0].expand_cursors_word()
-                        suggestions = ['“' + ms[pair_i][2] + '”'] + wonder.struck.suggest(ms[pair_i][2])
+                        suggestions = ['“' + ms[pair_i][2] + '”'] + [w.decode("utf-8") for w in wonder.struck.suggest(ms[pair_i][2])]
                         suggestions = list(zip(suggestions, [str(v) for v in suggestions]))
                         menu.menu.create(x, y, 200, suggestions, _replace_misspelled, () )
 

@@ -141,8 +141,7 @@ class P_Library(_Active_list):
         hp = _sign_counter(P)
 
         # add tag groups
-        F = F + Counter(itertools.chain.from_iterable((FTAGS[G] for G in T.groups) for T, n in F.items() if n))
-            
+        F = F.concat(Counter(itertools.chain.from_iterable((FTAGS[G] for G in T.groups) for T, n in F.items() if n)))
         try:
             return self._font_projections[(hp, hf)]
         except KeyError:
@@ -150,6 +149,10 @@ class P_Library(_Active_list):
             projection = Layer(F_DNA)
 
             for B in (b for b in self if b.tags <= P):
+                for c in B.layerable:
+                    if c.F.name == 'GREEN':
+                        print({k.name: v for k, v in c.tags.items()})
+                        print('F:' + str({k.name: v for k, v in F.items()}))
                 for C in (c for c in B.layerable if c.tags <= F and c.F is not None):
                     projection.overlay(C.F.attributes, C)
                     projection.members.append(C)
@@ -201,7 +204,7 @@ class _F_container(object):
 
 class _F_layers(_Active_list):
     def __init__(self, active_i=None, E=[]):
-        _Active_list.__init__(self, active_i, (_F_container(FONTSTYLES[F], Counter(FTAGS[T] for T in tags)) for F, tags in E))
+        _Active_list.__init__(self, active_i, (_F_container(FONTSTYLES[F], Counter({FTAGS[T]:V for T, V in tags.items()})) for F, tags in E))
         self.template = _F_container()
 
 class DB_Parastyle(object):

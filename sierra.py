@@ -25,7 +25,7 @@ def save():
     grid = meredith.mipsy.page_grid
     contexts = {'c': meredith.mipsy.C(), 'p': meredith.mipsy.page_context}
     
-    PPP = [P.polaroid() for P in styles.PARASTYLES]
+    PPP = styles.PARASTYLES.polaroid()
     FFF = {N: F.polaroid() for N, F in styles.FONTSTYLES.items()}
     
     GGG = {N: G.polaroid() for N, G in styles.PEGS.items()}

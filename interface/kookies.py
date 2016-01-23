@@ -1180,21 +1180,19 @@ class Para_control_panel(Ordered):
             if C == 1 or len(PSTYLE.tags) != 1:
                 self._LIBRARY.active = PSTYLE
                 self._REFRESH()
+                return C
                 
             elif C == 2:
                 self._BEFORE()
                 self._move(F, F - 1)
-                self._SYNCHRONIZE()
 
             elif C == 3:
                 self._BEFORE()
                 self._move(F, F + 1)
-                self._SYNCHRONIZE()
             
             elif C == 4:
                 self._BEFORE()
                 del self._LIBRARY[F]
-                self._SYNCHRONIZE()
             
             elif C == 5 or C == 6:
                 tag, count = next(iter(PSTYLE.tags.items()))
@@ -1204,8 +1202,9 @@ class Para_control_panel(Ordered):
                 else:
                     self._paragraph[1][tag] += 1
 
-                self._SYNCHRONIZE()
-                self._AFTER()
+            self._SYNCHRONIZE()
+            self._AFTER()
+            return C
     
     def draw(self, cr, hover=(None, None)):
         self._render_fonts(cr)

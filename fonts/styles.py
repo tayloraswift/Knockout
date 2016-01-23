@@ -32,11 +32,19 @@ class Layer(dict):
             self[A] = V
             self.Z[A] = B
 
-class Active_list(list):
-    def __init__(self, active, template, * args, ** kwargs):
-        self.active = active
-        self.template = template
+class _Active_list(list):
+    def __init__(self, active, * args, ** kwargs):
         list.__init__(self, * args, ** kwargs)
+        if active is not None:
+            active = self[active]
+        self.active = active
+
+    def polaroid(self):
+        if self.active is None or self.active not in self:
+            i = None
+        else:
+            i = self.index(self.active)
+        return i, [P.polaroid() for P in self]
 
 class _DB(object):
     def __init__(self, name, library):
@@ -100,17 +108,19 @@ class DB_Pegs(_DB_with_dict):
             C = ''.join(self.applies_to)
         else:
             C = ''
-        return (C, D)
+        return C, D
 
-class P_Library(list):
-    def __init__(self, *args, **kwargs):
-        list.__init__(self, *args, **kwargs)
+class P_Library(_Active_list):
+    def __init__(self):
+        self.template = DB_Parastyle()
+        
         self._projections = {}
         self._font_projections = {}
         
-        self.active = None
-        
         self.update_f = self._font_projections.clear
+    
+    def populate(self, active_i, E):
+        _Active_list.__init__(self, active_i, (DB_Parastyle(P.copy(), Counter({PTAGS[T]: V for T, V in count.items()})) for P, count in E))
     
     def project_p(self, P):
         hp = _sign_counter(P)
@@ -166,7 +176,7 @@ class P_Library(list):
 class DB_Fontstyle(_DB):
     def __init__(self, fdict={}, name='New fontclass'):
         _DB.__init__(self, name, library=FONTSTYLES)
-
+        fdict = fdict.copy()
         if 'pegs' in fdict:
             fdict['pegs'] = PEGS[fdict['pegs']]
         self.attributes = fdict
@@ -185,28 +195,34 @@ class _F_container(object):
     
     def copy(self):
         return type(self)(self.F, self.tags.copy())
+    
+    def polaroid(self):
+        return self.F.name, {T.name: V for T, V in self.tags.items()}
+
+class _F_layers(_Active_list):
+    def __init__(self, active_i=None, E=[]):
+        _Active_list.__init__(self, active_i, (_F_container(FONTSTYLES[F], Counter(FTAGS[T] for T in tags)) for F, tags in E))
+        self.template = _F_container()
 
 class DB_Parastyle(object):
     def __init__(self, pdict={}, count=Counter()):
         self.tags = count
         if 'fontclasses' in pdict:
-            E = pdict.pop('fontclasses')
-            # link fontstyle objects
-            self.layerable = Active_list(None, _F_container(), (_F_container(FONTSTYLES[F], Counter(FTAGS[T] for T in tags)) for tags, F in E))
+            self.layerable = _F_layers( * pdict.pop('fontclasses'))
         else:
-            self.layerable = Active_list(None, _F_container())
+            self.layerable = _F_layers()
         self.attributes = pdict
         
 #        ('leading', 'indent', 'indent_range', 'margin_bottom', 'margin_top', 'margin_left', 'margin_right', 'hyphenate')
     def polaroid(self):
         pdict = self.attributes.copy()
         if self.layerable:
-            pdict['fontclasses'] = [({T.name: V for T, V in F.tags.items()} , F.F.name) for F in self.layerable]
+            pdict['fontclasses'] = self.layerable.polaroid()
         return pdict, {T.name: V for T, V in self.tags.items()}
 
     def copy(self):
         P = self.polaroid()[0]
-        return type(self)(P, self.tags.copy())
+        return DB_Parastyle(P, self.tags.copy())
 
 class Tag(_DB):
     def __init__(self, library, name, groups, is_group = False):
@@ -243,10 +259,11 @@ class T_Library(dict):
 P_DNA = {}
 F_DNA = {}
 
-PEGS = {}
-
 FTAGS = T_Library()
 PTAGS = T_Library()
+
+PEGS = {}
+
 FONTSTYLES = {}
 PARASTYLES = P_Library()
 
@@ -289,9 +306,9 @@ def faith(woods):
     PARASTYLES.clear()
 
     PEGS.update(TREES(DB_Pegs, woods['PEGS']))
-
     FONTSTYLES.update(TREES(DB_Fontstyle, woods['FONTSTYLES']))
-    PARASTYLES[:] = [DB_Parastyle(P, Counter({PTAGS[T]: V for T, V in count.items()})) for P, count in woods['PARASTYLES']]
+    
+    PARASTYLES.populate( * woods['PARASTYLES'])
 
 def daydream():
     # set up emergency undefined classes

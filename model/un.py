@@ -24,13 +24,13 @@ class UN(object):
             del self._history[self._i:]
         
         # save styles
-        PPP = [P.polaroid() for P in styles.PARASTYLES]
+        PPP = styles.PARASTYLES.polaroid()
         FFF = {N: F.polaroid() for N, F in styles.FONTSTYLES.items()}
         
         GGG = {N: G.polaroid() for N, G in styles.PEGS.items()}
         PTT = [T.polaroid() for T in styles.PTAGS.values() if not T.is_group]
         FTT = [T.polaroid() for T in styles.FTAGS.values() if not T.is_group]
-        
+
         self._history.append({'kitty': kitty, 'styles': {'PARASTYLES': PPP, 'FONTSTYLES': FFF, 'PTAGLIST': PTT, 'FTAGLIST': FTT, 'PEGS': GGG}, 'page': page_xy})
         self._i = len(self._history)
 

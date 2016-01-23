@@ -306,7 +306,7 @@ class Properties(_Properties_panel):
                     get_paragraph = lambda: contexts.Text.paragraph, 
                     display = _print_counter,
                     library = styles.PARASTYLES,
-                    before = un.history.save, after = lambda: (meredith.mipsy.recalculate_all(), self._reconstruct()), refresh = self._reconstruct))
+                    before = un.history.save, after = lambda: (styles.PARASTYLES.update_p(), meredith.mipsy.recalculate_all(), self._reconstruct()), refresh = self._reconstruct))
             y += 200
             
             if styles.PARASTYLES.active is not None:

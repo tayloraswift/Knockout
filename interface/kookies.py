@@ -542,6 +542,16 @@ class Enumerate_field(Numeric_field):
         self._LIST = list(self._VALUE) + [None]
         self._stamp_glyphs(self._LIST)
 
+class RGBA_field(Blank_space):
+    def __init__(self, x, y, width, callback, value_acquire, params=(), before=lambda: None, after=lambda: None, name=None):
+        Blank_space.__init__(self, x, y, width, callback, value_acquire, params, before, after, name)
+        self._domain = plane._interpret_rgba
+
+    def _ACQUIRE_REPRESENT(self):
+        self._VALUE = str(self._value_acquire( * self._params))[1:-1]
+        self._LIST = list(self._VALUE) + [None]
+        self._stamp_glyphs(self._LIST)
+
 class Binomial_field(Numeric_field):
     def __init__(self, x, y, width, callback, value_acquire, params, before=lambda: None, after=lambda: None, name=None, letter='X'):
         Blank_space.__init__(self, x, y, width, callback, value_acquire, params, before, after, name)

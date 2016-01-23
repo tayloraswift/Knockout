@@ -11,7 +11,6 @@ from fonts import styles
 from state import noticeboard
 
 from model import kevin
-#from model import errors
 from model.wonder import words, character, _breaking_chars
 
 hy = pyphen.Pyphen(lang='en_US')
@@ -497,9 +496,6 @@ class Text(object):
             self._TYPESET(l, i)
         except AttributeError:
             self.deep_recalculate()
-        
-        # tally errors
-        errors.styleerrors.update(l)
 
     def deep_recalculate(self):
         # clear sorts
@@ -508,10 +504,6 @@ class Text(object):
         self._page_intervals.clear()
         
         self._TYPESET(0, 0)
-        
-        # tally errors
-        errors.styleerrors.update(0)
-
 
     def _target_line(self, x, y, c):
         

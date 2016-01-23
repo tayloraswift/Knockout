@@ -239,6 +239,8 @@ class Properties(_Properties_panel):
                         self._items += _columns(_create_f_field(kookies.Numeric_field, 15, y, 250, 'fontsize', after=self.synchronize, name='FONT SIZE'))
                         y += 45
                         self._items += _columns(_create_f_field(kookies.Numeric_field, 15, y, 250, 'tracking', after=self.synchronize, name='TRACKING'))
+                        y += 45
+                        self._items += _columns(_create_f_field(kookies.RGBA_field, 15, y, 250, 'color', after=self.synchronize, name='COLOR'))
             else:
                 self._items.append(kookies.Heading( 15, 90, 250, 30, '', upper=True))
 

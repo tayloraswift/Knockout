@@ -57,3 +57,35 @@ def pack_binomial(value):
         SIGN = 1
     
     return C, SIGN, K
+
+def _interpret_rgba(C):
+    hx = '0123456789abcdef'
+    numeric = '0123456789., '
+    flo = '0123456789.'
+    i = '0123456789'
+    RGBA = [0, 0, 0, 1]
+    # rgba
+    if all(c in numeric for c in C):
+        for pos, channel in enumerate(C.split(',')[:4]):
+            try:
+                # if int
+                if '.' not in channel:
+                    v = int(''.join(c for c in channel if c in i))
+                else:
+                    point = channel.find('.')
+                    integer = ''.join(c for c in channel[:point] if c in i)
+                    sawtooth = ''.join(c for c in channel[point:] if c in flo)
+                    v = float(integer + sawtooth)
+            except ValueError:
+                if pos == 3:
+                    v = 1
+                else:
+                    v = 0
+            RGBA[pos] = v
+    # hex
+    else:
+        colorstring = ''.join(c for c in C if c in hx)
+        colorstring = colorstring + '000000ffx'[len(colorstring):]
+        for pos in range(4):
+            RGBA[pos] = int(colorstring[pos*2 : pos*2 + 2], 16) / 255
+    return tuple(RGBA)

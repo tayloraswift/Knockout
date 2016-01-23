@@ -184,7 +184,7 @@ class _F_container(object):
         self.tags = count
     
     def copy(self):
-        return type(self)(F, self.tags.copy())
+        return type(self)(self.F, self.tags.copy())
 
 class DB_Parastyle(object):
     def __init__(self, pdict={}, count=Counter()):

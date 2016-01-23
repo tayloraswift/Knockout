@@ -513,11 +513,8 @@ class Blank_space(Base_kookie):
 
 class Numeric_field(Blank_space):
     def __init__(self, x, y, width, callback, value_acquire, params=(), before=lambda: None, after=lambda: None, name=None):
-    
         Blank_space.__init__(self, x, y, width, callback, value_acquire, params, before, after, name)
-        
-        self._digits = lambda k: ''.join([c for c in k if c in '1234567890.-'])
-        self._domain = lambda k: float(self._digits(k)) if '.' in k else int(self._digits(k))
+        self._domain = plane.interpret_float
 
     def _stamp_glyphs(self, text):
         self._template = self._build_line(self._text_left, self._y + self.font['fontsize'] + 5, text, self.font, sub_minus=True)
@@ -530,12 +527,12 @@ class Numeric_field(Blank_space):
 class Integer_field(Numeric_field):
     def __init__(self, x, y, width, callback, value_acquire, params=(), before=lambda: None, after=lambda: None, name=None):
         Numeric_field.__init__(self, x, y, width, callback, value_acquire, params, before, after, name)
-        self._domain = lambda k: int(float(self._digits(k)))
+        self._domain = plane.interpret_int
 
 class Enumerate_field(Numeric_field):
     def __init__(self, x, y, width, callback, value_acquire, params=(), before=lambda: None, after=lambda: None, name=None):
         Blank_space.__init__(self, x, y, width, callback, value_acquire, params, before, after, name)
-        self._domain = lambda k: set( int(v) for v in [''.join([c for c in val if c in '1234567890']) for val in k.split(',')] if v )
+        self._domain = lambda k: set([plane.interpret_int(val) for val in k.split(',') if any(c in '0123456789' for c in val)])
 
     def _ACQUIRE_REPRESENT(self):
         self._VALUE = str(self._value_acquire( * self._params))[1:-1]
@@ -545,7 +542,7 @@ class Enumerate_field(Numeric_field):
 class RGBA_field(Blank_space):
     def __init__(self, x, y, width, callback, value_acquire, params=(), before=lambda: None, after=lambda: None, name=None):
         Blank_space.__init__(self, x, y, width, callback, value_acquire, params, before, after, name)
-        self._domain = plane._interpret_rgba
+        self._domain = plane.interpret_rgba
 
     def _ACQUIRE_REPRESENT(self):
         self._VALUE = str(self._value_acquire( * self._params))[1:-1]

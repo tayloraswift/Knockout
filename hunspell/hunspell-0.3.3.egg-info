@@ -1,0 +1,10 @@
+Metadata-Version: 1.0
+Name: hunspell
+Version: 0.3.3
+Summary: Module for the Hunspell spellchecker engine
+Home-page: http://github.com/blatinier/pyhunspell
+Author: Benoît Latinier
+Author-email: benoit@latinier.fr
+License: LGPLv3
+Description: UNKNOWN
+Platform: UNKNOWN

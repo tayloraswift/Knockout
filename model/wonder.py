@@ -1,4 +1,4 @@
-import enchant
+from hunspell import hunspell
 from itertools import groupby
 
 def character(entity):
@@ -6,7 +6,7 @@ def character(entity):
         entity = entity[0]
     return entity
 
-struck = enchant.DictWithPWL("en_US","model/localdict.txt")
+struck = hunspell.HunSpell('hunspell/en_US.dic', 'hunspell/en_US.aff')
 
 _prose = set('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789&@#$\'’-')
 # these characters get read as word-breaks in speech
@@ -19,8 +19,7 @@ def check_spelling(word):
     if word[-2:] in ('’s', '\'s'):
         word = word[:-2]
     if word.isalpha() and not word.isupper():
-        return struck.check(word)
-
+        return struck.spell(word.encode('latin-1', 'ignore'))
     return True
 
 

@@ -15,10 +15,17 @@ def _create_f_field(TYPE, x, y, width, attribute, after, name='', **kwargs):
         z_y = y
     else:
         z_y = y + 7
-    ZI = kookies.Z_indicator(x, z_y, 10, height=24, get_projection = lambda: contexts.Fontstyle.fontstyle, get_attributes = lambda LIB: LIB.active.F.attributes, A = attribute, library=styles.PARASTYLES.active.layerable)
+    V_A = lambda A: styles.PARASTYLES.active.layerable.active.F.attributes[A] if A in styles.PARASTYLES.active.layerable.active.F.attributes else contexts.Fontstyle.fontstyle[A]
+    ZI = kookies.Z_indicator(x, z_y, 10, height=24, 
+            get_projection = lambda: contexts.Fontstyle.fontstyle, 
+            get_attributes = lambda LIB: LIB.active.F.attributes, 
+            A = attribute, 
+            copy_value = lambda A: ops.f_set_attribute(V_A(A), A), 
+            library=styles.PARASTYLES.active.layerable,
+            before=un.history.save, after= lambda: (styles.PARASTYLES.update_f(), meredith.mipsy.recalculate_all(), contexts.Text.update_force()))
     return [ZI, TYPE(x + 25, y, width - 25,
             callback= ops.f_set_attribute, 
-            value_acquire = lambda A: styles.PARASTYLES.active.layerable.active.F.attributes[A] if A in styles.PARASTYLES.active.layerable.active.F.attributes else contexts.Fontstyle.fontstyle[A],
+            value_acquire = V_A,
             params = (attribute,), 
             before=un.history.save,
             after=after,
@@ -29,10 +36,17 @@ def _create_p_field(TYPE, x, y, width, attribute, after, name='', **kwargs):
         z_y = y
     else:
         z_y = y + 7
-    ZI = kookies.Z_indicator(x, z_y, 10, height=24, get_projection = lambda: contexts.Parastyle.parastyle, get_attributes = lambda LIB: LIB.active.attributes, A = attribute, library=styles.PARASTYLES)
+    V_A = lambda A: styles.PARASTYLES.active.attributes[A] if A in styles.PARASTYLES.active.attributes else contexts.Parastyle.parastyle[A]
+    ZI = kookies.Z_indicator(x, z_y, 10, height=24, 
+            get_projection = lambda: contexts.Parastyle.parastyle, 
+            get_attributes = lambda LIB: LIB.active.attributes, 
+            A = attribute, 
+            copy_value = lambda A: ops.p_set_attribute(V_A(A), A), 
+            library=styles.PARASTYLES, 
+            before=un.history.save, after= lambda: (styles.PARASTYLES.update_p(), meredith.mipsy.recalculate_all(), contexts.Text.update_force()))
     return [ZI, TYPE(x + 25, y, width - 25,
             callback = ops.p_set_attribute, 
-            value_acquire= lambda A: styles.PARASTYLES.active.attributes[A] if A in styles.PARASTYLES.active.attributes else contexts.Parastyle.parastyle[A],
+            value_acquire = V_A,
             params = (attribute,), 
             before=un.history.save,
             after=after,

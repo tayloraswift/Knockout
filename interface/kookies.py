@@ -1308,23 +1308,41 @@ class Para_control_panel(Ordered):
         cr.fill()
 
 class Z_indicator(Base_kookie):
-    def __init__(self, x, y, width, height, get_projection, get_attributes, A, library):
+    def __init__(self, x, y, width, height, get_projection, get_attributes, A, copy_value, library, before=lambda: None, after=lambda: None):
+        self._BEFORE = before
+        self._AFTER = after
         Base_kookie.__init__(self, x, y, width, height)
-        
+
+        # set hover function equal to press function
+        self.is_over_hover = self.is_over
+
         self._get_projection = get_projection
         self._get_attributes = get_attributes
         self._LIBRARY = library
         self._attribute = A
+        self._copy_value = copy_value
         
         self._state = 0
         
         self._colors = ((0.6, 0.6, 0.6), accent, accent, (0.7, 0.7, 0.7))
+        self._hover_colors = ((0.4, 0.4, 0.4), tuple(v + 0.2 for v in accent), tuple(v + 0.2 for v in accent), (0.5, 0.5, 0.5))
 
         self._SYNCHRONIZE = self._ACQUIRE_REPRESENT
         self._SYNCHRONIZE()
-        
+
     def is_over(self, x, y):
-        return False
+        return True
+        
+    def hover(self, x, y):
+        return 1
+    
+    def focus(self, x, y):
+        self._BEFORE()
+        if self._state == 3:
+            self._copy_value(self._attribute)
+        else:
+            del self._get_attributes(self._LIBRARY)[self._attribute]
+        self._AFTER()
 
     def _ACQUIRE_REPRESENT(self):
         L = self._get_projection()
@@ -1345,8 +1363,13 @@ class Z_indicator(Base_kookie):
 
     def draw(self, cr, hover=(None, None)):
         self._render_fonts(cr)
-        cr.set_source_rgb( * self._colors[self._state])
         cr.rectangle(self._x, self._y, self._width, self._height)
+        if hover[1]:
+            colors = self._hover_colors
+        else:
+            colors = self._colors
+        
+        cr.set_source_rgb( * colors[self._state])
         if self._state == 2:
             cr.clip()
             cr.move_to(self._x, self._y)

@@ -32,7 +32,6 @@ class Text_context(object):
 
     def update_force(self):
         self.tract = meredith.mipsy.tracts[0]
-        meredith.mipsy.recalculate_all()
         PP, self._FSTYLE = self.tract.styling_at()
         P, P_i = PP
         self.paragraph =  self.tract.text[P_i]

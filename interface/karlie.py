@@ -323,12 +323,12 @@ class Properties(_Properties_panel):
                                 _create_p_field(kookies.Enumerate_field, 175, y, 95, 'indent_range', after=self.synchronize, name='FOR LINES'))
                 y += 45
 
-                self._items += _columns(_create_p_field(kookies.Numeric_field, 15, y, 120, 'margin_left', after=self.synchronize, name='LEFT MARGIN') + 
-                                _create_p_field(kookies.Numeric_field, 150, y, 120, 'margin_right', after=self.synchronize, name='RIGHT MARGIN'))
+                self._items += _columns(_create_p_field(kookies.Numeric_field, 15, y, 120, 'margin_left', after=self.synchronize, name='SPACE LEFT') + 
+                                _create_p_field(kookies.Numeric_field, 150, y, 120, 'margin_right', after=self.synchronize, name='SPACE RIGHT'))
                 y += 45
 
-                self._items += _columns(_create_p_field(kookies.Numeric_field, 15, y, 120, 'margin_top', after=self.synchronize, name='TOP MARGIN') +
-                                _create_p_field(kookies.Numeric_field, 150, y, 120, 'margin_bottom', after=self.synchronize, name='BOTTOM MARGIN'))
+                self._items += _columns(_create_p_field(kookies.Numeric_field, 15, y, 120, 'margin_top', after=self.synchronize, name='SPACE BEFORE') +
+                                _create_p_field(kookies.Numeric_field, 150, y, 120, 'margin_bottom', after=self.synchronize, name='SPACE AFTER'))
                 y += 60
 
                 self._items += _columns(_create_p_field(kookies.Checkbox, 15, y, 100, 'hyphenate', after=self.synchronize, name='HYPHENATE'))

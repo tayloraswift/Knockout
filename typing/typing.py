@@ -142,4 +142,5 @@ def type_document(name, char, lastpress=[0], direction=[0]):
             un.history.undo_save(1)
             MT.insert([(F, T)])
     else:
+        un.history.undo_save(13)
         MT.insert([char])

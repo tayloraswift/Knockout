@@ -318,7 +318,7 @@ def daydream():
     _G_DNA = DB_Pegs(('', {}), '_undefined')
     
     F_DNA.update({'fontsize': 13,
-            'path': 'fonts/FreeMono.ttf',
+            'path': 'fonts/Ubuntu-R.ttf',
             'pegs': _G_DNA,
             'tracking': 0,
             'color': (1, 0.15, 0.2, 1)})
@@ -330,6 +330,7 @@ def daydream():
             'margin_bottom': 0,
             'margin_left': 0,
             'margin_right': 0,
-            'margin_top': 0})
+            'margin_top': 0,
+            'stops': [89, 178, 267, 356]})
 
     ISTYLES.update(_create_interface())

@@ -34,10 +34,23 @@ def outside_tag(sequence):
 
     return sequence
 
+class Glyphline(dict):
+    def I(self, x, y):
+        i = bisect.bisect(self['_X_'], x)
+        if i:
+            try:
+                # compare before and after glyphs
+                x1, x2 = self['_X_'][i - 1 : i + 1]
+                if x2 - x > x - x1:
+                    i -= 1
+            except ValueError:
+                i -= 1
+        return i + self['i']
+
 def _assemble_line(letters, startindex, l, anchor, stop, y, leading, P, F, hyphenate=False):
     if stop < anchor:
         stop, anchor = anchor, stop
-    LINE = {
+    LINE = Glyphline({
             'l': l,
             'i': startindex,
             
@@ -50,7 +63,7 @@ def _assemble_line(letters, startindex, l, anchor, stop, y, leading, P, F, hyphe
             
             'P_BREAK': False,
             'F': F
-            }
+            })
     
     # list that contains glyphs
     GLYPHS = []
@@ -272,6 +285,8 @@ def _assemble_line(letters, startindex, l, anchor, stop, y, leading, P, F, hyphe
 
     LINE['j'] = startindex + len(GLYPHS)
     LINE['GLYPHS'] = GLYPHS
+    # cache x's
+    LINE['_X_'] = [g[1] for g in GLYPHS]
     
     try:
         LINE['F'] = GLYPHS[-1][4]
@@ -505,7 +520,7 @@ class Text(object):
         
         self._TYPESET(0, 0)
 
-    def _target_line(self, x, y, c):
+    def _target_row(self, x, y, c):
         
         yy, ll = zip( * self._line_yl[c])
         # find the clicked line
@@ -518,23 +533,9 @@ class Text(object):
         return ll[lineindex]
     
     def target_glyph(self, x, y, l=None, c=None):
-
         if l is None:
-            l = self._target_line(x, y, c)
-
-        # find first glyph to the right of click spot
-        glyphindex = bisect.bisect([glyph[1] for glyph in self._glyphs[l]['GLYPHS']], x )
-        
-        # determine x position of glyph before it
-        glyphx = self._glyphs[l]['GLYPHS'][glyphindex - 1][1]
-        # if click is closer to it, shift glyph index left one
-        try:
-            if abs(x - glyphx) < abs(x - self._glyphs[l]['GLYPHS'][glyphindex][1]):
-                glyphindex += -1
-        except IndexError:
-            glyphindex = len(self._glyphs[l]['GLYPHS']) - 1
-            
-        return glyphindex + self._glyphs[l]['i']
+            l = self._target_row(x, y, c)
+        return self._glyphs[l].I(x, y)
 
     # get line number given character index
     def index_to_line(self, index):

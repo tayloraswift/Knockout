@@ -11,9 +11,10 @@ class UN(object):
         self._history = []
         self._i = 0
         
-        self._state = 0
+        self._state = None
     
     def save(self):
+        print('—RECORD—')
         if len(self._history) > 989:
             del self._history[:89]
             self._i -= 89
@@ -78,7 +79,9 @@ class UN(object):
 
     # prevents excessive savings
     def undo_save(self, state):
+        print(state)
         if state != self._state or state == 3:
+            print('?')
             if self._state != 0:
                 self.save()
             self._state = state

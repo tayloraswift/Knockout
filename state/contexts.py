@@ -13,7 +13,7 @@ class Text_context(object):
         self.tract = meredith.mipsy.tracts[0]
         PP, FSTYLE = self.tract.styling_at()
         P, P_i = PP
-        if P_i is not self._previous_pi or self.tract is not self._previous_t:
+        if P_i != self._previous_pi or self.tract is not self._previous_t:
             print('update paragraph context')
             self.paragraph =  self.tract.text[P_i]
             self._previous_pi = P_i
@@ -26,6 +26,7 @@ class Text_context(object):
                 noticeboard.refresh_properties_stack.push_change()
 
         if self._FSTYLE is not FSTYLE:
+            print('update font context')
             self._FSTYLE = FSTYLE
             Fontstyle.update(FSTYLE)
             noticeboard.refresh_properties_stack.push_change()

@@ -196,7 +196,11 @@ class _F_container(object):
         return type(self)(self.F, self.tags.copy())
     
     def polaroid(self):
-        return self.F.name, {T.name: V for T, V in self.tags.items()}
+        if self.F is not None:
+            N = self.F.name
+        else:
+            N = None
+        return N, {T.name: V for T, V in self.tags.items()}
 
 class _F_layers(_Active_list):
     def __init__(self, active_i=None, E=[]):

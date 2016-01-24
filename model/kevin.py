@@ -25,7 +25,7 @@ def serialize(text):
             
             elif entity[0] == '<p>':
                 if entity[1] != {styles.PTAGS['body']}:
-                    b[e] = '<p class="' + '&'.join(P.name for P in entity[1]) + '">'
+                    b[e] = '<p class="' + '&'.join(itertools.chain.from_iterable((P.name for i in range(V)) for P, V in entity[1].items())) + '">'
                 else:
                     b[e] = '<p>'
 

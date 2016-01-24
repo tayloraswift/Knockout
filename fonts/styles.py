@@ -149,10 +149,6 @@ class P_Library(_Active_list):
             projection = Layer(F_DNA)
 
             for B in (b for b in self if b.tags <= P):
-                for c in B.layerable:
-                    if c.F.name == 'GREEN':
-                        print({k.name: v for k, v in c.tags.items()})
-                        print('F:' + str({k.name: v for k, v in F.items()}))
                 for C in (c for c in B.layerable if c.tags <= F and c.F is not None):
                     projection.overlay(C.F.attributes, C)
                     projection.members.append(C)

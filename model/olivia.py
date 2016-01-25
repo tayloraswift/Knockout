@@ -16,7 +16,7 @@ from model.wonder import words, character, _breaking_chars
 hy = pyphen.Pyphen(lang='en_US')
 
 # linebreaking characters
-_BREAK_WHITESPACE = set((' ', '<image>'))
+_BREAK_WHITESPACE = set((' '))
 _BREAK_ONLY_AFTER = set('-')
 _BREAK_AFTER_ELSE_BEFORE = set('–—')
 
@@ -190,28 +190,26 @@ def _assemble_line(letters, startindex, l, anchor, stop, y, leading, P, F, hyphe
             root_for = set()
             GLYPHS.append((-6, x, y, FSTYLE, fstat, x))
             break
-        
-        elif CHAR == '<image>':
-            root_for = set()
-            IMAGE = letter[1]
-                                                                                # additional fields
-            GLYPHS.append((-13, x, y - leading, FSTYLE, fstat, x + IMAGE[1], IMAGE ))
-            x += IMAGE[1]
-        
+
         else:
             root_for = set()
-            glyphwidth = FSTYLE['fontmetrics'].advance_pixel_width(CHAR) * FSTYLE['fontsize']
-            
-            GLYPHS.append((
-                    FSTYLE['fontmetrics'].character_index(CHAR),    # 0
-                    x,                                              # 1
-                    y,                                              # 2
-                    
-                    FSTYLE,                                         # 3
-                    fstat,                                          # 4
-                    x + glyphwidth                                  # 5
-                    ))
+            if CHAR == '<image>':
+                IMAGE = letter[1:]
+                glyphwidth = IMAGE[1]
+                                                                 # additional fields
+                GLYPHS.append((-13, x, y - leading, FSTYLE, fstat, x + glyphwidth, IMAGE))
 
+            else:
+                glyphwidth = FSTYLE['fontmetrics'].advance_pixel_width(CHAR) * FSTYLE['fontsize']
+                GLYPHS.append((
+                        FSTYLE['fontmetrics'].character_index(CHAR),    # 0
+                        x,                                              # 1
+                        y,                                              # 2
+                        
+                        FSTYLE,                                         # 3
+                        fstat,                                          # 4
+                        x + glyphwidth                                  # 5
+                        ))
             
             x += glyphwidth
 
@@ -322,7 +320,7 @@ class Text(object):
         self.text = kevin.deserialize(text)
         self.channels = channels
         
-        self._glyphs = []
+        self._SLUGS = []
         
         self._page_intervals = {}
         # STRUCTURE:
@@ -349,7 +347,7 @@ class Text(object):
         
     def _TYPESET(self, l, i):
         if not l:
-            self._glyphs = []
+            self._SLUGS = []
             # which happens if nothing has yet been rendered
             c = 0
             P = self.text[0][1]
@@ -363,8 +361,8 @@ class Text(object):
         else:
             # ylevel is the y position of the first line to print
             # here we are removing the last existing line so we can redraw that one as well
-            CURRENTLINE = self._glyphs.pop()
-            LASTLINE = self._glyphs[-1]
+            CURRENTLINE = self._SLUGS.pop()
+            LASTLINE = self._SLUGS[-1]
             
             if LASTLINE['P_BREAK']:
                 P = self.text[i][1]
@@ -461,7 +459,7 @@ class Text(object):
             if LINE['P_BREAK']:
 
                 if i > len(self.text) - 1:
-                    self._glyphs.append(LINE)
+                    self._SLUGS.append(LINE)
                     # this is the end of the document
                     break
                 
@@ -483,12 +481,12 @@ class Text(object):
                 R += 1
             
             l += 1
-            self._glyphs.append(LINE)
+            self._SLUGS.append(LINE)
 
         self._paginate(page, page_start_l, l + 1)
 
-        self._line_startindices = [line['i'] for line in self._glyphs]
-        self._line_yl = { cc: list(h[:2] for h in list(g)) for cc, g in groupby( ((LINE['y'], LINE['l'], LINE['c']) for LINE in self._glyphs if LINE['GLYPHS']), key=lambda k: k[2]) }
+        self._line_startindices = [line['i'] for line in self._SLUGS]
+        self._line_yl = { cc: list(h[:2] for h in list(g)) for cc, g in groupby( ((LINE['y'], LINE['l'], LINE['c']) for LINE in self._SLUGS if LINE['GLYPHS']), key=lambda k: k[2]) }
 
     def _recalculate(self):
         # clear sorts
@@ -506,15 +504,15 @@ class Text(object):
                     [ interval if interval[1] <= l else (interval[0], -1) if interval[0] <= l else None for interval in intervals]
                     if I is not None] for page, intervals in self._page_intervals.items()}    
             
-            i = self._glyphs[l]['i']
-            self._glyphs = self._glyphs[:l + 1]
+            i = self._SLUGS[l]['i']
+            self._SLUGS = self._SLUGS[:l + 1]
             self._TYPESET(l, i)
         except AttributeError:
             self.deep_recalculate()
 
     def deep_recalculate(self):
         # clear sorts
-        self._glyphs.clear()
+        self._SLUGS.clear()
         self._sorted_pages.clear()
         self._page_intervals.clear()
         
@@ -535,7 +533,7 @@ class Text(object):
     def target_glyph(self, x, y, l=None, c=None):
         if l is None:
             l = self._target_row(x, y, c)
-        return self._glyphs[l].I(x, y)
+        return self._SLUGS[l].I(x, y)
 
     # get line number given character index
     def index_to_line(self, index):
@@ -776,15 +774,15 @@ class Text(object):
     ### FUNCTIONS USEFUL FOR DRAWING AND INTERFACE
     
     def line_indices(self, l):
-        return self._glyphs[l]['i'], self._glyphs[l]['j']
+        return self._SLUGS[l]['i'], self._SLUGS[l]['j']
 
     # get location of specific glyph
     def text_index_location(self, index, ahead=False):
         l = self.index_to_line(index)
         try:
-            glyph = self._glyphs[l]['GLYPHS'][index - self._glyphs[l]['i']]
+            glyph = self._SLUGS[l]['GLYPHS'][index - self._SLUGS[l]['i']]
         except IndexError:
-            glyph = self._glyphs[l]['GLYPHS'][-1]
+            glyph = self._SLUGS[l]['GLYPHS'][-1]
             print ('ahead')
             ahead = True
 
@@ -797,26 +795,26 @@ class Text(object):
             self.word_count = words(self.text)
 
     def line_data(self, l):
-        anchor = self._glyphs[l]['anchor']
-        stop = self._glyphs[l]['stop']
-        leading = self._glyphs[l]['leading']
-        y = self._glyphs[l]['y']
+        anchor = self._SLUGS[l]['anchor']
+        stop = self._SLUGS[l]['stop']
+        leading = self._SLUGS[l]['leading']
+        y = self._SLUGS[l]['y']
         return anchor, stop, leading, y
     
     def styling_at(self):
         i = self.cursor.cursor
         l = self.index_to_line(i)
         try:
-            glyph = self._glyphs[l]['GLYPHS'][i - self._glyphs[l]['i']]
+            glyph = self._SLUGS[l]['GLYPHS'][i - self._SLUGS[l]['i']]
         except IndexError:
-            glyph = self._glyphs[l]['GLYPHS'][-1]
+            glyph = self._SLUGS[l]['GLYPHS'][-1]
             print ('ahead')
             ahead = True
 
-        return self._glyphs[l]['PP'], glyph[3]
+        return self._SLUGS[l]['PP'], glyph[3]
     
     def pp_at(self, i):
-        return self._glyphs[self.index_to_line(i)]['PP']
+        return self._SLUGS[self.index_to_line(i)]['PP']
 
     def extract_glyphs(self, refresh=False):
 
@@ -828,7 +826,7 @@ class Text(object):
             for page, intervals in self._page_intervals.items():
                 sorted_page = {'_annot': [], '_images': [], '_intervals': intervals}
                 
-                for line in chain.from_iterable(self._glyphs[slice( * interval)] for interval in intervals):
+                for line in chain.from_iterable(self._SLUGS[slice( * interval)] for interval in intervals):
 
                     p_i = line['PP'][1]
                     hyphen = line['hyphen']

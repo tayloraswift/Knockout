@@ -28,11 +28,11 @@
                                'tracking': 0},
                 'h1:DISPLAY STRONG': {'color': (0, 0, 0, 1),
                                       'path': '/home/kelvin/.fonts/Kabel.otf'}},
- 'FTAGLIST': [('emphasis', []),
+ 'FTAGLIST': [('caption', []),
+              ('sub', ['small']),
               ('strong', []),
               ('sup', ['small']),
-              ('sub', ['small']),
-              ('caption', [])],
+              ('emphasis', [])],
  'PARASTYLES': (0,
                 [({'fontclasses': (3,
                                    [('Fira Book', {}),
@@ -74,10 +74,10 @@
                  ({'fontclasses': (0, [('Subtitle', {})]), 'leading': 24},
                   {'h2': 1})]),
  'PEGS': {'Standard pegs': ('', {'sub': [0, -0.2], 'sup': [0, 0.3]})},
- 'PTAGLIST': [('answers', []), ('h1', []), ('h2', []), ('body', [])],
+ 'PTAGLIST': [('answers', []), ('h1', []), ('body', []), ('h2', [])],
  'contexts': {'c': 0, 'p': 0},
  'grid': [[90, 370, 410, 690], [80, 910]],
- 'kitty': [{'cursors': (529, 529),
+ 'kitty': [{'cursors': (493, 493),
             'outline': [[[[90, 80, False], [90, 910, False]],
                          [[370, 80, False], [370, 910, False]],
                          0],
@@ -97,7 +97,7 @@
                          [[690, 80, False], [690, 910, True]],
                          2]],
             'text': '<p class="h1"><strong>AP CALCULUS</strong> CREATE THE '
-                    'QUIZ</p><p class="h1&h2">We begin our Story in New '
+                    'QUIZ</p><p class="h2&h1">We begin our Story in New '
                     'York</p><p class="body"><strong>1</strong>   Find the '
                     'derivative of ln|cos √(<em>x</em> − 13)|.</p><p '
                     'class="answers&body">A.  − tan √(<em>x</em> − 13) / '
@@ -119,9 +119,10 @@
                     'class="sup"></p><p class="answers&body">D.  −<em>e<f '
                     'class="sup"></em>−<em>x</em></f class="sup"></p><p '
                     'class="body"><strong>4</strong>   Apple Music released '
-                    'the 1989 Tour Movie on Dec. 20. Normally, the rate '
-                    '(streams/day) that swifties stream the movie can be '
-                    'modeled by <em>S</em>(<em>t</em>) = 600<em>e<f '
+                    'the 1989 Tour Movie on Dec. 20. Normally, the rate<image '
+                    'src="meredith.png" width="300"> (streams/day) that '
+                    'swifties stream the movie can be modeled by '
+                    '<em>S</em>(<em>t</em>) = 600<em>e<f '
                     'class="sup"></em>−<em>x</em>/70</f class="sup"> + cos(2/7 '
                     '<em>πx</em>) + 1 , where <em>t</em> is the <em>number of '
                     'days since the release. This model do<strong>es not work '

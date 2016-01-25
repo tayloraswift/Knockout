@@ -17,7 +17,7 @@ hy = pyphen.Pyphen(lang='en_US')
 
 # linebreaking characters
 _BREAK_WHITESPACE = set((' '))
-_BREAK_ONLY_AFTER = set('-')
+_BREAK_ONLY_AFTER = set('-.,')
 _BREAK_AFTER_ELSE_BEFORE = set('–—')
 
 _BREAK = _BREAK_WHITESPACE | _BREAK_ONLY_AFTER | _BREAK_AFTER_ELSE_BEFORE

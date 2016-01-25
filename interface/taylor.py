@@ -583,7 +583,7 @@ class Document_view(ui.Cell):
         for dictionary in jumbled_pages:
             for page, sorted_glyphs in dictionary.items():
                 if page in classed_pages:
-                    for name, font, glyphs in ((item[0], * item[1]) for item in sorted_glyphs.items() if isinstance(item[0], int) or item[0] == '_images'):
+                    for name, font, glyphs in ((key, * L) for key, L in sorted_glyphs.items() if L and (isinstance(key, int) or key == '_images')):
                         classed_pages[page].setdefault(name, (font, []))[1].extend(glyphs)
                 else:
                     classed_pages[page] = {name: L for name, L in sorted_glyphs.items() if isinstance(name, int) or name == '_images'}

@@ -139,12 +139,11 @@ class P_Library(_Active_list):
     def project_f(self, P, F):
         hf = _sign_counter(F)
         hp = _sign_counter(P)
-
-        # add tag groups
-        F = F.concat(Counter(itertools.chain.from_iterable((FTAGS[G] for G in T.groups) for T, n in F.items() if n)))
         try:
             return self._font_projections[(hp, hf)]
         except KeyError:
+            # add tag groups
+            F = F.concat(Counter(itertools.chain.from_iterable((FTAGS[G] for G in T.groups) for T, n in F.items() if n)))
             # iterate through stack
             projection = Layer(F_DNA)
 

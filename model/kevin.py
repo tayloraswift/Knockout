@@ -41,7 +41,7 @@ def serialize(text):
                     b[e] = '<p>'
 
             elif entity[0] == '<image>':
-                source, width = entity[1:]
+                source, width = entity[1]
                 b[e] = '<image src="' + source + '" width="' + str(width) + '">'
 
         elif entity == '<':
@@ -95,7 +95,7 @@ def deserialize(string):
                 entity = ('<' + tag + '>', ftag)
             
             elif tag == 'image':
-                entity = ('<image>', fields['src'], int(fields['width']))
+                entity = ('<image>', (fields['src'], int(fields['width'])))
             
             else:
                 entity = '<' + tag + '>'

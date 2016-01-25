@@ -194,7 +194,7 @@ def _assemble_line(letters, startindex, l, anchor, stop, y, leading, P, F, hyphe
         else:
             root_for = set()
             if CHAR == '<image>':
-                IMAGE = letter[1:]
+                IMAGE = letter[1]
                 glyphwidth = IMAGE[1]
                                                                  # additional fields
                 GLYPHS.append((-13, x, y - leading, FSTYLE, fstat, x + glyphwidth, IMAGE))

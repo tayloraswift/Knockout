@@ -38,14 +38,10 @@ def save():
         pprint.pprint(doc, fi)
 
 def load(name):
-    try:
-        with open(name, 'r') as fi:
-            constants.filename = name
-            doc = ast.literal_eval(fi.read())
-    except UnicodeDecodeError:
-        with open(name, 'rb') as fi:
-            constants.filename = name
-            doc = pickle.load(fi)
+    with open(name, 'r') as fi:
+        constants.filename = name
+        doc = ast.literal_eval(fi.read())
+
     styles.daydream()
     styles.faith(doc)
     

@@ -585,7 +585,6 @@ class Selection_menu(Base_kookie):
     def _ACQUIRE_OPTIONS(self):
         self._menu_options = self._get_options()
         self._lookup_label = dict(self._menu_options)
-        print(self._lookup_label)
 
     def _ACQUIRE_REPRESENT(self):
         label = self._lookup_label[self._get_value( * self._params)]

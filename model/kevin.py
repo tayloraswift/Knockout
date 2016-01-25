@@ -1,7 +1,18 @@
 import html, itertools
 
+from pyparsing import Word, Suppress, CharsNotIn, nums, alphanums, dictOf
+
 from bulletholes.counter import TCounter as Counter
 from fonts import styles
+
+def _parse_tag(tag):
+    int_value = Word(nums)
+    str_value = Suppress("\"") + CharsNotIn("\"") + Suppress("\"")
+    value = int_value | str_value
+    identifier = Word(alphanums)
+    result = dictOf(identifier + Suppress("="), value)
+
+    return result.parseString(tag).asDict()
 
 def serialize(text):
     b = text.copy()
@@ -30,7 +41,8 @@ def serialize(text):
                     b[e] = '<p>'
 
             elif entity[0] == '<image>':
-                b[e] = '<image data=' + repr(entity[1]) + '>'
+                source, width = entity[1:]
+                b[e] = '<image src="' + source + '" width="' + str(width) + '">'
 
         elif entity == '<':
             b[e] = '&lt;'
@@ -65,26 +77,27 @@ def deserialize(string):
             entity = ('</f>', styles.FTAGS['strong'])
 
         else:
-            tag = entity.split()[0]
+            print(entity)
+            first_space = entity.find(' ')
+            if first_space == -1:
+                tag = entity
+            else:
+                tag = entity[:first_space]
+                R = entity[first_space + 1:]
+                fields = _parse_tag(R)
 
-            entity = ' '.join(entity.split())
-            try:
-                equals = entity.index('=')
-
-                data = entity[equals + 1:closetag]
-                data = eval(data)
-                
-                if tag == 'p':
-                    ptags = Counter(styles.PTAGS[T.strip()] for T in data.split('&'))
-                    entity = ['<' + tag + '>', ptags]
-                
-                else:
-                    if tag in {'f', '/f'}:
-                        data = styles.FTAGS[data]
-
-                    entity = ('<' + tag + '>', data)
-
-            except ValueError:
+            if tag == 'p':
+                ptags = Counter(styles.PTAGS[T.strip()] for T in fields['class'].split('&'))
+                entity = ['<p>', ptags]
+            
+            elif tag in {'f', '/f'}:
+                ftag = styles.FTAGS[fields['class']]
+                entity = ('<' + tag + '>', ftag)
+            
+            elif tag == 'image':
+                entity = ('<image>', fields['src'], int(fields['width']))
+            
+            else:
                 entity = '<' + tag + '>'
         
         del b[opentag:closetag + 1]

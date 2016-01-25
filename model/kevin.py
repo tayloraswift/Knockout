@@ -77,7 +77,6 @@ def deserialize(string):
             entity = ('</f>', styles.FTAGS['strong'])
 
         else:
-            print(entity)
             first_space = entity.find(' ')
             if first_space == -1:
                 tag = entity

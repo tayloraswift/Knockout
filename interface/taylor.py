@@ -138,10 +138,7 @@ def PDF():
     classes = becky.page_classes()
     max_page = max(classes.keys())
     for p in range(max_page + 1):
-        try:
-            becky.print_page(cr, p, classes)
-        except KeyError:
-            print('page undefined')
+        becky.print_page(cr, p, classes)
         cr.show_page()
 
 def place_tags(tag):
@@ -586,16 +583,17 @@ class Document_view(ui.Cell):
         for dictionary in jumbled_pages:
             for page, sorted_glyphs in dictionary.items():
                 if page in classed_pages:
-                    for name, font, glyphs in ((item[0], * item[1]) for item in sorted_glyphs.items() if isinstance(item[0], int)):
+                    for name, font, glyphs in ((item[0], * item[1]) for item in sorted_glyphs.items() if isinstance(item[0], int) or item[0] == '_images'):
                         classed_pages[page].setdefault(name, (font, []))[1].extend(glyphs)
                 else:
-                    classed_pages[page] = {name: L for name, L in sorted_glyphs.items() if isinstance(name, int)}
+                    classed_pages[page] = {name: L for name, L in sorted_glyphs.items() if isinstance(name, int) or name == '_images'}
         
         return classed_pages
     
     def print_page(self, cr, p, classed_pages):
-#        self._draw_images(cr, classed_pages[p]['_images'])
-        self._print_sorted(cr, classed_pages[p])
+        if p in classed_pages:
+            self._draw_images(cr, classed_pages[p]['_images'])
+            self._print_sorted(cr, classed_pages[p])
             
     def _draw_by_page(self, cr, mx_cx, my_cy, cx, cy, A=1, refresh=False):
         PHEIGHT = penclick.page.HEIGHT

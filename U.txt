@@ -120,7 +120,7 @@
                     'class="sup"></em>−<em>x</em></f class="sup"></p><p '
                     'class="body"><strong>4</strong>   Apple Music released '
                     'the 1989 Tour Movie on Dec. 20. Normally, the rate<image '
-                    'src="meredith.png" width="300"> (streams/day) that '
+                    'src="meredith.png" width="250"> (streams/day) that '
                     'swifties stream the movie can be modeled by '
                     '<em>S</em>(<em>t</em>) = 600<em>e<f '
                     'class="sup"></em>−<em>x</em>/70</f class="sup"> + cos(2/7 '

@@ -1,0 +1,73 @@
+from model.wonder import character
+
+def _bin(data, odelimit, cdelimit):
+    for i, v in ((i, v) for i, v in enumerate(data) if character(v) == odelimit):
+        try:
+            j = data[i:].index(cdelimit) + i
+        except ValueError:
+            print('unclosed bin')
+            continue
+        
+        bindata = data[i + 1:j]
+        if odelimit not in bindata:
+            yield [v] + bindata + [cdelimit]
+        else:
+            print('superfluous bin tag')
+            continue
+
+class Matrix(list):
+    def __str__(self):
+        M = []
+        for row in self:
+            R = ''
+            for cell in row:
+                if cell is None:
+                    C = '|    None    |'
+                else:
+                    value = ''.join(c for c in cell[1:-1] if isinstance(c, str))
+                    C = '|' + value + '            |'[len(value):]
+                R += C
+            M.append(R)
+        return '\n'.join(M)
+
+class Table(object):
+    def __init__(self, fields, data):
+        self.fields = fields
+        # process table structure
+        # build rows
+        self.data = [list(_bin(R, '<td>', '</td>')) for R in _bin(data, '<tr>', '</tr>')]
+        self._build_matrix()
+        
+    def _build_matrix(self):
+        MATRIX = Matrix()
+        for i, row in enumerate(self.data):
+            
+            # resize matrix if needed to fit the row
+            height = max(r[0][1] for r in row)
+            if i + height > len(MATRIX):
+                MATRIX += [[None] for k in range(len(MATRIX) - i + height)]
+
+            # resize matrix to fit the length
+            length = sum(r[0][2] for r in row) + sum(k is not None for k in MATRIX[i])
+            empty = [None] * length
+            print(length)
+            if length > len(MATRIX[-1]):
+                MATRIX[:] = [(R + empty)[:length] for R in MATRIX]
+            
+            # drop in cells
+            CELLS = row.copy()
+            for s, slot in enumerate(MATRIX[i]):
+                # check if cell is occupied
+                if slot is None:
+                    try:
+                        cell = CELLS.pop(0)
+                    except IndexError:
+                        break
+                    rspan, cspan = cell[0][1:]
+                    for rs in range(rspan):
+                        for cs in range(cspan):
+                            MATRIX[i + rs][s + cs] = cell
+            
+        print(MATRIX)
+    
+        

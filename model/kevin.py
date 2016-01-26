@@ -2,6 +2,8 @@ import html, itertools
 
 from pyparsing import Word, Suppress, CharsNotIn, nums, alphanums, dictOf
 
+from model import table
+
 from bulletholes.counter import TCounter as Counter
 from fonts import styles
 
@@ -51,64 +53,80 @@ def serialize(text):
 
     return ''.join(b)
 
-def deserialize(string):
-
-    b = list(string)
+def _parse_entities(b):
+    b = b.copy()
+    build = []
     while True:
         try:
             opentag = b.index('<')
-            closetag = b.index('>')
-
+            closetag = b.index('>') + 1
         except ValueError:
             break
-        entity = ''.join(b[opentag + 1:closetag])
-        
-        if entity == 'p':
-            entity = ['<p>', Counter({styles.PTAGS['body']: 1}) ]
-        elif entity == '/p':
-            entity = '</p>'
-        elif entity == 'em':
-            entity = ('<f>', styles.FTAGS['emphasis'])
-        elif entity == '/em':
-            entity = ('</f>', styles.FTAGS['emphasis'])
-        elif entity == 'strong':
-            entity = ('<f>', styles.FTAGS['strong'])
-        elif entity == '/strong':
-            entity = ('</f>', styles.FTAGS['strong'])
 
+        build += list(html.unescape(''.join(b[:opentag])))
+        entity = ''.join(b[opentag:closetag])
+        
+        content = entity[1:-1].strip()
+        first_space = content.find(' ')
+        if first_space == -1:
+            tag = content
+            fields = {}
         else:
-            first_space = entity.find(' ')
-            if first_space == -1:
-                tag = entity
-            else:
-                tag = entity[:first_space]
-                R = entity[first_space + 1:]
-                fields = _parse_tag(R)
-
-            if tag == 'p':
-                ptags = Counter(styles.PTAGS[T.strip()] for T in fields['class'].split('&'))
-                entity = ['<p>', ptags]
-            
-            elif tag in {'f', '/f'}:
-                ftag = styles.FTAGS[fields['class']]
-                entity = ('<' + tag + '>', ftag)
-            
-            elif tag == 'image':
-                entity = ('<image>', (fields['src'], int(fields['width'])))
-            
-            else:
-                entity = '<' + tag + '>'
+            tag = content[:first_space]
+            R = content[first_space + 1:]
+            fields = _parse_tag(R)
         
-        del b[opentag:closetag + 1]
-        b.insert(opentag, entity)
+        if tag == 'p':
+            if 'class' in fields:
+                ptags = Counter(styles.PTAGS[T.strip()] for T in fields['class'].split('&'))
+            else:
+                ptags = Counter({styles.PTAGS['body']: 1})
+            build.append(['<p>', ptags])
+            del b[:closetag]
+        
+        elif tag in {'f', '/f'}:
+            ftag = styles.FTAGS[fields['class']]
+            build.append(('<' + tag + '>', ftag))
+            del b[:closetag]
+        
+        elif tag == 'image':
+            build.append(('<image>', (fields['src'], int(fields['width']))))
+            del b[:closetag]
+        
+        elif tag == 'table':
+            del b[:closetag]
+            # recursivity
+            data, b = _parse_entities(b)
+            build.append(table.Table(fields, data))
+            
+        elif tag == '/table':
+            del b[:closetag]
+            return build, b
+        
+        elif tag == 'td':
+            if 'rowspan' in fields:
+                rs = int(fields['rowspan'])
+            else:
+                rs = 1
+            if 'colspan' in fields:
+                cs = int(fields['colspan'])
+            else:
+                cs = 1
+            build.append(('<td>', rs, cs))
+            del b[:closetag]
+        
+        else:
+            build.append(entity)
+            del b[:closetag]
+            
+    return build + list(html.unescape(''.join(b))), []
 
-    d = []
-    for k, g in [(k, list(g)) for k, g in itertools.groupby(b, key=lambda e: 1 if len(e) != 1 else 2 if e == '\u000A' else 0)]:
-        if k == 0:
-            d += list(html.unescape(''.join(g)))
-        elif k == 1:
-            d += g
-        elif k == 2:
-            d += ['</p>', ['<p>', Counter({styles.PTAGS['body']: 1})]]
+def deserialize(string):
+    string = string.replace('\u000A\u000A', '</p><p>')
+    string = string.replace('\u000A', '<br>')
+    string = string.replace('<em>', '<f class="emphasis">')
+    string = string.replace('</em>', '</f class="emphasis">')
+    string = string.replace('<strong>', '<f class="strong">')
+    string = string.replace('</strong>', '</f class="strong">')
 
-    return d
+    return _parse_entities(list(string))[0]

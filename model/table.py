@@ -15,6 +15,13 @@ def _bin(data, odelimit, cdelimit):
             print('superfluous bin tag')
             continue
 
+class _Table_cell(list):
+    def nail(self, i, j, r, c):
+        self.col = j
+        self.row = i
+        self.colspan = c
+        self.rowspan = r
+
 class Matrix(list):
     def __str__(self):
         M = []
@@ -35,39 +42,42 @@ class Table(object):
         self.fields = fields
         # process table structure
         # build rows
-        self.data = [list(_bin(R, '<td>', '</td>')) for R in _bin(data, '<tr>', '</tr>')]
+        self.data = [list(_Table_cell(C) for C in _bin(R, '<td>', '</td>')) for R in _bin(data, '<tr>', '</tr>')]
         self._build_matrix()
         
     def _build_matrix(self):
         MATRIX = Matrix()
         for i, row in enumerate(self.data):
-            
-            # resize matrix if needed to fit the row
+            # append rows to matrix if needed
             height = max(r[0][1] for r in row)
             if i + height > len(MATRIX):
-                MATRIX += [[None] for k in range(len(MATRIX) - i + height)]
+                MATRIX += [[None] for k in range(i + height - len(MATRIX))]
 
-            # resize matrix to fit the length
+            # extend matrix to fit the width
             length = sum(r[0][2] for r in row) + sum(k is not None for k in MATRIX[i])
             empty = [None] * length
-            print(length)
             if length > len(MATRIX[-1]):
-                MATRIX[:] = [(R + empty)[:length] for R in MATRIX]
+                MATRIX[:] = [R + empty[:length - len(R)] for R in MATRIX]
             
             # drop in cells
-            CELLS = row.copy()
+            _cellnumber_ = 0
             for s, slot in enumerate(MATRIX[i]):
                 # check if cell is occupied
                 if slot is None:
                     try:
-                        cell = CELLS.pop(0)
+                        cell = row[_cellnumber_]
+                        _cellnumber_ += 1
                     except IndexError:
                         break
                     rspan, cspan = cell[0][1:]
+                    cell.nail(i, s, rspan, cspan)
                     for rs in range(rspan):
                         for cs in range(cspan):
                             MATRIX[i + rs][s + cs] = cell
             
         print(MATRIX)
+        self._MATRIX = MATRIX
     
+    def fill(self, bounds):
+        pass
         

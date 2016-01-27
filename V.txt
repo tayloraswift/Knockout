@@ -161,7 +161,7 @@
                     """<table>
                         <tr>
                             <td>cell1</td>
-                            <td colspan=\"2\">cell2</td>
+                            <td colspan=\"2\" rowspan=\"3\">cell2</td>
                         </tr>
                         <tr>
                             <td rowspan=\"3\">cell3</td>
@@ -169,7 +169,7 @@
                             <td>cell5</td>
                         </tr>
                         <tr>
-                            <td>cell6</td>
+                            <td rowspan=\"3\">cell6</td>
                             <td colspan=\"2\">cell7</td>
                         </tr>
                     </table>"""

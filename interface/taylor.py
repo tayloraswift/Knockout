@@ -609,8 +609,8 @@ class Document_view(ui.Cell):
                 l1 = meredith.mipsy.tracts[0].index_to_line(i)
                 l2 = meredith.mipsy.tracts[0].index_to_line(j)
 
-                start = meredith.mipsy.tracts[0].text_index_location(i)[0]
-                stop = meredith.mipsy.tracts[0].text_index_location(j)[0]
+                start = meredith.mipsy.tracts[0].text_index_x(i)
+                stop = meredith.mipsy.tracts[0].text_index_x(j)
             
                 # spelling
                 annoying_red_lines = []
@@ -621,8 +621,8 @@ class Document_view(ui.Cell):
                     u_l = meredith.mipsy.tracts[0].index_to_line(u)
                     v_l = meredith.mipsy.tracts[0].index_to_line(v)
 
-                    u_x = meredith.mipsy.tracts[0].text_index_location(u)[0]
-                    v_x = meredith.mipsy.tracts[0].text_index_location(v)[0]
+                    u_x = meredith.mipsy.tracts[0].text_index_x(u)
+                    v_x = meredith.mipsy.tracts[0].text_index_x(v)
                     
                     annoying_red_lines.append((u_x, v_x, u_l, v_l, u, v))
             
@@ -649,11 +649,11 @@ class Document_view(ui.Cell):
                     self._draw_annotations(cr, sorted_glyphs['_annot'], page)
                     
                     # this is how we know what page the cursor is on
-                    if self._highlight(cr, sorted_glyphs['_intervals'], page, self._selection_highlight, 0.75, start, stop, l1, l2, i, j):
+                    if self._highlight(cr, sorted_glyphs['_lines'], page, self._selection_highlight, 0.75, start, stop, l1, l2, i, j):
                         meredith.mipsy.page_context = page
                     
                     for red_line in annoying_red_lines:
-                        self._highlight(cr, sorted_glyphs['_intervals'], page, self._spelling_highlight, 1, * red_line)
+                        self._highlight(cr, sorted_glyphs['_lines'], page, self._spelling_highlight, 1, * red_line)
 
         for pp in range(max_page + 1):
             #draw page border
@@ -759,26 +759,25 @@ class Document_view(ui.Cell):
                 cr.close_path()
                 cr.fill()
 
-    def _spelling_highlight(self, cr, x1, x2, y, height, I=None, J=None):
+    def _spelling_highlight(self, cr, x, y, width, height, I=None, J=None):
         cr.set_source_rgba(1, 0.15, 0.2, 0.8)
         
-        cr.rectangle(x1, y + int(2 * self._A), x2 - x1, 1)
+        cr.rectangle(x, y + int(2 * self._A), width, 1)
         cr.fill()
         
-    def _selection_highlight(self, cr, x1, x2, y, height, I=None, J=None):
+    def _selection_highlight(self, cr, x, y, width, height, I=None, J=None):
         cr.set_source_rgba(0, 0, 0, 0.1)
         
-        cr.rectangle(x1, y - height, x2 - x1, height)
+        cr.rectangle(x, y - height, width, height)
         cr.fill()
         # print cursor
         if I is not None:
-            self._draw_cursor(cr, I, x1, y, height)
+            self._draw_cursor(cr, I, x, y, height)
         if J is not None:
-            self._draw_cursor(cr, J, x2, y, height)
+            self._draw_cursor(cr, J, x + width, y, height)
 
 
-    def _highlight(self, cr, intervals, page, highlighting_engine, alpha, start_x, stop_x, l1, l2, I, J):
-        
+    def _highlight(self, cr, lines, page, highlighting_engine, alpha, start_x, stop_x, l1, l2, I, J):
         START_RENDERED = False
         STOP_RENDERED = False
         
@@ -786,37 +785,34 @@ class Document_view(ui.Cell):
             cr.push_group()
         
         # find overlaps
-        operant = []
-        for interval in intervals:
-            if l1 < interval[1] and l2 >= interval[0]:
-                rng = sorted((max(l1, interval[0]), min(l2, interval[1] - 1)))
-                operant += range(rng[0], rng[1] + 1)
+        bs1 = bisect.bisect(lines[1], l1) - 1
+        bs2 = bisect.bisect(lines[1], l2)
+        highlighted = ((line['l'], 
+                        self._X_to_screen(line['x'], page),
+                        self._Y_to_screen(line['y'], page),
+                        int(line['width'] * self._A),
+                        int(line['leading'] * self._A)) for line in lines[0][bs1:bs2])
         
         cr.set_source_rgba(0, 0, 0, 0.1)
-
-        for l in operant:
-            # get line dimensions
-            start, stop, leading, y = meredith.mipsy.tracts[0].line_data(l)
-            start = self._X_to_screen(start, page)
-            stop = self._X_to_screen(stop, page)
-            y = self._Y_to_screen(y, page)
-            leading = int(leading * self._A)
-            
+        
+        start = self._X_to_screen(start_x, page)
+        stop = self._X_to_screen(stop_x, page)
+        for l, x, y, width, leading in highlighted:
             if l == l1 == l2:
-                highlighting_engine(cr, self._X_to_screen(start_x, page), self._X_to_screen(stop_x, page), y, leading, I, J)
+                highlighting_engine(cr, start, y, stop - start, leading, I, J)
                 START_RENDERED = True
                 STOP_RENDERED = True
 
             elif l == l1:
-                highlighting_engine(cr, self._X_to_screen(start_x, page), stop, y, leading, I, None)
+                highlighting_engine(cr, start, y, x + width - start, leading, I, None)
                 START_RENDERED = True
 
             elif l == l2:
-                highlighting_engine(cr, start, self._X_to_screen(stop_x, page), y, leading, None, J)
+                highlighting_engine(cr, x, y, stop - x, leading, None, J)
                 STOP_RENDERED = True
 
             else:
-                highlighting_engine(cr, start, stop, y, leading, None, None)
+                highlighting_engine(cr, x, y, width, leading, None, None)
         
         if alpha != 1:
             cr.pop_group_to_source()

@@ -35,7 +35,13 @@ def outside_tag(sequence):
     return sequence
 
 class Glyphline(dict):
+    def translate(self, x, y):
+        self.x = x
+        self.y = y
+    
     def I(self, x, y):
+        x -= self['x']
+        y -= self['y']
         i = bisect.bisect(self['_X_'], x)
         if i:
             try:
@@ -47,18 +53,13 @@ class Glyphline(dict):
                 i -= 1
         return i + self['i']
 
-def _assemble_line(letters, startindex, l, anchor, stop, y, leading, P, F, hyphenate=False):
-    if stop < anchor:
-        stop, anchor = anchor, stop
+def _assemble_line(letters, startindex, width, leading, P, F, hyphenate=False):
     LINE = Glyphline({
-            'l': l,
             'i': startindex,
             
-            'anchor': anchor,
-            'stop': stop,
-            'y': y,
+            'width': width,           
             'leading': leading,
-            
+
             'hyphen': None,
             
             'P_BREAK': False,
@@ -67,9 +68,8 @@ def _assemble_line(letters, startindex, l, anchor, stop, y, leading, P, F, hyphe
     
     # list that contains glyphs
     GLYPHS = []
-    
-    # start on the anchor
-    x = anchor
+    x = 0
+    y = 0
 
     # retrieve font style
     fstat = F.copy()
@@ -214,7 +214,7 @@ def _assemble_line(letters, startindex, l, anchor, stop, y, leading, P, F, hyphe
             x += glyphwidth
 
             # work out line breaks
-            if x > stop:
+            if x > width:
                 n = len(GLYPHS)
                 if CHAR not in _BREAK_WHITESPACE:
 
@@ -259,7 +259,7 @@ def _assemble_line(letters, startindex, l, anchor, stop, y, leading, P, F, hyphe
                             h_F = GLYPHS[i - 1 + k][4]
                             HFS = styles.PARASTYLES.project_f(P, h_F)
                                 
-                            if GLYPHS[i - 1 + k][5] + HFS['fontmetrics'].advance_pixel_width('-') * HFS['fontsize'] < stop:
+                            if GLYPHS[i - 1 + k][5] + HFS['fontmetrics'].advance_pixel_width('-') * HFS['fontsize'] < width:
                                 i = i + k
 
                                 LINE['hyphen'] = (
@@ -322,10 +322,6 @@ class Text(object):
         
         self._SLUGS = []
         
-        self._page_intervals = {}
-        # STRUCTURE:
-        # PAGE_INTERVALS = {PAGE: [(a, b) u (c, d) u (e, f)] , PAGE: [(g, h) u (i, j)]}
-        
         self._sorted_pages = {}
         
         # create cursor objects
@@ -335,15 +331,6 @@ class Text(object):
         # STATS
         self.word_count = '—'
         self.misspellings = []
-    
-    def _paginate(self, page, l1, l2):
-        try:
-            if self._page_intervals[page] and self._page_intervals[page][-1][1] == -1:
-                self._page_intervals[page][-1] = (self._page_intervals[page][-1][0], l2)
-            else:
-                self._page_intervals[page].append( (l1, l2) )
-        except KeyError:
-            self._page_intervals[page] = [ (l1, l2) ]
         
     def _TYPESET(self, l, i):
         if not l:
@@ -380,7 +367,6 @@ class Text(object):
             y = CURRENTLINE['y'] - PSTYLE['leading']
         
         page = self.channels.channels[c].page
-        page_start_l = l
         K_x = None
         
         displacement = PSTYLE['leading']
@@ -391,16 +377,9 @@ class Text(object):
             # see if the lines have overrun the portals
             if y > self.channels.channels[c].railings[1][-1][1] and c < len(self.channels.channels) - 1:
                 c += 1
-                # jump to new entrance
                 y = self.channels.channels[c].railings[0][0][1]
                 
-                # PAGINATION
-                page_new = self.channels.channels[c].page
-                if page_new != page:
-                    self._paginate(page, page_start_l, l)
-                    page = page_new
-                    page_start_l = l
-                #############
+                page = self.channels.channels[c].page
                 continue
 
             # calculate indentation
@@ -412,11 +391,8 @@ class Text(object):
                         INDLINE = _assemble_line(
                             self.text[P_i : P_i + K + 1], 
                             0, 
-                            l, 
                             
-                            0, 
                             1989, 
-                            0, 
                             0,
                             P,
                             F.copy(), 
@@ -434,24 +410,29 @@ class Text(object):
             R_indent = PSTYLE['margin_right']
 
             # generate line objects
+            x1 = self.channels.channels[c].edge(0, y)[0] + L_indent
+            x2 = self.channels.channels[c].edge(1, y)[0] - R_indent
+            if x1 > x2:
+                x1, x2 = x2, x1
             LINE = _assemble_line(
                     self.text[i : i + 1989], 
                     i, 
-                    l, 
                     
-                    self.channels.channels[c].edge(0, y)[0] + L_indent, 
-                    self.channels.channels[c].edge(1, y)[0] - R_indent, 
-                    y, 
+                    x2 - x1, 
                     PSTYLE['leading'],
                     P,
                     F.copy(), 
                     
                     hyphenate = PSTYLE['hyphenate']
                     )
-            # stamp R line number
-            LINE['R'] = R
-            LINE['PP'] = (P, P_i)
+            # stamp line data
+            LINE['R'] = R # line number (within paragraph)
+            LINE['x'] = x1
+            LINE['y'] = y
+            LINE['l'] = l
             LINE['c'] = c
+            LINE['page'] = page
+            LINE['PP'] = (P, P_i)
             
             # get the index of the last glyph printed so we know where to start next time
             i = LINE['j']
@@ -483,8 +464,6 @@ class Text(object):
             l += 1
             self._SLUGS.append(LINE)
 
-        self._paginate(page, page_start_l, l + 1)
-
         self._line_startindices = [line['i'] for line in self._SLUGS]
         self._line_yl = { cc: list(h[:2] for h in list(g)) for cc, g in groupby( ((LINE['y'], LINE['l'], LINE['c']) for LINE in self._SLUGS if LINE['GLYPHS']), key=lambda k: k[2]) }
 
@@ -495,15 +474,8 @@ class Text(object):
         # avoid recalculating lines that weren't affected
         try:
             l = self.index_to_line( min(self.select.cursor, self.cursor.cursor) ) - 1
-            
             if l < 0:
                 l = 0
-            
-            print(self._page_intervals)
-            self._page_intervals = { page: [I for I in 
-                    [ interval if interval[1] <= l else (interval[0], -1) if interval[0] <= l else None for interval in intervals]
-                    if I is not None] for page, intervals in self._page_intervals.items()}    
-            
             i = self._SLUGS[l]['i']
             self._SLUGS = self._SLUGS[:l + 1]
             self._TYPESET(l, i)
@@ -514,7 +486,6 @@ class Text(object):
         # clear sorts
         self._SLUGS.clear()
         self._sorted_pages.clear()
-        self._page_intervals.clear()
         
         self._TYPESET(0, 0)
 
@@ -734,7 +705,7 @@ class Text(object):
             self.select.cursor = len(self.text) - 1
         else:
             self.select.cursor += self.text[self.select.cursor:].index('</p>')
-            self.cursor.cursor = self.pp_at(self.cursor.cursor)[1] + 1
+            self.cursor.cursor = self.pp_at()[1] + 1
     
     def expand_cursors_word(self):
 
@@ -776,58 +747,50 @@ class Text(object):
     def line_indices(self, l):
         return self._SLUGS[l]['i'], self._SLUGS[l]['j']
 
-    # get location of specific glyph
-    def text_index_location(self, index, ahead=False):
-        l = self.index_to_line(index)
+    # get x position of specific glyph
+    def text_index_x(self, i):
+        line = self._SLUGS[self.index_to_line(i)]
         try:
-            glyph = self._SLUGS[l]['GLYPHS'][index - self._SLUGS[l]['i']]
+            glyph = line['GLYPHS'][i - line['i']]
         except IndexError:
-            glyph = self._SLUGS[l]['GLYPHS'][-1]
-            print ('ahead')
-            ahead = True
+            glyph = line['GLYPHS'][-1]
 
-        return glyph[1:3]
+        return glyph[1] + line['x']
 
     def stats(self, spell):
         if spell:
             self.word_count, self.misspellings = words(self.text, spell=True)
         else:
             self.word_count = words(self.text)
-
-    def line_data(self, l):
-        anchor = self._SLUGS[l]['anchor']
-        stop = self._SLUGS[l]['stop']
-        leading = self._SLUGS[l]['leading']
-        y = self._SLUGS[l]['y']
-        return anchor, stop, leading, y
     
     def styling_at(self):
         i = self.cursor.cursor
-        l = self.index_to_line(i)
+        line = self._SLUGS[self.index_to_line(i)]
         try:
-            glyph = self._SLUGS[l]['GLYPHS'][i - self._SLUGS[l]['i']]
+            glyph = line['GLYPHS'][i - line['i']]
         except IndexError:
-            glyph = self._SLUGS[l]['GLYPHS'][-1]
-            print ('ahead')
-            ahead = True
+            glyph = line['GLYPHS'][-1]
 
-        return self._SLUGS[l]['PP'], glyph[3]
+        return line['PP'], glyph[3]
     
-    def pp_at(self, i):
-        return self._SLUGS[self.index_to_line(i)]['PP']
+    def pp_at(self):
+        return self._SLUGS[self.index_to_line(self.cursor.cursor)]['PP']
 
     def extract_glyphs(self, refresh=False):
-
         if refresh:
             self._sorted_pages = {}
 
         if not self._sorted_pages:
-
-            for page, intervals in self._page_intervals.items():
-                sorted_page = {'_annot': [], '_images': [], '_intervals': intervals}
+            for page, pageslugs in ((p, list(ps)) for p, ps in groupby((line for line in self._SLUGS), key=lambda line: line['page'])):
+                if page not in self._sorted_pages:
+                    self._sorted_pages[page] = {'_annot': [], '_images': [], '_lines': ([], [])}
+                sorted_page = self._sorted_pages[page]
+                sorted_page['_lines'][0].extend(pageslugs)
+                sorted_page['_lines'][1].extend(line['l'] for line in pageslugs)
                 
-                for line in chain.from_iterable(self._SLUGS[slice( * interval)] for interval in intervals):
-
+                for line in pageslugs:
+                    x = line['x']
+                    y = line['y']
                     p_i = line['PP'][1]
                     hyphen = line['hyphen']
                     
@@ -835,13 +798,13 @@ class Text(object):
                         
                         if glyph[0] < 0:
                             if glyph[0] == -6:
-                                sorted_page['_annot'].append( (glyph[0], line['anchor'], line['y'] + line['leading'], p_i, glyph[3]))
+                                sorted_page['_annot'].append( (glyph[0], x, y + line['leading'], p_i, glyph[3]))
                             elif glyph[0] == -13:
-                                sorted_page['_images'].append( (glyph[6], glyph[1], glyph[2]) )
+                                sorted_page['_images'].append( (glyph[6], glyph[1] + x, glyph[2] + y) )
                             else:
-                                sorted_page['_annot'].append(glyph[:3] + (p_i, glyph[3]))
+                                sorted_page['_annot'].append((glyph[0], glyph[1] + x, glyph[2] + y) + (p_i, glyph[3]))
                         else:
-                            K = glyph[0:3]
+                            K = (glyph[0], glyph[1] + x, glyph[2] + y)
                             N = glyph[3]['hash']
                             try:
                                 sorted_page[N][1].append(K)
@@ -849,12 +812,11 @@ class Text(object):
                                 sorted_page[N] = (glyph[3], [K])
 
                     if hyphen is not None:
-                        H = hyphen[0:3]
+                        H = (hyphen[0], hyphen[1] + x, hyphen[2] + y)
                         N = hyphen[3]['hash']
                         try:
                             sorted_page[N][1].append(H)
                         except KeyError:
                             sorted_page[N] = (hyphen[3], [H])
-                
-                self._sorted_pages[page] = sorted_page
+
         return self._sorted_pages

@@ -118,7 +118,7 @@ class Meredith(object):
         return character(self.tracts[0].text[i])
         
     def paragraph_at(self):
-        return self.tracts[0].pp_at(self.tracts[0].cursor.cursor)
+        return self.tracts[0].pp_at()
             
     def match_cursors(self):
         self.tracts[0].select.cursor = self.tracts[0].cursor.cursor
@@ -127,7 +127,7 @@ class Meredith(object):
         try:
             self.tracts[0].cursor.set_cursor(
                     self.tracts[0].target_glyph(
-                            self.tracts[0].text_index_location(self.tracts[0].cursor.cursor)[0], 
+                            self.tracts[0].text_index_x(self.tracts[0].cursor.cursor), 
                             0, 
                             self.tracts[0].index_to_line(self.tracts[0].cursor.cursor) + dl
                             ), 

@@ -49,6 +49,33 @@ class Glyphline(dict):
                 i -= 1
         return i + self['i']
 
+    def deposit(self, repository):
+        x = self['x']
+        y = self['y']
+        p_i = self['PP'][1]
+        hyphen = self['hyphen']
+
+        if hyphen is not None:
+            glyphs = self['GLYPHS'] + [hyphen]
+        else:
+            glyphs = self['GLYPHS']
+        
+        for glyph in glyphs:
+            if glyph[0] < 0:
+                if glyph[0] == -6:
+                    repository['_annot'].append( (glyph[0], x, y + self['leading'], p_i, glyph[3]))
+                elif glyph[0] == -13:
+                    repository['_images'].append( (glyph[6], glyph[1] + x, glyph[2] + y) )
+                else:
+                    repository['_annot'].append((glyph[0], glyph[1] + x, glyph[2] + y) + (p_i, glyph[3]))
+            else:
+                K = (glyph[0], glyph[1] + x, glyph[2] + y)
+                N = glyph[3]['hash']
+                try:
+                    repository[N][1].append(K)
+                except KeyError:
+                    repository[N] = (glyph[3], [K])
+
 def _assemble_line(letters, startindex, width, leading, P, F, hyphenate=False):
     LINE = Glyphline({
             'i': startindex,
@@ -785,34 +812,6 @@ class Text(object):
                 sorted_page['_lines'][1].extend(line['l'] for line in pageslugs)
                 
                 for line in pageslugs:
-                    x = line['x']
-                    y = line['y']
-                    p_i = line['PP'][1]
-                    hyphen = line['hyphen']
-                    
-                    for glyph in line['GLYPHS']:
-                        
-                        if glyph[0] < 0:
-                            if glyph[0] == -6:
-                                sorted_page['_annot'].append( (glyph[0], x, y + line['leading'], p_i, glyph[3]))
-                            elif glyph[0] == -13:
-                                sorted_page['_images'].append( (glyph[6], glyph[1] + x, glyph[2] + y) )
-                            else:
-                                sorted_page['_annot'].append((glyph[0], glyph[1] + x, glyph[2] + y) + (p_i, glyph[3]))
-                        else:
-                            K = (glyph[0], glyph[1] + x, glyph[2] + y)
-                            N = glyph[3]['hash']
-                            try:
-                                sorted_page[N][1].append(K)
-                            except KeyError:
-                                sorted_page[N] = (glyph[3], [K])
-
-                    if hyphen is not None:
-                        H = (hyphen[0], hyphen[1] + x, hyphen[2] + y)
-                        N = hyphen[3]['hash']
-                        try:
-                            sorted_page[N][1].append(H)
-                        except KeyError:
-                            sorted_page[N] = (hyphen[3], [H])
+                    line.deposit(sorted_page)
 
         return self._sorted_pages

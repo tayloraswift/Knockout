@@ -780,43 +780,44 @@ class Document_view(ui.Cell):
     def _highlight(self, cr, lines, page, highlighting_engine, alpha, start_x, stop_x, l1, l2, I, J):
         START_RENDERED = False
         STOP_RENDERED = False
-        
-        if alpha != 1:
-            cr.push_group()
-        
+
         # find overlaps
-        bs1 = bisect.bisect(lines[1], l1) - 1
-        bs2 = bisect.bisect(lines[1], l2)
-        highlighted = ((line['l'], 
-                        self._X_to_screen(line['x'], page),
-                        self._Y_to_screen(line['y'], page),
-                        int(line['width'] * self._A),
-                        int(line['leading'] * self._A)) for line in lines[0][bs1:bs2])
-        
-        cr.set_source_rgba(0, 0, 0, 0.1)
-        
-        start = self._X_to_screen(start_x, page)
-        stop = self._X_to_screen(stop_x, page)
-        for l, x, y, width, leading in highlighted:
-            if l == l1 == l2:
-                highlighting_engine(cr, start, y, stop - start, leading, I, J)
-                START_RENDERED = True
-                STOP_RENDERED = True
+        if l2 >= lines[1][0] and l1 < lines[1][-1]:
+            if alpha != 1:
+                cr.push_group()
+            
+            bs1 = bisect.bisect(lines[1], l1) - 1
+            bs2 = bisect.bisect(lines[1], l2)
+            highlighted = ((line['l'], 
+                            self._X_to_screen(line['x'], page),
+                            self._Y_to_screen(line['y'], page),
+                            int(line['width'] * self._A),
+                            int(line['leading'] * self._A)) for line in lines[0][bs1:bs2])
+            
+            cr.set_source_rgba(0, 0, 0, 0.1)
+            
+            start = self._X_to_screen(start_x, page)
+            stop = self._X_to_screen(stop_x, page)
+            for l, x, y, width, leading in highlighted:
+                if l == l1 == l2:
+                    highlighting_engine(cr, start, y, stop - start, leading, I, J)
+                    START_RENDERED = True
+                    STOP_RENDERED = True
 
-            elif l == l1:
-                highlighting_engine(cr, start, y, x + width - start, leading, I, None)
-                START_RENDERED = True
+                elif l == l1:
+                    highlighting_engine(cr, start, y, x + width - start, leading, I, None)
+                    START_RENDERED = True
 
-            elif l == l2:
-                highlighting_engine(cr, x, y, stop - x, leading, None, J)
-                STOP_RENDERED = True
+                elif l == l2:
+                    highlighting_engine(cr, x, y, stop - x, leading, None, J)
+                    STOP_RENDERED = True
 
-            else:
-                highlighting_engine(cr, x, y, width, leading, None, None)
-        
-        if alpha != 1:
-            cr.pop_group_to_source()
-            cr.paint_with_alpha(alpha)
+                else:
+                    highlighting_engine(cr, x, y, width, leading, None, None)
+            
+            if alpha != 1:
+                cr.pop_group_to_source()
+                cr.paint_with_alpha(alpha)
         
         return START_RENDERED and STOP_RENDERED
     

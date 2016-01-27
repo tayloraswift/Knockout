@@ -35,10 +35,6 @@ def outside_tag(sequence):
     return sequence
 
 class Glyphline(dict):
-    def translate(self, x, y):
-        self.x = x
-        self.y = y
-    
     def I(self, x, y):
         x -= self['x']
         y -= self['y']

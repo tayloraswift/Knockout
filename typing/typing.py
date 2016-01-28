@@ -1,7 +1,7 @@
 import time
-
+from model.wonder import character
 from fonts import styles
-
+from state.contexts import Text as CText
 from model import meredith
 
 from model import un
@@ -14,10 +14,28 @@ _OPEN = {'Ctrl equal': sup, 'Ctrl minus': sub, 'Ctrl b': strong, 'Ctrl i': empha
 _CLOSE = {'Ctrl underscore': sub, 'Ctrl plus': sup, 'Ctrl B': strong, 'Ctrl I': emphasis }
 special_names = set(_OPEN) | set(_CLOSE)
 
+def set_cursor(i):
+    CText.tract.cursor.set_cursor(i, CText.tract.text)
+def set_select(i):
+    CText.tract.select.set_cursor(i, CText.tract.text)
+
+def match_cursors():
+    CText.tract.select.cursor = CText.tract.cursor.cursor
+
+def hop(dl, CURSOR):
+    try:
+        set_cursor(CText.tract.target_glyph(
+                    CText.tract.text_index_x(CURSOR), 
+                    0, 
+                    CText.tract.index_to_line(CURSOR) + dl
+                    ))
+    except IndexError:
+        pass
+
 def type_document(name, char, lastpress=[0], direction=[0]):
 
-    CURSOR = meredith.mipsy.tracts[0].cursor.cursor
-    MT = meredith.mipsy.tracts[0]
+    CURSOR = CText.tract.cursor.cursor
+    MT = CText.tract
     
     # Non replacing
     if name == 'Left':
@@ -25,23 +43,23 @@ def type_document(name, char, lastpress=[0], direction=[0]):
             un.history.undo_save(0)
             
             MT.cursor.skip(-1, MT.text)
-            meredith.mipsy.match_cursors()
+            match_cursors()
     elif name == 'Right':
         if CURSOR < len(MT.text):
             un.history.undo_save(0)
             
             MT.cursor.skip(1, MT.text)
-            meredith.mipsy.match_cursors()
+            match_cursors()
     elif name == 'Up':
         un.history.undo_save(0)
         
-        meredith.mipsy.hop(-1)
-        meredith.mipsy.match_cursors()
+        hop(-1, CURSOR)
+        match_cursors()
     elif name == 'Down':
         un.history.undo_save(0)
         
-        meredith.mipsy.hop(1)
-        meredith.mipsy.match_cursors()
+        hop(1, CURSOR)
+        match_cursors()
 
     elif name in ['Home', 'End']:
         un.history.undo_save(0)
@@ -49,16 +67,16 @@ def type_document(name, char, lastpress=[0], direction=[0]):
         li = MT.index_to_line(CURSOR)
         i, j = MT.line_indices(li)
         if name == 'Home':
-            meredith.mipsy.set_cursor(i)
-            meredith.mipsy.match_cursors()
+            set_cursor(i)
+            match_cursors()
         else:
-            meredith.mipsy.set_cursor(j)
-            meredith.mipsy.match_cursors()
+            set_cursor(j)
+            match_cursors()
 
     elif name == 'All':
         un.history.undo_save(0)
         
-        meredith.mipsy.tracts[0].expand_cursors()
+        MT.expand_cursors()
     
     # replacing
 
@@ -69,7 +87,7 @@ def type_document(name, char, lastpress=[0], direction=[0]):
             MT.delete()
         elif name == 'BackSpace':            
             # for deleting paragraphs
-            if meredith.mipsy.at_absolute(CURSOR - 1) == '<p>':
+            if character(CText.tract.text[CURSOR - 1]) == '<p>':
                 # make sure that (1) we’re not trying to delete the first paragraph, 
                 # and that (2) we’re not sliding the cursor
                 if CURSOR > 1 and time.time() - lastpress[0] > 0.2:
@@ -81,7 +99,7 @@ def type_document(name, char, lastpress=[0], direction=[0]):
                 MT.delete(da = -1)
         else:
             # for deleting paragraphs (forward delete)
-            if meredith.mipsy.at_absolute(CURSOR) == '</p>':
+            if CText.tract.text[CURSOR] == '</p>':
                 if time.time() - lastpress[0] > 0.2:
                     un.history.undo_save(-2)
                     MT.delete(db = 2)
@@ -97,7 +115,7 @@ def type_document(name, char, lastpress=[0], direction=[0]):
 #        name = meredith.mipsy.paragraph_at()[0].name
 #        if name[0] == 'h' and name[1].isdigit() and meredith.mipsy.at_absolute(CURSOR) == '</p>' and 'body' in styles.PARASTYLES:
 #            name = 'body'
-        MT.insert(['</p>', ['<p>', meredith.mipsy.paragraph_at()[0].copy() ]])
+        MT.insert(['</p>', ['<p>', CText.tract.pp_at()[0].copy() ]])
         
     elif name == 'Return':
         un.history.undo_save(1)

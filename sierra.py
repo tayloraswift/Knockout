@@ -46,7 +46,7 @@ def load(name):
     styles.faith(doc)
     
     penclick.page = penclick.Page(doc['page'])
-    meredith.mipsy = meredith.Meredith(doc['kitty'], grid=doc['grid'], contexts=doc['contexts'])
+    meredith.mipsy = meredith.Meredith(doc['kitty'], grid=doc['grid'], ctxs=doc['contexts'])
         
     from interface import taylor
     taylor.becky = taylor.Document_view(doc['view'])

@@ -2,14 +2,12 @@ import bisect
 
 from itertools import groupby
 
-from fonts import styles
-
 from state import noticeboard
 
 from model import kevin
 from model.wonder import words, character, _breaking_chars
 
-from model.cat import cast_liquid_line, typeset_liquid, Toplevel_bounds
+from model.cat import typeset_chained
 
 def outside_tag(sequence):
     for i in reversed(range(len(sequence) - 1)):
@@ -58,168 +56,32 @@ class Text(object):
         self.word_count = '—'
         self.misspellings = []
         
-    def _TYPESET(self, l, i):
-        if not l:
-            self._SLUGS = []
-            # which happens if nothing has yet been rendered
-            c = 0
-            P = self.text[0][1]
-            PSTYLE = styles.PARASTYLES.project_p(P)
-            P_i = 0
-            F = Counter()
-            
-            R = 0
-            y = self.channels.channels[c].railings[0][0][1]
-        
-        else:
-            # ylevel is the y position of the first line to print
-            # here we are removing the last existing line so we can redraw that one as well
-            CURRENTLINE = self._SLUGS.pop()
-            LASTLINE = self._SLUGS[-1]
-            
-            if LASTLINE['P_BREAK']:
-                P = self.text[i][1]
-                P_i = i
-                F = Counter()
-
-            else:
-                P, P_i = LASTLINE['PP']
-                F = LASTLINE['F'].copy()
-            PSTYLE = styles.PARASTYLES.project_p(P)
-            
-            R = CURRENTLINE['R']
-            
-            c = CURRENTLINE['c']
-            y = CURRENTLINE['y'] - PSTYLE['leading']
-        
-        page = self.channels.channels[c].page
-        K_x = None
-        
-        displacement = PSTYLE['leading']
-
-        while True:
-            y += displacement
-            
-            # see if the lines have overrun the portals
-            if y > self.channels.channels[c].railings[1][-1][1] and c < len(self.channels.channels) - 1:
-                c += 1
-                y = self.channels.channels[c].railings[0][0][1]
-                
-                page = self.channels.channels[c].page
-                continue
-
-            # calculate indentation
-
-            if R in PSTYLE['indent_range']:
-                D, SIGN, K = PSTYLE['indent']
-                if K:
-                    if K_x is None:
-                        INDLINE = cast_liquid_line(
-                            self.text[P_i : P_i + K + 1], 
-                            0, 
-                            
-                            1989, 
-                            0,
-                            P,
-                            F.copy(), 
-                            
-                            hyphenate = False
-                            )
-                        K_x = INDLINE['GLYPHS'][-1][5] * SIGN
-                    
-                    L_indent = PSTYLE['margin_left'] + D + K_x
-                else:
-                    L_indent = PSTYLE['margin_left'] + D
-            else:
-                L_indent = PSTYLE['margin_left']
-            
-            R_indent = PSTYLE['margin_right']
-
-            # generate line objects
-            x1 = self.channels.channels[c].edge(0, y)[0] + L_indent
-            x2 = self.channels.channels[c].edge(1, y)[0] - R_indent
-            if x1 > x2:
-                x1, x2 = x2, x1
-            LINE = cast_liquid_line(
-                    self.text[i : i + 1989], 
-                    i, 
-                    
-                    x2 - x1, 
-                    PSTYLE['leading'],
-                    P,
-                    F.copy(), 
-                    
-                    hyphenate = PSTYLE['hyphenate']
-                    )
-            # stamp line data
-            LINE['R'] = R # line number (within paragraph)
-            LINE['x'] = x1
-            LINE['y'] = y
-            LINE['l'] = l
-            LINE['c'] = c
-            LINE['page'] = page
-            LINE['PP'] = (P, P_i)
-            
-            # get the index of the last glyph printed so we know where to start next time
-            i = LINE['j']
-            
-            if LINE['P_BREAK']:
-
-                if i > len(self.text) - 1:
-                    self._SLUGS.append(LINE)
-                    # this is the end of the document
-                    break
-                
-                y += PSTYLE['margin_bottom']
-
-                P = self.text[i][1]
-                PSTYLE = styles.PARASTYLES.project_p(P)
-                P_i = i
-                F = Counter()
-                R = 0
-                K_x = None
-                
-                y += PSTYLE['margin_top']
-
-                displacement = PSTYLE['leading']
-
-            else:
-                F = LINE['F']
-                R += 1
-            
-            l += 1
-            self._SLUGS.append(LINE)
-
+    def _precompute_search(self):
         self._line_startindices = [line['i'] for line in self._SLUGS]
         self._line_yl = { cc: list(h[:2] for h in list(g)) for cc, g in groupby( ((LINE['y'], LINE['l'], LINE['c']) for LINE in self._SLUGS if LINE['GLYPHS']), key=lambda k: k[2]) }
 
     def _recalculate(self):
-        # clear sorts
-        self._sorted_pages = {}
-        
         # avoid recalculating lines that weren't affected
-        try:
-            l = self.index_to_line( min(self.select.cursor, self.cursor.cursor) ) - 1
-            if l < 0:
-                l = 0
-            i = self._SLUGS[l]['i']
-            self._SLUGS = self._SLUGS[:l + 1]
-            
-            bounds = Toplevel_bounds(self.channels.channels)
-            self._line_startindices, self._line_yl = typeset_liquid(bounds, self.text, self._SLUGS, l, i)
-        except AttributeError:
-            self.deep_recalculate()
+        l = self.index_to_line( min(self.select.cursor, self.cursor.cursor) ) - 1
+        l = max(0, l)
+        del self._SLUGS[l + 1:]
+        trace = self._SLUGS.pop()
+        c = trace['c']
+        y = trace['y'] - trace['leading']
+        
+        arguments = self.channels.channels, self.text, c, y
+        if self._SLUGS:
+            arguments += (self._SLUGS[-1],)
+        self._SLUGS.extend(typeset_chained( * arguments))
+        self._precompute_search()
+        self._sorted_pages = {}
 
     def deep_recalculate(self):
-        # clear sorts
-        self._SLUGS.clear()
+        self._SLUGS[:] = typeset_chained(self.channels.channels, self.text)
+        self._precompute_search()
         self._sorted_pages.clear()
 
-        bounds = Toplevel_bounds(self.channels.channels)
-        self._line_startindices, self._line_yl = typeset_liquid(bounds, self.text, self._SLUGS, 0, 0)
-
     def _target_row(self, x, y, c):
-        
         yy, ll = zip( * self._line_yl[c])
         # find the clicked line
         lineindex = None
@@ -248,7 +110,6 @@ class Text(object):
             return self.text[self.cursor.cursor:self.select.cursor]
 
     def delete(self, start=None, end=None, da=0, db=0):
-
         self._sort_cursors()
 
         if start is None:
@@ -256,7 +117,6 @@ class Text(object):
             
         if end is None:
             end = self.select.cursor + db
-
 
         if [character(e) for e in self.text[start:end]] == ['</p>', '<p>']:
             del self.text[start:end]

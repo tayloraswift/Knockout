@@ -62,6 +62,145 @@ class _Glyphs_line(dict):
                 except KeyError:
                     repository[N] = (glyph[3], [K])
 
+def typeset_chained(channels, LIQUID, c=0, y=None, LASTLINE = {'j': 0, 'l': -1, 'P_BREAK': True}):
+    SLUGS = []
+    rchannels = channels[c:]
+    rlen = len(rchannels) - 1
+    c_leak = False
+    for c_number, channel in enumerate(rchannels):
+        i = LASTLINE['j']
+        if i >= len(LIQUID):
+            break
+        if y is None:
+            y = channel.railings[0][0][1]
+        if c_number == rlen:
+            c_leak = True
+        SLUGS += typeset_liquid(channel, LIQUID, LASTLINE, i, y, c_number + c, c_leak)
+        y = None
+        
+        if SLUGS:
+            LASTLINE = SLUGS[-1]
+
+    return SLUGS
+
+def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak):
+    SLUGS = []
+    if INIT['P_BREAK']:
+        P = LIQUID[i][1]
+        P_i = i
+        F = Counter()
+        R = 0
+    else:
+        P, P_i = INIT['PP']
+        F = INIT['F'].copy()
+        R = INIT['R'] + 1
+    l = INIT['l'] + 1
+
+    PSTYLE = styles.PARASTYLES.project_p(P)
+    page = channel.page
+    K_x = None
+    
+    displacement = PSTYLE['leading']
+
+    while True:
+        y += displacement
+        
+        # see if the lines have overrun the portal
+        if y > channel.railings[1][-1][1] and not c_leak:
+            break
+            
+        x1 = channel.edge(0, y)[0]
+        x2 = channel.edge(1, y)[0]
+
+        # calculate indentation
+
+        if R in PSTYLE['indent_range']:
+            D, SIGN, K = PSTYLE['indent']
+            if K:
+                if K_x is None:
+                    INDLINE = cast_liquid_line(
+                        LIQUID[P_i : P_i + K + 1], 
+                        0, 
+                        
+                        1989, 
+                        0,
+                        P,
+                        F.copy(), 
+                        
+                        hyphenate = False
+                        )
+                    K_x = INDLINE['GLYPHS'][-1][5] * SIGN
+                
+                L_indent = PSTYLE['margin_left'] + D + K_x
+            else:
+                L_indent = PSTYLE['margin_left'] + D
+        else:
+            L_indent = PSTYLE['margin_left']
+        
+        R_indent = PSTYLE['margin_right']
+
+        # generate line objects
+        x1 += L_indent
+        x2 -= R_indent
+        if x1 > x2:
+            x1, x2 = x2, x1
+        LINE = cast_liquid_line(
+                LIQUID[i : i + 1989], 
+                i, 
+                
+                x2 - x1, 
+                PSTYLE['leading'],
+                P,
+                F.copy(), 
+                
+                hyphenate = PSTYLE['hyphenate']
+                )
+        # stamp line data
+        LINE['R'] = R # line number (within paragraph)
+        LINE['x'] = x1
+        LINE['y'] = y
+        LINE['l'] = l
+        LINE['c'] = c
+        LINE['page'] = page
+        LINE['PP'] = (P, P_i)
+        
+        # get the index of the last glyph printed so we know where to start next time
+        i = LINE['j']
+        
+        if LINE['P_BREAK']:
+
+            if i > len(LIQUID) - 1:
+                SLUGS.append(LINE)
+                # this is the end of the document
+                break
+            
+            y += PSTYLE['margin_bottom']
+
+            if LIQUID[i][0] == '<table>':
+                TBL = LIQUID[i]
+                TBL.fill(None, c, y)
+                i += 1
+            
+            P = LIQUID[i][1]
+            PSTYLE = styles.PARASTYLES.project_p(P)
+            P_i = i
+            F = Counter()
+            R = 0
+            K_x = None
+            
+            y += PSTYLE['margin_top']
+
+            displacement = PSTYLE['leading']
+
+        else:
+            F = LINE['F']
+            R += 1
+        
+        l += 1
+        SLUGS.append(LINE)
+
+    return SLUGS
+
 def cast_liquid_line(letters, startindex, width, leading, P, F, hyphenate=False):
     LINE = _Glyphs_line({
             'i': startindex,
@@ -301,166 +440,3 @@ def cast_liquid_line(letters, startindex, width, leading, P, F, hyphenate=False)
         pass
     
     return LINE
-
-class Toplevel_bounds(object):
-    def __init__(self, channels):
-        self.channels = channels
-    
-#    def activate(self, c):
-#        channel = self.channels[c]
-#        self.y = channel.railings[0][0][1]
-#        self._bottom = channel.railings[0][-1][1]
-#        self.page = channel.page
-#        self._channel = channel
-#        self.c = c
-    
-    def test(self, c, y, displacement):
-        if y > self.channels[c].railings[1][-1][1] and c < len(self.channels) - 1:
-            c += 1
-            y = self.channels[c].railings[0][0][1] + displacement
-            
-        x1 = self.channels[c].edge(0, y)[0]
-        x2 = self.channels[c].edge(1, y)[0]
-        
-        return x1, x2, y, c, self.channels[c].page
-    
-    def copy(self):
-        return type(self)(self.channels)
-        
-
-def typeset_liquid(bounds, LIQUID, SLUGS, l, i, c=0, y=None, nest=0):
-    if not l:
-        SLUGS.clear()
-        # which happens if nothing has yet been rendered
-        P = LIQUID[0][1]
-        PSTYLE = styles.PARASTYLES.project_p(P)
-        P_i = 0
-        F = Counter()
-        
-        R = 0
-        if y is None:
-            y = bounds.channels[c].railings[0][0][1]
-    
-    else:
-        # ylevel is the y position of the first line to print
-        # here we are removing the last existing line so we can redraw that one as well
-        CURRENTLINE = SLUGS.pop()
-        LASTLINE = SLUGS[-1]
-        
-        if LASTLINE['P_BREAK']:
-            P = LIQUID[i][1]
-            P_i = i
-            F = Counter()
-
-        else:
-            P, P_i = LASTLINE['PP']
-            F = LASTLINE['F'].copy()
-        PSTYLE = styles.PARASTYLES.project_p(P)
-        
-        R = CURRENTLINE['R']
-        
-        c = CURRENTLINE['c']
-        y = CURRENTLINE['y'] - PSTYLE['leading']
-    
-    page = bounds.channels[c].page
-    K_x = None
-    
-    displacement = PSTYLE['leading']
-
-    while True:
-        y += displacement
-        
-        # see if the lines have overrun the portals
-        x1, x2, y, c, page = bounds.test(c, y, displacement)
-
-        # calculate indentation
-
-        if R in PSTYLE['indent_range']:
-            D, SIGN, K = PSTYLE['indent']
-            if K:
-                if K_x is None:
-                    INDLINE = cast_liquid_line(
-                        LIQUID[P_i : P_i + K + 1], 
-                        0, 
-                        
-                        1989, 
-                        0,
-                        P,
-                        F.copy(), 
-                        
-                        hyphenate = False
-                        )
-                    K_x = INDLINE['GLYPHS'][-1][5] * SIGN
-                
-                L_indent = PSTYLE['margin_left'] + D + K_x
-            else:
-                L_indent = PSTYLE['margin_left'] + D
-        else:
-            L_indent = PSTYLE['margin_left']
-        
-        R_indent = PSTYLE['margin_right']
-
-        # generate line objects
-        x1 += L_indent
-        x2 -= R_indent
-        if x1 > x2:
-            x1, x2 = x2, x1
-        LINE = cast_liquid_line(
-                LIQUID[i : i + 1989], 
-                i, 
-                
-                x2 - x1, 
-                PSTYLE['leading'],
-                P,
-                F.copy(), 
-                
-                hyphenate = PSTYLE['hyphenate']
-                )
-        # stamp line data
-        LINE['R'] = R # line number (within paragraph)
-        LINE['x'] = x1
-        LINE['y'] = y
-        LINE['l'] = l
-        LINE['c'] = c
-        LINE['page'] = page
-        LINE['PP'] = (P, P_i)
-        
-        # get the index of the last glyph printed so we know where to start next time
-        i = LINE['j']
-        
-        if LINE['P_BREAK']:
-
-            if i > len(LIQUID) - 1:
-                SLUGS.append(LINE)
-                # this is the end of the document
-                break
-            
-            y += PSTYLE['margin_bottom']
-
-            if LIQUID[i][0] == '<table>':
-                TBL = LIQUID[i]
-                TBL.fill(bounds.copy(), c, y)
-                i += 1
-            
-            P = LIQUID[i][1]
-            PSTYLE = styles.PARASTYLES.project_p(P)
-            P_i = i
-            F = Counter()
-            R = 0
-            K_x = None
-            
-            y += PSTYLE['margin_top']
-
-            displacement = PSTYLE['leading']
-
-        else:
-            F = LINE['F']
-            R += 1
-        
-        l += 1
-        SLUGS.append(LINE)
-
-    _line_startindices = [line['i'] for line in SLUGS]
-    _line_yl = { cc: list(h[:2] for h in list(g)) for cc, g in groupby( ((LINE['y'], LINE['l'], LINE['c']) for LINE in SLUGS if LINE['GLYPHS']), key=lambda k: k[2]) }
-    
-    return _line_startindices, _line_yl

@@ -28,11 +28,11 @@
                                'tracking': 0},
                 'h1:DISPLAY STRONG': {'color': (0, 0, 0, 1),
                                       'path': '/home/kelvin/.fonts/Kabel.otf'}},
- 'FTAGLIST': [('sup', ['small']),
+ 'FTAGLIST': [('strong', []),
+              ('emphasis', []),
               ('sub', ['small']),
-              ('strong', []),
-              ('caption', []),
-              ('emphasis', [])],
+              ('sup', ['small']),
+              ('caption', [])],
  'PARASTYLES': (4,
                 [({'fontclasses': (3,
                                    [('Fira Book', {}),
@@ -95,9 +95,9 @@
                   {'meredith_': 1})]),
  'PEGS': {'Standard pegs': ('', {'sub': [0, -0.2], 'sup': [0, 0.3]})},
  'PTAGLIST': [('body', []),
+              ('meredith_', []),
               ('h1', []),
               ('h2', []),
-              ('meredith_', []),
               ('answers', [])],
  'contexts': {'c': 0, 'p': 0},
  'grid': [[90, 370, 410, 690], [80, 910]],
@@ -121,26 +121,26 @@
                          [[690, 80, False], [690, 910, True]],
                          2]],
             'text': '<p class="h1"><strong>AP CALCULUS</strong> CREATE THE '
-                    'QUIZ</p><p class="h2&h1">We begin our Story in New '
+                    'QUIZ</p><p class="h1&h2">We begin our Story in New '
                     'York</p><p class="body"><strong>1</strong>   Find the '
                     'derivative of ln|cos √(<em>x</em> − 13)|.</p><p '
-                    'class="body&answers">A.  − tan √(<em>x</em> − 13) / '
-                    '2√(<em>x</em> − 13)</p><p class="body&answers">B.  sin '
+                    'class="answers&body">A.  − tan √(<em>x</em> − 13) / '
+                    '2√(<em>x</em> − 13)</p><p class="answers&body">B.  sin '
                     '√(<em>x</em> − 13) sec √(<em>x</em> − 13) / 2√(<em>x</em> '
-                    '− 13)</p><p class="body&answers">C.  − tan √(<em>x</em> − '
-                    '13)</p><p class="body&answers">D.  sec √(<em>x</em> − 13) '
+                    '− 13)</p><p class="answers&body">C.  − tan √(<em>x</em> − '
+                    '13)</p><p class="answers&body">D.  sec √(<em>x</em> − 13) '
                     '/ 2√(<em>x</em> − 13)</p><p '
                     'class="body"><strong>3</strong>   Let '
                     '<em>f</em>(<em>x</em>) = (<em>e<f class="sup">x</em></f '
                     'class="sup"> + <em>e<f class="sup"></em>−<em>x</em></f '
                     'class="sup"> + 2) / (<em>e<f class="sup">x</em></f '
                     'class="sup"> + 1). What is <em>f</em>′(<em>x</em>)?</p><p '
-                    'class="body&answers">A.  <em>e<f class="sup">x</em></f '
+                    'class="answers&body">A.  <em>e<f class="sup">x</em></f '
                     'class="sup"> − 2<em>e<f class="sup"></em>−<em>x</em></f '
-                    'class="sup"></p><p class="body&answers">B.  <em>e<f '
+                    'class="sup"></p><p class="answers&body">B.  <em>e<f '
                     'class="sup"></em>−<em>x</em></f class="sup"></p><p '
-                    'class="body&answers">C.  −<em>e<f class="sup">x</em></f '
-                    'class="sup"></p><p class="body&answers">D.  −<em>e<f '
+                    'class="answers&body">C.  −<em>e<f class="sup">x</em></f '
+                    'class="sup"></p><p class="answers&body">D.  −<em>e<f '
                     'class="sup"></em>−<em>x</em></f class="sup"></p><p '
                     'class="meredith_"><image src="meredith.png" '
                     'width="250"></p><p class="body"><strong>4</strong>   '
@@ -157,12 +157,12 @@
                     'Usin<strong>g calcul</strong>us, w</strong>hich is '
                     't<strong>he<strong>n th</strong>e best prediction for the '
                     'total number of streams the 1989 Movie will have by May '
-                    '8th (<em>t</em> = 140)?</p><p class="body&answers">A.  '
+                    '8th (<em>t</em> = 140)?</p><p class="answers&body">A.  '
                     '42,000/⁵√<em>e</em> − 42,000/<em>e</em>² + 126</p><p '
-                    'class="body&answers">B.  42,000/⁵√<em>e</em> − '
-                    '42,000/<em>e</em>² + 22126</p><p class="body&answers">C.  '
+                    'class="answers&body">B.  42,000/⁵√<em>e</em> − '
+                    '42,000/<em>e</em>² + 22126</p><p class="answers&body">C.  '
                     '42,000/⁵√<em>e</em> − 42,000/<em>e</em>² + 140</p><p '
-                    'class="body&answers">D.  −42000/<em>e</em>² + '
+                    'class="answers&body">D.  −42000/<em>e</em>² + '
                     '7/2<em>π</em> sin(40<em>π</em>) + 140</p><p '
                     'class="body"><strong>Correct answer: B</strong></p><p '
                     'class="body">∫<em>S</em>(<em>t</em>) = −42000<em>e<f '

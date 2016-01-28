@@ -231,7 +231,7 @@ class Properties(_Properties_panel):
                                 before = un.history.save, after = lambda: (styles.PARASTYLES.update_f(), meredith.mipsy.recalculate_all(), self.synchronize())))
                     y += 100
 
-                    _after_ = lambda: (styles.PARASTYLES.update_f(), meredith.mipsy.recalculate_all(), contexts.Fontstyle.update(meredith.mipsy.tracts[0].styling_at()[1]), self._reconstruct())
+                    _after_ = lambda: (styles.PARASTYLES.update_f(), meredith.mipsy.recalculate_all(), contexts.Fontstyle.update(contexts.Text.tract.styling_at()[1]), self._reconstruct())
                     if styles.PARASTYLES.active.layerable.active.F is None:
                         self._items.append(kookies.New_object_menu(15, y, 250,
                                     value_push = ops.link_fontstyle, 
@@ -395,7 +395,7 @@ class Properties(_Properties_panel):
                 self._items.append(kookies.Integer_field( 15, y, 250, 
                         callback = meredith.mipsy.change_channel_page, 
                         params = (c,),
-                        value_acquire = lambda C: str(meredith.mipsy.tracts[0].channels.channels[C].page),
+                        value_acquire = lambda C: str(contexts.Text.tract.channels.channels[C].page),
                         name = 'PAGE' ))
                 y += 30
             

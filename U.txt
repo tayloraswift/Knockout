@@ -28,12 +28,12 @@
                                'tracking': 0},
                 'h1:DISPLAY STRONG': {'color': (0, 0, 0, 1),
                                       'path': '/home/kelvin/.fonts/Kabel.otf'}},
- 'FTAGLIST': [('strong', []),
+ 'FTAGLIST': [('sup', ['small']),
+              ('strong', []),
               ('emphasis', []),
-              ('sub', ['small']),
-              ('sup', ['small']),
-              ('caption', [])],
- 'PARASTYLES': (4,
+              ('caption', []),
+              ('sub', ['small'])],
+ 'PARASTYLES': (0,
                 [({'fontclasses': (3,
                                    [('Fira Book', {}),
                                     ('Fira Italic', {'emphasis': 1}),
@@ -48,7 +48,7 @@
                    'hyphenate': True,
                    'indent': (0, -1, 6),
                    'indent_range': {0},
-                   'leading': 20,
+                   'leading': 26,
                    'margin_bottom': 8,
                    'margin_left': 0,
                    'margin_right': 0,
@@ -94,14 +94,14 @@
                    'margin_top': 0},
                   {'meredith_': 1})]),
  'PEGS': {'Standard pegs': ('', {'sub': [0, -0.2], 'sup': [0, 0.3]})},
- 'PTAGLIST': [('body', []),
-              ('meredith_', []),
-              ('h1', []),
+ 'PTAGLIST': [('h1', []),
               ('h2', []),
+              ('body', []),
+              ('meredith_', []),
               ('answers', [])],
  'contexts': {'c': 0, 'p': 0},
  'grid': [[90, 370, 410, 690], [80, 910]],
- 'kitty': [{'cursors': (438, 438),
+ 'kitty': [{'cursors': (139, 139),
             'outline': [[[[90, 80, False], [90, 910, False]],
                          [[370, 80, False], [370, 910, False]],
                          0],
@@ -117,30 +117,30 @@
                         [[[90, 80, False], [90, 910, False]],
                          [[370, 80, False], [370, 910, False]],
                          2],
-                        [[[410, 80, False], [410, 910, True]],
-                         [[690, 80, False], [690, 910, True]],
+                        [[[410, 80, False], [410, 910, False]],
+                         [[690, 80, False], [690, 910, False]],
                          2]],
             'text': '<p class="h1"><strong>AP CALCULUS</strong> CREATE THE '
                     'QUIZ</p><p class="h1&h2">We begin our Story in New '
                     'York</p><p class="body"><strong>1</strong>   Find the '
                     'derivative of ln|cos √(<em>x</em> − 13)|.</p><p '
-                    'class="answers&body">A.  − tan √(<em>x</em> − 13) / '
-                    '2√(<em>x</em> − 13)</p><p class="answers&body">B.  sin '
+                    'class="body&answers">A.  − tan √(<em>x</em> − 13) / '
+                    '2√(<em>x</em> − 13)</p><p class="body&answers">B.  sin '
                     '√(<em>x</em> − 13) sec √(<em>x</em> − 13) / 2√(<em>x</em> '
-                    '− 13)</p><p class="answers&body">C.  − tan √(<em>x</em> − '
-                    '13)</p><p class="answers&body">D.  sec √(<em>x</em> − 13) '
+                    '− 13)</p><p class="body&answers">C.  − tan √(<em>x</em> − '
+                    '13)</p><p class="body&answers">D.  sec √(<em>x</em> − 13) '
                     '/ 2√(<em>x</em> − 13)</p><p '
                     'class="body"><strong>3</strong>   Let '
                     '<em>f</em>(<em>x</em>) = (<em>e<f class="sup">x</em></f '
                     'class="sup"> + <em>e<f class="sup"></em>−<em>x</em></f '
                     'class="sup"> + 2) / (<em>e<f class="sup">x</em></f '
                     'class="sup"> + 1). What is <em>f</em>′(<em>x</em>)?</p><p '
-                    'class="answers&body">A.  <em>e<f class="sup">x</em></f '
+                    'class="body&answers">A.  <em>e<f class="sup">x</em></f '
                     'class="sup"> − 2<em>e<f class="sup"></em>−<em>x</em></f '
-                    'class="sup"></p><p class="answers&body">B.  <em>e<f '
+                    'class="sup"></p><p class="body&answers">B.  <em>e<f '
                     'class="sup"></em>−<em>x</em></f class="sup"></p><p '
-                    'class="answers&body">C.  −<em>e<f class="sup">x</em></f '
-                    'class="sup"></p><p class="answers&body">D.  −<em>e<f '
+                    'class="body&answers">C.  −<em>e<f class="sup">x</em></f '
+                    'class="sup"></p><p class="body&answers">D.  −<em>e<f '
                     'class="sup"></em>−<em>x</em></f class="sup"></p><p '
                     'class="meredith_"><image src="meredith.png" '
                     'width="250"></p><p class="body"><strong>4</strong>   '
@@ -157,12 +157,12 @@
                     'Usin<strong>g calcul</strong>us, w</strong>hich is '
                     't<strong>he<strong>n th</strong>e best prediction for the '
                     'total number of streams the 1989 Movie will have by May '
-                    '8th (<em>t</em> = 140)?</p><p class="answers&body">A.  '
+                    '8th (<em>t</em> = 140)?</p><p class="body&answers">A.  '
                     '42,000/⁵√<em>e</em> − 42,000/<em>e</em>² + 126</p><p '
-                    'class="answers&body">B.  42,000/⁵√<em>e</em> − '
-                    '42,000/<em>e</em>² + 22126</p><p class="answers&body">C.  '
+                    'class="body&answers">B.  42,000/⁵√<em>e</em> − '
+                    '42,000/<em>e</em>² + 22126</p><p class="body&answers">C.  '
                     '42,000/⁵√<em>e</em> − 42,000/<em>e</em>² + 140</p><p '
-                    'class="answers&body">D.  −42000/<em>e</em>² + '
+                    'class="body&answers">D.  −42000/<em>e</em>² + '
                     '7/2<em>π</em> sin(40<em>π</em>) + 140</p><p '
                     'class="body"><strong>Correct answer: B</strong></p><p '
                     'class="body">∫<em>S</em>(<em>t</em>) = −42000<em>e<f '
@@ -185,11 +185,16 @@
                     'class="sup">S</em>(<em>t</em>) <br>            = 22000 + '
                     '42,000/⁵√<em>e</em> − 42,000/<em>e</em>² + '
                     '126<br>            = 42,000/⁵√<em>e</em> − '
-                    '42,000/<em>e</em>² + 22126</p>'}],
+                    '42,000/<em>e</em>² + 22126</p>'},
+           {'cursors': (17, 17),
+            'outline': [[[[230, 20, True], [230, 30, True], [230, 60, True]],
+                         [[510, 20, True], [510, 60, True]],
+                         0]],
+            'text': '<p class="body">{nedfgdfhfgj fgjw}</p>'}],
  'page': {'dimensions': (765, 990), 'dual': False},
- 'view': {'H': 153,
-          'Hc': 429.78857421875,
-          'K': -269,
-          'Kc': 173.644775390625,
-          'Zoom': 12,
+ 'view': {'H': 152,
+          'Hc': 447.25433349609375,
+          'K': -40,
+          'Kc': 376.27789306640625,
+          'Zoom': 9,
           'mode': 'text'}}

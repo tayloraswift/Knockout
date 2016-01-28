@@ -346,7 +346,7 @@ class Text(object):
 
         return glyph[1] + line['x']
 
-    def stats(self, spell):
+    def stats(self, spell=False):
         if spell:
             self.word_count, self.misspellings = words(self.text, spell=True)
         else:

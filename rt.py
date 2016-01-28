@@ -3,8 +3,9 @@ import cairo
 
 from state import noticeboard
 from state import constants
+from state.contexts import Text as CText
 
-from model import kevin, meredith
+from model import kevin
 from model import errors
 from model import do
 
@@ -86,7 +87,7 @@ class Display(Gtk.Window):
         self._periodic = GObject.timeout_add(2000, self._on_periodic)
     
     def _on_periodic(self):
-        meredith.mipsy.stats(spell=True)
+        CText.tract.stats(spell=True)
         self.BECKY.queue_draw()
         self.KLOSSY.queue_draw()
         self.SCREEN.queue_draw()

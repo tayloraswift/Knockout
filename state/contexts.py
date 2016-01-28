@@ -1,16 +1,15 @@
 from fonts import styles
-from model import meredith
 from state import noticeboard
 
 class Text_context(object):
     def __init__(self):
+        self.tract = None
         self._previous_p = None
         self._previous_pi = None
         self._previous_t = None
         self._FSTYLE = None
-        self.update()
+
     def update(self):
-        self.tract = meredith.mipsy.tracts[0]
         PP, FSTYLE = self.tract.styling_at()
         P, P_i = PP
         if P_i != self._previous_pi or self.tract is not self._previous_t:
@@ -32,7 +31,6 @@ class Text_context(object):
             noticeboard.refresh_properties_stack.push_change()
 
     def update_force(self):
-        self.tract = meredith.mipsy.tracts[0]
         PP, self._FSTYLE = self.tract.styling_at()
         P, P_i = PP
         self.paragraph =  self.tract.text[P_i]

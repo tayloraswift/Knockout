@@ -9,12 +9,14 @@ import cairo
 import sierra
 
 from state import noticeboard
-from state import constants, contexts
+from state import constants
+from state.contexts import Text as CText
 
 from fonts import styles
 
 from model import meredith
 from model import wonder
+from model.wonder import character
 from model import un, do, penclick
 
 from typing import typing
@@ -143,12 +145,12 @@ def PDF():
 
 def place_tags(tag):
     un.history.undo_save(3)
-    if not meredith.mipsy.tracts[0].bridge(tag, sign=True):
+    if not CText.tract.bridge(tag, sign=True):
         un.history.pop()
 
 def punch_tags(tag):
     un.history.undo_save(3)
-    if not meredith.mipsy.tracts[0].bridge(tag, sign=False):
+    if not CText.tract.bridge(tag, sign=False):
         un.history.pop()
 
 class Document_toolbar(object):
@@ -265,7 +267,7 @@ def _replace_misspelled(word):
         wonder.struck.add(word[1:-1])
     else:
         typing.type_document('Paste', list(word))
-    meredith.mipsy.stats(spell=True)
+    CText.tract.stats(spell=True)
 
 class Document_view(ui.Cell):
     def __init__(self, state={'mode': 'text', 'Hc': 0, 'Kc': 0, 'H': 0, 'K': 0, 'Zoom': 11}):
@@ -288,7 +290,7 @@ class Document_view(ui.Cell):
 
         self._A = self._scroll_notches[self._scroll_notch_i]
         
-        meredith.mipsy.stats(spell=True)
+        CText.tract.stats(spell=True)
     
     def read_display_state(self):
         return {
@@ -346,7 +348,7 @@ class Document_view(ui.Cell):
         if self._mode == 'text':
             clipboard = typing.type_document(name, char)
             # check if paragraph and font context changed
-            contexts.Text.update()
+            CText.update()
             
             return clipboard
             
@@ -369,20 +371,20 @@ class Document_view(ui.Cell):
                     
                     meredith.mipsy.channel_select(x, y, search_all=True)
                     
-                    meredith.mipsy.set_cursor_xy(x, y)
-                    meredith.mipsy.match_cursors()
+                    typing.set_cursor(meredith.mipsy.lookup_xy(x, y))
+                    typing.match_cursors()
                     
                     # used to keep track of ui redraws
-                    self._sel_cursor = meredith.mipsy.tracts[0].select.cursor
+                    self._sel_cursor = CText.tract.select.cursor
                     
                 except ValueError:
                     # occurs if an empty channel is selected
                     pass
                 # check if paragraph context changed
-                contexts.Text.update()
+                CText.update()
                 
                 # count words
-                meredith.mipsy.stats()
+                CText.tract.stats()
             
             # CHANNEL EDITING MODE
             elif self._mode == 'channels':
@@ -400,7 +402,7 @@ class Document_view(ui.Cell):
         if self._region_active == 'view':
             # TEXT EDITING MODE
             if self._mode == 'text':
-                meredith.mipsy.tracts[0].expand_cursors_word()
+                CText.tract.expand_cursors_word()
     
     def press_right(self, x, y):
         if self._region_active == 'view':
@@ -415,7 +417,7 @@ class Document_view(ui.Cell):
                     meredith.mipsy.channel_select(xo, yo, search_all=True)
                     i = meredith.mipsy.lookup_xy(xo, yo)
                     
-                    ms = meredith.mipsy.tracts[0].misspellings
+                    ms = CText.tract.misspellings
                     pair_i = bisect.bisect([pair[0] for pair in ms], i) - 1
 
                     if ms[pair_i][0] <= i <= ms[pair_i][1]:
@@ -423,11 +425,11 @@ class Document_view(ui.Cell):
                         if i == ms[pair_i][1]:
                             i -= 1
                         meredith.mipsy.set_cursor(i)
-                        meredith.mipsy.match_cursors()
+                        typing.match_cursors()
                         
                         # used to keep track of ui redraws
-                        self._sel_cursor = meredith.mipsy.tracts[0].select.cursor
-                        meredith.mipsy.tracts[0].expand_cursors_word()
+                        self._sel_cursor = CText.tract.select.cursor
+                        CText.tract.expand_cursors_word()
                         suggestions = ['“' + ms[pair_i][2] + '”'] + [w.decode("utf-8") for w in wonder.struck.suggest(ms[pair_i][2])]
                         suggestions = list(zip(suggestions, [str(v) for v in suggestions]))
                         menu.menu.create(x, y, 200, suggestions, _replace_misspelled, () )
@@ -436,7 +438,7 @@ class Document_view(ui.Cell):
                     # occurs if an empty channel is selected
                     pass
                 # check if paragraph context changed
-                contexts.Text.update()
+                CText.update()
 
         
     def press_motion(self, x, y):
@@ -459,10 +461,10 @@ class Document_view(ui.Cell):
                     meredith.mipsy.channel_select(xp, yp)
                 
                 try:
-                    meredith.mipsy.set_select_xy(xp, yp)
+                    typing.set_select(meredith.mipsy.lookup_xy(xp, yp))
                     # if redraw needed
-                    if meredith.mipsy.tracts[0].select.cursor != self._sel_cursor:
-                        self._sel_cursor = meredith.mipsy.tracts[0].select.cursor
+                    if CText.tract.select.cursor != self._sel_cursor:
+                        self._sel_cursor = CText.tract.select.cursor
                         noticeboard.redraw_becky.push_change()
                 except ValueError:
                     pass
@@ -564,7 +566,7 @@ class Document_view(ui.Cell):
 
     def change_mode(self, mode):
         self._mode = mode
-        contexts.Text.update()
+        CText.update()
         noticeboard.refresh_properties_stack.push_change()
         noticeboard.refresh_properties_type.push_change(mode)
     
@@ -601,16 +603,16 @@ class Document_view(ui.Cell):
         
         max_page = 0
 
-        for t, tract in enumerate(meredith.mipsy.tracts):
+        for tract in meredith.mipsy.tracts:
             # highlights
-            if t == 0 and self._mode == 'text':
-                i, j = sorted((meredith.mipsy.tracts[0].cursor.cursor, meredith.mipsy.tracts[0].select.cursor))
+            if tract is CText.tract and self._mode == 'text':
+                i, j = sorted((CText.tract.cursor.cursor, CText.tract.select.cursor))
 
-                l1 = meredith.mipsy.tracts[0].index_to_line(i)
-                l2 = meredith.mipsy.tracts[0].index_to_line(j)
+                l1 = CText.tract.index_to_line(i)
+                l2 = CText.tract.index_to_line(j)
 
-                start = meredith.mipsy.tracts[0].text_index_x(i)
-                stop = meredith.mipsy.tracts[0].text_index_x(j)
+                start = CText.tract.text_index_x(i)
+                stop = CText.tract.text_index_x(j)
             
                 # spelling
                 annoying_red_lines = []
@@ -618,11 +620,11 @@ class Document_view(ui.Cell):
 
                     u, v = pair[:2]
 
-                    u_l = meredith.mipsy.tracts[0].index_to_line(u)
-                    v_l = meredith.mipsy.tracts[0].index_to_line(v)
+                    u_l = CText.tract.index_to_line(u)
+                    v_l = CText.tract.index_to_line(v)
 
-                    u_x = meredith.mipsy.tracts[0].text_index_x(u)
-                    v_x = meredith.mipsy.tracts[0].text_index_x(v)
+                    u_x = CText.tract.text_index_x(u)
+                    v_x = CText.tract.text_index_x(v)
                     
                     annoying_red_lines.append((u_x, v_x, u_l, v_l, u, v))
             
@@ -645,7 +647,7 @@ class Document_view(ui.Cell):
                 cr.restore()
                 
                 # only annotate active tract
-                if t == 0 and self._mode == 'text':
+                if tract is CText.tract and self._mode == 'text':
                     self._draw_annotations(cr, sorted_glyphs['_annot'], page)
                     
                     # this is how we know what page the cursor is on
@@ -717,7 +719,7 @@ class Document_view(ui.Cell):
             
             fontsize = F['fontsize'] * self._A
 
-            if p_i == meredith.mipsy.paragraph_at()[1]:
+            if p_i == CText.tract.pp_at()[1]:
                 cr.set_source_rgba( * accent_light, 0.7)
             else:
                 cr.set_source_rgba(0, 0, 0, 0.4)
@@ -836,7 +838,7 @@ class Document_view(ui.Cell):
                     2, 
                     uh)
         # special cursor if adjacent to font tag
-        if meredith.mipsy.at_absolute(i) in ('<f>', '</f>'):
+        if character(CText.tract.text[i]) in ('<f>', '</f>'):
             cr.rectangle(ux - 3, 
                     uy, 
                     4, 
@@ -845,7 +847,7 @@ class Document_view(ui.Cell):
                     uy + uh - 2, 
                     4, 
                     2)
-        if meredith.mipsy.at_absolute(i - 1) in ('<f>', '</f>'):
+        if character(CText.tract.text[i - 1]) in ('<f>', '</f>'):
             cr.rectangle(ux - 1, 
                     uy, 
                     4, 
@@ -899,7 +901,7 @@ class Document_view(ui.Cell):
         cr.show_text('{0:g}'.format(self._A*100) + '%')
         
         cr.move_to(constants.UI[1] - 150, k - 20)
-        cr.show_text(str(meredith.mipsy.tracts[0].word_count) + ' words · page ' + str(meredith.mipsy.page_context))
+        cr.show_text(str(CText.tract.word_count) + ' words · page ' + str(meredith.mipsy.page_context))
         
         cr.reset_clip()
 

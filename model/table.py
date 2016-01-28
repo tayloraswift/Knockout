@@ -1,4 +1,5 @@
 from model.wonder import character
+from model.cat import typeset_liquid
 
 def _bin(data, odelimit, cdelimit):
     for i, v in ((i, v) for i, v in enumerate(data) if character(v) == odelimit):
@@ -78,6 +79,12 @@ class Table(object):
         print(MATRIX)
         self._MATRIX = MATRIX
     
-    def fill(self, bounds):
+    def fill(self, bounds, c, y):
         pass
+    
+    def __getitem__(self, i):
+        if not i:
+            return '<table>'
+        else:
+            raise IndexError
         

@@ -782,18 +782,20 @@ class Document_view(ui.Cell):
         STOP_RENDERED = False
 
         # find overlaps
-        if l2 >= lines[1][0] and l1 < lines[1][-1]:
+        if l2 >= lines[1][0] and l1 <= lines[1][-1]:
             if alpha != 1:
                 cr.push_group()
             
             bs1 = bisect.bisect(lines[1], l1) - 1
             bs2 = bisect.bisect(lines[1], l2)
+            if bs1 < 0:
+                bs1 = 0
             highlighted = ((line['l'], 
                             self._X_to_screen(line['x'], page),
                             self._Y_to_screen(line['y'], page),
                             int(line['width'] * self._A),
                             int(line['leading'] * self._A)) for line in lines[0][bs1:bs2])
-            
+
             cr.set_source_rgba(0, 0, 0, 0.1)
             
             start = self._X_to_screen(start_x, page)

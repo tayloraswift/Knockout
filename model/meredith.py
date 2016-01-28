@@ -29,6 +29,7 @@ class Meredith(object):
         if not self.channel_select(x, y):
             old_pg = self.page_context
             self.page_context = penclick.page.XY_to_page(x, y)
+            print(self.page_context)
             xp, yp = self.XY(x, y)
             if not self.channel_select(xp, yp):
                 self.page_context = old_pg

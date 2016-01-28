@@ -45,6 +45,9 @@ def serialize(text):
             elif entity[0] == '<image>':
                 source, width = entity[1]
                 b[e] = '<image src="' + source + '" width="' + str(width) + '">'
+            
+            elif entity[0] == '<table>':
+                b[e] = ''
 
         elif entity == '<':
             b[e] = '&lt;'

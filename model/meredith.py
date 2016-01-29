@@ -1,13 +1,14 @@
 from model import olivia
 from model import george
 from model import penclick
+from model import kevin
 
 from state import noticeboard
 from state.contexts import Text as CText
 
 class Meredith(object):
     def __init__(self, kitty, grid, ctxs):
-        self.tracts = [olivia.Text(k['text'], george.Washington([george.Swimming_pool( * c ) for c in k['outline']]), * k['cursors'] ) for k in kitty if k['outline']]
+        self.tracts = [olivia.Text(kevin.deserialize(k['text']), george.Washington([george.Swimming_pool( * c ) for c in k['outline']]), * k['cursors'] ) for k in kitty if k['outline']]
         
         self.page_context = ctxs['p']
         self.hover_page_context = 0

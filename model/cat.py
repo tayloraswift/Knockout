@@ -2,6 +2,7 @@ import bisect
 from itertools import groupby
 from bulletholes.counter import TCounter as Counter
 from model.wonder import character
+from model.george import Swimming_pool
 from fonts import styles
 
 from pyphen import pyphen
@@ -20,7 +21,7 @@ _BREAK_P = _BREAK | set(('</p>',))
 
 _APOSTROPHES = set("'’")
 
-class _Glyphs_line(dict):
+class Glyphs_line(dict):
     def I(self, x, y):
         x -= self['x']
         y -= self['y']
@@ -62,12 +63,19 @@ class _Glyphs_line(dict):
                 except KeyError:
                     repository[N] = (glyph[3], [K])
 
-def typeset_chained(channels, LIQUID, c=0, y=None, LASTLINE = {'j': 0, 'l': -1, 'P_BREAK': True}):
+class LContainer(Swimming_pool):
+    def __init__(self, SP):
+        Swimming_pool.__init__(self, SP.railings, SP.page)
+    
+    def bounds(self, y):
+        return self.edge(0, y)[0], self.edge(1, y)[0]
+
+def typeset_chained(channels, LIQUID, c=0, y=None, LASTLINE = Glyphs_line({'j': 0, 'l': -1, 'P_BREAK': True})):
     SLUGS = []
     rchannels = channels[c:]
     rlen = len(rchannels) - 1
     c_leak = False
-    for c_number, channel in enumerate(rchannels):
+    for c_number, channel in enumerate(LContainer(rc) for rc in rchannels):
         i = LASTLINE['j']
         if i >= len(LIQUID):
             break
@@ -85,6 +93,7 @@ def typeset_chained(channels, LIQUID, c=0, y=None, LASTLINE = {'j': 0, 'l': -1, 
 
 def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak):
     SLUGS = []
+    l = INIT['l'] + 1
     if INIT['P_BREAK']:
         P = LIQUID[i][1]
         P_i = i
@@ -94,7 +103,6 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak):
         P, P_i = INIT['PP']
         F = INIT['F'].copy()
         R = INIT['R'] + 1
-    l = INIT['l'] + 1
 
     PSTYLE = styles.PARASTYLES.project_p(P)
     page = channel.page
@@ -109,8 +117,7 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak):
         if y > channel.railings[1][-1][1] and not c_leak:
             break
             
-        x1 = channel.edge(0, y)[0]
-        x2 = channel.edge(1, y)[0]
+        x1, x2 = channel.bounds(y)
 
         # calculate indentation
 
@@ -163,14 +170,16 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak):
         LINE['c'] = c
         LINE['page'] = page
         LINE['PP'] = (P, P_i)
-        
+
+        l += 1
+        SLUGS.append(LINE)
+
         # get the index of the last glyph printed so we know where to start next time
         i = LINE['j']
         
         if LINE['P_BREAK']:
 
             if i > len(LIQUID) - 1:
-                SLUGS.append(LINE)
                 # this is the end of the document
                 break
             
@@ -178,7 +187,16 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak):
 
             if LIQUID[i][0] == '<table>':
                 TBL = LIQUID[i]
-                TBL.fill(None, c, y)
+                TBL.fill(channel, c, y)
+                TBL['i'] = i
+                TBL['j'] = i + 1
+                TBL['l'] = l
+                TBL['c'] = c
+                TBL['page'] = page
+                y = TBL['y']
+                
+                SLUGS.append(TBL)
+                l += 1
                 i += 1
             
             P = LIQUID[i][1]
@@ -195,14 +213,11 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak):
         else:
             F = LINE['F']
             R += 1
-        
-        l += 1
-        SLUGS.append(LINE)
 
     return SLUGS
 
 def cast_liquid_line(letters, startindex, width, leading, P, F, hyphenate=False):
-    LINE = _Glyphs_line({
+    LINE = Glyphs_line({
             'i': startindex,
             
             'width': width,           

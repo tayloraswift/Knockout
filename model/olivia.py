@@ -4,10 +4,9 @@ from itertools import groupby
 
 from state import noticeboard
 
-from model import kevin
 from model.wonder import words, character, _breaking_chars
 
-from model.cat import typeset_chained
+from model.cat import typeset_chained, Glyphs_line
 
 def outside_tag(sequence):
     for i in reversed(range(len(sequence) - 1)):
@@ -39,9 +38,9 @@ class Cursor(object):
         self.cursor = index
         self.skip(0, text)
 
-class Text(object):
-    def __init__(self, text, channels, cursor, select):
-        self.text = kevin.deserialize(text)
+class Flowing_text(object):
+    def __init__(self, text, channels=None, cursor=1, select=1):
+        self.text = text
         self.channels = channels
         
         self._SLUGS = []
@@ -59,27 +58,6 @@ class Text(object):
     def _precompute_search(self):
         self._line_startindices = [line['i'] for line in self._SLUGS]
         self._line_yl = { cc: list(h[:2] for h in list(g)) for cc, g in groupby( ((LINE['y'], LINE['l'], LINE['c']) for LINE in self._SLUGS if LINE['GLYPHS']), key=lambda k: k[2]) }
-
-    def _recalculate(self):
-        # avoid recalculating lines that weren't affected
-        l = self.index_to_line( min(self.select.cursor, self.cursor.cursor) ) - 1
-        l = max(0, l)
-        del self._SLUGS[l + 1:]
-        trace = self._SLUGS.pop()
-        c = trace['c']
-        y = trace['y'] - trace['leading']
-        
-        arguments = self.channels.channels, self.text, c, y
-        if self._SLUGS:
-            arguments += (self._SLUGS[-1],)
-        self._SLUGS.extend(typeset_chained( * arguments))
-        self._precompute_search()
-        self._sorted_pages = {}
-
-    def deep_recalculate(self):
-        self._SLUGS[:] = typeset_chained(self.channels.channels, self.text)
-        self._precompute_search()
-        self._sorted_pages.clear()
 
     def _target_row(self, x, y, c):
         yy, ll = zip( * self._line_yl[c])
@@ -365,6 +343,34 @@ class Text(object):
     def pp_at(self):
         return self._SLUGS[self.index_to_line(self.cursor.cursor)]['PP']
 
+class Text(Flowing_text):
+    def _recalculate(self):
+        # avoid recalculating lines that weren't affected
+        l = self.index_to_line( min(self.select.cursor, self.cursor.cursor) )
+        del self._SLUGS[l + 1:]
+
+        if type(self._SLUGS[l]) is Glyphs_line:
+            l -= 1
+            l = max(0, l)
+            if type(self._SLUGS[l]) is Glyphs_line:
+                del self._SLUGS[l + 1:]
+
+        trace = self._SLUGS.pop()
+        c = trace['c']
+        y = trace['y'] - trace['leading']
+        
+        arguments = self.channels.channels, self.text, c, y
+        if self._SLUGS:
+            arguments += (self._SLUGS[-1],)
+        self._SLUGS.extend(typeset_chained( * arguments))
+        self._precompute_search()
+        self._sorted_pages = {}
+
+    def deep_recalculate(self):
+        self._SLUGS[:] = typeset_chained(self.channels.channels, self.text)
+        self._precompute_search()
+        self._sorted_pages.clear()
+    
     def extract_glyphs(self, refresh=False):
         if refresh:
             self._sorted_pages = {}

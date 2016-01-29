@@ -1,9 +1,9 @@
 import bisect
 
 class Swimming_pool(object):
-    def __init__(self, left, right, page=0):
+    def __init__(self, railings, page=0):
         # create two railings, the borders
-        self.railings = [left, right]
+        self.railings = railings
         self.page = page
     
     def set_page(self, page):
@@ -186,7 +186,7 @@ class Washington(object):
 
     def generate_channel(self):
         x1, y1, x2 = self.channels[-1].railings[0][-1][0], self.channels[-1].railings[0][-1][1] + 40, self.channels[-1].railings[1][-1][0]
-        return Swimming_pool( [[x1, y1, False], [x1, y1 + 40, False]], [[x2, y1, False], [x2, y1 + 40, False]], self.channels[-1].page )
+        return Swimming_pool( [[[x1, y1, False], [x1, y1 + 40, False]], [[x2, y1, False], [x2, y1 + 40, False]]], self.channels[-1].page )
     
     def add_channel(self):
         self.channels.append(self.generate_channel())

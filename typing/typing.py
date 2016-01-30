@@ -79,7 +79,6 @@ def type_document(name, char, lastpress=[0], direction=[0]):
         MT.expand_cursors()
     
     # replacing
-
     elif name in ['BackSpace', 'Delete']:
         
         if MT.take_selection():
@@ -87,14 +86,20 @@ def type_document(name, char, lastpress=[0], direction=[0]):
             MT.delete()
         elif name == 'BackSpace':            
             # for deleting paragraphs
-            if character(CText.tract.text[CURSOR - 1]) == '<p>':
+            prec = character(CText.tract.text[CURSOR - 1])
+            if prec == '<p>':
                 # make sure that (1) we’re not trying to delete the first paragraph, 
                 # and that (2) we’re not sliding the cursor
                 if CURSOR > 1 and time.time() - lastpress[0] > 0.2:
                     un.history.undo_save(-2)
-                    MT.delete(da = -2)
+                    # for table objects
+                    if CText.tract.text[CURSOR - 2] != '</p>':
+                        del CText.tract.text[CURSOR - 2]
+                        MT.delete(da = 0)
+                    else:
+                        MT.delete(da = -2)
 
-            else:
+            elif prec != '</p>':
                 un.history.undo_save(-1)
                 MT.delete(da = -1)
         else:
@@ -102,7 +107,11 @@ def type_document(name, char, lastpress=[0], direction=[0]):
             if CText.tract.text[CURSOR] == '</p>':
                 if time.time() - lastpress[0] > 0.2:
                     un.history.undo_save(-2)
-                    MT.delete(db = 2)
+                    if character(CText.tract.text[CURSOR + 1]) != '<p>':
+                        del CText.tract.text[CURSOR + 1]
+                        MT.delete(db = 0)
+                    else:
+                        MT.delete(db = 2)
             else:
                 un.history.undo_save(-1)
                 MT.delete(db = 1)

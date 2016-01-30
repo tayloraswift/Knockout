@@ -27,10 +27,12 @@
                                'pegs': 'Standard pegs',
                                'tracking': 0},
                 'h1:DISPLAY STRONG': {'color': (0, 0, 0, 1),
-                                      'path': '/home/kelvin/.fonts/Kabel.otf'}},
- 'FTAGLIST': [('emphasis', []),
+                                      'path': '/home/kelvin/.fonts/Kabel.otf'},
+                'pink': {'color': (1, 0.1, 0.3, 1),
+                         'path': '/home/kelvin/.fonts/FiraSans-SemiBold.otf'}},
+ 'FTAGLIST': [('strong', []),
               ('sup', ['small']),
-              ('strong', []),
+              ('emphasis', []),
               ('caption', []),
               ('sub', ['small'])],
  'PARASTYLES': (5,
@@ -93,28 +95,17 @@
                    'margin_right': 0,
                    'margin_top': 0},
                   {'meredith_': 1}),
-                 ({'fontclasses': (3,
-                                   [('Fira Book', {}),
-                                    ('Fira Italic', {'emphasis': 1}),
-                                    ('Fira Light', {'strong': -1}),
-                                    ('Fira Bold', {'strong': 1}),
-                                    ('Fira Superbold', {'strong': 2}),
-                                    ('Fira Bold Italic',
-                                     {'emphasis': 1, 'strong': 1}),
-                                    ('Small', {'small': 1}),
-                                    ('Small Italic',
-                                     {'emphasis': 1, 'small': 1})])},
-                  {'tablecell': 1})]),
+                 ({'fontclasses': (0, [('pink', {})])}, {'tablecell': 1})]),
  'PEGS': {'Standard pegs': ('', {'sub': [0, -0.2], 'sup': [0, 0.3]})},
  'PTAGLIST': [('meredith_', []),
-              ('h1', []),
               ('tablecell', []),
-              ('h2', []),
               ('answers', []),
+              ('h2', []),
+              ('h1', []),
               ('body', [])],
- 'contexts': {'c': 1, 'p': 0},
+ 'contexts': {'c': 0, 'p': 0},
  'grid': [[90, 370, 410, 690], [80, 910]],
- 'kitty': [{'cursors': (871, 871),
+ 'kitty': [{'cursors': (151, 151),
             'outline': [(([[90, 80, False], [90, 910, False]],
                           [[370, 80, False], [370, 910, False]]),
                          0),
@@ -134,7 +125,7 @@
                           [[690, 80, False], [690, 910, True]]),
                          2)],
             'text': '<p class="h1"><strong>AP CALCULUS</strong> CREATE THE '
-                    'QUIZ</p><p class="h2&h1">We begin our Story in New '
+                    'QUIZ</p><p class="h1&h2">We begin our Story in New '
                     'York</p><p class="body"><strong>1</strong>   Find the '
                     'derivative of ln|cos √(<em>x</em> − 13)|.</p><p '
                     'class="body&answers">A.  − tan √(<em>x</em> − 13) / '
@@ -174,12 +165,14 @@
                     'colspan="1"><p class="tablecell">cell1 Timing is a funny '
                     'thing</p></td><td rowspan="1" colspan="2"><p '
                     'class="tablecell">cell2</p></td></tr><tr><td rowspan="2" '
-                    'colspan="1"><p class="tablecell">cell3 She danced to forget '
-                    'him</p><p class="tablecell">br</p></td><td rowspan="1" '
-                    'colspan="1"><p class="tablecell">cell4</p></td><td rowspan="1" '
-                    'colspan="1"><p class="tablecell">cell5</p></td><td rowspan="1" '
-                    'colspan="1"><p class="tablecell">cell6</p></td></tr><tr><td '
-                    'rowspan="2" colspan="1"><p class="tablecell">cell7</p></td><td '
+                    'colspan="1"><p class="tablecell">cell3 She danced to '
+                    'forget him</p><p class="tablecell">br</p></td><td '
+                    'rowspan="1" colspan="1"><p '
+                    'class="tablecell">cell4</p></td><td rowspan="1" '
+                    'colspan="1"><p class="tablecell">cell5</p></td><td '
+                    'rowspan="1" colspan="1"><p '
+                    'class="tablecell">cell6</p></td></tr><tr><td rowspan="2" '
+                    'colspan="1"><p class="tablecell">cell7</p></td><td '
                     'rowspan="1" colspan="2"><p '
                     'class="tablecell">cell8</p></td></tr></table><p '
                     'class="body&answers">A.  42,000/⁵√<em>e</em> − '
@@ -211,9 +204,9 @@
                     '126<br>            = 42,000/⁵√<em>e</em> − '
                     '42,000/<em>e</em>² + 22126</p>'}],
  'page': {'dimensions': (765, 990), 'dual': False},
- 'view': {'H': 132,
-          'Hc': 572.0698852539062,
-          'K': 28,
-          'Kc': 156.68435668945312,
-          'Zoom': 13,
+ 'view': {'H': -80,
+          'Hc': 368.1319580078125,
+          'K': -39,
+          'Kc': 217.98599243164062,
+          'Zoom': 12,
           'mode': 'text'}}

@@ -83,7 +83,7 @@ def typeset_chained(channels, LIQUID, c=0, y=None, LASTLINE = Glyphs_line({'j': 
             y = channel.railings[0][0][1]
         if c_number == rlen:
             c_leak = True
-        SLUGS += typeset_liquid(channel, LIQUID, LASTLINE, i, y, c_number + c, c_leak)
+        SLUGS += typeset_liquid(channel, LIQUID, LASTLINE, i, y, c_number + c, c_leak, root=True)
         y = None
         
         if SLUGS:
@@ -91,30 +91,60 @@ def typeset_chained(channels, LIQUID, c=0, y=None, LASTLINE = Glyphs_line({'j': 
 
     return SLUGS
 
-def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak):
+def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False):
     SLUGS = []
     l = INIT['l'] + 1
     if INIT['P_BREAK']:
-        P = LIQUID[i][1]
-        P_i = i
-        F = Counter()
-        R = 0
+        gap = True
     else:
         P, P_i = INIT['PP']
         F = INIT['F'].copy()
         R = INIT['R'] + 1
-
-    PSTYLE = styles.PARASTYLES.project_p(P)
-    page = channel.page
-    K_x = None
+        K_x = None
+        PSTYLE = styles.PARASTYLES.project_p(P)
+        gap = False
     
-    displacement = PSTYLE['leading']
+    page = channel.page
 
     while True:
-        y += displacement
+        if gap:
+            i, container = next((a + i, v) for a, v in enumerate(LIQUID[i:]) if character(v) in {'<p>', '<table>'})
+            if container[0] == '<p>':
+                P = container[1]
+                PSTYLE = styles.PARASTYLES.project_p(P)
+                P_i = i
+                F = Counter()
+                R = 0
+                K_x = None
+                
+                y += PSTYLE['margin_top'] + PSTYLE['leading']
+
+                gap = False
+
+            elif container[0] == '<table>':
+                TBL = container
+                try:
+                    TBL.fill(channel, c, y)
+                except RuntimeError:
+                    break
+                TBL['i'] = i
+                TBL['j'] = i + 1
+                TBL['l'] = l
+                TBL['c'] = c
+                TBL['page'] = page
+                y = TBL['y']
+                
+                SLUGS.append(TBL)
+                l += 1
+                i += 1
+                continue
+        else:
+            y += PSTYLE['leading']
         
         # see if the lines have overrun the portal
         if y > channel.railings[1][-1][1] and not c_leak:
+            if not root:
+                raise RuntimeError
             break
             
         x1, x2 = channel.bounds(y)
@@ -178,38 +208,11 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak):
         i = LINE['j']
         
         if LINE['P_BREAK']:
-
             if i > len(LIQUID) - 1:
-                # this is the end of the document
+                # end of the document
                 break
-            
             y += PSTYLE['margin_bottom']
-
-            if LIQUID[i][0] == '<table>':
-                TBL = LIQUID[i]
-                TBL.fill(channel, c, y)
-                TBL['i'] = i
-                TBL['j'] = i + 1
-                TBL['l'] = l
-                TBL['c'] = c
-                TBL['page'] = page
-                y = TBL['y']
-                
-                SLUGS.append(TBL)
-                l += 1
-                i += 1
-            
-            P = LIQUID[i][1]
-            PSTYLE = styles.PARASTYLES.project_p(P)
-            P_i = i
-            F = Counter()
-            R = 0
-            K_x = None
-            
-            y += PSTYLE['margin_top']
-
-            displacement = PSTYLE['leading']
-
+            gap = True
         else:
             F = LINE['F']
             R += 1
@@ -314,7 +317,7 @@ def cast_liquid_line(letters, startindex, width, leading, P, F, hyphenate=False)
                     if brackets[V][-1][1]:
                         del brackets[V][-1]
                     brackets[V][-1][1] = True
-                except IndexError:
+                except (IndexError, KeyError):
                     print('line begins with close tag character')
             root_for.update(set(T.groups))
             

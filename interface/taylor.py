@@ -424,7 +424,7 @@ class Document_view(ui.Cell):
 
                         if i == ms[pair_i][1]:
                             i -= 1
-                        meredith.mipsy.set_cursor(i)
+                        typing.set_cursor(i)
                         typing.match_cursors()
                         
                         # used to keep track of ui redraws

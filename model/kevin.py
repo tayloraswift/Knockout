@@ -57,13 +57,14 @@ def serialize(text):
         elif entity == '>':
             b[e] = '&gt;'
 
-#        elif entity == '</p>':
-#            b[e] = '</p>\n'
+        elif entity == '</p>':
+            b[e] = '</p>\n'
+
     return ''.join(b)
 
 def _parse_entities(b):
     gap_end = {'</table>', '</p>'}
-    whitespace = {' ', '\n', '<br>'}
+    whitespace = {' ', '\n', '<br>', '\t'}
     b = b.copy()
     build = []
     while True:
@@ -88,15 +89,14 @@ def _parse_entities(b):
         
         if tag == 'p':
             # clear the gap
-#            print(build)
-#            try:
-#                
-#                gap_begin = next(len(build) - i for i, v in enumerate(reversed(build)) if type(v) is str and v in gap_end)
-#                build[gap_begin:] = [e for e in build[gap_begin:] if not (type(e) is str and e in whitespace)]
-#
-#            except StopIteration:
-#                pass
-#            print(build)
+            try:
+                
+                gap_begin = next(len(build) - i for i, v in enumerate(reversed(build)) if type(v) is str and v in gap_end)
+                if all(type(e) is str and e in whitespace for e in build[gap_begin:]):
+                    del build[gap_begin:]
+
+            except StopIteration:
+                pass
             
             if 'class' in fields:
                 ptags = Counter(styles.PTAGS[T.strip()] for T in fields['class'].split('&'))

@@ -108,7 +108,11 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False):
 
     while True:
         if gap:
-            i, container = next((a + i, v) for a, v in enumerate(LIQUID[i:]) if character(v) in {'<p>', '<table>'})
+            try:
+                i, container = next((a + i, v) for a, v in enumerate(LIQUID[i:]) if character(v) in {'<p>', '<table>'})
+            except StopIteration:
+                # end of file
+                break
             if container[0] == '<p>':
                 P = container[1]
                 PSTYLE = styles.PARASTYLES.project_p(P)
@@ -208,9 +212,6 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False):
         i = LINE['j']
         
         if LINE['P_BREAK']:
-            if i > len(LIQUID) - 1:
-                # end of the document
-                break
             y += PSTYLE['margin_bottom']
             gap = True
         else:

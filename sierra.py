@@ -35,7 +35,7 @@ def save():
     doc = {'kitty': kitty, 'grid': grid, 'contexts': contexts, 'PARASTYLES': PPP, 'FONTSTYLES': FFF, 'PTAGLIST': PTT, 'FTAGLIST': FTT, 'PEGS': GGG, 'view': taylor.becky.read_display_state(), 'page': page}
     
     with open(constants.filename, 'w') as fi:
-        pprint.pprint(doc, fi)
+        pprint.pprint(doc, fi, width=120)
 
 def load(name):
     with open(name, 'r') as fi:

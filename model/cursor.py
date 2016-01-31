@@ -38,38 +38,13 @@ class FCursor(object):
 
     def _sort_cursors(self):
         self.i, self.j = sorted((self.i, self.j))
-    
-    def paint(self):
-        i, j = sorted((self.i, self.j))
 
-        l1 = self.index_to_line(i)
-        l2 = self.index_to_line(j)
-
-        start = self.text_index_x(i, l1)
-        stop = self.text_index_x(j, l2)
-
-        # chained multipage
-        if type(self._ftx) is olivia.Chained_text:
-            PAGES = {}
-            for page, V in self._ftx._sorted_pages.items():
-                lines, lineindexes = V['_lines'] 
-                if l2 >= lineindexes[0] and l1 <= lineindexes[-1]:
-                    bs1 = max(0, bisect.bisect(lineindexes, l1) - 1)
-                    bs2 = bisect.bisect(lineindexes, l2)
-                    PAGES[page] = lines[bs1:bs2]
-
-        # single page
-        else:
-            lines = self._ftx._SLUGS
-            lineindexes = [line['l'] for line in lines]
-            bs1 = max(0, bisect.bisect(lineindexes, l1) - 1)
-            bs2 = bisect.bisect(lineindexes, l2)
-            PAGES = {lines[0]['page']: lines[bs1:bs2]}
-        
+    def paint_current_selection(self):
         ftags = {'<f>', '</f>'}
-        signs = ((character(self.text[self.i - 1]) in ftags, character(self.text[self.i]) in ftags) , 
+        signs = (self.j < self.i,
+                (character(self.text[self.i - 1]) in ftags, character(self.text[self.i]) in ftags) , 
                 (character(self.text[self.j - 1]) in ftags, character(self.text[self.j]) in ftags))
-        return PAGES, l1, l2, start, stop, signs
+        return self._ftx.paint_select(self.i, self.j) + (signs,)
     
     def take_selection(self):
         if self.i == self.j:

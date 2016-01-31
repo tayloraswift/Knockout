@@ -602,11 +602,9 @@ class Document_view(ui.Cell):
         PWIDTH = penclick.page.WIDTH
         
         max_page = 0
-
         for tract in meredith.mipsy.tracts:            
             for page, sorted_glyphs in tract.extract_glyphs(refresh).items():
-                if page > max_page:
-                    max_page = page
+                max_page = max(max_page, page)
 
                 # Transform goes
                 # x' = A (x + m - c) + c
@@ -627,15 +625,11 @@ class Document_view(ui.Cell):
                     self._draw_annotations(cr, sorted_glyphs['_annot'], page)
                     self._draw_spelling(cr, tract.paint_misspellings())
         
-        PAGES, l1, l2, start, stop, signs = cursor.fcursor.paint()
+        meredith.mipsy.page_context, selections, signs = cursor.fcursor.paint_current_selection()
+        self._draw_selection_highlight(cr, selections, signs)
 
         for pp in range(max_page + 1):
-
-            # N
-            if pp in PAGES:
-                if self._highlight(cr, PAGES[pp], pp, self._selection_highlight, 0.75, start, stop, l1, l2, signs):
-                    meredith.mipsy.page_context = pp
-
+            
             #draw page border
             if pp == meredith.mipsy.page_context:
                 cr.set_source_rgba( * accent_light, 0.7)
@@ -747,59 +741,28 @@ class Document_view(ui.Cell):
                     int((x2 - x1) * self._A), 1)
         cr.fill()
         
-    def _selection_highlight(self, cr, x, y, width, height, I=None, J=None):
+    def _draw_selection_highlight(self, cr, selections, signs):
+        cr.push_group()
         cr.set_source_rgba(0, 0, 0, 0.1)
-        
-        cr.rectangle(x, y - height, width, height)
+        for y, x1, x2, leading, page in selections:
+            cr.rectangle(self._X_to_screen(x1, page), 
+                    self._Y_to_screen(y - leading, page), 
+                    int((x2 - x1) * self._A), 
+                    int(leading * self._A))
         cr.fill()
         # print cursor
-        if I is not None:
-            self._draw_cursor(cr, I, x, y, height)
-        if J is not None:
-            self._draw_cursor(cr, J, x + width, y, height)
-
-
-    def _highlight(self, cr, lines, page, highlighting_engine, alpha, start_x, stop_x, l1, l2, signs):
-        isign, jsign = signs
+        reverse, isign, jsign = signs
+        if reverse:
+            isign, jsign = jsign, isign
         
-        START_RENDERED = False
-        STOP_RENDERED = False
+        # first
+        y1, x11, x21, leading1, page1 = selections[0]
+        y2, x12, x22, leading2, page2 = selections[-1]
+        self._draw_cursor(cr, isign, self._X_to_screen(x11, page1), self._Y_to_screen(y1, page1), int(leading1 * self._A))
+        self._draw_cursor(cr, jsign, self._X_to_screen(x22, page2), self._Y_to_screen(y2, page2), int(leading2 * self._A))
 
-        if alpha != 1:
-            cr.push_group()
-
-        highlighted = ((line['l'], 
-                        self._X_to_screen(line['x'], page),
-                        self._Y_to_screen(line['y'], page),
-                        int(line['width'] * self._A),
-                        int(line['leading'] * self._A)) for line in lines)
-
-        cr.set_source_rgba(0, 0, 0, 0.1)
-        
-        start = self._X_to_screen(start_x, page)
-        stop = self._X_to_screen(stop_x, page)
-        for l, x, y, width, leading in highlighted:
-            if l == l1 == l2:
-                highlighting_engine(cr, start, y, stop - start, leading, isign, jsign)
-                START_RENDERED = True
-                STOP_RENDERED = True
-
-            elif l == l1:
-                highlighting_engine(cr, start, y, x + width - start, leading, isign, None)
-                START_RENDERED = True
-
-            elif l == l2:
-                highlighting_engine(cr, x, y, stop - x, leading, None, jsign)
-                STOP_RENDERED = True
-
-            else:
-                highlighting_engine(cr, x, y, width, leading, None, None)
-        
-        if alpha != 1:
-            cr.pop_group_to_source()
-            cr.paint_with_alpha(alpha)
-    
-        return START_RENDERED and STOP_RENDERED
+        cr.pop_group_to_source()
+        cr.paint_with_alpha(0.8)
     
     def _draw_cursor(self, cr, sign, x, y, leading):
         

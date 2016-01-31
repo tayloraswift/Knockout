@@ -39,6 +39,30 @@ class Atomic_text(object):
 
     ### FUNCTIONS USEFUL FOR DRAWING AND INTERFACE
 
+    def paint_select(self, u, v):
+        select = []
+        u_l = self.index_to_line(u)
+        v_l = self.index_to_line(v)
+        page = self._SLUGS[v_l]['page']
+        
+        u_l, v_l = sorted((u_l, v_l))
+        u, v = sorted((u, v))
+        u_x = self.text_index_x(u, u_l)
+        v_x = self.text_index_x(v, v_l)
+        
+        first = self._SLUGS[u_l]
+        if not u_l - v_l:
+                               # y, x1, x2
+            select.append((first['y'], u_x, v_x, first['leading'], first['page']))
+        
+        else:
+            last = self._SLUGS[v_l]
+            select.append((first['y'], u_x, first['width'] + first['x'], first['leading'], first['page']))
+            select.extend((line['y'], line['x'], line['width'] + line['x'], line['leading'], line['page']) for line in (self._SLUGS[l] for l in range(u_l + 1, v_l)))
+            select.append((last['y'], last['x'], v_x, last['leading'], last['page']))
+
+        return page, select
+
     # get line number given character index
     def index_to_line(self, index):
         return bisect.bisect(self._line_startindices, index) - 1
@@ -115,30 +139,6 @@ class Chained_text(Atomic_text):
                 underscores.extend((line['y'], line['x'], line['GLYPHS'][-1][5] + line['x'], line['page']) for line in (self._SLUGS[l] for l in range(u_l + 1, v_l)))
                 underscores.append((last['y'], last['x'], v_x, last['page']))
         return underscores
-
-    def paint_select(self, u, v):
-        select = []
-        u_l = self.index_to_line(u)
-        v_l = self.index_to_line(v)
-        page = self._SLUGS[v_l]['page']
-        
-        u_l, v_l = sorted((u_l, v_l))
-        u, v = sorted((u, v))
-        u_x = self.text_index_x(u, u_l)
-        v_x = self.text_index_x(v, v_l)
-        
-        first = self._SLUGS[u_l]
-        if not u_l - v_l:
-                               # y, x1, x2
-            select.append((first['y'], u_x, v_x, first['leading'], first['page']))
-        
-        else:
-            last = self._SLUGS[v_l]
-            select.append((first['y'], u_x, first['width'] + first['x'], first['leading'], first['page']))
-            select.extend((line['y'], line['x'], line['width'] + line['x'], line['leading'], line['page']) for line in (self._SLUGS[l] for l in range(u_l + 1, v_l)))
-            select.append((last['y'], last['x'], v_x, last['leading'], last['page']))
-
-        return page, select
 
     def extract_glyphs(self, refresh=False):
         if refresh:

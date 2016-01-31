@@ -95,6 +95,8 @@ class Display(Gtk.Window):
 
     def DRAW_BECKY(self, w, cr):
         cr.set_font_options(self._HINTS)
+        cr.set_source_rgb(1, 1, 1)
+        cr.paint()
         taylor.becky.render(cr, self._h, self._k)
 
         if self.errorpanel is not None:

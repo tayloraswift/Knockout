@@ -21,7 +21,7 @@ class Atomic_text(object):
         self._line_startindices = [line['i'] for line in self._SLUGS]
         self._line_yl = { cc: list(h[:2] for h in list(g)) for cc, g in groupby( ((LINE['y'], LINE['l'], LINE['c']) for LINE in self._SLUGS if LINE['GLYPHS']), key=lambda k: k[2]) }
 
-    def _target_row(self, x, y, c):
+    def _target_row(self, y, c):
         yy, ll = zip( * self._line_yl[c])
         # find the clicked line
         lineindex = None
@@ -34,7 +34,7 @@ class Atomic_text(object):
     
     def target_glyph(self, x, y, l=None, c=None):
         if l is None:
-            l = self._target_row(x, y, c)
+            l = self._target_row(y, c)
         return self._SLUGS[l].I(x, y)
 
     ### FUNCTIONS USEFUL FOR DRAWING AND INTERFACE

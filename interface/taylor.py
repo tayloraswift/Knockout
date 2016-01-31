@@ -625,8 +625,9 @@ class Document_view(ui.Cell):
                     self._draw_annotations(cr, sorted_glyphs['_annot'], page)
                     self._draw_spelling(cr, tract.paint_misspellings())
         
-        meredith.mipsy.page_context, selections, signs = cursor.fcursor.paint_current_selection()
-        self._draw_selection_highlight(cr, selections, signs)
+        if self._mode == 'text':
+            meredith.mipsy.page_context, selections, signs = cursor.fcursor.paint_current_selection()
+            self._draw_selection_highlight(cr, selections, signs)
 
         for pp in range(max_page + 1):
             

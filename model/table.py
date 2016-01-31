@@ -1,7 +1,7 @@
 from itertools import chain
 from model.wonder import character
 from model.cat import typeset_liquid
-from model.olivia import Flowing_text
+from model.olivia import Atomic_text
 from model.george import Swimming_pool
 from bulletholes.counter import TCounter as Counter
 
@@ -20,9 +20,9 @@ def _bin(data, odelimit, cdelimit):
             print('superfluous bin tag')
             continue
 
-class _Table_cell(Flowing_text):
+class _Table_cell(Atomic_text):
     def __init__(self, text):
-        Flowing_text.__init__(self, text[1:-1])
+        Atomic_text.__init__(self, text[1:-1])
         self.rs, self.cs = text[0][1:]
     
     def nail(self, i, j):

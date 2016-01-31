@@ -12,10 +12,15 @@ def outside_tag(sequence):
 
 class FCursor(object):
     def __init__(self, ftext, i, j):
-        self._ftx = ftext
-        self.text = ftext.text
+        self.assign_text(ftext)
         self.i = i
         self.j = j
+    
+    def assign_text(self, ftext):
+        self._ftx = ftext
+        self.text = ftext.text
+        self.index_to_line = ftext.index_to_line
+        self.text_index_x = ftext.text_index_x
 
     def skip(self, i, jump):
         i += jump
@@ -33,20 +38,6 @@ class FCursor(object):
 
     def _sort_cursors(self):
         self.i, self.j = sorted((self.i, self.j))
-
-    # get line number given character index
-    def index_to_line(self, index):
-        return bisect.bisect(self._ftx._line_startindices, index) - 1
-    
-    # get x position of specific glyph
-    def text_index_x(self, i):
-        line = self._ftx._SLUGS[self.index_to_line(i)]
-        try:
-            glyph = line['GLYPHS'][i - line['i']]
-        except IndexError:
-            glyph = line['GLYPHS'][-1]
-
-        return glyph[1] + line['x']
     
     def paint(self):
         i, j = sorted((self.i, self.j))
@@ -54,8 +45,8 @@ class FCursor(object):
         l1 = self.index_to_line(i)
         l2 = self.index_to_line(j)
 
-        start = self.text_index_x(i)
-        stop = self.text_index_x(j)
+        start = self.text_index_x(i, l1)
+        stop = self.text_index_x(j, l2)
 
         # chained multipage
         if type(self._ftx) is olivia.Chained_text:

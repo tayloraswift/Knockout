@@ -122,7 +122,9 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False):
                 R = 0
                 K_x = None
                 
-                y += PSTYLE['margin_top'] + PSTYLE['leading']
+                if l != INIT['l'] + 1: # prevent accumulating y error
+                    y += PSTYLE['margin_top']
+                y += PSTYLE['leading']
 
                 gap = False
 

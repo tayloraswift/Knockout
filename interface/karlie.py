@@ -218,18 +218,18 @@ class Properties(_Properties_panel):
             if styles.PARASTYLES.active is not None:
                 
                 self._items.append(kookies.Heading( 15, 90, 250, 30, ', '.join(T.name for T in styles.PARASTYLES.active.tags), upper=True))
-                self._items.append(kookies.Ordered(15, y, 250, 250,
+                self._items.append(kookies.Ordered(15, y, 250, 300,
                             library = styles.PARASTYLES.active.layerable, 
                             display = _print_counter,
                             before = un.history.save, after = lambda: (styles.PARASTYLES.update_f(), meredith.mipsy.recalculate_all(), self._reconstruct()), refresh = self._reconstruct))
-                y += 250
+                y += 300
                 
                 if styles.PARASTYLES.active.layerable.active is not None:
-                    self._items.append(kookies.Counter_editor(15, y, 250, 100, (125, 28),
+                    self._items.append(kookies.Counter_editor(15, y, 250, 150, (125, 28),
                                 get_counter = lambda: styles.PARASTYLES.active.layerable.active.tags,
                                 superset = styles.FTAGS,
                                 before = un.history.save, after = lambda: (styles.PARASTYLES.update_f(), meredith.mipsy.recalculate_all(), self.synchronize())))
-                    y += 100
+                    y += 150
 
                     _after_ = lambda: (styles.PARASTYLES.update_f(), meredith.mipsy.recalculate_all(), contexts.Fontstyle.update(contexts.Text.tract.styling_at()[1]), self._reconstruct())
                     if styles.PARASTYLES.active.layerable.active.F is None:
@@ -302,19 +302,19 @@ class Properties(_Properties_panel):
         if self._tab == 'paragraph':
             self._items.append(kookies.Heading( 15, 90, 250, 30, ', '.join(T.name if V == 1 else T.name + ' (' + str(V) + ')' for T, V in contexts.Text.paragraph[1].items() if V), upper=True))
 
-            self._items.append(kookies.Para_control_panel(15, y, 250, 200, 
+            self._items.append(kookies.Para_control_panel(15, y, 250, 250, 
                     get_paragraph = lambda: contexts.Text.paragraph, 
                     display = _print_counter,
                     library = styles.PARASTYLES,
                     before = un.history.save, after = lambda: (styles.PARASTYLES.update_p(), meredith.mipsy.recalculate_all(), self._reconstruct()), refresh = self._reconstruct))
-            y += 200
+            y += 250
             
             if styles.PARASTYLES.active is not None:
-                self._items.append(kookies.Counter_editor(15, y, 250, 100, (125, 28),
+                self._items.append(kookies.Counter_editor(15, y, 250, 150, (125, 28),
                             get_counter = lambda: styles.PARASTYLES.active.tags,
                             superset = styles.PTAGS,
                             before = un.history.save, after = lambda: (styles.PARASTYLES.update_p(), meredith.mipsy.recalculate_all(), self.synchronize())))
-                y += 100
+                y += 150
                 
                 self._items += _columns(_create_p_field(kookies.Numeric_field, 15, y, 255, 'leading', after=self.synchronize, name='LEADING'))
                 y += 45

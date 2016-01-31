@@ -39,7 +39,7 @@ class Glyphs_line(dict):
     def deposit(self, repository):
         x = self['x']
         y = self['y']
-        p_i = self['PP'][1]
+        PP = self['PP']
         hyphen = self['hyphen']
 
         if hyphen is not None:
@@ -50,11 +50,11 @@ class Glyphs_line(dict):
         for glyph in glyphs:
             if glyph[0] < 0:
                 if glyph[0] == -6:
-                    repository['_annot'].append( (glyph[0], x, y + self['leading'], p_i, glyph[3]))
+                    repository['_annot'].append( (glyph[0], x, y + self['leading'], PP, glyph[3]))
                 elif glyph[0] == -13:
                     repository['_images'].append( (glyph[6], glyph[1] + x, glyph[2] + y) )
                 else:
-                    repository['_annot'].append((glyph[0], glyph[1] + x, glyph[2] + y) + (p_i, glyph[3]))
+                    repository['_annot'].append((glyph[0], glyph[1] + x, glyph[2] + y) + (PP, glyph[3]))
             else:
                 K = (glyph[0], glyph[1] + x, glyph[2] + y)
                 N = glyph[3]['hash']
@@ -97,11 +97,11 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False):
     if INIT['P_BREAK']:
         gap = True
     else:
-        P, P_i = INIT['PP']
+        PP = INIT['PP']
         F = INIT['F'].copy()
         R = INIT['R'] + 1
         K_x = None
-        PSTYLE = styles.PARASTYLES.project_p(P)
+        PSTYLE = styles.PARASTYLES.project_p(PP[1])
         gap = False
     
     page = channel.page
@@ -114,9 +114,10 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False):
                 # end of file
                 break
             if container[0] == '<p>':
-                P = container[1]
-                PSTYLE = styles.PARASTYLES.project_p(P)
-                P_i = i
+                PP = container
+                _p_i_ = i
+                PSTYLE = styles.PARASTYLES.project_p(PP[1])
+                
                 F = Counter()
                 R = 0
                 K_x = None
@@ -160,12 +161,12 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False):
             if K:
                 if K_x is None:
                     INDLINE = cast_liquid_line(
-                        LIQUID[P_i : P_i + K + 1], 
+                        LIQUID[_p_i_ : _p_i_ + K + 1], 
                         0, 
                         
                         1989, 
                         0,
-                        P,
+                        PP[1],
                         F.copy(), 
                         
                         hyphenate = False
@@ -191,7 +192,7 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False):
                 
                 x2 - x1, 
                 PSTYLE['leading'],
-                P,
+                PP[1],
                 F.copy(), 
                 
                 hyphenate = PSTYLE['hyphenate']
@@ -203,7 +204,7 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False):
         LINE['l'] = l
         LINE['c'] = c
         LINE['page'] = page
-        LINE['PP'] = (P, P_i)
+        LINE['PP'] = PP
 
         l += 1
         SLUGS.append(LINE)

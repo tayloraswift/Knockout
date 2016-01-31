@@ -13,7 +13,7 @@ def save():
             {
             'text': kevin.serialize(t.text), 
             'outline': [(c.railings, c.page) for c in t.channels.channels], 
-            'cursors': (t.cursor.cursor, t.select.cursor)
+#            'cursors': (t.cursor.cursor, t.select.cursor)
             } 
             for t in meredith.mipsy.tracts]
     

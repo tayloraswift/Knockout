@@ -14,7 +14,7 @@ from state.contexts import Text as CText
 
 from fonts import styles
 
-from model import meredith
+from model import meredith, cursor
 from model import wonder
 from model.wonder import character
 from model import un, do, penclick
@@ -145,12 +145,12 @@ def PDF():
 
 def place_tags(tag):
     un.history.undo_save(3)
-    if not CText.tract.bridge(tag, sign=True):
+    if not cursor.fcursor.bridge(tag, sign=True):
         un.history.pop()
 
 def punch_tags(tag):
     un.history.undo_save(3)
-    if not CText.tract.bridge(tag, sign=False):
+    if not cursor.fcursor.bridge(tag, sign=False):
         un.history.pop()
 
 class Document_toolbar(object):
@@ -375,7 +375,7 @@ class Document_view(ui.Cell):
                     typing.match_cursors()
                     
                     # used to keep track of ui redraws
-                    self._sel_cursor = CText.tract.select.cursor
+                    self._sel_cursor = cursor.fcursor.j
                     
                 except ValueError:
                     # occurs if an empty channel is selected
@@ -402,7 +402,7 @@ class Document_view(ui.Cell):
         if self._region_active == 'view':
             # TEXT EDITING MODE
             if self._mode == 'text':
-                CText.tract.expand_cursors_word()
+                cursor.fcursor.expand_cursors_word()
     
     def press_right(self, x, y):
         if self._region_active == 'view':
@@ -428,8 +428,8 @@ class Document_view(ui.Cell):
                         typing.match_cursors()
                         
                         # used to keep track of ui redraws
-                        self._sel_cursor = CText.tract.select.cursor
-                        CText.tract.expand_cursors_word()
+                        self._sel_cursor = cursor.fcursor.j
+                        cursor.fcursor.expand_cursors_word()
                         suggestions = ['“' + ms[pair_i][2] + '”'] + [w.decode("utf-8") for w in wonder.struck.suggest(ms[pair_i][2])]
                         suggestions = list(zip(suggestions, [str(v) for v in suggestions]))
                         menu.menu.create(x, y, 200, suggestions, _replace_misspelled, () )
@@ -463,8 +463,8 @@ class Document_view(ui.Cell):
                 try:
                     typing.set_select(meredith.mipsy.lookup_xy(xp, yp))
                     # if redraw needed
-                    if CText.tract.select.cursor != self._sel_cursor:
-                        self._sel_cursor = CText.tract.select.cursor
+                    if cursor.fcursor.j != self._sel_cursor:
+                        self._sel_cursor = cursor.fcursor.j
                         noticeboard.redraw_becky.push_change()
                 except ValueError:
                     pass
@@ -606,16 +606,10 @@ class Document_view(ui.Cell):
         for tract in meredith.mipsy.tracts:
             # highlights
             if tract is CText.tract and self._mode == 'text':
-                i, j = sorted((CText.tract.cursor.cursor, CText.tract.select.cursor))
-
-                l1 = CText.tract.index_to_line(i)
-                l2 = CText.tract.index_to_line(j)
-
-                start = CText.tract.text_index_x(i)
-                stop = CText.tract.text_index_x(j)
-            
                 # spelling
+                
                 annoying_red_lines = []
+                """
                 for pair in tract.misspellings:
 
                     u, v = pair[:2]
@@ -627,6 +621,7 @@ class Document_view(ui.Cell):
                     v_x = CText.tract.text_index_x(v)
                     
                     annoying_red_lines.append((u_x, v_x, u_l, v_l, u, v))
+                """
             
             for page, sorted_glyphs in tract.extract_glyphs(refresh).items():
                 if page > max_page:
@@ -650,14 +645,18 @@ class Document_view(ui.Cell):
                 if tract is CText.tract and self._mode == 'text':
                     self._draw_annotations(cr, sorted_glyphs['_annot'], page)
                     
-                    # this is how we know what page the cursor is on
-                    if self._highlight(cr, sorted_glyphs['_lines'], page, self._selection_highlight, 0.75, start, stop, l1, l2, i, j):
-                        meredith.mipsy.page_context = page
-                    
-                    for red_line in annoying_red_lines:
-                        self._highlight(cr, sorted_glyphs['_lines'], page, self._spelling_highlight, 1, * red_line)
+#                    for red_line in annoying_red_lines:
+#                        self._highlight(cr, sorted_glyphs['_lines'], page, self._spelling_highlight, 1, * red_line)
+        
+        PAGES, l1, l2, start, stop, signs = cursor.fcursor.paint()
 
         for pp in range(max_page + 1):
+
+            # N
+            if pp in PAGES:
+                if self._highlight(cr, PAGES[pp], pp, self._selection_highlight, 0.75, start, stop, l1, l2, signs):
+                    meredith.mipsy.page_context = pp
+
             #draw page border
             if pp == meredith.mipsy.page_context:
                 cr.set_source_rgba( * accent_light, 0.7)
@@ -712,14 +711,14 @@ class Document_view(ui.Cell):
 
     def _draw_annotations(self, cr, annot, page):
 
-        for a, x, y, p_i, F in annot:
+        for a, x, y, PP, F in annot:
             
             x = self._X_to_screen(x, page)
             y = self._Y_to_screen(y, page)
             
             fontsize = F['fontsize'] * self._A
 
-            if p_i == CText.tract.pp_at()[1]:
+            if PP is cursor.fcursor.pp_at():
                 cr.set_source_rgba( * accent_light, 0.7)
             else:
                 cr.set_source_rgba(0, 0, 0, 0.4)
@@ -779,53 +778,49 @@ class Document_view(ui.Cell):
             self._draw_cursor(cr, J, x + width, y, height)
 
 
-    def _highlight(self, cr, lines, page, highlighting_engine, alpha, start_x, stop_x, l1, l2, I, J):
+    def _highlight(self, cr, lines, page, highlighting_engine, alpha, start_x, stop_x, l1, l2, signs):
+        isign, jsign = signs
+        
         START_RENDERED = False
         STOP_RENDERED = False
 
-        # find overlaps
-        if l2 >= lines[1][0] and l1 <= lines[1][-1]:
-            if alpha != 1:
-                cr.push_group()
-            
-            bs1 = bisect.bisect(lines[1], l1) - 1
-            bs2 = bisect.bisect(lines[1], l2)
-            if bs1 < 0:
-                bs1 = 0
-            highlighted = ((line['l'], 
-                            self._X_to_screen(line['x'], page),
-                            self._Y_to_screen(line['y'], page),
-                            int(line['width'] * self._A),
-                            int(line['leading'] * self._A)) for line in lines[0][bs1:bs2])
+        if alpha != 1:
+            cr.push_group()
 
-            cr.set_source_rgba(0, 0, 0, 0.1)
-            
-            start = self._X_to_screen(start_x, page)
-            stop = self._X_to_screen(stop_x, page)
-            for l, x, y, width, leading in highlighted:
-                if l == l1 == l2:
-                    highlighting_engine(cr, start, y, stop - start, leading, I, J)
-                    START_RENDERED = True
-                    STOP_RENDERED = True
+        highlighted = ((line['l'], 
+                        self._X_to_screen(line['x'], page),
+                        self._Y_to_screen(line['y'], page),
+                        int(line['width'] * self._A),
+                        int(line['leading'] * self._A)) for line in lines)
 
-                elif l == l1:
-                    highlighting_engine(cr, start, y, x + width - start, leading, I, None)
-                    START_RENDERED = True
-
-                elif l == l2:
-                    highlighting_engine(cr, x, y, stop - x, leading, None, J)
-                    STOP_RENDERED = True
-
-                else:
-                    highlighting_engine(cr, x, y, width, leading, None, None)
-            
-            if alpha != 1:
-                cr.pop_group_to_source()
-                cr.paint_with_alpha(alpha)
+        cr.set_source_rgba(0, 0, 0, 0.1)
         
+        start = self._X_to_screen(start_x, page)
+        stop = self._X_to_screen(stop_x, page)
+        for l, x, y, width, leading in highlighted:
+            if l == l1 == l2:
+                highlighting_engine(cr, start, y, stop - start, leading, isign, jsign)
+                START_RENDERED = True
+                STOP_RENDERED = True
+
+            elif l == l1:
+                highlighting_engine(cr, start, y, x + width - start, leading, isign, None)
+                START_RENDERED = True
+
+            elif l == l2:
+                highlighting_engine(cr, x, y, stop - x, leading, None, jsign)
+                STOP_RENDERED = True
+
+            else:
+                highlighting_engine(cr, x, y, width, leading, None, None)
+        
+        if alpha != 1:
+            cr.pop_group_to_source()
+            cr.paint_with_alpha(alpha)
+    
         return START_RENDERED and STOP_RENDERED
     
-    def _draw_cursor(self, cr, i, x, y, leading):
+    def _draw_cursor(self, cr, sign, x, y, leading):
         
         cr.set_source_rgb(1, 0, 0.5)
 
@@ -838,21 +833,21 @@ class Document_view(ui.Cell):
                     2, 
                     uh)
         # special cursor if adjacent to font tag
-        if character(CText.tract.text[i]) in ('<f>', '</f>'):
-            cr.rectangle(ux - 3, 
+        if sign[0]:
+            cr.rectangle(ux - 1, 
                     uy, 
                     4, 
                     2)
-            cr.rectangle(ux - 3, 
+            cr.rectangle(ux - 1, 
                     uy + uh - 2, 
                     4, 
                     2)
-        if character(CText.tract.text[i - 1]) in ('<f>', '</f>'):
-            cr.rectangle(ux - 1, 
+        if sign[1]:
+            cr.rectangle(ux - 3, 
                     uy, 
                     4, 
                     2)
-            cr.rectangle(ux - 1, 
+            cr.rectangle(ux - 3, 
                     uy + uh - 2, 
                     4, 
                     2)

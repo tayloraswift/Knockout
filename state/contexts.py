@@ -1,27 +1,25 @@
 from fonts import styles
+from model import cursor
 from state import noticeboard
 
 class Text_context(object):
     def __init__(self):
         self.tract = None
         self._previous_p = None
-        self._previous_pi = None
-        self._previous_t = None
+        self.paragraph = None
         self._FSTYLE = None
 
     def update(self):
-        PP, FSTYLE = self.tract.styling_at()
-        P, P_i = PP
-        if P_i != self._previous_pi or self.tract is not self._previous_t:
+        PP, FSTYLE = cursor.fcursor.styling_at()
+        P = PP[1]
+        if PP is not self.paragraph:
             print('update paragraph context')
-            self.paragraph =  self.tract.text[P_i]
-            self._previous_pi = P_i
-            self._previous_t = self.tract
+            self.paragraph =  PP
             
             if P is not self._previous_p:
                 print('update parastyle context')
                 self._previous_p = P
-                Parastyle.update(self.paragraph[1])
+                Parastyle.update(P)
                 noticeboard.refresh_properties_stack.push_change()
 
         if self._FSTYLE is not FSTYLE:
@@ -31,13 +29,11 @@ class Text_context(object):
             noticeboard.refresh_properties_stack.push_change()
 
     def update_force(self):
-        PP, self._FSTYLE = self.tract.styling_at()
-        P, P_i = PP
-        self.paragraph =  self.tract.text[P_i]
-        self._previous_pi = None
-        self._previous_t = self.tract
+        PP, self._FSTYLE = cursor.fcursor.styling_at()
+        P = PP[1]
+        self.paragraph =  PP
         self._previous_p = None
-        Parastyle.update(self.paragraph[1])
+        Parastyle.update(P)
         Fontstyle.update(self._FSTYLE)
         noticeboard.refresh_properties_stack.push_change()
 

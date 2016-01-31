@@ -57,8 +57,8 @@ def serialize(text):
         elif entity == '>':
             b[e] = '&gt;'
 
-        elif entity == '</p>':
-            b[e] = '</p>\n'
+#        elif entity == '</p>':
+#            b[e] = '</p>\n'
 
     return ''.join(b)
 
@@ -90,11 +90,9 @@ def _parse_entities(b):
         if tag == 'p':
             # clear the gap
             try:
-                
                 gap_begin = next(len(build) - i for i, v in enumerate(reversed(build)) if type(v) is str and v in gap_end)
                 if all(type(e) is str and e in whitespace for e in build[gap_begin:]):
                     del build[gap_begin:]
-
             except StopIteration:
                 pass
             
@@ -140,7 +138,16 @@ def _parse_entities(b):
             build.append(entity)
             del b[:closetag]
             
-    return build + list(html.unescape(''.join(b))), []
+    build += list(html.unescape(''.join(b)))
+    # clear the gap
+    try:
+        gap_begin = next(len(build) - i for i, v in enumerate(reversed(build)) if type(v) is str and v in gap_end)
+        if all(type(e) is str and e in whitespace for e in build[gap_begin:]):
+            del build[gap_begin:]
+    except StopIteration:
+        pass
+    
+    return build, []
 
 def deserialize(string):
     string = string.replace('\u000A\u000A', '</p><p>')

@@ -18,7 +18,7 @@ class UN(object):
             del self._history[:89]
             self._i -= 89
         
-        kitty = [{'text': kevin.serialize(t.text), 'spelling': t.misspellings[:], 'outline': deepcopy(t.channels.channels), 'cursors': (t.cursor.cursor, t.select.cursor)} for t in mipsy.tracts]
+        kitty = [{'text': kevin.serialize(t.text), 'spelling': t.misspellings[:], 'outline': deepcopy(t.channels.channels), 'cursors': (0, 0)} for t in mipsy.tracts]
         page_xy = (penclick.page.WIDTH, penclick.page.HEIGHT)
         if len(self._history) > self._i:
             del self._history[self._i:]
@@ -46,8 +46,8 @@ class UN(object):
         for t in range(len(mipsy.tracts)):
             mipsy.tracts[t].text = kevin.deserialize(self._history[i]['kitty'][t]['text'])
             mipsy.tracts[t].misspellings = self._history[i]['kitty'][t]['spelling']
-            mipsy.tracts[t].cursor.cursor = self._history[i]['kitty'][t]['cursors'][0]
-            mipsy.tracts[t].select.cursor = self._history[i]['kitty'][t]['cursors'][1]
+#            mipsy.tracts[t].cursor.cursor = self._history[i]['kitty'][t]['cursors'][0]
+#            mipsy.tracts[t].select.cursor = self._history[i]['kitty'][t]['cursors'][1]
             mipsy.tracts[t].channels.channels = self._history[i]['kitty'][t]['outline']
     
     def back(self):

@@ -1,8 +1,8 @@
 import time
 from model.wonder import character
 from fonts import styles
+from model import meredith, cursor
 from state.contexts import Text as CText
-from model import meredith
 
 from model import un
 
@@ -15,41 +15,40 @@ _CLOSE = {'Ctrl underscore': sub, 'Ctrl plus': sup, 'Ctrl B': strong, 'Ctrl I': 
 special_names = set(_OPEN) | set(_CLOSE)
 
 def set_cursor(i):
-    CText.tract.cursor.set_cursor(i, CText.tract.text)
+    cursor.fcursor.i = cursor.fcursor.skip(i, 0)
+    
 def set_select(i):
-    CText.tract.select.set_cursor(i, CText.tract.text)
+    cursor.fcursor.j = cursor.fcursor.skip(i, 0)
 
 def match_cursors():
-    CText.tract.select.cursor = CText.tract.cursor.cursor
+    cursor.fcursor.j = cursor.fcursor.i
 
 def hop(dl, CURSOR):
     try:
         set_cursor(CText.tract.target_glyph(
-                    CText.tract.text_index_x(CURSOR), 
+                    cursor.fcursor.text_index_x(CURSOR), 
                     0, 
-                    CText.tract.index_to_line(CURSOR) + dl
+                    cursor.fcursor.index_to_line(CURSOR) + dl
                     ))
     except IndexError:
         pass
 
 def type_document(name, char, lastpress=[0], direction=[0]):
 
-    CURSOR = CText.tract.cursor.cursor
-    MT = CText.tract
+    CURSOR = cursor.fcursor.i
     
     # Non replacing
     if name == 'Left':
-        if CURSOR > 1:
-            un.history.undo_save(0)
+        un.history.undo_save(0)
+        cursor.fcursor.i = cursor.fcursor.skip(CURSOR, -1)
+        match_cursors()
             
-            MT.cursor.skip(-1, MT.text)
-            match_cursors()
     elif name == 'Right':
-        if CURSOR < len(MT.text):
-            un.history.undo_save(0)
-            
-            MT.cursor.skip(1, MT.text)
-            match_cursors()
+        un.history.undo_save(0)
+        
+        cursor.fcursor.i = cursor.fcursor.skip(CURSOR, 1)
+        match_cursors()
+        
     elif name == 'Up':
         un.history.undo_save(0)
         
@@ -63,9 +62,8 @@ def type_document(name, char, lastpress=[0], direction=[0]):
 
     elif name in ['Home', 'End']:
         un.history.undo_save(0)
-        
-        li = MT.index_to_line(CURSOR)
-        i, j = MT.line_indices(li)
+
+        i, j = cursor.fcursor.front_and_back()
         if name == 'Home':
             set_cursor(i)
             match_cursors()
@@ -76,45 +74,45 @@ def type_document(name, char, lastpress=[0], direction=[0]):
     elif name == 'All':
         un.history.undo_save(0)
         
-        MT.expand_cursors()
+        cursor.fcursor.expand_cursors()
     
     # replacing
     elif name in ['BackSpace', 'Delete']:
         
-        if MT.take_selection():
+        if cursor.fcursor.take_selection():
             un.history.undo_save(3)
-            MT.delete()
+            cursor.fcursor.delete()
         elif name == 'BackSpace':            
             # for deleting paragraphs
-            prec = character(CText.tract.text[CURSOR - 1])
+            prec = character(cursor.fcursor.text[CURSOR - 1])
             if prec == '<p>':
                 # make sure that (1) we’re not trying to delete the first paragraph, 
                 # and that (2) we’re not sliding the cursor
                 if CURSOR > 1 and time.time() - lastpress[0] > 0.2:
                     un.history.undo_save(-2)
                     # for table objects
-                    if CText.tract.text[CURSOR - 2] != '</p>':
-                        del CText.tract.text[CURSOR - 2]
-                        MT.delete(da = 0)
+                    if cursor.fcursor.text[CURSOR - 2] != '</p>':
+                        del cursor.fcursor.text[CURSOR - 2]
+                        cursor.fcursor.delete(da = 0)
                     else:
-                        MT.delete(da = -2)
+                        cursor.fcursor.delete(da = -2)
 
             elif prec != '</p>':
                 un.history.undo_save(-1)
-                MT.delete(da = -1)
+                cursor.fcursor.delete(da = -1)
         else:
             # for deleting paragraphs (forward delete)
-            if CText.tract.text[CURSOR] == '</p>':
+            if cursor.fcursor.text[CURSOR] == '</p>':
                 if time.time() - lastpress[0] > 0.2:
                     un.history.undo_save(-2)
-                    if character(CText.tract.text[CURSOR + 1]) != '<p>':
-                        del CText.tract.text[CURSOR + 1]
-                        MT.delete(db = 0)
+                    if character(cursor.fcursor.text[CURSOR + 1]) != '<p>':
+                        del cursor.fcursor.text[CURSOR + 1]
+                        cursor.fcursor.delete(db = 0)
                     else:
-                        MT.delete(db = 2)
+                        cursor.fcursor.delete(db = 2)
             else:
                 un.history.undo_save(-1)
-                MT.delete(db = 1)
+                cursor.fcursor.delete(db = 1)
                 
         # record time
         lastpress[0] = time.time()
@@ -124,30 +122,31 @@ def type_document(name, char, lastpress=[0], direction=[0]):
 #        name = meredith.mipsy.paragraph_at()[0].name
 #        if name[0] == 'h' and name[1].isdigit() and meredith.mipsy.at_absolute(CURSOR) == '</p>' and 'body' in styles.PARASTYLES:
 #            name = 'body'
-        MT.insert(['</p>', ['<p>', CText.tract.pp_at()[0].copy() ]])
+        tag, P = cursor.fcursor.pp_at()
+        cursor.fcursor.insert(['</p>', [tag, P.copy()]])
         
     elif name == 'Return':
         un.history.undo_save(1)
-        MT.insert(['<br>'])
+        cursor.fcursor.insert(['<br>'])
 
     elif name == 'Paste':
         if char:
             un.history.undo_save(3)
-            if MT.take_selection():
-                MT.delete()
+            if cursor.fcursor.take_selection():
+                cursor.fcursor.delete()
             # char is a LIST in this case
-            MT.insert(char)
+            cursor.fcursor.insert(char)
     
     elif name == 'Copy':
-        sel = MT.take_selection()
+        sel = cursor.fcursor.take_selection()
         if sel:
             return sel
     
     elif name == 'Cut':
-        sel = MT.take_selection()
+        sel = cursor.fcursor.take_selection()
         if sel:
             un.history.undo_save(3)
-            MT.delete()
+            cursor.fcursor.delete()
         
             return sel
     
@@ -161,13 +160,13 @@ def type_document(name, char, lastpress=[0], direction=[0]):
             T = _CLOSE[name]
             B = False
             F = '</f>'
-        if MT.take_selection():
+        if cursor.fcursor.take_selection():
             un.history.undo_save(3)
-            if not MT.bridge(T, B):
+            if not cursor.fcursor.bridge(T, B):
                 un.history.pop()
         else:
             un.history.undo_save(1)
-            MT.insert([(F, T)])
+            cursor.fcursor.insert([(F, T)])
     else:
         un.history.undo_save(13)
-        MT.insert([char])
+        cursor.fcursor.insert([char])

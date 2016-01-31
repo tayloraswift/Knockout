@@ -3,6 +3,7 @@ from model.wonder import character
 from model.cat import typeset_liquid
 from model.olivia import Flowing_text
 from model.george import Swimming_pool
+from bulletholes.counter import TCounter as Counter
 
 def _bin(data, odelimit, cdelimit):
     for i, v in ((i, v) for i, v in enumerate(data) if character(v) == odelimit):
@@ -128,7 +129,7 @@ class Table(dict):
         self['leading'] = y - top
         self['GLYPHS'] = [(-2, 0, y, None, None, x2 - x1)]
         self['P_BREAK'] = True
-        self['PP'] = (None, 0)
+        self['PP'] = ['<table>', Counter()]
     
     def I(self, x, y):
         return self['i']

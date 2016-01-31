@@ -603,26 +603,7 @@ class Document_view(ui.Cell):
         
         max_page = 0
 
-        for tract in meredith.mipsy.tracts:
-            # highlights
-            if tract is CText.tract and self._mode == 'text':
-                # spelling
-                
-                annoying_red_lines = []
-                """
-                for pair in tract.misspellings:
-
-                    u, v = pair[:2]
-
-                    u_l = CText.tract.index_to_line(u)
-                    v_l = CText.tract.index_to_line(v)
-
-                    u_x = CText.tract.text_index_x(u)
-                    v_x = CText.tract.text_index_x(v)
-                    
-                    annoying_red_lines.append((u_x, v_x, u_l, v_l, u, v))
-                """
-            
+        for tract in meredith.mipsy.tracts:            
             for page, sorted_glyphs in tract.extract_glyphs(refresh).items():
                 if page > max_page:
                     max_page = page
@@ -644,9 +625,7 @@ class Document_view(ui.Cell):
                 # only annotate active tract
                 if tract is CText.tract and self._mode == 'text':
                     self._draw_annotations(cr, sorted_glyphs['_annot'], page)
-                    
-#                    for red_line in annoying_red_lines:
-#                        self._highlight(cr, sorted_glyphs['_lines'], page, self._spelling_highlight, 1, * red_line)
+                    self._draw_spelling(cr, tract.paint_misspellings())
         
         PAGES, l1, l2, start, stop, signs = cursor.fcursor.paint()
 
@@ -760,10 +739,12 @@ class Document_view(ui.Cell):
                 cr.close_path()
                 cr.fill()
 
-    def _spelling_highlight(self, cr, x, y, width, height, I=None, J=None):
+    def _draw_spelling(self, cr, underscores):
         cr.set_source_rgba(1, 0.15, 0.2, 0.8)
-        
-        cr.rectangle(x, y + int(2 * self._A), width, 1)
+        for y, x1, x2, page in underscores:
+            cr.rectangle(self._X_to_screen(x1, page), 
+                    self._Y_to_screen(y + 2, page), 
+                    int((x2 - x1) * self._A), 1)
         cr.fill()
         
     def _selection_highlight(self, cr, x, y, width, height, I=None, J=None):

@@ -25,10 +25,11 @@ def match_cursors():
 
 def hop(dl, CURSOR):
     try:
+        l = cursor.fcursor.index_to_line(CURSOR)
         set_cursor(CText.tract.target_glyph(
-                    cursor.fcursor.text_index_x(CURSOR), 
+                    cursor.fcursor.text_index_x(CURSOR, l), 
                     0, 
-                    cursor.fcursor.index_to_line(CURSOR) + dl
+                    l + dl
                     ))
     except IndexError:
         pass

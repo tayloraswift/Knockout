@@ -91,7 +91,23 @@ class Chained_text(Atomic_text):
         self.channels = channels
         self._sorted_pages = {}
         Atomic_text.__init__(self, text)
+    
+    def target(self, x, y, page, i):
+        # chained text contains multiple channels
+        c = self.channels.target_channel(x, y, page, 20)
+        if c is None:
+            if i is not None:
+                c = self._SLUGS[self.index_to_line(i)]['c']
+                imperfect = True
+            else:
+                return True, None, None
+        else:
+            imperfect = False
         
+        lineobject = self._SLUGS[self._target_row(y, c)]
+        tract, i = lineobject.I(x, y)
+        return imperfect, tract, i
+    
     def _dbuff(self, l):
         # avoid recalculating lines that weren't affected
         del self._SLUGS[l + 1:]

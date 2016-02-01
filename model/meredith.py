@@ -2,10 +2,10 @@ from model import olivia
 from model import george
 from model import penclick
 from model import kevin
-from model import cursor
+#from model import cursor
 
 from state import noticeboard
-from state.contexts import Text as CText
+#from state.contexts import Text as CText
 
 class Meredith(object):
     def __init__(self, kitty, grid, ctxs):
@@ -14,14 +14,14 @@ class Meredith(object):
         self.page_context = ctxs['p']
         self.hover_page_context = 0
         
-        self._C = ctxs['c']
+#        self._C = ctxs['c']
         
         self.page_grid = grid
 
-        self.recalculate_all()
-        CText.tract = self.tracts[ctxs['t']]
-        cursor.fcursor = cursor.FCursor(self.tracts[ctxs['t']], ctxs['i'], ctxs['j'])
-        CText.update()
+#        self.recalculate_all()
+#        CText.tract = self.tracts[ctxs['t']]
+#        cursor.fcursor = cursor.FCursor(self.tracts[ctxs['t']], ctxs['i'], ctxs['j'])
+#        CText.update()
     
     def C(self):
         return self._C
@@ -55,25 +55,26 @@ class Meredith(object):
     def _XY_hover(self, x, y):
         return penclick.page.normalize_XY(x, y, self.hover_page_context)
 
-    def channel_select(self, x, y, search_all=False):
-        # try local
-        c_local = CText.tract.channels.target_channel(x, y, self.page_context, 20)
-        
-        if c_local is not None:
-            if c_local != self._C:
-                self._C = c_local
-                return True
-        
-        elif search_all:
-            for tract in self.tracts:
-                c = tract.channels.target_channel(x, y, self.page_context, 20)
-                if c is not None:
-                    CText.tract = tract
-                    cursor.fcursor.assign_text(tract)
-                    self._C = c
-                    return True
-        
-        return False
+# marked for deletion
+#    def __channel_select(self, x, y, search_all=False):
+#        # try local
+#        c_local = CText.tract.channels.target_channel(x, y, self.page_context, 20)
+#        
+#        if c_local is not None:
+#            if c_local != self._C:
+#                self._C = c_local
+#                return True
+#        
+#        elif search_all:
+#            for tract in self.tracts:
+#                c = tract.channels.target_channel(x, y, self.page_context, 20)
+#                if c is not None:
+#                    CText.tract = tract
+##                    cursor.fcursor.assign_text(tract)
+#                    self._C = c
+#                    return True
+#        
+#        return False
 
     def channel_point_select(self, x, y):
         c, r, i = CText.tract.channels.target_point(x, y, self.page_context, 20)
@@ -116,7 +117,7 @@ class Meredith(object):
             t = self.tracts.index(CText.tract)
             del self.tracts[t]
             CText.tract = self.tracts[0]
-            cursor.fcursor.assign_text(self.tracts[0])
+#            cursor.fcursor.assign_text(self.tracts[0])
         except ValueError:
             print('No tract selected')
     

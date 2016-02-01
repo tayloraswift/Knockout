@@ -368,7 +368,6 @@ class Document_view(ui.Cell):
                     x, y = meredith.mipsy.set_page_context(x, y)
                     
                     un.history.undo_save(0)
-                    
                     meredith.mipsy.channel_select(x, y, search_all=True)
                     
                     typing.set_cursor(meredith.mipsy.lookup_xy(x, y))
@@ -379,7 +378,7 @@ class Document_view(ui.Cell):
                     
                 except ValueError:
                     # occurs if an empty channel is selected
-                    pass
+                    print('empty channel selected')
                 # check if paragraph context changed
                 CText.update()
                 

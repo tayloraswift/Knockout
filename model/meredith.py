@@ -19,8 +19,8 @@ class Meredith(object):
         self.page_grid = grid
 
         self.recalculate_all()
-        CText.tract = self.tracts[0]
-        cursor.fcursor = cursor.FCursor(self.tracts[0], 13, 103)
+        CText.tract = self.tracts[ctxs['t']]
+        cursor.fcursor = cursor.FCursor(self.tracts[ctxs['t']], ctxs['i'], ctxs['j'])
         CText.update()
     
     def C(self):

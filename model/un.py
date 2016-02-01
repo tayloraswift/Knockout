@@ -3,7 +3,8 @@ from copy import deepcopy
 from fonts import styles
 
 from model.meredith import mipsy
-from model import penclick, kevin
+from state.contexts import Text as CText
+from model import penclick, kevin, cursor
 
 
 class UN(object):
@@ -18,8 +19,11 @@ class UN(object):
             del self._history[:89]
             self._i -= 89
         
-        kitty = [{'text': kevin.serialize(t.text), 'spelling': t.misspellings[:], 'outline': deepcopy(t.channels.channels), 'cursors': (0, 0)} for t in mipsy.tracts]
+        kitty = [{'text': kevin.serialize(t.text), 'spelling': t.misspellings[:], 'outline': deepcopy(t.channels.channels)} for t in mipsy.tracts]
         page_xy = (penclick.page.WIDTH, penclick.page.HEIGHT)
+        contexts = {'t': mipsy.tracts.index(CText.tract),
+                'i': cursor.fcursor.i,
+                'j': cursor.fcursor.j}
         if len(self._history) > self._i:
             del self._history[self._i:]
         
@@ -31,7 +35,7 @@ class UN(object):
         PTT = [T.polaroid() for T in styles.PTAGS.values() if not T.is_group]
         FTT = [T.polaroid() for T in styles.FTAGS.values() if not T.is_group]
 
-        self._history.append({'kitty': kitty, 'styles': {'PARASTYLES': PPP, 'FONTSTYLES': FFF, 'PTAGLIST': PTT, 'FTAGLIST': FTT, 'PEGS': GGG}, 'page': page_xy})
+        self._history.append({'kitty': kitty, 'contexts': contexts, 'styles': {'PARASTYLES': PPP, 'FONTSTYLES': FFF, 'PTAGLIST': PTT, 'FTAGLIST': FTT, 'PEGS': GGG}, 'page': page_xy})
         self._i = len(self._history)
 
     def pop(self):
@@ -39,16 +43,18 @@ class UN(object):
         self._i = len(self._history)
         
     def _restore(self, i):
-        styles.faith(self._history[i]['styles'])
+        image = self._history[i]
+        styles.faith(image['styles'])
         
-        penclick.page.WIDTH, penclick.page.HEIGHT = self._history[i]['page']
+        penclick.page.WIDTH, penclick.page.HEIGHT = image['page']
 
+        CText.tract = mipsy.tracts[image['contexts']['t']]
         for t in range(len(mipsy.tracts)):
-            mipsy.tracts[t].text = kevin.deserialize(self._history[i]['kitty'][t]['text'])
-            mipsy.tracts[t].misspellings = self._history[i]['kitty'][t]['spelling']
-#            mipsy.tracts[t].cursor.cursor = self._history[i]['kitty'][t]['cursors'][0]
-#            mipsy.tracts[t].select.cursor = self._history[i]['kitty'][t]['cursors'][1]
-            mipsy.tracts[t].channels.channels = self._history[i]['kitty'][t]['outline']
+            mipsy.tracts[t].text = kevin.deserialize(image['kitty'][t]['text'])
+            mipsy.tracts[t].misspellings = image['kitty'][t]['spelling']
+            mipsy.tracts[t].channels.channels = image['kitty'][t]['outline']
+        
+        cursor.fcursor.__init__(CText.tract, image['contexts']['i'], image['contexts']['j'])
     
     def back(self):
         if self._i > 0:

@@ -69,6 +69,7 @@ class Meredith(object):
                 c = tract.channels.target_channel(x, y, self.page_context, 20)
                 if c is not None:
                     CText.tract = tract
+                    cursor.fcursor.assign_text(tract)
                     self._C = c
                     return True
         
@@ -115,6 +116,7 @@ class Meredith(object):
             t = self.tracts.index(CText.tract)
             del self.tracts[t]
             CText.tract = self.tracts[0]
+            cursor.fcursor.assign_text(self.tracts[0])
         except ValueError:
             print('No tract selected')
     

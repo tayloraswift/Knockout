@@ -147,10 +147,8 @@ class Chained_text(Atomic_text):
         if not self._sorted_pages:
             for page, pageslugs in ((p, list(ps)) for p, ps in groupby((line for line in self._SLUGS), key=lambda line: line['page'])):
                 if page not in self._sorted_pages:
-                    self._sorted_pages[page] = {'_annot': [], '_images': [], '_lines': ([], [])}
+                    self._sorted_pages[page] = {'_annot': [], '_images': []}
                 sorted_page = self._sorted_pages[page]
-                sorted_page['_lines'][0].extend(pageslugs)
-                sorted_page['_lines'][1].extend(line['l'] for line in pageslugs)
                 
                 for line in pageslugs:
                     line.deposit(sorted_page)

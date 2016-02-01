@@ -3,7 +3,7 @@ from itertools import chain
 
 from state import constants
 from state import noticeboard
-from state.contexts import Text as CText
+from state.ctext import Tract
 
 from interface import poptarts
 accent = poptarts.accent
@@ -55,7 +55,7 @@ class Channels_controls(object):
         
         if c is None:
             if name != 'ctrl':
-                CText.tract.channels.clear_selection()
+                Tract.tract.channels.clear_selection()
             
             if self._grid_controls.press(x, y):
                 self._mode = 'grid'
@@ -66,27 +66,27 @@ class Channels_controls(object):
         else:
             self._mode = 'outlines'
             #clear selection
-            if name != 'ctrl' and not CText.tract.channels.is_selected(c, r, i):
-                CText.tract.channels.clear_selection()
+            if name != 'ctrl' and not Tract.tract.channels.is_selected(c, r, i):
+                Tract.tract.channels.clear_selection()
             
             # MAKE SELECTIONS
             if i is not None:
-                CText.tract.channels.make_selected(c, r, i, name)
+                Tract.tract.channels.make_selected(c, r, i, name)
 
             elif portal is not None:
                 if portal[0] == 'entrance':
-                    CText.tract.channels.make_selected(c, 0, 0, name)
-                    CText.tract.channels.make_selected(c, 1, 0, name)
+                    Tract.tract.channels.make_selected(c, 0, 0, name)
+                    Tract.tract.channels.make_selected(c, 1, 0, name)
                     r = 0
                     i = 0
                 elif portal[0] == 'portal':
-                    CText.tract.channels.make_selected(c, 0, -1, name)
-                    CText.tract.channels.make_selected(c, 1, -1, name)
+                    Tract.tract.channels.make_selected(c, 0, -1, name)
+                    Tract.tract.channels.make_selected(c, 1, -1, name)
                     r = 1
-                    i = len(CText.tract.channels.channels[c].railings[1]) - 1
+                    i = len(Tract.tract.channels.channels[c].railings[1]) - 1
 
             if i is not None:
-                self._sel_locale = tuple(CText.tract.channels.channels[c].railings[r][i][:2])
+                self._sel_locale = tuple(Tract.tract.channels.channels[c].railings[r][i][:2])
                 self._release_locale = self._sel_locale
             
             self._selected_point = (meredith.mipsy.C(), r, i)
@@ -103,20 +103,20 @@ class Channels_controls(object):
                 if self._selected_portal is not None:
                     
                     if self._selected_portal[0] == 'entrance':
-                        xo, yo = CText.tract.channels.channels[c].railings[0][0][:2]
-                        CText.tract.channels.translate_selection(x - self._selected_portal[1], y - self._selected_portal[2], xo, yo)
+                        xo, yo = Tract.tract.channels.channels[c].railings[0][0][:2]
+                        Tract.tract.channels.translate_selection(x - self._selected_portal[1], y - self._selected_portal[2], xo, yo)
 
                     elif self._selected_portal[0] == 'portal':
-                        xo, yo = CText.tract.channels.channels[c].railings[1][-1][:2]
-                        CText.tract.channels.translate_selection(x - self._selected_portal[1], y - self._selected_portal[2], xo, yo)
+                        xo, yo = Tract.tract.channels.channels[c].railings[1][-1][:2]
+                        Tract.tract.channels.translate_selection(x - self._selected_portal[1], y - self._selected_portal[2], xo, yo)
 
                 # if point is selected
                 elif self._selected_point[2] is not None:
-                    xo, yo = CText.tract.channels.channels[c].railings[r][i][:2]
-                    CText.tract.channels.translate_selection(x, y, xo, yo)
+                    xo, yo = Tract.tract.channels.channels[c].railings[r][i][:2]
+                    Tract.tract.channels.translate_selection(x, y, xo, yo)
                     
-                if self._sel_locale != tuple(CText.tract.channels.channels[c].railings[r][i][:2]):
-                    self._sel_locale = tuple(CText.tract.channels.channels[c].railings[r][i][:2])
+                if self._sel_locale != tuple(Tract.tract.channels.channels[c].railings[r][i][:2]):
+                    self._sel_locale = tuple(Tract.tract.channels.channels[c].railings[r][i][:2])
                     noticeboard.redraw_becky.push_change()
         elif self._mode == 'grid':
             # translate grid lines
@@ -127,12 +127,12 @@ class Channels_controls(object):
         # if point is selected
         c, r, i = self._selected_point
         if i is not None:
-            CText.tract.channels.channels[c].fix(0)
-            CText.tract.channels.channels[c].fix(1)
+            Tract.tract.channels.channels[c].fix(0)
+            Tract.tract.channels.channels[c].fix(1)
         
-            if self._release_locale != tuple(CText.tract.channels.channels[c].railings[r][i][:2]):
-                self._release_locale = tuple(CText.tract.channels.channels[c].railings[r][i][:2])
-                CText.tract.deep_recalculate()
+            if self._release_locale != tuple(Tract.tract.channels.channels[c].railings[r][i][:2]):
+                self._release_locale = tuple(Tract.tract.channels.channels[c].railings[r][i][:2])
+                Tract.tract.deep_recalculate()
             else:
                 un.history.pop()
     
@@ -145,36 +145,36 @@ class Channels_controls(object):
                     un.history.undo_save(3)
                     
                     # delete channel
-                    del CText.tract.channels.channels[c]
+                    del Tract.tract.channels.channels[c]
                     # wipe out entire tract if it's the last one
-                    if not CText.tract.channels.channels:
+                    if not Tract.tract.channels.channels:
                         meredith.mipsy.delete_tract()
 
                 else:
                     un.history.undo_save(3)
-                    if not CText.tract.channels.delete_selection():
+                    if not Tract.tract.channels.delete_selection():
                         un.history.pop()
                 
-                CText.tract.deep_recalculate()
+                Tract.tract.deep_recalculate()
             
             elif self._mode == 'grid':
                 self._grid_controls.del_grid()
                 
         elif name == 'All':
-            CText.tract.channels.expand_selection(self._selected_point[0])
+            Tract.tract.channels.expand_selection(self._selected_point[0])
             
     
     def hover(self, x, y, hovered=[None, None]):
         
-        c, r, i = CText.tract.channels.target_point(x, y, meredith.mipsy.hover_page_context, 20)
+        c, r, i = Tract.tract.channels.target_point(x, y, meredith.mipsy.hover_page_context, 20)
         portal = None
         if c is None:
-            c = CText.tract.channels.target_channel(x, y, meredith.mipsy.hover_page_context, 20)
+            c = Tract.tract.channels.target_channel(x, y, meredith.mipsy.hover_page_context, 20)
 
         self._hover_point = (c, r, i)
         
         if r is None and c is not None:
-            portal = CText.tract.channels.channels[c].target_portal(x, y, radius=5)
+            portal = Tract.tract.channels.channels[c].target_portal(x, y, radius=5)
             # select multiple points
             if portal is not None:
                 self._hover_portal = (c, portal[0])
@@ -191,7 +191,7 @@ class Channels_controls(object):
     def render(self, cr, Tx, Ty, show_rails=False):            
             
         if show_rails:
-            for c, channel in enumerate(CText.tract.channels.channels):
+            for c, channel in enumerate(Tract.tract.channels.channels):
                 page = channel.page
                 
                 color = (0.3, 0.3, 0.3, 0.5)
@@ -267,7 +267,7 @@ class Channels_controls(object):
                 cr.stroke()
 
         else:
-            for c, channel in enumerate(CText.tract.channels.channels):
+            for c, channel in enumerate(Tract.tract.channels.channels):
                 page = channel.page
                 
                 color = (0.3, 0.3, 0.3, 0.5)

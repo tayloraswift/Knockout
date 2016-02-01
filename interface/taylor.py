@@ -11,6 +11,7 @@ import sierra
 from state import noticeboard
 from state import constants
 from state.contexts import Text as CText
+from state.ctext import Tract
 
 from fonts import styles
 
@@ -267,7 +268,7 @@ def _replace_misspelled(word):
         wonder.struck.add(word[1:-1])
     else:
         typing.type_document('Paste', list(word))
-    CText.tract.stats(spell=True)
+    cursor.fcursor._ftx.stats(spell=True)
 
 class Document_view(ui.Cell):
     def __init__(self, state={'mode': 'text', 'Hc': 0, 'Kc': 0, 'H': 0, 'K': 0, 'Zoom': 11}):
@@ -290,7 +291,7 @@ class Document_view(ui.Cell):
 
         self._A = self._scroll_notches[self._scroll_notch_i]
         
-        CText.tract.stats(spell=True)
+        cursor.fcursor._ftx.stats(spell=True)
     
     def read_display_state(self):
         return {
@@ -365,13 +366,10 @@ class Document_view(ui.Cell):
             # TEXT EDITING MODE
             if self._mode == 'text':
                 try:
-                    x, y = meredith.mipsy.set_page_context(x, y)
+#                    x, y = meredith.mipsy.set_page_context(x, y)
                     
                     un.history.undo_save(0)
-                    meredith.mipsy.channel_select(x, y, search_all=True)
-                    
-                    typing.set_cursor(meredith.mipsy.lookup_xy(x, y))
-                    typing.match_cursors()
+                    cursor.fcursor.target(x, y)
                     
                     # used to keep track of ui redraws
                     self._sel_cursor = cursor.fcursor.j
@@ -383,7 +381,7 @@ class Document_view(ui.Cell):
                 CText.update()
                 
                 # count words
-                CText.tract.stats()
+                cursor.fcursor._ftx.stats()
             
             # CHANNEL EDITING MODE
             elif self._mode == 'channels':
@@ -411,20 +409,16 @@ class Document_view(ui.Cell):
             # TEXT EDITING MODE
             if self._mode == 'text':
                 try:
-                    xo, yo = meredith.mipsy.set_page_context(xo, yo)
+                    cursor.fcursor.target(xo, yo)
+                    i = cursor.fcursor.i
                     
-                    meredith.mipsy.channel_select(xo, yo, search_all=True)
-                    i = meredith.mipsy.lookup_xy(xo, yo)
-                    
-                    ms = CText.tract.misspellings
+                    ms = Tract.tract.misspellings
                     pair_i = bisect.bisect([pair[0] for pair in ms], i) - 1
 
                     if ms[pair_i][0] <= i <= ms[pair_i][1]:
 
                         if i == ms[pair_i][1]:
-                            i -= 1
-                        typing.set_cursor(i)
-                        typing.match_cursors()
+                            cursor.fcursor.i -= 1
                         
                         # used to keep track of ui redraws
                         self._sel_cursor = cursor.fcursor.j
@@ -438,8 +432,7 @@ class Document_view(ui.Cell):
                     pass
                 # check if paragraph context changed
                 CText.update()
-
-        
+    
     def press_motion(self, x, y):
         if self._region_active == 'view':
 
@@ -451,22 +444,13 @@ class Document_view(ui.Cell):
                 noticeboard.redraw_becky.push_change()
 
             x, y = self._T_1(x, y)
-            xp, yp = meredith.mipsy.XY(x, y)
+#            xp, yp = meredith.mipsy.XY(x, y)
 
             if self._mode == 'text':
-                if not penclick.page.inside(xp, yp):
-                    xp, yp = meredith.mipsy.positive_page_context(x, y)
-                else:
-                    meredith.mipsy.channel_select(xp, yp)
-                
-                try:
-                    typing.set_select(meredith.mipsy.lookup_xy(xp, yp))
-                    # if redraw needed
-                    if cursor.fcursor.j != self._sel_cursor:
-                        self._sel_cursor = cursor.fcursor.j
-                        noticeboard.redraw_becky.push_change()
-                except ValueError:
-                    pass
+                cursor.fcursor.target_select(x, y)
+                if cursor.fcursor.j != self._sel_cursor:
+                    self._sel_cursor = cursor.fcursor.j
+                    noticeboard.redraw_becky.push_change()
 
             elif self._mode == 'channels':
                 caramel.delight.press_motion(xp, yp)
@@ -620,7 +604,7 @@ class Document_view(ui.Cell):
                 cr.restore()
                 
                 # only annotate active tract
-                if tract is CText.tract and self._mode == 'text':
+                if tract is Tract.tract and self._mode == 'text':
                     self._draw_annotations(cr, sorted_glyphs['_annot'], page)
                     self._draw_spelling(cr, tract.paint_misspellings())
         
@@ -840,7 +824,7 @@ class Document_view(ui.Cell):
         cr.show_text('{0:g}'.format(self._A*100) + '%')
         
         cr.move_to(constants.UI[1] - 150, k - 20)
-        cr.show_text(str(CText.tract.word_count) + ' words · page ' + str(meredith.mipsy.page_context))
+        cr.show_text(str(cursor.fcursor._ftx.word_count) + ' words · page ' + str(cursor.fcursor.PG))
         
         cr.reset_clip()
 

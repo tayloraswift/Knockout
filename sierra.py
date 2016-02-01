@@ -3,6 +3,8 @@ import pprint, pickle, ast
 from fonts import fonts, styles
 
 from state import constants
+from state.contexts import Text
+from state.ctext import Tract
 
 from model import meredith, penclick, cursor
 from model import kevin
@@ -22,8 +24,8 @@ def save():
             }
     
     grid = meredith.mipsy.page_grid
-    contexts = {'t': meredith.mipsy.tracts.index(meredith.CText.tract),
-            'c': meredith.mipsy.C(), 
+    contexts = {'t': meredith.mipsy.tracts.index(Tract.tract),
+#            'c': meredith.mipsy.C(), 
             'p': meredith.mipsy.page_context,
             'i': cursor.fcursor.i,
             'j': cursor.fcursor.j}
@@ -50,6 +52,11 @@ def load(name):
     
     penclick.page = penclick.Page(doc['page'])
     meredith.mipsy = meredith.Meredith(doc['kitty'], grid=doc['grid'], ctxs=doc['contexts'])
+    cursor.fcursor = cursor.FCursor(meredith.mipsy.tracts[doc['contexts']['t']], doc['contexts']['i'], doc['contexts']['j'], doc['contexts']['p'])
+    
+    meredith.mipsy.recalculate_all()
+    Tract.tract = meredith.mipsy.tracts[doc['contexts']['t']]
+    Text.update()
         
     from interface import taylor
     taylor.becky = taylor.Document_view(doc['view'])

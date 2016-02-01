@@ -4,7 +4,7 @@ from fonts import fonts, styles
 
 from state import constants
 
-from model import meredith, penclick
+from model import meredith, penclick, cursor
 from model import kevin
 
 def save():
@@ -13,7 +13,6 @@ def save():
             {
             'text': kevin.serialize(t.text), 
             'outline': [(c.railings, c.page) for c in t.channels.channels], 
-#            'cursors': (t.cursor.cursor, t.select.cursor)
             } 
             for t in meredith.mipsy.tracts]
     
@@ -23,7 +22,11 @@ def save():
             }
     
     grid = meredith.mipsy.page_grid
-    contexts = {'c': meredith.mipsy.C(), 'p': meredith.mipsy.page_context}
+    contexts = {'t': meredith.mipsy.tracts.index(meredith.CText.tract),
+            'c': meredith.mipsy.C(), 
+            'p': meredith.mipsy.page_context,
+            'i': cursor.fcursor.i,
+            'j': cursor.fcursor.j}
     
     PPP = styles.PARASTYLES.polaroid()
     FFF = {N: F.polaroid() for N, F in styles.FONTSTYLES.items()}

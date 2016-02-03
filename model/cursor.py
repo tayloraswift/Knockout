@@ -30,62 +30,55 @@ class FCursor(object):
         # perform naïve targeting (current page, current tract)
         x, y = meredith.page.normalize_XY(xo, yo, self.PG)
         imperfect, ftext, i_new = self._ftx.target(x, y, self.PG, self.i)
-        if not imperfect:
-            # simple cursor assignment
-            self.i = i_new
-            self.j = i_new
-            if ftext is not None:
-                # switch of tract context
-                self.assign_text(ftext)
-            return
-
-        # fallbacks: current page, other tracts
-        for chained_tract in meredith.mipsy.tracts: 
-            imperfect_t, ftext_t, i_t = chained_tract.target(x, y, self.PG, i=None)
-            if not imperfect_t:
-                # hit!  
-                self.i = i_t
-                self.j = i_t
-                if ftext_t is not None:
+        
+        if imperfect:
+            # fallbacks: current page, other tracts
+            for chained_tract in meredith.mipsy.tracts: 
+                imperfect_t, ftext_t, i_t = chained_tract.target(x, y, self.PG, i=None)
+                if not imperfect_t:
+                    # hit!  
+                    self.i = i_t
+                    self.j = i_t
+                    if ftext_t is not None:
+                        # switch of tract context
+                        self.assign_text(ftext_t)
+                    else:
+                        self.assign_text(chained_tract)
+                    self.TRACT = chained_tract
+                    return
+                    
+            # fallbacks: other page, current tract
+            binned_page = meredith.page.XY_to_page(xo, yo)
+            x, y = meredith.page.normalize_XY(xo, yo, binned_page)
+            
+            imperfect_p, ftext_p, i_p = self._ftx.target(x, y, binned_page, i=None)
+            if not imperfect_p:
+                # hit!
+                self.i = i_p
+                self.j = i_p
+                self.PG = binned_page
+                if ftext_p is not None:
                     # switch of tract context
-                    self.assign_text(ftext_t)
-                else:
-                    self.assign_text(chained_tract)
-                self.TRACT = chained_tract
+                    self.assign_text(ftext_p)
                 return
                 
-        # fallbacks: other page, current tract
-        binned_page = meredith.page.XY_to_page(xo, yo)
-        x, y = meredith.page.normalize_XY(xo, yo, binned_page)
-        
-        imperfect_p, ftext_p, i_p = self._ftx.target(x, y, binned_page, i=None)
-        if not imperfect_p:
-            # hit!
-            self.i = i_p
-            self.j = i_p
-            self.PG = binned_page
-            if ftext_p is not None:
-                # switch of tract context
-                self.assign_text(ftext_p)
-            return
-            
-        # fallbacks: other page, other tracts
-        for chained_tract in meredith.mipsy.tracts:
-            imperfect_pt, ftext_pt, i_pt = chained_tract.target(x, y, binned_page, i=None)
-            if not imperfect_pt:
-                # hit!
-                self.i = i_pt
-                self.j = i_pt
-                self.PG = binned_page
-                if ftext_pt is not None:
-                    # switch of tract context
-                    self.assign_text(ftext_pt)
-                else:
-                    self.assign_text(chained_tract)
-                self.TRACT = chained_tract
-                return
+            # fallbacks: other page, other tracts
+            for chained_tract in meredith.mipsy.tracts:
+                imperfect_pt, ftext_pt, i_pt = chained_tract.target(x, y, binned_page, i=None)
+                if not imperfect_pt:
+                    # hit!
+                    self.i = i_pt
+                    self.j = i_pt
+                    self.PG = binned_page
+                    if ftext_pt is not None:
+                        # switch of tract context
+                        self.assign_text(ftext_pt)
+                    else:
+                        self.assign_text(chained_tract)
+                    self.TRACT = chained_tract
+                    return
 
-        # last fallback: simple best guess
+        # best guess
         self.i = i_new
         self.j = i_new
         if ftext is not None:
@@ -97,29 +90,23 @@ class FCursor(object):
         # perform naïve targeting (current page, current tract)
         x, y = meredith.page.normalize_XY(xo, yo, self.PG)
         imperfect, ftext, i_new = self._ftx.target(x, y, self.PG, self.j)
-        if not imperfect:
-            # simple cursor assignment
-            self.j = i_new
-            if ftext is not None:
-                # switch of tract context (this is a problem!)
-                raise RuntimeError
-            return
-  
-        # fallbacks: other page, current tract
-        binned_page = meredith.page.XY_to_page(xo, yo)
-        x, y = meredith.page.normalize_XY(xo, yo, binned_page)
         
-        imperfect_p, ftext_p, i_p = self._ftx.target(x, y, binned_page, i=None)
-        if not imperfect_p:
-            # hit!
-            self.j = i_p
-            self.PG = binned_page
-            if ftext_p is not None:
-                # switch of tract context (this is a problem!)
-                raise RuntimeError
-            return
+        if imperfect:
+            # fallbacks: other page, current tract
+            binned_page = meredith.page.XY_to_page(xo, yo)
+            x, y = meredith.page.normalize_XY(xo, yo, binned_page)
+            
+            imperfect_p, ftext_p, i_p = self._ftx.target(x, y, binned_page, i=None)
+            if not imperfect_p:
+                # hit!
+                self.j = i_p
+                self.PG = binned_page
+                if ftext_p is not None:
+                    # switch of tract context (this is a problem!)
+                    raise RuntimeError
+                return
 
-        # last fallback: simple best guess
+        # simple cursor assignment
         self.j = i_new
         if ftext is not None:
             # switch of tract context (this is a problem!)
@@ -383,5 +370,3 @@ class FCursor(object):
 
     def front_and_back(self):
         return self._ftx.line_indices(self.index_to_line(self.i))
-
-fcursor = None

@@ -157,10 +157,10 @@ class Keyboard(dict):
         elif name in self._special_names:
             T = self[name]
             if name in self._CLOSE:
-                B = True
+                B = False
                 F = '</f>'
             else:
-                B = False
+                B = True
                 F = '<f>'
             if cursor.fcursor.take_selection():
                 un.history.undo_save(3)

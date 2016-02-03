@@ -136,7 +136,7 @@ class FCursor(object):
         signs = (self.j < self.i,
                 (character(self.text[self.i - 1]) in ftags, character(self.text[self.i]) in ftags) , 
                 (character(self.text[self.j - 1]) in ftags, character(self.text[self.j]) in ftags))
-        return self._ftx.paint_select(self.i, self.j) + (signs,)
+        return self._ftx.paint_select(self.i, self.j), signs
     
     def take_selection(self):
         self.i, self.j = sorted((self.i, self.j))

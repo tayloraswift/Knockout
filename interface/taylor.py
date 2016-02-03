@@ -371,8 +371,6 @@ class Document_view(ui.Cell):
             # TEXT EDITING MODE
             if self._mode == 'text':
                 try:
-#                    x, y = meredith.mipsy.set_page_context(x, y)
-                    
                     un.history.undo_save(0)
                     self.fcursor.target(x, y)
                     
@@ -446,7 +444,6 @@ class Document_view(ui.Cell):
                 noticeboard.redraw_becky.push_change()
 
             x, y = self._T_1(x, y)
-#            xp, yp = meredith.mipsy.XY(x, y)
 
             if self._mode == 'text':
                 self.fcursor.target_select(x, y)
@@ -565,7 +562,7 @@ class Document_view(ui.Cell):
     def page_classes(self):
         classed_pages = {}
 
-        jumbled_pages = [tract.extract_glyphs() for tract in meredith.mipsy.tracts]
+        jumbled_pages = [tract.extract_glyphs() for tract in meredith.mipsy]
 
         for dictionary in jumbled_pages:
             for page, sorted_glyphs in dictionary.items():
@@ -587,7 +584,7 @@ class Document_view(ui.Cell):
         PWIDTH = meredith.page.WIDTH
         
         max_page = 0
-        for tract in meredith.mipsy.tracts:            
+        for tract in meredith.mipsy:            
             for page, sorted_glyphs in tract.extract_glyphs(refresh).items():
                 max_page = max(max_page, page)
 

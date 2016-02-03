@@ -11,13 +11,15 @@ def outside_tag(sequence):
     return sequence
 
 class FCursor(object):
-    def __init__(self, ftext, i, j, pc, tract):
+    def __init__(self, ctx):
+        self.TRACT = meredith.mipsy[ctx['t']]
+        if ctx['ftx'] is None:
+            ftext = self.TRACT
         self.assign_text(ftext)
-        self.i = i
-        self.j = j
+        self.i = ctx['i']
+        self.j = ctx['j']
         
-        self.PG = pc
-        self.TRACT = meredith.mipsy.tracts[tract]
+        self.PG = ctx['p']
 
     def assign_text(self, ftext):
         self._ftx = ftext
@@ -33,7 +35,7 @@ class FCursor(object):
         
         if imperfect:
             # fallbacks: current page, other tracts
-            for chained_tract in meredith.mipsy.tracts: 
+            for chained_tract in meredith.mipsy: 
                 imperfect_t, ftext_t, i_t = chained_tract.target(x, y, self.PG, i=None)
                 if not imperfect_t:
                     # hit!  
@@ -63,7 +65,7 @@ class FCursor(object):
                 return
                 
             # fallbacks: other page, other tracts
-            for chained_tract in meredith.mipsy.tracts:
+            for chained_tract in meredith.mipsy:
                 imperfect_pt, ftext_pt, i_pt = chained_tract.target(x, y, binned_page, i=None)
                 if not imperfect_pt:
                     # hit!

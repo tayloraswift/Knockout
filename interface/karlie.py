@@ -7,7 +7,7 @@ from fonts import styles
 
 from interface import kookies, caramel, ui, ops
 
-from model import meredith, penclick
+from model import meredith
 from model import un
 
 def _create_f_field(TYPE, x, y, width, attribute, after, name='', **kwargs):
@@ -366,21 +366,21 @@ class Properties(_Properties_panel):
         elif self._tab == 'page':
             self._items.append(kookies.Heading( 15, 90, 250, 30, '', upper=True))
             self._items.append(kookies.Integer_field( 15, y, 250, 
-                        callback = penclick.page.set_width,
-                        value_acquire = lambda: penclick.page.WIDTH,
+                        callback = meredith.page.set_width,
+                        value_acquire = lambda: meredith.page.WIDTH,
                         name = 'WIDTH' ))
             
             y += 45
             self._items.append(kookies.Integer_field( 15, y, 250,
-                        callback = penclick.page.set_height,
-                        value_acquire = lambda: penclick.page.HEIGHT,
+                        callback = meredith.page.set_height,
+                        value_acquire = lambda: meredith.page.HEIGHT,
                         name = 'HEIGHT' ))
         
         self._stack()
 
     def _reconstruct_channel_properties(self):
         # ALWAYS REQUIRES CALL TO _stack()
-        c = meredith.mipsy.C()
+        c = caramel.delight.C()
         
         self._items = [self._tabstrip]
         self._active_box_i = None
@@ -393,9 +393,9 @@ class Properties(_Properties_panel):
         if self._tab == 'channels':
             if c is not None:
                 self._items.append(kookies.Integer_field( 15, y, 250, 
-                        callback = meredith.mipsy.change_channel_page, 
+                        callback = lambda page, C: (caramel.delight.TRACT.channels.channels[C].set_page(page), caramel.delight.TRACT.deep_recalculate()), 
                         params = (c,),
-                        value_acquire = lambda C: str(contexts.Text.tract.channels.channels[C].page),
+                        value_acquire = lambda C: str(caramel.delight.TRACT.channels.channels[C].page),
                         name = 'PAGE' ))
                 y += 30
             
@@ -419,7 +419,3 @@ class Properties(_Properties_panel):
             self._reconstruct = self._reconstruct_channel_properties
         
         self._reconstruct()
-
-
-klossy = Properties(tabs = (('page', 'M'), ('tags', 'T'), ('paragraph', 'P'), ('font', 'F'), ('pegs', 'G')), default=2, partition=1 )
-

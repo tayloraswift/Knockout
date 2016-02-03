@@ -132,7 +132,7 @@ class Table(dict):
         self['PP'] = ['<table>', Counter()]
     
     def I(self, x, y):
-        return self['i']
+        return None, self['i']
     
     def deposit(self, repository):
         for cell in chain.from_iterable(self.data):

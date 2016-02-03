@@ -73,5 +73,3 @@ class Page(object):
             return y + (pp + 1)//2 * self._HEIGHT_HALFGAP
         else:
             return y + pp * self._HEIGHT_HALFGAP
-
-page = None

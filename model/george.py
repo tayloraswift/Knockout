@@ -59,7 +59,7 @@ class Swimming_pool(object):
         self.railings[r].sort(key = lambda k: k[1])
     
     def target_portal(self, x, y, radius=0):
-        portal = None
+        portal = (None, 0, 0)
         if self.railings[0][0][1] - radius - 5 <= y <= self.railings[0][0][1] + radius:
             if self.railings[0][0][0] < x < self.railings[1][0][0]:
                 portal = ('entrance', x - self.railings[0][0][0], y - self.railings[0][0][1])

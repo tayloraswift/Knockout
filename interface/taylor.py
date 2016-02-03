@@ -6,19 +6,17 @@ from copy import deepcopy
 import os
 import cairo
 
-import sierra
-
 from state import noticeboard
 from state import constants
 from state.contexts import Text as CText
-from state.ctext import Tract
 
 from fonts import styles
 
-from model import meredith, cursor
+from model import meredith
+from model import cursor
 from model import wonder
 from model.wonder import character
-from model import un, do, penclick
+from model import un, do
 
 from typing import typing
 
@@ -135,7 +133,7 @@ class Mode_switcher(object):
 
 def PDF():
     name = os.path.splitext(constants.filename)[0]
-    surface = cairo.PDFSurface(name + '.pdf', penclick.page.WIDTH, penclick.page.HEIGHT)
+    surface = cairo.PDFSurface(name + '.pdf', meredith.page.WIDTH, meredith.page.HEIGHT)
     cr = cairo.Context(surface)
     
     classes = becky.page_classes()
@@ -144,18 +142,23 @@ def PDF():
         becky.print_page(cr, p, classes)
         cr.show_page()
 
-def place_tags(tag):
+def _place_tags(tag):
     un.history.undo_save(3)
     if not cursor.fcursor.bridge(tag, sign=True):
         un.history.pop()
 
-def punch_tags(tag):
+def _punch_tags(tag):
     un.history.undo_save(3)
     if not cursor.fcursor.bridge(tag, sign=False):
         un.history.pop()
 
+def _add_channel():
+    caramel.delight.TRACT.channels.add_channel()
+    caramel.delight.TRACT.deep_recalculate()
+
 class Document_toolbar(object):
-    def __init__(self):
+    def __init__(self, save):
+        self._save = save
         self.refresh_class()
     
     def refresh_class(self):
@@ -166,7 +169,7 @@ class Document_toolbar(object):
         self._hover_memory = (None, None)
         
         y = 120
-        self._items.append(kookies.Button(5, y, 90, 30, callback=sierra.save, string='Save'))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=self._save, string='Save'))
         y += 30
         self._items.append(kookies.Button(5, y, 90, 30, callback=PDF, string='PDF'))
         
@@ -176,22 +179,22 @@ class Document_toolbar(object):
         self._items.append(kookies.Button(5, y, 90, 30, callback=do.redo, string='Redo'))
         
         y += 40
-        self._items.append(kookies.Button(5, y, 90, 30, callback=meredith.mipsy.add_channel, string='Add portal'))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=_add_channel, string='Add portal'))
         y += 30
         self._items.append(kookies.Button(5, y, 90, 30, callback=meredith.mipsy.add_tract, string='Add tract'))
 
         y += 50
-        self._items.append(kookies.Button(5, y, 90, 30, callback=place_tags, string='Emphasis', params=(typing.emphasis,) ))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=_place_tags, string='Emphasis', params=(typing.keyboard['Ctrl i'],) ))
         y += 30
-        self._items.append(kookies.Button(5, y, 90, 30, callback=punch_tags, string='x Emphasis', params=(typing.emphasis,) ))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=_punch_tags, string='x Emphasis', params=(typing.keyboard['Ctrl I'],) ))
 
         y += 40
-        self._items.append(kookies.Button(5, y, 90, 30, callback=place_tags, string='Strong', params=(typing.strong,) ))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=_place_tags, string='Strong', params=(typing.keyboard['Ctrl b'],) ))
         y += 30
-        self._items.append(kookies.Button(5, y, 90, 30, callback=punch_tags, string='x Strong', params=(typing.strong,) ))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=_punch_tags, string='x Strong', params=(typing.keyboard['Ctrl B'],) ))
 
         y += 50
-        self._items.append(kookies.Checkbox(15, y, 80, callback=penclick.page.toggle_dual, value_acquire=lambda: penclick.page.dual, name='Dual'.upper()))
+        self._items.append(kookies.Checkbox(15, y, 80, callback=meredith.page.toggle_dual, value_acquire=lambda: meredith.page.dual, name='Dual'.upper()))
         
         y += 50
         self._items.append(kookies.Selection_menu(5, y, 90, 30, menu_callback=constants.HINTS.set_hint_style, options_acquire=constants.default_hints, value_acquire=constants.HINTS.get_hint_style, source=0))
@@ -267,15 +270,17 @@ def _replace_misspelled(word):
     if word[0] == '“':
         wonder.struck.add(word[1:-1])
     else:
-        typing.type_document('Paste', list(word))
+        typing.keyboard.type_document('Paste', list(word))
     cursor.fcursor._ftx.stats(spell=True)
 
 class Document_view(ui.Cell):
-    def __init__(self, state={'mode': 'text', 'Hc': 0, 'Kc': 0, 'H': 0, 'K': 0, 'Zoom': 11}):
+    def __init__(self, save, state={'mode': 'text', 'Hc': 0, 'Kc': 0, 'H': 0, 'K': 0, 'Zoom': 11}):
         self._mode = state['mode']
         self._region_active, self._region_hover = 'view', 'view'
-        self._toolbar = Document_toolbar()
+        self._toolbar = Document_toolbar(save)
         self._mode_switcher = Mode_switcher(self.change_mode)
+        self.keyboard = typing.keyboard
+        self.fcursor = cursor.fcursor
         
         self._stake = None
         
@@ -291,7 +296,7 @@ class Document_view(ui.Cell):
 
         self._A = self._scroll_notches[self._scroll_notch_i]
         
-        cursor.fcursor._ftx.stats(spell=True)
+        self.fcursor._ftx.stats(spell=True)
     
     def read_display_state(self):
         return {
@@ -305,10 +310,10 @@ class Document_view(ui.Cell):
     
     # TRANSFORMATION FUNCTIONS
     def _X_to_screen(self, x, pp):
-        return int(self._A * (penclick.page.map_X(x, pp) + self._H - self._Hc) + self._Hc)
+        return int(self._A * (meredith.page.map_X(x, pp) + self._H - self._Hc) + self._Hc)
 
     def _Y_to_screen(self, y, pp):
-        return int(self._A * (penclick.page.map_Y(y, pp) + self._K - self._Kc) + self._Kc)
+        return int(self._A * (meredith.page.map_Y(y, pp) + self._K - self._Kc) + self._Kc)
     
     def _T_1(self, x, y):
         x = (x - self._Hc) / self._A - self._H + self._Hc
@@ -347,7 +352,7 @@ class Document_view(ui.Cell):
 
     def key_input(self, name, char):
         if self._mode == 'text':
-            clipboard = typing.type_document(name, char)
+            clipboard = self.keyboard.type_document(name, char)
             # check if paragraph and font context changed
             CText.update()
             
@@ -369,10 +374,10 @@ class Document_view(ui.Cell):
 #                    x, y = meredith.mipsy.set_page_context(x, y)
                     
                     un.history.undo_save(0)
-                    cursor.fcursor.target(x, y)
+                    self.fcursor.target(x, y)
                     
                     # used to keep track of ui redraws
-                    self._sel_cursor = cursor.fcursor.j
+                    self._sel_cursor = self.fcursor.j
                     
                 except ValueError:
                     # occurs if an empty channel is selected
@@ -381,14 +386,11 @@ class Document_view(ui.Cell):
                 CText.update()
                 
                 # count words
-                cursor.fcursor._ftx.stats()
+                self.fcursor._ftx.stats()
             
             # CHANNEL EDITING MODE
             elif self._mode == 'channels':
-                xp, yp = meredith.mipsy.XY(x, y)
-                if not caramel.delight.press(xp, yp, name=name):
-                    x, y = meredith.mipsy.set_page_context(x, y)
-                    caramel.delight.press(x, y, name=name)
+                caramel.delight.press(x, y, name=name)
 
         elif self._region_active == 'toolbar':
             self._toolbar.press(x, y)
@@ -399,7 +401,7 @@ class Document_view(ui.Cell):
         if self._region_active == 'view':
             # TEXT EDITING MODE
             if self._mode == 'text':
-                cursor.fcursor.expand_cursors_word()
+                self.fcursor.expand_cursors_word()
     
     def press_right(self, x, y):
         if self._region_active == 'view':
@@ -409,20 +411,20 @@ class Document_view(ui.Cell):
             # TEXT EDITING MODE
             if self._mode == 'text':
                 try:
-                    cursor.fcursor.target(xo, yo)
-                    i = cursor.fcursor.i
+                    self.fcursor.target(xo, yo)
+                    i = self.fcursor.i
                     
-                    ms = Tract.tract.misspellings
+                    ms = self.fcursor.TRACT.misspellings
                     pair_i = bisect.bisect([pair[0] for pair in ms], i) - 1
 
                     if ms[pair_i][0] <= i <= ms[pair_i][1]:
 
                         if i == ms[pair_i][1]:
-                            cursor.fcursor.i -= 1
+                            self.fcursor.i -= 1
                         
                         # used to keep track of ui redraws
-                        self._sel_cursor = cursor.fcursor.j
-                        cursor.fcursor.expand_cursors_word()
+                        self._sel_cursor = self.fcursor.j
+                        self.fcursor.expand_cursors_word()
                         suggestions = ['“' + ms[pair_i][2] + '”'] + [w.decode("utf-8") for w in wonder.struck.suggest(ms[pair_i][2])]
                         suggestions = list(zip(suggestions, [str(v) for v in suggestions]))
                         menu.menu.create(x, y, 200, suggestions, _replace_misspelled, () )
@@ -447,13 +449,13 @@ class Document_view(ui.Cell):
 #            xp, yp = meredith.mipsy.XY(x, y)
 
             if self._mode == 'text':
-                cursor.fcursor.target_select(x, y)
-                if cursor.fcursor.j != self._sel_cursor:
-                    self._sel_cursor = cursor.fcursor.j
+                self.fcursor.target_select(x, y)
+                if self.fcursor.j != self._sel_cursor:
+                    self._sel_cursor = self.fcursor.j
                     noticeboard.redraw_becky.push_change()
 
             elif self._mode == 'channels':
-                caramel.delight.press_motion(xp, yp)
+                caramel.delight.press_motion(x, y)
         elif self._region_active == 'toolbar':
             pass
         elif self._region_active == 'switcher':
@@ -537,7 +539,7 @@ class Document_view(ui.Cell):
                 pass
 
             elif self._mode == 'channels':
-                caramel.delight.hover( * meredith.mipsy.set_hover_page_context( * self._T_1(x, y)) )
+                caramel.delight.hover( * self._T_1(x, y) )
                 
         elif self._region_hover == 'toolbar':
             self._toolbar.hover(x, y)
@@ -581,8 +583,8 @@ class Document_view(ui.Cell):
             self._print_sorted(cr, classed_pages[p])
             
     def _draw_by_page(self, cr, mx_cx, my_cy, cx, cy, A=1, refresh=False):
-        PHEIGHT = penclick.page.HEIGHT
-        PWIDTH = penclick.page.WIDTH
+        PHEIGHT = meredith.page.HEIGHT
+        PWIDTH = meredith.page.WIDTH
         
         max_page = 0
         for tract in meredith.mipsy.tracts:            
@@ -595,7 +597,7 @@ class Document_view(ui.Cell):
                 
                 # Scale first (on bottom) is significantly faster in cairo
                 cr.save()
-                cr.translate(A*penclick.page.map_X(mx_cx, page) + cx, A*penclick.page.map_Y(my_cy, page) + cy)
+                cr.translate(A*meredith.page.map_X(mx_cx, page) + cx, A*meredith.page.map_Y(my_cy, page) + cy)
                 cr.scale(A, A)
 
                 self._draw_images(cr, sorted_glyphs['_images'])
@@ -604,12 +606,12 @@ class Document_view(ui.Cell):
                 cr.restore()
                 
                 # only annotate active tract
-                if tract is Tract.tract and self._mode == 'text':
+                if tract is self.fcursor.TRACT and self._mode == 'text':
                     self._draw_annotations(cr, sorted_glyphs['_annot'], page)
                     self._draw_spelling(cr, tract.paint_misspellings())
         
         if self._mode == 'text':
-            meredith.mipsy.page_context, selections, signs = cursor.fcursor.paint_current_selection()
+            meredith.mipsy.page_context, selections, signs = self.fcursor.paint_current_selection()
             self._draw_selection_highlight(cr, selections, signs)
 
         for pp in range(max_page + 1):
@@ -675,7 +677,7 @@ class Document_view(ui.Cell):
             
             fontsize = F['fontsize'] * self._A
 
-            if PP is cursor.fcursor.pp_at():
+            if PP is self.fcursor.pp_at():
                 cr.set_source_rgba( * accent_light, 0.7)
             else:
                 cr.set_source_rgba(0, 0, 0, 0.4)
@@ -824,9 +826,6 @@ class Document_view(ui.Cell):
         cr.show_text('{0:g}'.format(self._A*100) + '%')
         
         cr.move_to(constants.UI[1] - 150, k - 20)
-        cr.show_text(str(cursor.fcursor._ftx.word_count) + ' words · page ' + str(cursor.fcursor.PG))
+        cr.show_text(str(self.fcursor._ftx.word_count) + ' words · page ' + str(self.fcursor.PG))
         
         cr.reset_clip()
-
-becky = None
-

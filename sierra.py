@@ -4,10 +4,20 @@ from fonts import fonts, styles
 
 from state import constants
 from state.contexts import Text
-from state.ctext import Tract
 
-from model import meredith, penclick, cursor
-from model import kevin
+from model import meredith, page, cursor
+from model import kevin, un
+
+from typing import typing
+
+from interface import karlie, taylor, caramel, poptarts
+
+shortcuts = [
+        ('Ctrl equal', 'Ctrl plus', 'sup'),
+        ('Ctrl minus', 'Ctrl underscore', 'sub'),
+        ('Ctrl b', 'Ctrl B', 'strong'),
+        ('Ctrl i', 'Ctrl I', 'emphasis')
+        ]
 
 def save():
     from interface import taylor
@@ -50,16 +60,27 @@ def load(name):
     styles.daydream()
     styles.faith(doc)
     
-    penclick.page = penclick.Page(doc['page'])
+    # set up page, tract model, page grid objects
+    meredith.page = page.Page(doc['page'])
     meredith.mipsy = meredith.Meredith(doc['kitty'], grid=doc['grid'], ctxs=doc['contexts'])
-    cursor.fcursor = cursor.FCursor(meredith.mipsy.tracts[doc['contexts']['t']], doc['contexts']['i'], doc['contexts']['j'], doc['contexts']['p'])
+    
+    # aim editor objects
+    cursor.fcursor = cursor.FCursor(meredith.mipsy.tracts[doc['contexts']['t']], 
+            doc['contexts']['i'], 
+            doc['contexts']['j'], 
+            doc['contexts']['p'],
+            doc['contexts']['t'])
+    caramel.delight = caramel.Channels_controls(meredith.mipsy.tracts[doc['contexts']['t']], doc['contexts']['p'], poptarts.Sprinkles())
+    typing.keyboard = typing.Keyboard(shortcuts)
     
     meredith.mipsy.recalculate_all()
-    Tract.tract = meredith.mipsy.tracts[doc['contexts']['t']]
     Text.update()
-        
-    from interface import taylor
-    taylor.becky = taylor.Document_view(doc['view'])
-    from model import un
+
+    # start undo tracking
+    un.history = un.UN() 
+
+    taylor.becky = taylor.Document_view(save, doc['view'])
+    karlie.klossy = karlie.Properties(tabs = (('page', 'M'), ('tags', 'T'), ('paragraph', 'P'), ('font', 'F'), ('pegs', 'G')), default=2, partition=1 )
+
     un.history.save()
 

@@ -81,7 +81,7 @@ class Channels_controls(object):
                 self._selected_portal = self._CHANNELS.channels[c].target_portal(xn, yn, radius=5)
             else:
                 self._selected_portal = (None, 0, 0)
-            return
+            return xn, yn
 
         # try different page
         binned_page = meredith.page.XY_to_page(x, y)
@@ -95,7 +95,7 @@ class Channels_controls(object):
             self._selected_point = [c, r, i]
             if r is None:
                 self._selected_portal = self._CHANNELS.channels[c].target_portal(xn, yn, radius=5)
-            return
+            return xn, yn
         
         # try different tract
         for tract in meredith.mipsy:
@@ -106,15 +106,16 @@ class Channels_controls(object):
                 self._selected_point = [c, r, i]
                 self.TRACT = tract
                 self._CHANNELS = tract.channels
-                return
+                return xn, yn
         
         self._selected_portal = (None, 0, 0)
+        return xn, yn
 
     def press(self, x, y, name):
         un.history.undo_save(3)
         
         self._grid_controls.clear_selection()
-        self.target(x, y)
+        xn, yn = self.target(x, y)
         c, r, i = self._selected_point
         portal = self._selected_portal
         
@@ -122,7 +123,7 @@ class Channels_controls(object):
             if name != 'ctrl':
                 self._CHANNELS.clear_selection()
             
-            if self._grid_controls.press(x, y):
+            if self._grid_controls.press(xn, yn):
                 self._mode = 'grid'
                 return True
             else:
@@ -152,7 +153,6 @@ class Channels_controls(object):
             
             elif r is not None:
                 # insert point if one was not found
-                xn, yn = meredith.page.normalize_XY(x, y, self.PG)
                 i = self._CHANNELS.channels[c].insert_point(r, yn)
                 self._CHANNELS.make_selected(c, r, i, name)
                 self._selected_point[2] = 1

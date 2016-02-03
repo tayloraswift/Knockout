@@ -2,10 +2,8 @@ from copy import deepcopy
 
 from fonts import styles
 
-from model.meredith import mipsy
-from state.ctext import Tract
-from model import penclick, kevin, cursor
-
+from model import meredith
+from model import kevin, cursor
 
 class UN(object):
     def __init__(self):
@@ -19,9 +17,9 @@ class UN(object):
             del self._history[:89]
             self._i -= 89
         
-        kitty = [{'text': kevin.serialize(t.text), 'spelling': t.misspellings[:], 'outline': deepcopy(t.channels.channels)} for t in mipsy.tracts]
-        page_xy = (penclick.page.WIDTH, penclick.page.HEIGHT)
-        contexts = {'t': mipsy.tracts.index(Tract.tract),
+        kitty = [{'text': kevin.serialize(t.text), 'spelling': t.misspellings[:], 'outline': deepcopy(t.channels.channels)} for t in meredith.mipsy.tracts]
+        page_xy = (meredith.page.WIDTH, meredith.page.HEIGHT)
+        contexts = {'t': meredith.mipsy.tracts.index(cursor.fcursor.TRACT),
                 'i': cursor.fcursor.i,
                 'j': cursor.fcursor.j}
         if len(self._history) > self._i:
@@ -46,15 +44,15 @@ class UN(object):
         image = self._history[i]
         styles.faith(image['styles'])
         
-        penclick.page.WIDTH, penclick.page.HEIGHT = image['page']
+        meredith.page.WIDTH, meredith.page.HEIGHT = image['page']
 
-        Tract.tract = mipsy.tracts[image['contexts']['t']]
-        for t in range(len(mipsy.tracts)):
-            mipsy.tracts[t].text = kevin.deserialize(image['kitty'][t]['text'])
-            mipsy.tracts[t].misspellings = image['kitty'][t]['spelling']
-            mipsy.tracts[t].channels.channels = image['kitty'][t]['outline']
+        cursor.fcursor.TRACT = meredith.mipsy.tracts[image['contexts']['t']]
+        for t in range(len(meredith.mipsy.tracts)):
+            meredith.mipsy.tracts[t].text = kevin.deserialize(image['kitty'][t]['text'])
+            meredith.mipsy.tracts[t].misspellings = image['kitty'][t]['spelling']
+            meredith.mipsy.tracts[t].channels.channels = image['kitty'][t]['outline']
         
-        cursor.fcursor.__init__(Tract.tract, image['contexts']['i'], image['contexts']['j'])
+        cursor.fcursor.__init__(cursor.fcursor.TRACT, image['contexts']['i'], image['contexts']['j'])
     
     def back(self):
         if self._i > 0:
@@ -88,5 +86,3 @@ class UN(object):
             if self._state != 0:
                 self.save()
             self._state = state
-            
-history = UN() 

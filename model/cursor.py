@@ -1,7 +1,6 @@
 import bisect
 from model.wonder import words, character, _breaking_chars
-from model import meredith, penclick, olivia
-from state.ctext import Tract
+from model import meredith, olivia
 
 def outside_tag(sequence):
     for i in reversed(range(len(sequence) - 1)):
@@ -12,12 +11,13 @@ def outside_tag(sequence):
     return sequence
 
 class FCursor(object):
-    def __init__(self, ftext, i, j, pc):
+    def __init__(self, ftext, i, j, pc, tract):
         self.assign_text(ftext)
         self.i = i
         self.j = j
         
         self.PG = pc
+        self.TRACT = meredith.mipsy.tracts[tract]
 
     def assign_text(self, ftext):
         self._ftx = ftext
@@ -28,7 +28,7 @@ class FCursor(object):
     # TARGETING SYSTEM
     def target(self, xo, yo):
         # perform naïve targeting (current page, current tract)
-        x, y = penclick.page.normalize_XY(xo, yo, self.PG)
+        x, y = meredith.page.normalize_XY(xo, yo, self.PG)
         imperfect, ftext, i_new = self._ftx.target(x, y, self.PG, self.i)
         if not imperfect:
             # simple cursor assignment
@@ -51,12 +51,12 @@ class FCursor(object):
                     self.assign_text(ftext_t)
                 else:
                     self.assign_text(chained_tract)
-                Tract.tract = chained_tract
+                self.TRACT = chained_tract
                 return
                 
         # fallbacks: other page, current tract
-        binned_page = penclick.page.XY_to_page(xo, yo)
-        x, y = penclick.page.normalize_XY(xo, yo, binned_page)
+        binned_page = meredith.page.XY_to_page(xo, yo)
+        x, y = meredith.page.normalize_XY(xo, yo, binned_page)
         
         imperfect_p, ftext_p, i_p = self._ftx.target(x, y, binned_page, i=None)
         if not imperfect_p:
@@ -82,7 +82,7 @@ class FCursor(object):
                     self.assign_text(ftext_pt)
                 else:
                     self.assign_text(chained_tract)
-                Tract.tract = chained_tract
+                self.TRACT = chained_tract
                 return
 
         # last fallback: simple best guess
@@ -95,7 +95,7 @@ class FCursor(object):
 
     def target_select(self, xo, yo):
         # perform naïve targeting (current page, current tract)
-        x, y = penclick.page.normalize_XY(xo, yo, self.PG)
+        x, y = meredith.page.normalize_XY(xo, yo, self.PG)
         imperfect, ftext, i_new = self._ftx.target(x, y, self.PG, self.j)
         if not imperfect:
             # simple cursor assignment
@@ -106,8 +106,8 @@ class FCursor(object):
             return
   
         # fallbacks: other page, current tract
-        binned_page = penclick.page.XY_to_page(xo, yo)
-        x, y = penclick.page.normalize_XY(xo, yo, binned_page)
+        binned_page = meredith.page.XY_to_page(xo, yo)
+        x, y = meredith.page.normalize_XY(xo, yo, binned_page)
         
         imperfect_p, ftext_p, i_p = self._ftx.target(x, y, binned_page, i=None)
         if not imperfect_p:

@@ -1,16 +1,12 @@
 from math import pi
 from itertools import chain
 
-from state import constants
 from state import noticeboard
-from state.ctext import Tract
 
-from interface import poptarts
-accent = poptarts.accent
+from interface.poptarts import accent
 
-from model import meredith, penclick
+from model import meredith, cursor
 from model import un
-
 
 def _draw_broken_bar(cr, x1, y1, x2, color_rgba, top):
     
@@ -35,27 +31,96 @@ def _draw_broken_bar(cr, x1, y1, x2, color_rgba, top):
     cr.set_dash([], 0)
         
 class Channels_controls(object):
-    def __init__(self):
+    def __init__(self, tract, pc, grid):
         self._mode = 'outlines'
         
-        self._grid_controls = poptarts.Sprinkles()
-        
-        self._selected_point = (None, None, None)
-        self._selected_portal = None
+        self._grid_controls = grid
+
+        self._selected_point = [None, None, None]
+        self._selected_portal = (None, None, None)
 
         # these are stateful
         self._hover_point = (None, None, None)
         self._hover_portal = (None, None)
-    
+        
+        self.PG = pc
+        self.HPG = 0
+        self.TRACT = tract
+        self._CHANNELS = tract.channels
+
+    def C(self):
+        return self._selected_point[0]
+
+    def target_select(self, x, y):
+        xn, yn = meredith.page.normalize_XY(x, y, self.HPG)
+        c, r, i = self._CHANNELS.target_point(xn, yn, self.HPG, 20)
+        if c is None:
+            # try different page
+            binned_page = meredith.page.XY_to_page(x, y)
+            xn, yn = meredith.page.normalize_XY(x, y, binned_page)
+            
+            c, r, i = self._CHANNELS.target_point(xn, yn, binned_page, 20)
+            if c is not None:
+                self.HPG = binned_page
+
+        if c is not None and r is None:
+            ptype, dpx, dpy = self._CHANNELS.channels[c].target_portal(xn, yn, radius=5)
+            self._hover_portal = (c, ptype)
+
+        self._hover_point = c, r, i
+
+    def target(self, x, y):
+        old_c = self._selected_point[0]
+        xn, yn = meredith.page.normalize_XY(x, y, self.PG)
+        c, r, i = self._CHANNELS.target_point(xn, yn, self.PG, 20)
+        self._selected_point = [c, r, i]
+        if c is not None:
+            if c != old_c:
+                noticeboard.refresh_properties_stack.push_change()
+            if r is None:
+                self._selected_portal = self._CHANNELS.channels[c].target_portal(xn, yn, radius=5)
+            else:
+                self._selected_portal = (None, 0, 0)
+            return
+
+        # try different page
+        binned_page = meredith.page.XY_to_page(x, y)
+        xn, yn = meredith.page.normalize_XY(x, y, binned_page)
+        
+        c, r, i = self._CHANNELS.target_point(xn, yn, binned_page, 20)
+        if c is not None:
+            if c != old_c:
+                noticeboard.refresh_properties_stack.push_change()
+            self.PG = binned_page
+            self._selected_point = [c, r, i]
+            if r is None:
+                self._selected_portal = self._CHANNELS.channels[c].target_portal(xn, yn, radius=5)
+            return
+        
+        # try different tract
+        for tract in meredith.mipsy.tracts:
+            c, r, i = tract.channels.target_point(xn, yn, binned_page, 20)
+            if c is not None:
+                noticeboard.refresh_properties_stack.push_change()
+                self.PG = binned_page
+                self._selected_point = [c, r, i]
+                self.TRACT = tract
+                self._CHANNELS = tract.channels
+                return
+        
+        self._selected_portal = (None, 0, 0)
+
     def press(self, x, y, name):
         un.history.undo_save(3)
         
         self._grid_controls.clear_selection()
-        c, r, i, portal = meredith.mipsy.channel_point_select(x, y)
+        self.target(x, y)
+        c, r, i = self._selected_point
+        portal = self._selected_portal
         
         if c is None:
             if name != 'ctrl':
-                Tract.tract.channels.clear_selection()
+                self._CHANNELS.clear_selection()
             
             if self._grid_controls.press(x, y):
                 self._mode = 'grid'
@@ -66,121 +131,134 @@ class Channels_controls(object):
         else:
             self._mode = 'outlines'
             #clear selection
-            if name != 'ctrl' and not Tract.tract.channels.is_selected(c, r, i):
-                Tract.tract.channels.clear_selection()
+            if name != 'ctrl' and not self._CHANNELS.is_selected(c, r, i):
+                self._CHANNELS.clear_selection()
             
             # MAKE SELECTIONS
             if i is not None:
-                Tract.tract.channels.make_selected(c, r, i, name)
+                self._CHANNELS.make_selected(c, r, i, name)
+                self._selected_portal = (None, None, None)
 
-            elif portal is not None:
-                if portal[0] == 'entrance':
-                    Tract.tract.channels.make_selected(c, 0, 0, name)
-                    Tract.tract.channels.make_selected(c, 1, 0, name)
-                    r = 0
-                    i = 0
-                elif portal[0] == 'portal':
-                    Tract.tract.channels.make_selected(c, 0, -1, name)
-                    Tract.tract.channels.make_selected(c, 1, -1, name)
-                    r = 1
-                    i = len(Tract.tract.channels.channels[c].railings[1]) - 1
+            elif portal[0] == 'entrance':
+                self._CHANNELS.make_selected(c, 0, 0, name)
+                self._CHANNELS.make_selected(c, 1, 0, name)
+                r = 0
+                i = 0
+            elif portal[0] == 'portal':
+                self._CHANNELS.make_selected(c, 0, -1, name)
+                self._CHANNELS.make_selected(c, 1, -1, name)
+                r = 1
+                i = len(self._CHANNELS.channels[c].railings[1]) - 1
+            
+            elif r is not None:
+                # insert point if one was not found
+                xn, yn = meredith.page.normalize_XY(x, y, self.PG)
+                i = self._CHANNELS.channels[c].insert_point(r, yn)
+                self._CHANNELS.make_selected(c, r, i, name)
+                self._selected_point[2] = 1
 
             if i is not None:
-                self._sel_locale = tuple(Tract.tract.channels.channels[c].railings[r][i][:2])
+                self._sel_locale = tuple(self._CHANNELS.channels[c].railings[r][i][:2])
                 self._release_locale = self._sel_locale
-            
-            self._selected_point = (meredith.mipsy.C(), r, i)
-            self._selected_portal = portal
 
             return True
     
     def press_motion(self, x, y):
+        x, y = meredith.page.normalize_XY(x, y, self.PG)
         if self._mode == 'outlines':
             c, r, i = self._selected_point
+            portal, px, py = self._selected_portal
             
-            if i is not None:
-                # if portal is selected
-                if self._selected_portal is not None:
+            if i is not None or portal is not None:
+                if i is not None:
+                    xo, yo = self._CHANNELS.channels[c].railings[r][i][:2]
+                    self._CHANNELS.translate_selection(x, y, xo, yo)
                     
-                    if self._selected_portal[0] == 'entrance':
-                        xo, yo = Tract.tract.channels.channels[c].railings[0][0][:2]
-                        Tract.tract.channels.translate_selection(x - self._selected_portal[1], y - self._selected_portal[2], xo, yo)
+                    anchor = tuple(self._CHANNELS.channels[c].railings[r][i][:2])
 
-                    elif self._selected_portal[0] == 'portal':
-                        xo, yo = Tract.tract.channels.channels[c].railings[1][-1][:2]
-                        Tract.tract.channels.translate_selection(x - self._selected_portal[1], y - self._selected_portal[2], xo, yo)
-
-                # if point is selected
-                elif self._selected_point[2] is not None:
-                    xo, yo = Tract.tract.channels.channels[c].railings[r][i][:2]
-                    Tract.tract.channels.translate_selection(x, y, xo, yo)
+                elif portal == 'entrance':
+                    xo, yo = self._CHANNELS.channels[c].railings[0][0][:2]
+                    self._CHANNELS.translate_selection(x - px, y - py, xo, yo)
                     
-                if self._sel_locale != tuple(Tract.tract.channels.channels[c].railings[r][i][:2]):
-                    self._sel_locale = tuple(Tract.tract.channels.channels[c].railings[r][i][:2])
-                    noticeboard.redraw_becky.push_change()
+                    anchor = tuple(self._CHANNELS.channels[c].railings[0][0][:2])
+
+                elif portal == 'portal':
+                    xo, yo = self._CHANNELS.channels[c].railings[1][-1][:2]
+                    self._CHANNELS.translate_selection(x - px, y - py, xo, yo)
+                
+                    anchor = tuple(self._CHANNELS.channels[c].railings[1][-1][:2])
+                
+                if self._sel_locale != anchor:
+                        self._sel_locale = anchor
+                        noticeboard.redraw_becky.push_change()
+ 
         elif self._mode == 'grid':
             # translate grid lines
             self._grid_controls.move_grid(x, y)
 
     def release(self):
         self._grid_controls.release()
-        # if point is selected
+
         c, r, i = self._selected_point
-        if i is not None:
-            Tract.tract.channels.channels[c].fix(0)
-            Tract.tract.channels.channels[c].fix(1)
+        portal, px, py = self._selected_portal
+
+        if i is not None or portal is not None:
+            self._CHANNELS.channels[c].fix(0)
+            self._CHANNELS.channels[c].fix(1)
+            
+            if i is not None:
+                anchor = tuple(self._CHANNELS.channels[c].railings[r][i][:2])
+
+            if portal == 'entrance':
+                anchor = tuple(self._CHANNELS.channels[c].railings[0][0][:2])
+
+            elif portal == 'portal':
+                anchor = tuple(self._CHANNELS.channels[c].railings[1][-1][:2])
+
+            if self._release_locale != anchor:
+                self._release_locale = anchor
+                self.TRACT.deep_recalculate()
+                return
         
-            if self._release_locale != tuple(Tract.tract.channels.channels[c].railings[r][i][:2]):
-                self._release_locale = tuple(Tract.tract.channels.channels[c].railings[r][i][:2])
-                Tract.tract.deep_recalculate()
-            else:
-                un.history.pop()
+        un.history.pop()
     
     def key_input(self, name):
 
         if name in ['BackSpace', 'Delete']:
             if self._mode == 'outlines':
                 c, r, i = self._selected_point
-                if self._selected_portal is not None or (c is not None and i is None):
+                portal, px, py = self._selected_portal
+                if portal is not None or (c is not None and i is None):
                     un.history.undo_save(3)
                     
                     # delete channel
-                    del Tract.tract.channels.channels[c]
+                    del self._CHANNELS.channels[c]
                     # wipe out entire tract if it's the last one
-                    if not Tract.tract.channels.channels:
-                        meredith.mipsy.delete_tract()
-
+                    if not self._CHANNELS.channels:
+                        old_tract = self.TRACT
+                        meredith.mipsy.delete_tract(old_tract)
+                        self.TRACT = meredith.mipsy.tracts[0]
+                        self._CHANNELS = self.TRACT.channels
+                        # cursor needs to be informed
+                        if cursor.fcursor.TRACT is old_tract:
+                            cursor.fcursor.assign_text(self.TRACT)
+                            cursor.fcursor.TRACT = self.TRACT
                 else:
                     un.history.undo_save(3)
-                    if not Tract.tract.channels.delete_selection():
+                    if not self._CHANNELS.delete_selection():
                         un.history.pop()
                 
-                Tract.tract.deep_recalculate()
+                self.TRACT.deep_recalculate()
             
             elif self._mode == 'grid':
                 self._grid_controls.del_grid()
                 
         elif name == 'All':
-            Tract.tract.channels.expand_selection(self._selected_point[0])
+            self._CHANNELS.expand_selection(self._selected_point[0])
             
     
     def hover(self, x, y, hovered=[None, None]):
-        
-        c, r, i = Tract.tract.channels.target_point(x, y, meredith.mipsy.hover_page_context, 20)
-        portal = None
-        if c is None:
-            c = Tract.tract.channels.target_channel(x, y, meredith.mipsy.hover_page_context, 20)
-
-        self._hover_point = (c, r, i)
-        
-        if r is None and c is not None:
-            portal = Tract.tract.channels.channels[c].target_portal(x, y, radius=5)
-            # select multiple points
-            if portal is not None:
-                self._hover_portal = (c, portal[0])
-            else:
-                self._hover_portal = (None, None)
-
+        self.target_select(x, y)
         if self._hover_point != hovered[0]:
             noticeboard.redraw_becky.push_change()
             hovered[0] = self._hover_point
@@ -191,7 +269,7 @@ class Channels_controls(object):
     def render(self, cr, Tx, Ty, show_rails=False):            
             
         if show_rails:
-            for c, channel in enumerate(Tract.tract.channels.channels):
+            for c, channel in enumerate(self._CHANNELS.channels):
                 page = channel.page
                 
                 color = (0.3, 0.3, 0.3, 0.5)
@@ -252,7 +330,7 @@ class Channels_controls(object):
                             cr.set_line_width(1)
                             cr.stroke()
     
-            for channel in chain.from_iterable(tract.channels.channels for tract in meredith.mipsy.tracts[1:]):
+            for channel in chain.from_iterable(tract.channels.channels for tract in meredith.mipsy.tracts if tract is not self.TRACT):
                 page = channel.page
                 
                 cr.set_source_rgba(0.3, 0.3, 0.3, 0.3)
@@ -267,12 +345,11 @@ class Channels_controls(object):
                 cr.stroke()
 
         else:
-            for c, channel in enumerate(Tract.tract.channels.channels):
+            for c, channel in enumerate(cursor.fcursor.TRACT.channels.channels):
                 page = channel.page
                 
                 color = (0.3, 0.3, 0.3, 0.5)
-                if (c, 'entrance') == self._hover_portal:
-                    color = (0.3, 0.3, 0.3, 1)
+
                 # draw portals            
                 _draw_broken_bar(cr,
                         round( Tx(channel.railings[0][0][0] , page) ), 
@@ -281,10 +358,7 @@ class Channels_controls(object):
                         color,
                         top = 1
                         )
-                if (c, 'portal') == self._hover_portal:
-                    color = (1, 0, 0.1, 1)
-                else:
-                    color = (1, 0, 0.1, 0.5)
+                color = (1, 0, 0.1, 0.5)
                 _draw_broken_bar(cr,
                         round( Tx(channel.railings[0][-1][0] , page) ), 
                         round( Ty(channel.railings[1][-1][1] , page) ),
@@ -296,4 +370,3 @@ class Channels_controls(object):
     def render_grid(self, cr, px, py, p_h, p_k, A):
         self._grid_controls.render(cr, px, py, p_h, p_k, A)
 
-delight = Channels_controls()

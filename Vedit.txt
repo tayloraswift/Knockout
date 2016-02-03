@@ -11,13 +11,13 @@
                 'Superbold': {'path': '/home/kelvin/.fonts/Merriweather_UltraBold.ttf'},
                 'Superitalic': {'path': '/home/kelvin/.fonts/GaramondPremrPro-MedItCapt.otf'},
                 'gray': {'color': (0, 0, 0, 0.4)}},
- 'FTAGLIST': [('big', []),
-              ('strong', []),
+ 'FTAGLIST': [('sup', ['small']),
+              ('big', []),
               ('emphasis', []),
-              ('caption', []),
-              ('sub', ['small']),
               ('link', []),
-              ('sup', ['small'])],
+              ('strong', []),
+              ('sub', ['small']),
+              ('caption', [])],
  'PARASTYLES': (1,
                 [({'fontclasses': (0, [('Black', {})])}, {}),
                  ({'fontclasses': (0, [('Heading', {})]), 'leading': 36}, {'h1': 1}),
@@ -41,14 +41,14 @@
                  ({'indent': (0, -1, 4), 'indent_range': {0}}, {'hanging indent': 1}),
                  ({'fontclasses': (0, [('gray', {})])}, {'gray': 1})]),
  'PEGS': {'Standard pegs': ('', {'sub': [0, -0.2], 'sup': [0, 0.3]})},
- 'PTAGLIST': [('h1', []),
-              ('indent demo', []),
-              ('body', []),
-              ('gray', []),
+ 'PTAGLIST': [('gray', []),
               ('h2', []),
               ('signature', []),
-              ('hanging indent', [])],
- 'contexts': {'c': 0, 'i': 30, 'j': 30, 'p': 0, 't': 1},
+              ('body', []),
+              ('hanging indent', []),
+              ('h1', []),
+              ('indent demo', [])],
+ 'contexts': {'channels': {'c': None, 'p': 0, 't': 1}, 'text': {'ftx': None, 'i': 133, 'j': 133, 'p': 0, 't': 0}},
  'grid': [[120, 480], [120, 480]],
  'kitty': [{'outline': [(([[120, 210, False], [120, 480, False]], [[480, 210, False], [480, 480, False]]), 0),
                         ([[[120, 120, False], [120, 480, False]], [[480, 120, False], [480, 480, False]]], 1),
@@ -69,7 +69,7 @@
                     'flexible and efficient. The end goal of the project is to include all the tools and parameters '
                     'handled by “serious” typesetters, and allow editing of them in the least verbose manner. Hence, '
                     'Vedit offers granular control, with a strong emphasis on <strong>additive styling</strong>.</p><p '
-                    'class="body&signature">—Kelvin Ma</p><p class="h2">WHAT IS ADDITIVE STYLING?</p><p '
+                    'class="signature&body">—Kelvin Ma</p><p class="h2">WHAT IS ADDITIVE STYLING?</p><p '
                     'class="body">Additive styling is the idea that multiple “building block” text styles can be '
                     'defined and combined to create the visual styles seen on the page. For example, an '
                     '&lt;<em>Italic</em>&gt; class may be defined which simply declares an italic font file, while a '
@@ -98,11 +98,11 @@
                     'class="body">Instead of “single” or “double” spacing, Vedit lets the writer specify the literal '
                     'point size of the <strong>leading</strong>, or line height. This helps you predict the amount of '
                     'space that text will take up, and helps you avoid text alignment headaches, since the spacing is '
-                    'always constant and measurable. </p><p class="indent demo&body"><strong>Indentation</strong> is '
+                    'always constant and measurable. </p><p class="body&indent demo"><strong>Indentation</strong> is '
                     'powerful in Vedit. The lines over which it takes effect can be explicitly enumerated (in a '
                     'relative count from the start of the paragraph), and it can be set in terms of the character '
                     'positions of the first line. </p><p class="body&hanging indent">—&gt;  This is very useful for '
-                    'creating <strong>hanging indents</strong>.</p><p class="body&gray">Paragraph styles even add '
+                    'creating <strong>hanging indents</strong>.</p><p class="gray&body">Paragraph styles even add '
                     'their <strong>constituent text styles</strong>, which allows for <em>very interesting</em> '
                     'constructs, such as this gray filter, which is made up of a paragraph class containing a single '
                     'text class which defines just a gray color, all overlayed over our standard body text '
@@ -131,4 +131,4 @@
            {'outline': [(([[120, 120, False], [120, 200, True]], [[480, 120, False], [480, 200, True]]), 0)],
             'text': '<p class="h1">About this typesetting editor</p>'}],
  'page': {'dimensions': (600, 600), 'dual': True},
- 'view': {'H': -550, 'Hc': 435.42279052734375, 'K': 94, 'Kc': 228.0390625, 'Zoom': 11, 'mode': 'text'}}
+ 'view': {'H': -50, 'Hc': 435.42279052734375, 'K': 50, 'Kc': 228.0390625, 'Zoom': 11, 'mode': 'text'}}

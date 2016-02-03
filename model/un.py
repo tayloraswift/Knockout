@@ -2,10 +2,8 @@ from copy import deepcopy
 
 from fonts import styles
 
-from model.meredith import mipsy
-from state.contexts import Text as CText
-from model import penclick, kevin, cursor
-
+from model import meredith
+from model import kevin, cursor
 
 class UN(object):
     def __init__(self):
@@ -19,11 +17,20 @@ class UN(object):
             del self._history[:89]
             self._i -= 89
         
-        kitty = [{'text': kevin.serialize(t.text), 'spelling': t.misspellings[:], 'outline': deepcopy(t.channels.channels)} for t in mipsy.tracts]
-        page_xy = (penclick.page.WIDTH, penclick.page.HEIGHT)
-        contexts = {'t': mipsy.tracts.index(CText.tract),
-                'i': cursor.fcursor.i,
-                'j': cursor.fcursor.j}
+        kitty = [{'text': kevin.serialize(t.text), 'spelling': t.misspellings[:], 'outline': deepcopy(t.channels.channels)} for t in meredith.mipsy]
+        page_xy = (meredith.page.WIDTH, meredith.page.HEIGHT)
+        
+        textcontexts = {'t': meredith.mipsy.index(cursor.fcursor.TRACT),
+                        'i': cursor.fcursor.i,
+                        'j': cursor.fcursor.j,
+                        'p': cursor.fcursor.PG,
+                        'ftx': None
+                       }
+        channelcontexts = {
+#                        't': meredith.mipsy.index(caramel.delight.TRACT),
+#                        'c': caramel.delight.C(), 
+#                        'p': caramel.delight.PG
+                        }
         if len(self._history) > self._i:
             del self._history[self._i:]
         
@@ -35,7 +42,7 @@ class UN(object):
         PTT = [T.polaroid() for T in styles.PTAGS.values() if not T.is_group]
         FTT = [T.polaroid() for T in styles.FTAGS.values() if not T.is_group]
 
-        self._history.append({'kitty': kitty, 'contexts': contexts, 'styles': {'PARASTYLES': PPP, 'FONTSTYLES': FFF, 'PTAGLIST': PTT, 'FTAGLIST': FTT, 'PEGS': GGG}, 'page': page_xy})
+        self._history.append({'kitty': kitty, 'contexts': {'text': textcontexts, 'channels': channelcontexts}, 'styles': {'PARASTYLES': PPP, 'FONTSTYLES': FFF, 'PTAGLIST': PTT, 'FTAGLIST': FTT, 'PEGS': GGG}, 'page': page_xy})
         self._i = len(self._history)
 
     def pop(self):
@@ -46,15 +53,14 @@ class UN(object):
         image = self._history[i]
         styles.faith(image['styles'])
         
-        penclick.page.WIDTH, penclick.page.HEIGHT = image['page']
+        meredith.page.WIDTH, meredith.page.HEIGHT = image['page']
 
-        CText.tract = mipsy.tracts[image['contexts']['t']]
-        for t in range(len(mipsy.tracts)):
-            mipsy.tracts[t].text = kevin.deserialize(image['kitty'][t]['text'])
-            mipsy.tracts[t].misspellings = image['kitty'][t]['spelling']
-            mipsy.tracts[t].channels.channels = image['kitty'][t]['outline']
+        for t in range(len(meredith.mipsy)):
+            meredith.mipsy[t].text = kevin.deserialize(image['kitty'][t]['text'])
+            meredith.mipsy[t].misspellings = image['kitty'][t]['spelling']
+            meredith.mipsy[t].channels.channels = image['kitty'][t]['outline']
         
-        cursor.fcursor.__init__(CText.tract, image['contexts']['i'], image['contexts']['j'])
+        cursor.fcursor.__init__(image['contexts']['text'])
     
     def back(self):
         if self._i > 0:
@@ -88,5 +94,3 @@ class UN(object):
             if self._state != 0:
                 self.save()
             self._state = state
-            
-history = UN() 

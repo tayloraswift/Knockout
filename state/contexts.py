@@ -4,7 +4,6 @@ from state import noticeboard
 
 class Text_context(object):
     def __init__(self):
-        self.tract = None
         self._previous_p = None
         self.paragraph = None
         self._FSTYLE = None

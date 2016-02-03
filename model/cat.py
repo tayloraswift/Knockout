@@ -34,7 +34,8 @@ class Glyphs_line(dict):
                     i -= 1
             except ValueError:
                 i -= 1
-        return i + self['i']
+    # glyphline is root, index
+        return None, i + self['i']
 
     def deposit(self, repository):
         x = self['x']

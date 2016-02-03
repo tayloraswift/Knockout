@@ -31,22 +31,22 @@ def _draw_broken_bar(cr, x1, y1, x2, color_rgba, top):
     cr.set_dash([], 0)
         
 class Channels_controls(object):
-    def __init__(self, tract, pc, grid):
+    def __init__(self, ctx, grid):
         self._mode = 'outlines'
         
         self._grid_controls = grid
 
-        self._selected_point = [None, None, None]
+        self._selected_point = [ctx['c'], None, None]
         self._selected_portal = (None, None, None)
 
         # these are stateful
         self._hover_point = (None, None, None)
         self._hover_portal = (None, None)
         
-        self.PG = pc
-        self.HPG = 0
-        self.TRACT = tract
-        self._CHANNELS = tract.channels
+        self.PG = ctx['p']
+        self.HPG = ctx['p']
+        self.TRACT = meredith.mipsy[ctx['t']]
+        self._CHANNELS = self.TRACT.channels
 
     def C(self):
         return self._selected_point[0]
@@ -98,7 +98,7 @@ class Channels_controls(object):
             return
         
         # try different tract
-        for tract in meredith.mipsy.tracts:
+        for tract in meredith.mipsy:
             c, r, i = tract.channels.target_point(xn, yn, binned_page, 20)
             if c is not None:
                 noticeboard.refresh_properties_stack.push_change()
@@ -237,7 +237,7 @@ class Channels_controls(object):
                     if not self._CHANNELS.channels:
                         old_tract = self.TRACT
                         meredith.mipsy.delete_tract(old_tract)
-                        self.TRACT = meredith.mipsy.tracts[0]
+                        self.TRACT = meredith.mipsy[0]
                         self._CHANNELS = self.TRACT.channels
                         # cursor needs to be informed
                         if cursor.fcursor.TRACT is old_tract:
@@ -330,7 +330,7 @@ class Channels_controls(object):
                             cr.set_line_width(1)
                             cr.stroke()
     
-            for channel in chain.from_iterable(tract.channels.channels for tract in meredith.mipsy.tracts if tract is not self.TRACT):
+            for channel in chain.from_iterable(tract.channels.channels for tract in meredith.mipsy if tract is not self.TRACT):
                 page = channel.page
                 
                 cr.set_source_rgba(0.3, 0.3, 0.3, 0.3)

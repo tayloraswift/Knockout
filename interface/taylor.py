@@ -608,13 +608,18 @@ class Document_view(ui.Cell):
                     self._draw_spelling(cr, tract.paint_misspellings())
         
         if self._mode == 'text':
-            meredith.mipsy.page_context, selections, signs = self.fcursor.paint_current_selection()
+            selections, signs = self.fcursor.paint_current_selection()
             self._draw_selection_highlight(cr, selections, signs)
+            
+            page_highlight = self.fcursor.PG
+        
+        elif self._mode == 'channels':
+            page_highlight = caramel.delight.PG
 
         for pp in range(max_page + 1):
             
             #draw page border
-            if pp == meredith.mipsy.page_context:
+            if pp == page_highlight:
                 cr.set_source_rgba( * accent_light, 0.7)
             else:
                 cr.set_source_rgba(0, 0, 0, 0.2)

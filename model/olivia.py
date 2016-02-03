@@ -61,7 +61,7 @@ class Atomic_text(object):
             select.extend((line['y'], line['x'], line['width'] + line['x'], line['leading'], line['page']) for line in (self._SLUGS[l] for l in range(u_l + 1, v_l)))
             select.append((last['y'], last['x'], v_x, last['leading'], last['page']))
 
-        return page, select
+        return select
 
     # get line number given character index
     def index_to_line(self, index):

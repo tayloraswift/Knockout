@@ -13,7 +13,6 @@ class Sprinkles(object):
         self.grid_selected = (None, None)
 
     def press(self, x, y):
-        print(y)
         if meredith.page.gutter_horizontal(x, y):
             if not self._target_grid('x', x):
                 self._add_grid('x', x)

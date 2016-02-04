@@ -21,31 +21,33 @@ def _parse_tag(tag):
 def serialize(text):
     b = text.copy()
     for e, entity in enumerate(b):
-        if not isinstance(entity, str):
-            if entity[0] == '<f>':
-                if entity[1].name == 'emphasis':
+        CT = type(entity)
+        if CT is not str:
+            if CT is OpenFontpost:
+                if entity.F.name == 'emphasis':
                     b[e] = '<em>'
-                elif entity[1].name == 'strong':
+                elif entity.F.name == 'strong':
                     b[e] = '<strong>'
                 else:
-                    b[e] = '<f class="' + entity[1].name + '">'
+                    b[e] = '<f class="' + entity.F.name + '">'
             
-            elif entity[0] == '</f>':
-                if entity[1].name == 'emphasis':
+            elif CT is CloseFontpost:
+                if entity.F.name == 'emphasis':
                     b[e] = '</em>'
-                elif entity[1].name == 'strong':
+                elif entity.F.name == 'strong':
                     b[e] = '</strong>'
                 else:
-                    b[e] = '</f class="' + entity[1].name + '">'
+                    b[e] = '</f class="' + entity.F.name + '">'
             
-            elif entity[0] == '<p>':
-                if entity[1] != {styles.PTAGS['body']}:
-                    b[e] = '<p class="' + '&'.join(itertools.chain.from_iterable((P.name for i in range(V)) for P, V in entity[1].items())) + '">'
+            elif CT is Paragraph:
+                if entity.P != Counter({styles.PTAGS['body']}):
+                    b[e] = '<p class="' + '&'.join(itertools.chain.from_iterable((P.name for i in range(V)) for P, V in entity.P.items())) + '">'
                 else:
                     b[e] = '<p>'
 
-            elif entity[0] == '<image>':
-                source, width = entity[1]
+            elif CT is Image:
+                source = entity.src
+                width = entity.width
                 b[e] = '<image src="' + source + '" width="' + str(width) + '">'
             
             elif entity[0] == '<td>':

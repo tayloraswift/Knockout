@@ -17,7 +17,6 @@ class UN(object):
             del self._history[:89]
             self._i -= 89
         
-        """
         kitty = [{'text': kevin.serialize(t.text), 'spelling': t.misspellings[:], 'outline': deepcopy(t.channels.channels)} for t in meredith.mipsy]
         page_xy = (meredith.page.WIDTH, meredith.page.HEIGHT)
         
@@ -40,7 +39,6 @@ class UN(object):
 
         self._history.append({'kitty': kitty, 'contexts': {'text': textcontexts, 'channels': channelcontexts}, 'styles': {'PARASTYLES': PPP, 'FONTSTYLES': FFF, 'PTAGLIST': PTT, 'FTAGLIST': FTT, 'PEGS': GGG}, 'page': page_xy})
         self._i = len(self._history)
-        """
 
     def pop(self):
         del self._history[-1]

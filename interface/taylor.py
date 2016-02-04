@@ -15,7 +15,6 @@ from fonts import styles
 from model import meredith
 from model import cursor
 from model import wonder
-from model.wonder import character
 from model import un, do
 
 from typing import typing

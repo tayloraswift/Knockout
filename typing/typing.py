@@ -1,7 +1,6 @@
 from itertools import chain
-
 import time
-from model.wonder import character
+
 from fonts import styles
 from model import meredith, cursor
 from state.contexts import Text as CText

@@ -22,7 +22,10 @@ class Atomic_text(object):
         self._line_yl = { cc: list(h[:2] for h in list(g)) for cc, g in groupby( ((LINE['y'], LINE['l'], LINE['c']) for LINE in self._SLUGS if LINE['GLYPHS']), key=lambda k: k[2]) }
 
     def _target_row(self, y, c):
-        yy, ll = zip( * self._line_yl[c])
+        try:
+            yy, ll = zip( * self._line_yl[c])
+        except KeyError:
+            return self._SLUGS[-1]['l']
         # find the clicked line
         lineindex = None
         if y >= yy[-1]:
@@ -86,6 +89,30 @@ class Atomic_text(object):
         else:
             self.word_count = words(self.text)
 
+    def I(self, x, y):
+        c = self._SLUGS[0]['c']
+        lineobject = self._SLUGS[self._target_row(y, c)]
+        
+        ftx = self
+        O = lineobject
+        while 1:
+            O = O.I(x, y)
+            if type(O) is int:
+                break
+            else:
+                ftx = O
+        return O
+    
+    def target_select(self, x, y, page, i):
+        c = self._SLUGS[0]['c']
+        lineobject = self._SLUGS[self._target_row(y, c)]
+        
+        O = lineobject.I(x, y)
+        if type(O) is not int:
+            O = lineobject['i']
+        
+        return False, O
+
 class Chained_text(Atomic_text):
     def __init__(self, text, channels):
         self.channels = channels
@@ -100,15 +127,54 @@ class Chained_text(Atomic_text):
                 c = self._SLUGS[self.index_to_line(i)]['c']
                 imperfect = True
             else:
-                return True, None, None
+                return True, None, None, None
         else:
             imperfect = False
         
         lineobject = self._SLUGS[self._target_row(y, c)]
-        tract, i = lineobject.I(x, y)
-        return imperfect, tract, i
+        
+        ftx = self
+        O = lineobject
+        si = lineobject.I(x, y)
+        
+        if type(si) is not int:
+            O = si
+            ftx = O
+            si = lineobject['i']
+            
+            while 1:
+                O = O.I(x, y)
+                if type(O) is int:
+                    break
+                else:
+                    ftx = O
+        else:
+            O = si
+
+        return imperfect, ftx, O, si
+
+    def target_select(self, x, y, page, i):
+        # chained text contains multiple channels
+        c = self.channels.target_channel(x, y, page, 20)
+        if c is None:
+            if i is not None:
+                c = self._SLUGS[self.index_to_line(i)]['c']
+                imperfect = True
+            else:
+                return True, None
+        else:
+            imperfect = False
+        
+        lineobject = self._SLUGS[self._target_row(y, c)]
+        
+        O = lineobject.I(x, y)
+        if type(O) is not int:
+            O = lineobject['i']
+
+        return imperfect, O
     
-    def _dbuff(self, l):
+    def _dbuff(self, i):
+        l = self.index_to_line(i)
         # avoid recalculating lines that weren't affected
         del self._SLUGS[l + 1:]
 

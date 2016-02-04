@@ -1,7 +1,6 @@
 import bisect
 from itertools import chain
 
-from model.wonder import character
 from model.cat import typeset_liquid
 from model.olivia import Atomic_text
 from model.george import Swimming_pool

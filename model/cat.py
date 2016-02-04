@@ -1,7 +1,6 @@
 import bisect
 from itertools import groupby
 from bulletholes.counter import TCounter as Counter
-from model.wonder import character
 from model.george import Swimming_pool
 from fonts import styles
 

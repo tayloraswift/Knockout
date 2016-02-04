@@ -1,10 +1,5 @@
 from hunspell import hunspell
 
-def character(entity):
-    if type(entity) is not str:
-        entity = entity[0]
-    return entity
-
 struck = hunspell.HunSpell('hunspell/en_US.dic', 'hunspell/en_US.aff')
 
 _prose = set('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789&@#$\'’-')

@@ -4,7 +4,7 @@ from itertools import groupby
 
 from state import noticeboard
 
-from model.wonder import words, character, _breaking_chars
+from model.wonder import words
 
 from model.cat import typeset_chained, Glyphs_line
 

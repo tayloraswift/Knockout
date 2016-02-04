@@ -155,7 +155,7 @@ class Channels_controls(object):
                 # insert point if one was not found
                 i = self._CHANNELS.channels[c].insert_point(r, yn)
                 self._CHANNELS.make_selected(c, r, i, name)
-                self._selected_point[2] = 1
+                self._selected_point[2] = i
 
             if i is not None:
                 self._sel_locale = tuple(self._CHANNELS.channels[c].railings[r][i][:2])

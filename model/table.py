@@ -1,4 +1,6 @@
+import bisect
 from itertools import chain
+
 from model.wonder import character
 from model.cat import typeset_liquid
 from model.olivia import Atomic_text
@@ -114,13 +116,16 @@ class Table(dict):
     
     def fill(self, bounds, c, y):
         top = y
+        row_y = []
         for r, row in enumerate(self.data):
             for cell in row:
                 # calculate percentages
                 cellcount = len(self._MATRIX[r])
                 cellbounds = TCell_container(bounds, cell.col/cellcount, (cell.col + cell.cs)/cellcount)
                 cell._SLUGS[:] = typeset_liquid(cellbounds, cell.text, {'j': 0, 'l': -1, 'P_BREAK': True}, 0, y, c, False)
+                cell._precompute_search()
             y = self._row_height(r, y)
+            row_y.append(y)
         
         x1, x2 = bounds.bounds(top)
         self['x'] = x1
@@ -130,9 +135,20 @@ class Table(dict):
         self['GLYPHS'] = [(-2, 0, y, None, None, x2 - x1)]
         self['P_BREAK'] = True
         self['PP'] = ['<table>', Counter()]
+        
+        self['_row_y'] = row_y
+        self['_bounds'] = bounds
+        self['_cellcount'] = cellcount
     
     def I(self, x, y):
-        return None, self['i']
+        x1, x2 = self['_bounds'].bounds(y)
+        r = bisect.bisect(self['_row_y'], y)
+        c = int((x - x1) // ((x2 - x1) / self['_cellcount']))
+        try:
+            return self._MATRIX[r][c]
+        except IndexError:
+            print('Empty cell selected')
+            return self['j']
     
     def deposit(self, repository):
         for cell in chain.from_iterable(self.data):

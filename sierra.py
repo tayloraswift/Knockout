@@ -34,12 +34,7 @@ def save():
             }
     
     grid = meredith.mipsy.page_grid
-    textcontexts = {'t': meredith.mipsy.index(cursor.fcursor.TRACT),
-                    'i': cursor.fcursor.i,
-                    'j': cursor.fcursor.j,
-                    'p': cursor.fcursor.PG,
-                    'ftx': None
-                   }
+    textcontexts = cursor.fcursor.polaroid()
     channelcontexts = {'t': meredith.mipsy.index(caramel.delight.TRACT),
                     'c': caramel.delight.C(), 
                     'p': caramel.delight.PG

@@ -7,6 +7,8 @@ from model import table
 from bulletholes.counter import TCounter as Counter
 from fonts import styles
 
+from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image, FTable
+
 def _parse_tag(tag):
     int_value = Word(nums)
     str_value = Suppress("\"") + CharsNotIn("\"") + Suppress("\"")
@@ -100,16 +102,19 @@ def _parse_entities(b):
                 ptags = Counter(styles.PTAGS[T.strip()] for T in fields['class'].split('&'))
             else:
                 ptags = Counter({styles.PTAGS['body']: 1})
-            build.append(['<p>', ptags])
+            build.append(Paragraph(ptags))
             del b[:closetag]
         
         elif tag in {'f', '/f'}:
             ftag = styles.FTAGS[fields['class']]
-            build.append(('<' + tag + '>', ftag))
+            if tag == 'f':
+                build.append(OpenFontpost(ftag))
+            else:
+                build.append(CloseFontpost(ftag))
             del b[:closetag]
         
         elif tag == 'image':
-            build.append(('<image>', (fields['src'], int(fields['width']))))
+            build.append(Image(fields['src'], int(fields['width'])))
             del b[:closetag]
         
         elif tag == 'table':

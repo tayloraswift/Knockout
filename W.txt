@@ -1,0 +1,129 @@
+{'FONTSTYLES': {'Big': {'fontsize': 18, 'path': '/home/kelvin/.fonts/LinLibertine_R.otf'},
+                'Black': {'color': (0, 0, 0, 1), 'pegs': 'Standard pegs'},
+                'Bold': {'path': '/home/kelvin/.fonts/Proforma-Bold.otf'},
+                'Bold Italic': {'path': '/home/kelvin/.fonts/Proforma-BoldItalic.otf'},
+                'Heading': {'fontsize': 36, 'path': '/home/kelvin/.fonts/Kabel.otf'},
+                'Heading.001': {'fontsize': 20, 'path': '/home/kelvin/.fonts/FiraSans-Light.otf', 'tracking': 1},
+                'Italic': {'path': '/home/kelvin/.fonts/Proforma-MediumItalic.otf'},
+                'Link': {'color': (1, 0.2, 0.4, 1), 'path': '/home/kelvin/.fonts/Proforma-SemiboldItalic.otf'},
+                'Regular': {'path': '/home/kelvin/.fonts/Proforma-Medium.otf'},
+                'Small': {'fontsize': 10},
+                'Superbold': {'path': '/home/kelvin/.fonts/Merriweather_UltraBold.ttf'},
+                'Superitalic': {'path': '/home/kelvin/.fonts/GaramondPremrPro-MedItCapt.otf'},
+                'gray': {'color': (0, 0, 0, 0.4)}},
+ 'FTAGLIST': [('sup', ['small']),
+              ('emphasis', []),
+              ('caption', []),
+              ('link', []),
+              ('big', []),
+              ('strong', []),
+              ('sub', ['small'])],
+ 'PARASTYLES': (3,
+                [({'fontclasses': (0, [('Black', {})])}, {}),
+                 ({'fontclasses': (0, [('Heading', {})]), 'leading': 36}, {'h1': 1}),
+                 ({'fontclasses': (0, [('Heading.001', {})]), 'leading': 24, 'margin_bottom': 10}, {'h2': 1}),
+                 ({'fontclasses': (8,
+                                   [('Regular', {}),
+                                    ('Italic', {'emphasis': 1}),
+                                    ('Bold', {'strong': 1}),
+                                    ('Bold Italic', {'emphasis': 1, 'strong': 1}),
+                                    ('Link', {'link': 1}),
+                                    ('Small', {'small': 1}),
+                                    ('Superitalic', {'emphasis': 2}),
+                                    ('Superbold', {'strong': 2}),
+                                    ('Big', {'big': 1})]),
+                   'hyphenate': True,
+                   'leading': 20,
+                   'margin_bottom': 6},
+                  {'body': 1}),
+                 ({'fontclasses': (0, [('Italic', {})]), 'indent': (20, 1, 0), 'margin_top': 6}, {'signature': 1}),
+                 ({'indent': (30, 1, 0), 'indent_range': {0, 1}}, {'indent demo': 1}),
+                 ({'indent': (0, -1, 4), 'indent_range': {0}}, {'hanging indent': 1}),
+                 ({'fontclasses': (0, [('gray', {})])}, {'gray': 1})]),
+ 'PEGS': {'Standard pegs': ('', {'sub': [0, -0.2], 'sup': [0, 0.3]})},
+ 'PTAGLIST': [('h2', []),
+              ('signature', []),
+              ('h1', []),
+              ('indent demo', []),
+              ('gray', []),
+              ('body', []),
+              ('hanging indent', [])],
+ 'contexts': {'channels': {'c': 7, 'p': 6.0, 't': 0}, 'text': {'i': 4512, 'j': 4512, 'p': 5.0, 't': 0}},
+ 'grid': [[120, 480], [120, 480]],
+ 'kitty': [{'outline': [(([[120, 210, False], [120, 480, False]], [[480, 210, False], [480, 480, False]]), 0),
+                        ([[[120, 120, False], [120, 480, False]], [[480, 120, False], [480, 480, False]]], 1),
+                        ([[[120, 120, False], [120, 460, False]], [[480, 120, False], [480, 460, False]]], 2),
+                        ([[[120, 120, False], [120, 480, False]], [[480, 120, False], [480, 480, False]]], 3),
+                        ([[[120, 120, False], [120, 400, False]], [[480, 120, False], [480, 400, False]]], 4),
+                        ([[[120, 120, False], [120, 480, False]],
+                          [[300, 120, False], [70, 310, False], [290, 480, False]]],
+                         5),
+                        ([[[360, 120, False], [160, 310, False], [360, 480, False]],
+                          [[410, 120, False], [590, 300, False], [410, 480, False]]],
+                         5),
+                        ([[[120, 120, False], [120, 480, False]], [[480, 120, True], [480, 480, False]]], 6)],
+            'text': '<p class="body">This typesetting editor is an application I have been developing for over half a '
+                    'year. The codebase was written from scratch in Python 3, and uses its own UI toolkit which I also '
+                    'wrote. Although still in alpha stages, the codebase can be synced from &lt;<f '
+                    'class="link">https://github.com/kelvin13/shifty-octocat</f class="link">&gt;, where it will work '
+                    'out of the box on any Linux installation.</p><p class="body">Vedit was designed to be both '
+                    'flexible and efficient. The end goal of the project is to include all the tools and parameters '
+                    'handled by “serious” typesetters, and allow editing of them in the least verbose manner. Hence, '
+                    'Vedit offers granular control, with a strong emphasis on <strong>additive styling</strong>.</p><p '
+                    'class="signature&body">—Kelvin Ma</p><p class="h2">WHAT IS ADDITIVE STYLING?</p><p '
+                    'class="body">Additive styling is the idea that multiple “building block” text styles can be '
+                    'defined and combined to create the visual styles seen on the page. For example, an '
+                    '&lt;<em>Italic</em>&gt; class may be defined which simply declares an italic font file, while a '
+                    '&lt;<f class="sup">Superscript</f class="sup">&gt; class might define a reduced font size (the '
+                    'raised position is the result of <strong>keypegging</strong>, which we’ll get to later). The '
+                    'superscript and italic classes can then be stacked to infer a &lt;<f '
+                    'class="sup"><em>Superscript-Italic</em></f class="sup">&gt; class. </p><p class="body">Of course, '
+                    'in real typesetting, superscripts require a slightly heavier fontweight, which is where '
+                    '<strong>explicit styling</strong> is needed. An italic and a bold class both define a font file, '
+                    'so a &lt;<strong><em>Bold-Italic</em></strong>&gt; class must be defined with the specialized '
+                    'bold-italic font. </p><p class="body">Additive styling is nevertheless very powerful. <em>Classes '
+                    'can overlap each other on the page, allowing <strong>interesting</em> effects, such as in this '
+                    'sentence where a pair of italic tags mixes with a pair of bold tags over the word '
+                    '“interesting”.</strong> Additive styling even allows the use of negative styles, and multistyles. '
+                    '<em>This lets us do things such as <em>superitalics</em> o<strong></em>r '
+                    '<strong>superbolds</strong> in our text.</strong> Negative styles are work too, though there is '
+                    'little practical use for them.</p><p class="body">Additive styling to my knowledge is unique to '
+                    'Vedit, though CSS can be hacked to achieve a significant subset of its behavior. It is distinct '
+                    'from an <strong>inheritance model</strong> because additive styling is flat rather than nested, '
+                    'relying on an ordered sequence of classes which can be turned on and off to effect certain '
+                    'elements on the page. Unlike the <strong>flat styling model</strong>, additive styles mix and '
+                    'combine with one another, eliminating redundant statements, and unlike the <strong>direct styling '
+                    'model</strong>, it preserves the order of editable classes. </p><p class="body">Paragraphs too, '
+                    'have additive styling, which functions in the same way as text styling, except with attributes '
+                    'like leading, hyphenation, margins, and indentation.</p><p class="h2">PARAGRAPH CONTROL</p><p '
+                    'class="body">Instead of “single” or “double” spacing, Vedit lets the writer specify the literal '
+                    'point size of the <strong>leading</strong>, or line height. This helps you predict the amount of '
+                    'space that text will take up, and helps you avoid text alignment headaches, since the spacing is '
+                    'always constant and measurable. </p><p class="indent demo&body"><strong>Indentation</strong> is '
+                    'powerful in Vedit. The lines over which it takes effect can be explicitly enumerated (in a '
+                    'relative count from the start of the paragraph), and it can be set in terms of the character '
+                    'positions of the first line. </p><p class="hanging indent&body">—&gt;  This is very useful for '
+                    'creating <strong>hanging indents</strong>.</p><p class="gray&body">Paragraph styles even add '
+                    'their <strong>constituent text styles</strong>, which allows for <em>very interesting</em> '
+                    'constructs, such as this gray filter, which is made up of a paragraph class containing a single '
+                    'text class which defines just a gray color, all overlayed over our standard body text '
+                    'style.</p><p class="h2">SUPERSCRIPTS AND SUBSCRIPTS</p><p class="body">Superscripts and '
+                    'subscripts are handled by Vedit’s keypegging system. This defines the positioning of text styles '
+                    'when they occur after certain other text styles. For example, <f class="sup">This superscript is '
+                    'pegged above the baseline<f class="sup">and this</f class="sup"> is a superscript pegged onto the '
+                    'first one.</f class="sup">This allows for some interesting script nesting combinations, and '
+                    'additive styling means you can have multistyles that make the nested superscripts smaller than '
+                    'the regular superscripts. Keypegging also means super and sub are not the <em>only</em> script '
+                    'possibilities, for keypegging also works in the <em>x</em> direction.</p><p class="body">Certain '
+                    'styles may collapse upon themselves, making it possible to set dual scripts such as <f '
+                    'class="big">∫</f class="big"><f class="sub">13</f class="sub"><f class="sup">22</f class="sup"> '
+                    '<em>f</em> (<em>x</em>) d<em>x</em>.</p><p class="h2">TEXT CHANNELS</p><p class="body">One last '
+                    'thing I might want to mention. Text columns are completely flexible, and they can be bent to make '
+                    'any text wrapping you would ever need. Even <em>negative</em> text wrapping works. </p><p '
+                    'class="body">Flexible text channels even work with Vedit’s tables, which calculate their cell '
+                    'width based on the width of the text channel at that point.</p><p class="body"> Of course, square tables are much easier to '
+                    'read.</p><p class="body"></p>'},
+           {'outline': [(([[120, 120, False], [120, 200, True]], [[480, 120, False], [480, 200, True]]), 0)],
+            'text': '<p class="h1">About this typesetting editor</p>'}],
+ 'page': {'dimensions': (600, 600), 'dual': True},
+ 'view': {'H': 132, 'Hc': 421.24249267578125, 'K': -1806, 'Kc': 307.52764892578125, 'Zoom': 11, 'mode': 'text'}}

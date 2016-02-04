@@ -24,7 +24,7 @@ def check_spelling(word):
 
 def words(text, startindex=0, spell=False):
 
-    T = [e if type(e) is str else e[0] for e in text]
+    T = list(map(str, text))
 
     if spell:
         word_count = 0

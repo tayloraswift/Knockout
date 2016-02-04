@@ -5,6 +5,8 @@ from model.wonder import character
 from model.george import Swimming_pool
 from fonts import styles
 
+from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image, FTable
+
 from pyphen import pyphen
 pyphen.language_fallback('en_US')
 
@@ -102,7 +104,7 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False):
         F = INIT['F'].copy()
         R = INIT['R'] + 1
         K_x = None
-        PSTYLE = styles.PARASTYLES.project_p(PP[1])
+        PSTYLE = styles.PARASTYLES.project_p(PP.P)
         gap = False
     
     page = channel.page
@@ -110,14 +112,14 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False):
     while True:
         if gap:
             try:
-                i, container = next((a + i, v) for a, v in enumerate(LIQUID[i:]) if character(v) in {'<p>', '<table>'})
+                i, container = next((a + i, v) for a, v in enumerate(LIQUID[i:]) if type(v) in {Paragraph, FTable})
             except StopIteration:
                 # end of file
                 break
-            if container[0] == '<p>':
+            if type(container) is Paragraph:
                 PP = container
                 _p_i_ = i
-                PSTYLE = styles.PARASTYLES.project_p(PP[1])
+                PSTYLE = styles.PARASTYLES.project_p(PP.P)
                 
                 F = Counter()
                 R = 0
@@ -129,7 +131,7 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False):
 
                 gap = False
 
-            elif container[0] == '<table>':
+            elif type(container) is FTable:
                 TBL = container
                 try:
                     TBL.fill(channel, c, y)
@@ -169,7 +171,7 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False):
                         
                         1989, 
                         0,
-                        PP[1],
+                        PP.P,
                         F.copy(), 
                         
                         hyphenate = False
@@ -195,7 +197,7 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False):
                 
                 x2 - x1, 
                 PSTYLE['leading'],
-                PP[1],
+                PP.P,
                 F.copy(), 
                 
                 hyphenate = PSTYLE['hyphenate']
@@ -265,10 +267,9 @@ def cast_liquid_line(letters, startindex, width, leading, P, F, hyphenate=False)
     front = x
 
     for letter in letters:
-        CHAR = character(letter)
-
-        if CHAR == '<f>':
-            T = letter[1]
+        CT = type(letter)
+        if CT is OpenFontpost:
+            T = letter.F
             TAG = T.name
             
             # increment tag count
@@ -305,8 +306,8 @@ def cast_liquid_line(letters, startindex, width, leading, P, F, hyphenate=False)
             FSTYLE = styles.PARASTYLES.project_f(P, F)
             GLYPHS.append((-4, x, y, FSTYLE, fstat, x))
             
-        elif CHAR == '</f>':
-            T = letter[1]
+        elif CT is CloseFontpost:
+            T = letter.F
             TAG = T.name
             
             # increment tag count
@@ -337,7 +338,7 @@ def cast_liquid_line(letters, startindex, width, leading, P, F, hyphenate=False)
             FSTYLE = styles.PARASTYLES.project_f(P, F)
             GLYPHS.append((-5, x, y, FSTYLE, fstat, x))
             
-        elif CHAR == '<p>':
+        elif CT is Paragraph:
             if GLYPHS:
                 break
             else:
@@ -352,28 +353,27 @@ def cast_liquid_line(letters, startindex, width, leading, P, F, hyphenate=False)
                         x - FSTYLE['fontsize']   # 5
                         ))
         
-        elif CHAR == '</p>':
+        elif letter == '</p>':
             LINE['P_BREAK'] = True
             GLYPHS.append((-3, x, y, FSTYLE, fstat, x))
             break
         
-        elif CHAR == '<br>':
+        elif letter == '<br>':
             root_for = set()
             GLYPHS.append((-6, x, y, FSTYLE, fstat, x))
             break
 
         else:
             root_for = set()
-            if CHAR == '<image>':
-                IMAGE = letter[1]
-                glyphwidth = IMAGE[1]
+            if CT == Image:
+                glyphwidth = letter.width
                                                                  # additional fields
-                GLYPHS.append((-13, x, y - leading, FSTYLE, fstat, x + glyphwidth, IMAGE))
+                GLYPHS.append((-13, x, y - leading, FSTYLE, fstat, x + glyphwidth, (letter.src, letter.width)))
 
             else:
-                glyphwidth = FSTYLE['fontmetrics'].advance_pixel_width(CHAR) * FSTYLE['fontsize']
+                glyphwidth = FSTYLE['fontmetrics'].advance_pixel_width(letter) * FSTYLE['fontsize']
                 GLYPHS.append((
-                        FSTYLE['fontmetrics'].character_index(CHAR),    # 0
+                        FSTYLE['fontmetrics'].character_index(letter),  # 0
                         x,                                              # 1
                         y,                                              # 2
                         
@@ -387,17 +387,18 @@ def cast_liquid_line(letters, startindex, width, leading, P, F, hyphenate=False)
             # work out line breaks
             if x > width:
                 n = len(GLYPHS)
+                CHAR = str(letter)
                 if CHAR not in _BREAK_WHITESPACE:
 
                     LN = letters[:n]
 
                     try:
                         if CHAR in _BREAK_ONLY_AFTER:
-                            i = next(i + 1 for i, v in zip(range(n - 2, 0, -1), reversed(LN[:-1])) if v in _BREAK)
+                            i = next(i + 1 for i, v in zip(range(n - 2, 0, -1), reversed(LN[:-1])) if str(v) in _BREAK)
                         elif CHAR in _BREAK_AFTER_ELSE_BEFORE:
                             i = len(LN) - 1
                         else:
-                            i = next(i + 1 for i, v in zip(range(n - 1, 0, -1), reversed(LN)) if v in _BREAK)
+                            i = next(i + 1 for i, v in zip(range(n - 1, 0, -1), reversed(LN)) if str(v) in _BREAK)
                     
                     except StopIteration:
                         del GLYPHS[-1]

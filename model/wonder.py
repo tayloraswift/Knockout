@@ -1,5 +1,4 @@
 from hunspell import hunspell
-from itertools import groupby
 
 def character(entity):
     if type(entity) is not str:

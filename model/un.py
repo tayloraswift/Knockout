@@ -20,12 +20,7 @@ class UN(object):
         kitty = [{'text': kevin.serialize(t.text), 'spelling': t.misspellings[:], 'outline': deepcopy(t.channels.channels)} for t in meredith.mipsy]
         page_xy = (meredith.page.WIDTH, meredith.page.HEIGHT)
         
-        textcontexts = {'t': meredith.mipsy.index(cursor.fcursor.TRACT),
-                        'i': cursor.fcursor.i,
-                        'j': cursor.fcursor.j,
-                        'p': cursor.fcursor.PG,
-                        'ftx': None
-                       }
+        textcontexts = cursor.fcursor.polaroid()
         channelcontexts = {
 #                        't': meredith.mipsy.index(caramel.delight.TRACT),
 #                        'c': caramel.delight.C(), 

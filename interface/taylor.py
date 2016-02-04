@@ -370,16 +370,13 @@ class Document_view(ui.Cell):
 
             # TEXT EDITING MODE
             if self._mode == 'text':
-                try:
-                    un.history.undo_save(0)
-                    self.fcursor.target(x, y)
-                    
-                    # used to keep track of ui redraws
-                    self._sel_cursor = self.fcursor.j
-                    
-                except ValueError:
-                    # occurs if an empty channel is selected
-                    print('empty channel selected')
+
+                un.history.undo_save(0)
+                self.fcursor.target(x, y)
+                
+                # used to keep track of ui redraws
+                self._sel_cursor = self.fcursor.j
+                
                 # check if paragraph context changed
                 CText.update()
                 

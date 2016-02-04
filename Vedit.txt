@@ -12,13 +12,13 @@
                 'Superitalic': {'path': '/home/kelvin/.fonts/GaramondPremrPro-MedItCapt.otf'},
                 'gray': {'color': (0, 0, 0, 0.4)}},
  'FTAGLIST': [('sup', ['small']),
-              ('big', []),
               ('emphasis', []),
+              ('caption', []),
               ('link', []),
+              ('big', []),
               ('strong', []),
-              ('sub', ['small']),
-              ('caption', [])],
- 'PARASTYLES': (1,
+              ('sub', ['small'])],
+ 'PARASTYLES': (3,
                 [({'fontclasses': (0, [('Black', {})])}, {}),
                  ({'fontclasses': (0, [('Heading', {})]), 'leading': 36}, {'h1': 1}),
                  ({'fontclasses': (0, [('Heading.001', {})]), 'leading': 24, 'margin_bottom': 10}, {'h2': 1}),
@@ -41,14 +41,14 @@
                  ({'indent': (0, -1, 4), 'indent_range': {0}}, {'hanging indent': 1}),
                  ({'fontclasses': (0, [('gray', {})])}, {'gray': 1})]),
  'PEGS': {'Standard pegs': ('', {'sub': [0, -0.2], 'sup': [0, 0.3]})},
- 'PTAGLIST': [('gray', []),
-              ('h2', []),
+ 'PTAGLIST': [('h2', []),
               ('signature', []),
-              ('body', []),
-              ('hanging indent', []),
               ('h1', []),
-              ('indent demo', [])],
- 'contexts': {'channels': {'c': None, 'p': 0, 't': 1}, 'text': {'ftx': None, 'i': 133, 'j': 133, 'p': 0, 't': 0}},
+              ('indent demo', []),
+              ('gray', []),
+              ('body', []),
+              ('hanging indent', [])],
+ 'contexts': {'channels': {'c': 7, 'p': 6.0, 't': 0}, 'text': {'i': 4512, 'j': 4512, 'p': 5.0, 't': 0}},
  'grid': [[120, 480], [120, 480]],
  'kitty': [{'outline': [(([[120, 210, False], [120, 480, False]], [[480, 210, False], [480, 480, False]]), 0),
                         ([[[120, 120, False], [120, 480, False]], [[480, 120, False], [480, 480, False]]], 1),
@@ -56,11 +56,12 @@
                         ([[[120, 120, False], [120, 480, False]], [[480, 120, False], [480, 480, False]]], 3),
                         ([[[120, 120, False], [120, 400, False]], [[480, 120, False], [480, 400, False]]], 4),
                         ([[[120, 120, False], [120, 480, False]],
-                          [[300, 120, False], [70, 310, True], [290, 480, False]]],
+                          [[300, 120, False], [70, 310, False], [290, 480, False]]],
                          5),
-                        ([[[360, 120, False], [270, 300, False], [360, 480, False]],
-                          [[410, 120, False], [480, 300, False], [410, 480, False]]],
-                         5)],
+                        ([[[360, 120, False], [160, 310, False], [360, 480, False]],
+                          [[410, 120, False], [590, 300, False], [410, 480, False]]],
+                         5),
+                        ([[[120, 120, False], [120, 480, False]], [[480, 120, True], [480, 480, False]]], 6)],
             'text': '<p class="body">This typesetting editor is an application I have been developing for over half a '
                     'year. The codebase was written from scratch in Python 3, and uses its own UI toolkit which I also '
                     'wrote. Although still in alpha stages, the codebase can be synced from &lt;<f '
@@ -98,10 +99,10 @@
                     'class="body">Instead of “single” or “double” spacing, Vedit lets the writer specify the literal '
                     'point size of the <strong>leading</strong>, or line height. This helps you predict the amount of '
                     'space that text will take up, and helps you avoid text alignment headaches, since the spacing is '
-                    'always constant and measurable. </p><p class="body&indent demo"><strong>Indentation</strong> is '
+                    'always constant and measurable. </p><p class="indent demo&body"><strong>Indentation</strong> is '
                     'powerful in Vedit. The lines over which it takes effect can be explicitly enumerated (in a '
                     'relative count from the start of the paragraph), and it can be set in terms of the character '
-                    'positions of the first line. </p><p class="body&hanging indent">—&gt;  This is very useful for '
+                    'positions of the first line. </p><p class="hanging indent&body">—&gt;  This is very useful for '
                     'creating <strong>hanging indents</strong>.</p><p class="gray&body">Paragraph styles even add '
                     'their <strong>constituent text styles</strong>, which allows for <em>very interesting</em> '
                     'constructs, such as this gray filter, which is made up of a paragraph class containing a single '
@@ -120,15 +121,29 @@
                     'thing I might want to mention. Text columns are completely flexible, and they can be bent to make '
                     'any text wrapping you would ever need. Even <em>negative</em> text wrapping works. </p><p '
                     'class="body">Flexible text channels even work with Vedit’s tables, which calculate their cell '
-                    'width based on the width of the text channel at that point.</p><br><table><tr><td rowspan="1" '
-                    'colspan="1"><p class="body">cell 1</p><br></td><td rowspan="1" colspan="1"><p class="body">cell '
-                    '2</p><br></td></tr><tr><td rowspan="1" colspan="1"><p class="body">cell 3</p><br></td><td '
-                    'rowspan="1" colspan="1"><p class="body">cell 4</p><br></td><td rowspan="1" colspan="1"><p '
-                    'class="body">cell 5</p><br></td><td rowspan="1" colspan="1"><p class="body">cell '
-                    '6</p><br></td></tr><tr><td rowspan="1" colspan="2"><p class="body">cell 7</p><br></td><td '
-                    'rowspan="1" colspan="1"><p class="body">cell 8</p></td><td rowspan="1" colspan="1"><p '
-                    'class="body">cell 9</p><br></td></tr></table><p class="body"></p>'},
+                    'width based on the width of the text channel at that point.</p><table><tr><td rowspan="1" '
+                    'colspan="1"><p class="body">cell 1</p></td><td rowspan="1" colspan="3"><p class="body">cell '
+                    '2</p></td></tr><tr><td rowspan="1" colspan="1"><p class="body">cell 3</p><p class="body">cell 3 '
+                    '(row 2)</p></td><td rowspan="1" colspan="1"><p class="body">cell 4</p></td><td rowspan="1" '
+                    'colspan="1"><p class="body">cell 5</p></td><td rowspan="1" colspan="1"><p class="body">cell '
+                    '6</p></td></tr><tr><td rowspan="1" colspan="2"><p class="body">cell 7</p></td><td rowspan="1" '
+                    'colspan="1"><p class="body">cell 8</p></td><td rowspan="1" colspan="1"><p class="body">cell '
+                    '9</p></td></tr></table><p class="body"> Of course, square tables are much easier to '
+                    'read.</p><table><tr><td rowspan="1" colspan="1"><p class="body">cell 1 some interesting script '
+                    'nesting combinations, and additive styling means you can have multistyles that make the nested '
+                    'superscripts smaller than the regular s</p></td><td rowspan="1" colspan="3"><p class="body"> some '
+                    'interesting script nesting combinations, and additive styling means you can have multistyles that '
+                    'make the nested superscripts smaller than the regular s some ghinteresting script nesting '
+                    'combinations, and additive styling means you can have multistyles that make the nested '
+                    'superscripts smaller than the regular s some interesting script nesting combinations, and '
+                    'additive styling means you can have multistyles that make the nested superscripts smaller than '
+                    'the regular s</p></td></tr><tr><td rowspan="1" colspan="1"><p class="body">cell 3</p><p '
+                    'class="body">cell 3 (row 2)</p></td><td rowspan="1" colspan="1"><p class="body">cell '
+                    '4</p></td><td rowspan="1" colspan="1"><p class="body">cell 5</p></td><td rowspan="1" '
+                    'colspan="1"><p class="body">cell 6</p></td></tr><tr><td rowspan="1" colspan="2"><p '
+                    'class="body">cell 7</p></td><td rowspan="1" colspan="1"><p class="body">cell 8</p></td><td '
+                    'rowspan="1" colspan="1"><p class="body">cell 9</p></td></tr></table><p class="body"></p>'},
            {'outline': [(([[120, 120, False], [120, 200, True]], [[480, 120, False], [480, 200, True]]), 0)],
             'text': '<p class="h1">About this typesetting editor</p>'}],
  'page': {'dimensions': (600, 600), 'dual': True},
- 'view': {'H': -50, 'Hc': 435.42279052734375, 'K': 50, 'Kc': 228.0390625, 'Zoom': 11, 'mode': 'text'}}
+ 'view': {'H': 132, 'Hc': 421.24249267578125, 'K': -1806, 'Kc': 307.52764892578125, 'Zoom': 11, 'mode': 'text'}}

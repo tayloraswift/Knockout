@@ -1,14 +1,37 @@
 import bisect
 from itertools import chain
 
-from model.wonder import character
 from model.cat import typeset_liquid
 from model.olivia import Atomic_text
 from model.george import Swimming_pool
 from bulletholes.counter import TCounter as Counter
 
+from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image
+
+class CellPost(object):
+    def __init__(self, rowspan, colspan):
+        self.rowspan = rowspan
+        self.colspan = colspan
+    def __str__(self):
+        return '<td>'
+
+    def __repr__(self):
+        if self.rowspan == 1:
+            if self.colspan == 1:
+                return '<td>'
+            else:
+                return '<td colspan="' + str(self.colspan) + '">'
+        else:
+            if self.colspan == 1:
+                return '<td rowspan="' + str(self.rowspan) + '">'
+            else:
+                return '<td rowspan="' + str(self.rowspan) + '" colspan="' + str(self.colspan) + '">'
+
+    def __len__(self):
+        return 4
+
 def _bin(data, odelimit, cdelimit):
-    for i, v in ((i, v) for i, v in enumerate(data) if character(v) == odelimit):
+    for i, v in ((i, v) for i, v in enumerate(data) if str(v) == odelimit):
         try:
             j = data[i:].index(cdelimit) + i
         except ValueError:
@@ -25,7 +48,8 @@ def _bin(data, odelimit, cdelimit):
 class _Table_cell(Atomic_text):
     def __init__(self, text):
         Atomic_text.__init__(self, text[1:-1])
-        self.rs, self.cs = text[0][1:]
+        self.rs = text[0].rowspan
+        self.cs = text[0].colspan
     
     def nail(self, i, j):
         self.col = j
@@ -58,9 +82,12 @@ class Matrix(list):
             M.append(R)
         return '\n'.join(M)
 
-class Table(dict):
+def _row_height(data, r, y):
+    cells = (cell for cell in chain.from_iterable(row for row in data) if cell.row + cell.rs - 1 == r)
+    return max(cell._SLUGS[-1]['y'] + cell._SLUGS[-1]['leading'] for cell in cells)
+
+class Table(object):
     def __init__(self, fields, data):
-        dict.__init__(self, {0: '<table>'})
         self.fields = fields
         # process table structure
         # build rows
@@ -72,7 +99,7 @@ class Table(dict):
         for row in self.data:
             L.append('<tr>')
             for cell in row:
-                L.extend([('<td>', cell.rs, cell.cs)] + cell.text + ['</td>'])
+                L.extend([CellPost(cell.rs, cell.cs)] + cell.text + ['</td>'])
             L.append('</tr>')
             
         return L
@@ -109,22 +136,24 @@ class Table(dict):
             
         print(MATRIX)
         self._MATRIX = MATRIX
-    
-    def _row_height(self, r, y):
-        cells = (cell for cell in chain.from_iterable(row for row in self.data) if cell.row + cell.rs - 1 == r)
-        return max(cell._SLUGS[-1]['y'] + cell._SLUGS[-1]['leading'] for cell in cells)
-    
+
     def fill(self, bounds, c, y):
+        return Atomic_table(self._MATRIX, self.data, bounds, c, y)
+
+class Atomic_table(dict):
+    def __init__(self, matrix, data, bounds, c, y):
+        self._matrix = matrix
+        self._cells = [cell for row in data for cell in row]
         top = y
         row_y = []
-        for r, row in enumerate(self.data):
+        for r, row in enumerate(data):
+            cellcount = len(self._matrix[r])
             for cell in row:
                 # calculate percentages
-                cellcount = len(self._MATRIX[r])
                 cellbounds = TCell_container(bounds, cell.col/cellcount, (cell.col + cell.cs)/cellcount)
                 cell._SLUGS[:] = typeset_liquid(cellbounds, cell.text, {'j': 0, 'l': -1, 'P_BREAK': True}, 0, y, c, False)
                 cell._precompute_search()
-            y = self._row_height(r, y)
+            y = _row_height(data, r, y)
             row_y.append(y)
         
         x1, x2 = bounds.bounds(top)
@@ -134,7 +163,7 @@ class Table(dict):
         self['leading'] = y - top
         self['GLYPHS'] = [(-2, 0, y, None, None, x2 - x1)]
         self['P_BREAK'] = True
-        self['PP'] = ['<table>', Counter()]
+        self['PP'] = Paragraph(Counter())
         
         self['_row_y'] = row_y
         self['_bounds'] = bounds
@@ -145,13 +174,14 @@ class Table(dict):
         r = bisect.bisect(self['_row_y'], y)
         c = int((x - x1) // ((x2 - x1) / self['_cellcount']))
         try:
-            return self._MATRIX[r][c]
+            return self._matrix[r][c]
         except IndexError:
             print('Empty cell selected')
             return self['j']
+
+    def collect_text(self):
+        return list(chain.from_iterable(cell.collect_text() for cell in self._cells))
     
     def deposit(self, repository):
-        for cell in chain.from_iterable(self.data):
-            for S in cell._SLUGS:
-                S.deposit(repository)
-        
+        for cell in self._cells:
+            cell.deposit(repository)

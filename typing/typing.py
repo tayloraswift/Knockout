@@ -1,32 +1,22 @@
 from itertools import chain
-
 import time
-from model.wonder import character
+
 from fonts import styles
 from model import meredith, cursor
 from state.contexts import Text as CText
 
+from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image
+
 from model import un
 
 def set_cursor(i):
-    cursor.fcursor.i = cursor.fcursor.skip(i, 0)
+    cursor.fcursor.i = cursor.fcursor.skip(i)
     
 def set_select(i):
-    cursor.fcursor.j = cursor.fcursor.skip(i, 0)
+    cursor.fcursor.j = cursor.fcursor.skip(i)
 
 def match_cursors():
     cursor.fcursor.j = cursor.fcursor.i
-
-def hop(dl, CURSOR):
-    try:
-        l = cursor.fcursor.index_to_line(CURSOR)
-        set_cursor(CText.tract.target_glyph(
-                    cursor.fcursor.text_index_x(CURSOR, l), 
-                    0, 
-                    l + dl
-                    ))
-    except IndexError:
-        pass
 
 class Keyboard(dict):
     def __init__(self, shortcuts):
@@ -55,12 +45,12 @@ class Keyboard(dict):
         elif name == 'Up':
             un.history.undo_save(0)
             
-            hop(-1, CURSOR)
+            cursor.fcursor.hop(-1)
             match_cursors()
         elif name == 'Down':
             un.history.undo_save(0)
             
-            hop(1, CURSOR)
+            cursor.fcursor.hop(1)
             match_cursors()
 
         elif name in ['Home', 'End']:
@@ -87,8 +77,8 @@ class Keyboard(dict):
                 cursor.fcursor.delete()
             elif name == 'BackSpace':            
                 # for deleting paragraphs
-                prec = character(cursor.fcursor.text[CURSOR - 1])
-                if prec == '<p>':
+                prec = cursor.fcursor.text[CURSOR - 1]
+                if type(prec) is Paragraph:
                     # make sure that (1) we’re not trying to delete the first paragraph, 
                     # and that (2) we’re not sliding the cursor
                     if CURSOR > 1 and time.time() - lastpress[0] > 0.2:
@@ -108,7 +98,7 @@ class Keyboard(dict):
                 if cursor.fcursor.text[CURSOR] == '</p>':
                     if time.time() - lastpress[0] > 0.2:
                         un.history.undo_save(-2)
-                        if character(cursor.fcursor.text[CURSOR + 1]) != '<p>':
+                        if type(cursor.fcursor.text[CURSOR + 1]) is not Paragraph:
                             del cursor.fcursor.text[CURSOR + 1]
                             cursor.fcursor.delete(db = 0)
                         else:
@@ -125,8 +115,8 @@ class Keyboard(dict):
     #        name = meredith.mipsy.paragraph_at()[0].name
     #        if name[0] == 'h' and name[1].isdigit() and meredith.mipsy.at_absolute(CURSOR) == '</p>' and 'body' in styles.PARASTYLES:
     #            name = 'body'
-            tag, P = cursor.fcursor.pp_at()
-            cursor.fcursor.insert(['</p>', [tag, P.copy()]])
+            P = cursor.fcursor.pp_at().P.copy()
+            cursor.fcursor.insert(['</p>', Paragraph(P)])
             
         elif name == 'Return':
             un.history.undo_save(1)
@@ -151,24 +141,23 @@ class Keyboard(dict):
                 un.history.undo_save(3)
                 cursor.fcursor.delete()
             
-                return sel
-        
+                return sel        
 
         elif name in self._special_names:
             T = self[name]
             if name in self._CLOSE:
                 B = False
-                F = '</f>'
+                F = CloseFontpost
             else:
                 B = True
-                F = '<f>'
+                F = OpenFontpost
             if cursor.fcursor.take_selection():
                 un.history.undo_save(3)
                 if not cursor.fcursor.bridge(T, B):
                     un.history.pop()
             else:
                 un.history.undo_save(1)
-                cursor.fcursor.insert([(F, T)])
+                cursor.fcursor.insert([F(T)])
         else:
             un.history.undo_save(13)
             cursor.fcursor.insert([char])

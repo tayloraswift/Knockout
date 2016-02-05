@@ -300,7 +300,7 @@ class Properties(_Properties_panel):
                 self._items.append(kookies.Heading( 15, 90, 250, 30, '', upper=True))
         
         if self._tab == 'paragraph':
-            self._items.append(kookies.Heading( 15, 90, 250, 30, ', '.join(T.name if V == 1 else T.name + ' (' + str(V) + ')' for T, V in contexts.Text.paragraph[1].items() if V), upper=True))
+            self._items.append(kookies.Heading( 15, 90, 250, 30, ', '.join(T.name if V == 1 else T.name + ' (' + str(V) + ')' for T, V in contexts.Text.paragraph.P.items() if V), upper=True))
 
             self._items.append(kookies.Para_control_panel(15, y, 250, 250, 
                     get_paragraph = lambda: contexts.Text.paragraph, 

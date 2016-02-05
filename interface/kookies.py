@@ -1197,9 +1197,9 @@ class Para_control_panel(Ordered):
                 tag, count = next(iter(PSTYLE.tags.items()))
                 self._BEFORE()
                 if C == 5:
-                    self._paragraph[1][tag] -= 1
+                    self._paragraph.P[tag] -= 1
                 else:
-                    self._paragraph[1][tag] += 1
+                    self._paragraph.P[tag] += 1
 
             self._SYNCHRONIZE()
             self._AFTER()
@@ -1222,7 +1222,7 @@ class Para_control_panel(Ordered):
                 cr.arc(self._x + radius, y2 - radius, radius, 1*(pi/2), 2*(pi/2))
                 cr.close_path()
                 
-                if PSTYLE.tags <= self._paragraph[1]:
+                if PSTYLE.tags <= self._paragraph.P:
                     cr.set_source_rgb( * accent)
                     cr.fill()
                 else:
@@ -1284,12 +1284,12 @@ class Para_control_panel(Ordered):
                     plus_sign(cr, self._x + 25, y1)
                     cr.fill()
                 
-                if PSTYLE.tags <= self._paragraph[1]:
+                if PSTYLE.tags <= self._paragraph.P:
                     cr.set_source_rgb( * accent)
                 else:
                     cr.set_source_rgba(0, 0, 0, 0.4)
 
-            elif PSTYLE.tags <= self._paragraph[1]:
+            elif PSTYLE.tags <= self._paragraph.P:
                 cr.set_source_rgba(0, 0, 0, 0.7)
 
             else:

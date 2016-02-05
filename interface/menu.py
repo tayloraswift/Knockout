@@ -1,5 +1,4 @@
 from state import noticeboard, constants
-
 from interface import base
 
 class Menu(object):

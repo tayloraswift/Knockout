@@ -1,5 +1,4 @@
 class Cell(object):
-
     def key_input(self, name, char):
         print(name)
     

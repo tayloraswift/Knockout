@@ -1,13 +1,12 @@
 from itertools import chain
 import time
 
-from fonts import styles
-from model import meredith, cursor
-from state.contexts import Text as CText
+from style import styles
+from edit import cursor
 
 from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image
 
-from model import un
+from IO import un
 
 def set_cursor(i):
     cursor.fcursor.i = cursor.fcursor.skip(i)

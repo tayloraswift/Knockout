@@ -8,7 +8,7 @@ from interface import menu
 
 UI_CELLS = [taylor.becky, karlie.klossy]
 
-#                                                         click | hover
+#1 TREE PAINE STAN                                        click | hover
 def take_event(x, y, event, key=False, char=None, region=[  0,      0  ]):
 
     if key:

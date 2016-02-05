@@ -1,9 +1,8 @@
 import bisect
 from math import pi
 
-from fonts import styles
-from fonts import paperairplanes as plane
-
+from style.styles import ISTYLES
+from edit.paperairplanes import interpret_float, interpret_int, interpret_rgba, pack_binomial, read_binomial
 from interface.base import Base_kookie, accent, xhover
 from interface import menu
 
@@ -238,7 +237,7 @@ class Blank_space(Base_kookie):
         self._j = self._i
         
         # build static texts
-        self._add_static_text(self._x, self._y + 40, self._name, font=styles.ISTYLES[('label',)] , upper=True)
+        self._add_static_text(self._x, self._y + 40, self._name, font=ISTYLES[('label',)] , upper=True)
         
         self._resting_bar_color = (0, 0, 0, 0.4)
         self._active_bar_color = (0, 0, 0, 0.8)
@@ -514,7 +513,7 @@ class Blank_space(Base_kookie):
 class Numeric_field(Blank_space):
     def __init__(self, x, y, width, callback, value_acquire, params=(), before=lambda: None, after=lambda: None, name=None):
         Blank_space.__init__(self, x, y, width, callback, value_acquire, params, before, after, name)
-        self._domain = plane.interpret_float
+        self._domain = interpret_float
 
     def _stamp_glyphs(self, text):
         self._template = self._build_line(self._text_left, self._y + self.font['fontsize'] + 5, text, self.font, sub_minus=True)
@@ -527,12 +526,12 @@ class Numeric_field(Blank_space):
 class Integer_field(Numeric_field):
     def __init__(self, x, y, width, callback, value_acquire, params=(), before=lambda: None, after=lambda: None, name=None):
         Numeric_field.__init__(self, x, y, width, callback, value_acquire, params, before, after, name)
-        self._domain = plane.interpret_int
+        self._domain = interpret_int
 
 class Enumerate_field(Numeric_field):
     def __init__(self, x, y, width, callback, value_acquire, params=(), before=lambda: None, after=lambda: None, name=None):
         Blank_space.__init__(self, x, y, width, callback, value_acquire, params, before, after, name)
-        self._domain = lambda k: set([plane.interpret_int(val) for val in k.split(',') if any(c in '0123456789' for c in val)])
+        self._domain = lambda k: set([interpret_int(val) for val in k.split(',') if any(c in '0123456789' for c in val)])
 
     def _ACQUIRE_REPRESENT(self):
         self._VALUE = str(self._value_acquire( * self._params))[1:-1]
@@ -542,7 +541,7 @@ class Enumerate_field(Numeric_field):
 class RGBA_field(Blank_space):
     def __init__(self, x, y, width, callback, value_acquire, params=(), before=lambda: None, after=lambda: None, name=None):
         Blank_space.__init__(self, x, y, width, callback, value_acquire, params, before, after, name)
-        self._domain = plane.interpret_rgba
+        self._domain = interpret_rgba
 
     def _ACQUIRE_REPRESENT(self):
         self._VALUE = str(self._value_acquire( * self._params))[1:-1]
@@ -553,10 +552,10 @@ class Binomial_field(Numeric_field):
     def __init__(self, x, y, width, callback, value_acquire, params, before=lambda: None, after=lambda: None, name=None, letter='X'):
         Blank_space.__init__(self, x, y, width, callback, value_acquire, params, before, after, name)
         letters = set('1234567890.-+' + letter)
-        self._domain = lambda k: plane.pack_binomial(''.join([c for c in k if c in letters]))
+        self._domain = lambda k: pack_binomial(''.join([c for c in k if c in letters]))
 
     def _ACQUIRE_REPRESENT(self):
-        self._VALUE = plane.read_binomial( * self._value_acquire( * self._params))
+        self._VALUE = read_binomial( * self._value_acquire( * self._params))
         self._LIST = list(self._VALUE) + [None]
         self._stamp_glyphs(self._LIST)
 
@@ -733,6 +732,7 @@ class Object_menu(Blank_space):
                 self._active = True
                 self._dropdown_active = True
                 print('DROPDOWN')
+                return
             elif J == 4:
                 # unlink
                 self._value_push(None, * self._params)

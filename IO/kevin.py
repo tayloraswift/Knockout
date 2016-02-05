@@ -1,12 +1,9 @@
 import html
-
 from pyparsing import Word, Suppress, CharsNotIn, nums, alphanums, dictOf
 
 from model import table
-
 from bulletholes.counter import TCounter as Counter
-from fonts import styles
-
+from style import styles
 from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image
 
 def _parse_tag(tag):

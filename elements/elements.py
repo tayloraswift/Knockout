@@ -1,5 +1,4 @@
 from itertools import chain
-from fonts import styles
 
 class Paragraph(object):
     def __init__(self, counts):

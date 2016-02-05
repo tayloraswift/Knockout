@@ -1,27 +1,16 @@
 import bisect
 from math import pi, sqrt
-
-from copy import deepcopy
-
 import os
 import cairo
 
-from state import noticeboard
-from state import constants
+from state import noticeboard, constants
 from state.contexts import Text as CText
-
-from fonts import styles
-
-from model import meredith
-from model import cursor
-from model import wonder
-from model import un, do
-
+from style import styles
+from model import meredith, wonder
+from edit import cursor, caramel
+from IO import un, do
 from typing import typing
-
-from interface import kookies
-from interface import caramel
-from interface import menu, ui
+from interface import kookies, menu, ui
 from interface.base import accent
 
 accent_light = caramel.accent

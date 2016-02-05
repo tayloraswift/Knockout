@@ -367,6 +367,18 @@ class FCursor(object):
             else:
                 return False
 
+    def hop(self, dl): #implemented exclusively for arrow-up/down events
+        l = self.index_to_line(self.i)
+        x = self.text_index_x(self.i, l)
+        l += dl
+        if l >= len(self._ftx._SLUGS):
+            l = 0
+        lineobject = self._ftx._SLUGS[l]
+        O = lineobject.I(x, lineobject['y'] - lineobject['leading'])
+        if type(O) is not int:
+            O = lineobject['i']
+        self.i = self.skip(O)
+
     def pp_at(self):
         return self._ftx._SLUGS[self.index_to_line(self.i)]['PP']
 

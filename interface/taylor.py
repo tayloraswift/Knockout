@@ -267,7 +267,10 @@ class Document_toolbar(object):
 
 def _replace_misspelled(word):
     if word[0] == '“':
-        wonder.struck.add(word[1:-1])
+        word = word[1:-1]
+        wonder.struck.add(word)
+        with open(wonder.additional_words_file, 'a') as A:
+            A.write(word + '\n')
     else:
         typing.keyboard.type_document('Paste', list(word))
     cursor.fcursor.FTX.stats(spell=True)
@@ -410,7 +413,7 @@ class Document_view(ui.Cell):
                     self.fcursor.target(xo, yo)
                     i = self.fcursor.i
                     
-                    ms = self.fcursor.TRACT.misspellings
+                    ms = self.fcursor.FTX.misspellings
                     pair_i = bisect.bisect([pair[0] for pair in ms], i) - 1
 
                     if ms[pair_i][0] <= i <= ms[pair_i][1]:
@@ -421,7 +424,7 @@ class Document_view(ui.Cell):
                         # used to keep track of ui redraws
                         self._sel_cursor = self.fcursor.j
                         self.fcursor.expand_cursors_word()
-                        suggestions = ['“' + ms[pair_i][2] + '”'] + [w.decode("utf-8") for w in wonder.struck.suggest(ms[pair_i][2])]
+                        suggestions = ['“' + ms[pair_i][2] + '”'] + [w.decode("utf-8") for w in wonder.struck.suggest(ms[pair_i][2].encode('latin-1', 'ignore'))]
                         suggestions = list(zip(suggestions, [str(v) for v in suggestions]))
                         menu.menu.create(x, y, 200, suggestions, _replace_misspelled, () )
 

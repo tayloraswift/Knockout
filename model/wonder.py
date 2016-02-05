@@ -1,6 +1,10 @@
 from hunspell import hunspell
 
 struck = hunspell.HunSpell('hunspell/en_US.dic', 'hunspell/en_US.aff')
+additional_words_file = 'hunspell/add.txt'
+with open(additional_words_file) as A:
+    for word in A.read().splitlines():
+        struck.add(word.strip())
 
 _prose = set('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789&@#$\'’-')
 # these characters get read as word-breaks in speech
@@ -15,7 +19,6 @@ def check_spelling(word):
     if word.isalpha() and not word.isupper():
         return struck.spell(word.encode('latin-1', 'ignore'))
     return True
-
 
 def words(text, startindex=0, spell=False):
 

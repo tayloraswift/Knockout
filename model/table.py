@@ -178,8 +178,10 @@ class Atomic_table(dict):
         except IndexError:
             print('Empty cell selected')
             return self['j']
+
+    def collect_text(self):
+        return list(chain.from_iterable(cell.collect_text() for cell in self._cells))
     
     def deposit(self, repository):
         for cell in self._cells:
             cell.deposit(repository)
-        

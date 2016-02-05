@@ -270,7 +270,7 @@ def _replace_misspelled(word):
         wonder.struck.add(word[1:-1])
     else:
         typing.keyboard.type_document('Paste', list(word))
-    cursor.fcursor._ftx.stats(spell=True)
+    cursor.fcursor.FTX.stats(spell=True)
 
 class Document_view(ui.Cell):
     def __init__(self, save, state={'mode': 'text', 'Hc': 0, 'Kc': 0, 'H': 0, 'K': 0, 'Zoom': 11}):
@@ -295,7 +295,9 @@ class Document_view(ui.Cell):
 
         self._A = self._scroll_notches[self._scroll_notch_i]
         
-        self.fcursor._ftx.stats(spell=True)
+        # initial spellcheck
+        for FTX in self.fcursor.TRACT.collect_text():
+            FTX.stats(spell=True)
     
     def read_display_state(self):
         return {
@@ -380,7 +382,7 @@ class Document_view(ui.Cell):
                 CText.update()
                 
                 # count words
-                self.fcursor._ftx.stats()
+                self.fcursor.FTX.stats()
             
             # CHANNEL EDITING MODE
             elif self._mode == 'channels':
@@ -601,7 +603,9 @@ class Document_view(ui.Cell):
                 # only annotate active tract
                 if tract is self.fcursor.TRACT and self._mode == 'text':
                     self._draw_annotations(cr, sorted_glyphs['_annot'], page)
-                    self._draw_spelling(cr, tract.paint_misspellings())
+                
+            if self._mode == 'text':
+                self._draw_spelling(cr, tract.paint_misspellings())
         
         if self._mode == 'text':
             selections, signs = self.fcursor.paint_current_selection()
@@ -824,6 +828,6 @@ class Document_view(ui.Cell):
         cr.show_text('{0:g}'.format(self._A*100) + '%')
         
         cr.move_to(constants.UI[1] - 150, k - 20)
-        cr.show_text(str(self.fcursor._ftx.word_count) + ' words · page ' + str(self.fcursor.PG))
+        cr.show_text(str(self.fcursor.FTX.word_count) + ' words · page ' + str(self.fcursor.PG))
         
         cr.reset_clip()

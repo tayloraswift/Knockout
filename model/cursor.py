@@ -23,7 +23,7 @@ class FCursor(object):
         self.PG = ctx['p']
 
     def polaroid(self):
-        if self._ftx is self.TRACT:
+        if self.FTX is self.TRACT:
             i = self.i
             j = self.j
         else:
@@ -32,7 +32,7 @@ class FCursor(object):
         return {'t': meredith.mipsy.index(self.TRACT), 'i': i, 'j': j, 'p': self.PG}
 
     def assign_text(self, ftext):
-        self._ftx = ftext
+        self.FTX = ftext
         self.text = ftext.text
         self.index_to_line = ftext.index_to_line
         self.text_index_x = ftext.text_index_x
@@ -49,7 +49,7 @@ class FCursor(object):
                 imperfect_t, ftext_t, i_t, si_t = chained_tract.target(x, y, self.PG, i=None)
                 if not imperfect_t:
                     # hit!
-                    if ftext_t is not self._ftx:
+                    if ftext_t is not self.FTX:
                         # switch of tract context
                         self.assign_text(ftext_t)
                     self.TRACT = chained_tract
@@ -65,7 +65,7 @@ class FCursor(object):
             imperfect_p, ftext_p, i_p, si_p = self.TRACT.target(x, y, binned_page, i=None)
             if not imperfect_p:
                 # hit!
-                if ftext_p is not self._ftx:
+                if ftext_p is not self.FTX:
                     # switch of tract context
                     self.assign_text(ftext_p)
                 self.i = self.skip(i_p)
@@ -79,7 +79,7 @@ class FCursor(object):
                 imperfect_pt, ftext_pt, i_pt, si_pt = chained_tract.target(x, y, binned_page, i=None)
                 if not imperfect_pt:
                     # hit!
-                    if ftext_pt is not self._ftx:
+                    if ftext_pt is not self.FTX:
                         # switch of tract context
                         self.assign_text(ftext_pt)
                     self.TRACT = chained_tract
@@ -90,7 +90,7 @@ class FCursor(object):
                     return
 
         # best guess
-        if ftext is not self._ftx:
+        if ftext is not self.FTX:
             # switch of tract context
             self.assign_text(ftext)
         self.i = self.skip(i_new)
@@ -101,14 +101,14 @@ class FCursor(object):
     def target_select(self, xo, yo):
         # perform naïve targeting (current page, current tract)
         x, y = meredith.page.normalize_XY(xo, yo, self.PG)
-        imperfect, i_new = self._ftx.target_select(x, y, self.PG, self.j)
+        imperfect, i_new = self.FTX.target_select(x, y, self.PG, self.j)
         
         if imperfect:
             # fallbacks: other page, current tract
             binned_page = meredith.page.XY_to_page(xo, yo)
             x, y = meredith.page.normalize_XY(xo, yo, binned_page)
             
-            imperfect_p, i_p = self._ftx.target_select(x, y, binned_page, i=None)
+            imperfect_p, i_p = self.FTX.target_select(x, y, binned_page, i=None)
             if not imperfect_p:
                 # hit!
                 self.j = self.skip(i_p)
@@ -140,14 +140,14 @@ class FCursor(object):
         signs = (self.j < self.i,
                 (type(self.text[self.i - 1]) in ftags, type(self.text[self.i]) in ftags) , 
                 (type(self.text[self.j - 1]) in ftags, type(self.text[self.j]) in ftags))
-        return self._ftx.paint_select(self.i, self.j), signs
+        return self.FTX.paint_select(self.i, self.j), signs
     
     def take_selection(self):
         self.i, self.j = sorted((self.i, self.j))
         return self.text[self.i:self.j]
 
     def _recalculate(self):
-        if self._ftx is self.TRACT:
+        if self.FTX is self.TRACT:
             self.si = self.i
         self.TRACT._dbuff( self.si )
 
@@ -182,7 +182,7 @@ class FCursor(object):
             offset = start - end + len(outside)
         
         # fix spelling lines
-        self._ftx.misspellings = [pair if pair[1] < start else (pair[0] + offset, pair[1] + offset, pair[2]) if pair[0] > end else (0, 0, None) for pair in self._ftx.misspellings]
+        self.FTX.misspellings = [pair if pair[1] < start else (pair[0] + offset, pair[1] + offset, pair[2]) if pair[0] > end else (0, 0, None) for pair in self.FTX.misspellings]
 
         self._recalculate()
         self.i = self.skip(self.i + da)
@@ -199,7 +199,7 @@ class FCursor(object):
         self.j = self.i
         
         # fix spelling lines
-        self._ftx.misspellings = [pair if pair[1] < self.i else (pair[0] + s, pair[1] + s, pair[2]) if pair[0] > self.i else (pair[0], pair[1] + s, pair[2]) for pair in self._ftx.misspellings]
+        self.FTX.misspellings = [pair if pair[1] < self.i else (pair[0] + s, pair[1] + s, pair[2]) if pair[0] > self.i else (pair[0], pair[1] + s, pair[2]) for pair in self.FTX.misspellings]
 
     def expand_cursors(self):
         # order
@@ -357,11 +357,11 @@ class FCursor(object):
                 self._recalculate()
                 
                 # redo spelling for this paragraph
-                self._ftx.misspellings = [pair if pair[1] < P_1 else
+                self.FTX.misspellings = [pair if pair[1] < P_1 else
                         (pair[0] + DA, pair[1] + DA, pair[2]) if pair[0] > P_2 else
-                        (0, 0, 0) for pair in self._ftx.misspellings ]
+                        (0, 0, 0) for pair in self.FTX.misspellings ]
                 # paragraph has changed
-                self._ftx.misspellings += words(self.text[P_1:P_2 + DA] + ['</p>'], startindex=P_1, spell=True)[1]
+                self.FTX.misspellings += words(self.text[P_1:P_2 + DA] + ['</p>'], startindex=P_1, spell=True)[1]
                 
                 return True
             else:
@@ -371,19 +371,19 @@ class FCursor(object):
         l = self.index_to_line(self.i)
         x = self.text_index_x(self.i, l)
         l += dl
-        if l >= len(self._ftx._SLUGS):
+        if l >= len(self.FTX._SLUGS):
             l = 0
-        lineobject = self._ftx._SLUGS[l]
+        lineobject = self.FTX._SLUGS[l]
         O = lineobject.I(x, lineobject['y'] - lineobject['leading'])
         if type(O) is not int:
             O = lineobject['i']
         self.i = self.skip(O)
 
     def pp_at(self):
-        return self._ftx._SLUGS[self.index_to_line(self.i)]['PP']
+        return self.FTX._SLUGS[self.index_to_line(self.i)]['PP']
 
     def styling_at(self):
-        line = self._ftx._SLUGS[self.index_to_line(self.i)]
+        line = self.FTX._SLUGS[self.index_to_line(self.i)]
         try:
             glyph = line['GLYPHS'][self.i - line['i']]
         except IndexError:
@@ -392,4 +392,4 @@ class FCursor(object):
         return line['PP'], glyph[3]
 
     def front_and_back(self):
-        return self._ftx.line_indices(self.index_to_line(self.i))
+        return self.FTX.line_indices(self.index_to_line(self.i))

@@ -16,7 +16,16 @@ class CellPost(object):
         return '<td>'
 
     def __repr__(self):
-        return '<td rowspan="' + str(self.rowspan) + '" colspan="' + str(self.colspan) + '">'
+        if self.rowspan == 1:
+            if self.colspan == 1:
+                return '<td>'
+            else:
+                return '<td colspan="' + str(self.colspan) + '">'
+        else:
+            if self.colspan == 1:
+                return '<td rowspan="' + str(self.rowspan) + '">'
+            else:
+                return '<td rowspan="' + str(self.rowspan) + '" colspan="' + str(self.colspan) + '">'
 
     def __len__(self):
         return 4

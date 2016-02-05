@@ -5,7 +5,7 @@ from fonts import styles
 from model import meredith, cursor
 from state.contexts import Text as CText
 
-from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image, FTable
+from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image
 
 from model import un
 

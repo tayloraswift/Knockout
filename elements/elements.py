@@ -68,6 +68,3 @@ class Image(object):
 
     def __len__(self):
         return 7
-
-class FTable(object):
-    pass

@@ -4,7 +4,7 @@ from bulletholes.counter import TCounter as Counter
 from model.george import Swimming_pool
 from fonts import styles
 
-from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image, FTable
+from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image
 
 from pyphen import pyphen
 pyphen.language_fallback('en_US')
@@ -111,7 +111,7 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False):
     while True:
         if gap:
             try:
-                i, container = next((a + i, v) for a, v in enumerate(LIQUID[i:]) if type(v) in {Paragraph, FTable})
+                i, container = next((a + i, v) for a, v in enumerate(LIQUID[i:]) if type(v) not in {str, OpenFontpost, CloseFontpost, Image})
             except StopIteration:
                 # end of file
                 break
@@ -130,20 +130,19 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False):
 
                 gap = False
 
-            elif type(container) is FTable:
-                TBL = container
+            else:
                 try:
-                    TBL.fill(channel, c, y)
+                    MOD = container.fill(channel, c, y)
                 except RuntimeError:
                     break
-                TBL['i'] = i
-                TBL['j'] = i + 1
-                TBL['l'] = l
-                TBL['c'] = c
-                TBL['page'] = page
-                y = TBL['y']
+                MOD['i'] = i
+                MOD['j'] = i + 1
+                MOD['l'] = l
+                MOD['c'] = c
+                MOD['page'] = page
+                y = MOD['y']
                 
-                SLUGS.append(TBL)
+                SLUGS.append(MOD)
                 l += 1
                 i += 1
                 continue

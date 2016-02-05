@@ -1,4 +1,4 @@
-from fonts import styles
+from style import styles
 
 class StyleErrors(object):
     def __init__(self):

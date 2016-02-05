@@ -2,8 +2,7 @@ from math import floor
 import bisect
 
 from state import constants
-
-from fonts import styles
+from style import styles
 
 accent = (1, 0.22, 0.50)
 

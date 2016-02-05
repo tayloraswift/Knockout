@@ -1,6 +1,6 @@
 import sys
 
-import sierra
+from IO import sierra
 
 _fail = '\033[91m'
 _endc = '\033[0m'
@@ -19,8 +19,8 @@ def main(argv):
         print (_fail + _bold + 'ERROR:' + _endc + _fail + ' Document file \'' + filename + '\' does not exist!' + _endc)
         sierra.load('default.txt')
     
-    import rt
-    rt.main()
+    import app
+    app.main()
     
 if __name__ == "__main__":
     main(sys.argv)

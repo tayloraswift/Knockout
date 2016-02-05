@@ -1,5 +1,5 @@
 from model import meredith
-from fonts import styles
+from style import styles
 
 def p_set_attribute(value, A):
     styles.PARASTYLES.active.attributes[A] = value

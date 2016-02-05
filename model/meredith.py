@@ -1,6 +1,6 @@
 from model import olivia
 from model import george
-from model import kevin
+from IO import kevin
 
 class Meredith(list):
     def __init__(self, kitty, grid):

@@ -1,14 +1,12 @@
 import bisect
 import itertools
-from state import constants, contexts
-from state import noticeboard
 
-from fonts import styles
-
-from interface import kookies, caramel, ui, ops
-
+from state import constants, contexts, noticeboard
+from style import styles
+from interface import kookies, ui
+from edit import ops, caramel, cursor
 from model import meredith
-from model import un
+from IO import un
 
 def _create_f_field(TYPE, x, y, width, attribute, after, name='', **kwargs):
     if TYPE == kookies.Checkbox:
@@ -89,7 +87,7 @@ class _Properties_panel(ui.Cell):
         self._partition = partition
 
         width = 140
-        self._tabstrip = kookies.Tabs( (constants.window.get_h() - constants.UI[partition] - width)//2 , 50, width, 30, default=default, callback=self._tab_switch, signals=tabs)
+        self._tabstrip = kookies.Tabs( (constants.window.get_h() - constants.UI[partition] - width)//2 , 20, width, 30, default=default, callback=self._tab_switch, signals=tabs)
         self._tab = tabs[default][0]
         
         self._reconstruct()
@@ -212,12 +210,12 @@ class Properties(_Properties_panel):
         self._active_box_i = None
         self._hover_box_ij = (None, None)
         
-        y = 145
+        y = 110
 
         if self._tab == 'font':
             if styles.PARASTYLES.active is not None:
                 
-                self._items.append(kookies.Heading( 15, 90, 250, 30, ', '.join(T.name for T in styles.PARASTYLES.active.tags), upper=True))
+                self._items.append(kookies.Heading( 15, 70, 250, 30, ', '.join(T.name for T in styles.PARASTYLES.active.tags), upper=True))
                 self._items.append(kookies.Ordered(15, y, 250, 300,
                             library = styles.PARASTYLES.active.layerable, 
                             display = _print_counter,
@@ -231,7 +229,7 @@ class Properties(_Properties_panel):
                                 before = un.history.save, after = lambda: (styles.PARASTYLES.update_f(), meredith.mipsy.recalculate_all(), self.synchronize())))
                     y += 150
 
-                    _after_ = lambda: (styles.PARASTYLES.update_f(), meredith.mipsy.recalculate_all(), contexts.Fontstyle.update(contexts.Text.tract.styling_at()[1]), self._reconstruct())
+                    _after_ = lambda: (styles.PARASTYLES.update_f(), meredith.mipsy.recalculate_all(), contexts.Fontstyle.update(cursor.fcursor.styling_at()[1]), self._reconstruct())
                     if styles.PARASTYLES.active.layerable.active.F is None:
                         self._items.append(kookies.New_object_menu(15, y, 250,
                                     value_push = ops.link_fontstyle, 
@@ -260,7 +258,7 @@ class Properties(_Properties_panel):
 
         elif self._tab == 'pegs':
             if styles.PARASTYLES.active is not None and styles.PARASTYLES.active.layerable.active is not None and styles.PARASTYLES.active.layerable.active.F is not None:
-                self._items.append(kookies.Heading( 15, 90, 250, 30, styles.PARASTYLES.active.layerable.active.F.name, upper=True))
+                self._items.append(kookies.Heading( 15, 70, 250, 30, styles.PARASTYLES.active.layerable.active.F.name, upper=True))
                 
                 FG = lambda: styles.PARASTYLES.active.layerable.active.F.attributes['pegs'] if 'pegs' in styles.PARASTYLES.active.layerable.active.F.attributes else None
                 G = FG()
@@ -300,14 +298,14 @@ class Properties(_Properties_panel):
                 self._items.append(kookies.Heading( 15, 90, 250, 30, '', upper=True))
         
         if self._tab == 'paragraph':
-            self._items.append(kookies.Heading( 15, 90, 250, 30, ', '.join(T.name if V == 1 else T.name + ' (' + str(V) + ')' for T, V in contexts.Text.paragraph.P.items() if V), upper=True))
+            self._items.append(kookies.Heading( 15, 70, 250, 30, ', '.join(T.name if V == 1 else T.name + ' (' + str(V) + ')' for T, V in contexts.Text.paragraph.P.items() if V), upper=True))
 
-            self._items.append(kookies.Para_control_panel(15, y, 250, 250, 
+            self._items.append(kookies.Para_control_panel(15, y, 250, 280, 
                     get_paragraph = lambda: contexts.Text.paragraph, 
                     display = _print_counter,
                     library = styles.PARASTYLES,
                     before = un.history.save, after = lambda: (styles.PARASTYLES.update_p(), meredith.mipsy.recalculate_all(), self._reconstruct()), refresh = self._reconstruct))
-            y += 250
+            y += 280
             
             if styles.PARASTYLES.active is not None:
                 self._items.append(kookies.Counter_editor(15, y, 250, 150, (125, 28),
@@ -336,7 +334,7 @@ class Properties(_Properties_panel):
                 
         
         elif self._tab == 'tags':
-            self._items.append(kookies.Heading( 15, 90, 250, 30, '', upper=True))
+            self._items.append(kookies.Heading( 15, 70, 250, 30, '', upper=True))
             
             self._items.append(kookies.Unordered( 15, y, 200, 200,
                         library = styles.PTAGS, 
@@ -364,7 +362,7 @@ class Properties(_Properties_panel):
                         before=un.history.save, after=self.synchronize, name='TAG NAME'))
             
         elif self._tab == 'page':
-            self._items.append(kookies.Heading( 15, 90, 250, 30, '', upper=True))
+            self._items.append(kookies.Heading( 15, 70, 250, 30, '', upper=True))
             self._items.append(kookies.Integer_field( 15, y, 250, 
                         callback = meredith.page.set_width,
                         value_acquire = lambda: meredith.page.WIDTH,
@@ -386,9 +384,9 @@ class Properties(_Properties_panel):
         self._active_box_i = None
         self._hover_box_ij = (None, None)
         
-        y = 145
+        y = 110
         
-        self._items.append(kookies.Heading( 15, 90, 250, 30, 'Channel ' + str(c), upper=True))
+        self._items.append(kookies.Heading( 15, 70, 250, 30, 'Channel ' + str(c), upper=True))
         
         if self._tab == 'channels':
             if c is not None:
@@ -407,14 +405,14 @@ class Properties(_Properties_panel):
         if to == 'text':
             tabs = (('page', 'M'), ('tags', 'T'), ('paragraph', 'P'), ('font', 'F'), ('pegs', 'G'))
             default = 2
-            self._tabstrip = kookies.Tabs( (constants.window.get_h() - constants.UI[self._partition] - width)//2 , 50, width, 30, default=default, callback=self._tab_switch, signals=tabs)
+            self._tabstrip = kookies.Tabs( (constants.window.get_h() - constants.UI[self._partition] - width)//2 , 20, width, 30, default=default, callback=self._tab_switch, signals=tabs)
             self._tab = tabs[default][0]
             self._reconstruct = self._reconstruct_text_properties
 
         elif to == 'channels':
             tabs = (('channels', 'C'), ('', '?'))
             default = 0
-            self._tabstrip = kookies.Tabs( (constants.window.get_h() - constants.UI[self._partition] - width)//2 , 50, width, 30, default=default, callback=self._tab_switch, signals=tabs)
+            self._tabstrip = kookies.Tabs( (constants.window.get_h() - constants.UI[self._partition] - width)//2 , 20, width, 30, default=default, callback=self._tab_switch, signals=tabs)
             self._tab = tabs[default][0]
             self._reconstruct = self._reconstruct_channel_properties
         

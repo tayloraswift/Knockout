@@ -1,5 +1,5 @@
-from fonts import styles
-from model import cursor
+from style import styles
+from edit import cursor
 from state import noticeboard
 
 class Text_context(object):

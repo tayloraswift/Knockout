@@ -1,4 +1,4 @@
-import html, itertools
+import html
 
 from pyparsing import Word, Suppress, CharsNotIn, nums, alphanums, dictOf
 
@@ -24,31 +24,16 @@ def serialize(text):
         CT = type(entity)
         if CT is not str:
             if CT is OpenFontpost:
-                if entity.F.name == 'emphasis':
-                    b[e] = '<em>'
-                elif entity.F.name == 'strong':
-                    b[e] = '<strong>'
-                else:
-                    b[e] = '<f class="' + entity.F.name + '">'
+                b[e] = repr(entity)
             
             elif CT is CloseFontpost:
-                if entity.F.name == 'emphasis':
-                    b[e] = '</em>'
-                elif entity.F.name == 'strong':
-                    b[e] = '</strong>'
-                else:
-                    b[e] = '</f class="' + entity.F.name + '">'
+                b[e] = repr(entity)
             
             elif CT is Paragraph:
-                if entity.P != Counter({styles.PTAGS['body']}):
-                    b[e] = '<p class="' + '&'.join(itertools.chain.from_iterable((P.name for i in range(V)) for P, V in entity.P.items())) + '">'
-                else:
-                    b[e] = '<p>'
+                b[e] = repr(entity)
 
             elif CT is Image:
-                source = entity.src
-                width = entity.width
-                b[e] = '<image src="' + source + '" width="' + str(width) + '">'
+                b[e] = repr(entity)
             
             elif entity[0] == '<td>':
                 b[e] = '<td rowspan="' + str(entity[1]) + '" colspan="' + str(entity[2]) + '">'

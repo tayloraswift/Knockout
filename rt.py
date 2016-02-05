@@ -87,7 +87,7 @@ class Display(Gtk.Window):
         self._periodic = GObject.timeout_add(2000, self._on_periodic)
     
     def _on_periodic(self):
-        cursor.fcursor.TRACT.stats(spell=True)
+        cursor.fcursor.FTX.stats(spell=True)
         self.BECKY.queue_draw()
         self.KLOSSY.queue_draw()
         self.SCREEN.queue_draw()

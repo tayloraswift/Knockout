@@ -11,13 +11,13 @@
                 'Superbold': {'path': '/home/kelvin/.fonts/Merriweather_UltraBold.ttf'},
                 'Superitalic': {'path': '/home/kelvin/.fonts/GaramondPremrPro-MedItCapt.otf'},
                 'gray': {'color': (0, 0, 0, 0.4)}},
- 'FTAGLIST': [('sub', ['small']),
-              ('link', []),
-              ('emphasis', []),
-              ('strong', []),
-              ('caption', []),
+ 'FTAGLIST': [('emphasis', []),
               ('big', []),
-              ('sup', ['small'])],
+              ('link', []),
+              ('sub', ['small']),
+              ('sup', ['small']),
+              ('caption', []),
+              ('strong', [])],
  'PARASTYLES': (8,
                 [({'fontclasses': (0, [('Black', {})])}, {}),
                  ({'fontclasses': (0, [('Heading', {})]), 'leading': 36}, {'h1': 1}),
@@ -42,15 +42,15 @@
                  ({'fontclasses': (0, [('gray', {})])}, {'gray': 1}),
                  ({'leading': 200}, {'_meredith': 1})]),
  'PEGS': {'Standard pegs': ('', {'sub': [0, -0.2], 'sup': [0, 0.3]})},
- 'PTAGLIST': [('_meredith', []),
-              ('indent demo', []),
+ 'PTAGLIST': [('indent demo', []),
+              ('h1', []),
+              ('gray', []),
               ('h2', []),
               ('signature', []),
+              ('_meredith', []),
               ('body', []),
-              ('hanging indent', []),
-              ('h1', []),
-              ('gray', [])],
- 'contexts': {'channels': {'c': 7, 'p': 6.0, 't': 0}, 'text': {'i': 4641, 'j': 4641, 'p': 6, 't': 0}},
+              ('hanging indent', [])],
+ 'contexts': {'channels': {'c': 7, 'p': 6.0, 't': 0}, 'text': {'i': 3036, 'j': 3036, 'p': 3, 't': 0}},
  'grid': [[120, 480], [120, 480]],
  'kitty': [{'outline': [(([[120, 210, False], [120, 480, False]], [[480, 210, False], [480, 480, False]]), 0),
                         ([[[120, 120, False], [120, 480, False]], [[480, 120, False], [480, 480, False]]], 1),
@@ -72,7 +72,7 @@
                     'efficient. The end goal of the project is to include all the tools and parameters handled by '
                     '“serious” typesetters, and allow editing of them in the least verbose manner. Hence, Vedit offers '
                     'granular control, with a strong emphasis on <strong>additive styling</strong>.</p><p '
-                    'class="body&signature">—Kelvin Ma</p><p class="h2">WHAT IS ADDITIVE STYLING?</p><p>Additive '
+                    'class="signature&body">—Kelvin Ma</p><p class="h2">WHAT IS ADDITIVE STYLING?</p><p>Additive '
                     'styling is the idea that multiple “building block” text styles can be defined and combined to '
                     'create the visual styles seen on the page. For example, an &lt;<em>Italic</em>&gt; class may be '
                     'defined which simply declares an italic font file, while a &lt;<f class="sup">Superscript</f '
@@ -100,11 +100,11 @@
                     '“single” or “double” spacing, Vedit lets the writer specify the literal point size of the '
                     '<strong>leading</strong>, or line height. This helps you predict the amount of space that text '
                     'will take up, and helps you avoid text alignment headaches, since the spacing is always constant '
-                    'and measurable. </p><p class="body&indent demo"><strong>Indentation</strong> is powerful in '
+                    'and measurable. </p><p class="indent demo&body"><strong>Indentation</strong> is powerful in '
                     'Vedit. The lines over which it takes effect can be explicitly enumerated (in a relative count '
                     'from the start of the paragraph), and it can be set in terms of the character positions of the '
                     'first line. </p><p class="body&hanging indent">—&gt;  This is very useful for creating '
-                    '<strong>hanging indents</strong>.</p><p class="body&gray">Paragraph styles even add their '
+                    '<strong>hanging indents</strong>.</p><p class="gray&body">Paragraph styles even add their '
                     '<strong>constituent text styles</strong>, which allows for <em>very interesting</em> constructs, '
                     'such as this gray filter, which is made up of a paragraph class containing a single text class '
                     'which defines just a gray color, all overlayed over our standard body text style.</p><p '
@@ -126,16 +126,16 @@
                     '3</p><p>cell 3 (row 2)</p></td><td><p>cell 4</p></td><td><p>cell 55</p></td><td><p>cell '
                     '6</p></td></tr><tr><td colspan="2"><p>cell 7</p></td><td><p>cell 8</p></td><td><p>cell '
                     '9</p></td></tr></table><p> Of course, square tables are much easier to '
-                    'read.</p><table><tr><td><p>Tables can contain anything, including paragraphs and images, and in '
+                    'read.</p><table><tr><td><p>Tables can contain anything, including paragraphs  and images, and in '
                     'theory, other tables, though the parser cannot currently load nested tables. </p><p>At this '
                     'moment, the table cell structure itself is not editable through the UI.</p></td><td '
                     'colspan="3"><p class="h2">Who doesn’t love Meredith Grey?</p><p class="_meredith&body"><image '
-                    'src="meredith.png" width="200"></p><p class="body&gray">(Taylor, evidently.)</p><p '
-                    'class="body&gray">Also, hopefully you can see that these table cells  arrange themselves '
-                    'according to the W3 HTML table specification.</p></td></tr><tr><td><p>cell 3</p><p>cell 3 (row '
+                    'src="meredith.png" width="200"></p><p class="gray&body">(Taylor, evidently.)</p><p '
+                    'class="gray&body">Also, hopefully you can see that these tablecells  arrange themselves according '
+                    'to the W3 HTML table specification.</p></td></tr><tr><td><p>cell 3</p><p>cell 3 (row '
                     '2)</p></td><td><p>cell 4</p></td><td><p>cell 5</p></td><td><p>cell 6</p></td></tr><tr><td '
                     'colspan="2"><p>cell 7</p></td><td><p>cell 8</p></td><td><p>cell 9</p></td></tr></table><p></p>'},
            {'outline': [(([[120, 120, False], [120, 200, True]], [[480, 120, False], [480, 200, True]]), 0)],
             'text': '<p class="h1">About this typesetting editor</p>'}],
  'page': {'dimensions': (600, 600), 'dual': True},
- 'view': {'H': -109, 'Hc': 314.0701904296875, 'K': -1488, 'Kc': 397.9307861328125, 'Zoom': 11, 'mode': 'text'}}
+ 'view': {'H': -161, 'Hc': 497.27557373046875, 'K': -1386, 'Kc': 349.47015380859375, 'Zoom': 9, 'mode': 'text'}}

@@ -113,6 +113,10 @@ class Atomic_text(object):
         
         return False, O
 
+    def deposit(self, repository):
+        for S in self._SLUGS:
+            S.deposit(repository)
+
 class Chained_text(Atomic_text):
     def __init__(self, text, channels):
         self.channels = channels

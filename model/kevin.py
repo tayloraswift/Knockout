@@ -7,7 +7,7 @@ from model import table
 from bulletholes.counter import TCounter as Counter
 from fonts import styles
 
-from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image, FTable
+from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image
 
 def _parse_tag(tag):
     int_value = Word(nums)
@@ -35,10 +35,10 @@ def serialize(text):
             elif CT is Image:
                 b[e] = repr(entity)
             
-            elif entity[0] == '<td>':
-                b[e] = '<td rowspan="' + str(entity[1]) + '" colspan="' + str(entity[2]) + '">'
+            elif CT is table.CellPost:
+                b[e] = repr(entity)
 
-            elif entity[0] == '<table>':
+            elif CT is table.Table:
                 b[e] = '<table>' + serialize(entity.flatten()) + '</table>'
 
         elif entity == '<':
@@ -123,7 +123,7 @@ def _parse_entities(b):
                 cs = int(fields['colspan'])
             else:
                 cs = 1
-            build.append(('<td>', rs, cs))
+            build.append(table.CellPost(rs, cs))
             del b[:closetag]
         
         else:

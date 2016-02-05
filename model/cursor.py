@@ -2,7 +2,7 @@ import bisect
 from model.wonder import words, _breaking_chars
 from model import meredith, olivia
 
-from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image, FTable
+from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image
 
 def outside_tag(sequence):
     for i in reversed(range(len(sequence) - 1)):

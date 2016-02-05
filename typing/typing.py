@@ -10,24 +10,13 @@ from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image
 from model import un
 
 def set_cursor(i):
-    cursor.fcursor.i = cursor.fcursor.skip(i, 0)
+    cursor.fcursor.i = cursor.fcursor.skip(i)
     
 def set_select(i):
-    cursor.fcursor.j = cursor.fcursor.skip(i, 0)
+    cursor.fcursor.j = cursor.fcursor.skip(i)
 
 def match_cursors():
     cursor.fcursor.j = cursor.fcursor.i
-
-def hop(dl, CURSOR):
-    try:
-        l = cursor.fcursor.index_to_line(CURSOR)
-        set_cursor(CText.tract.target_glyph(
-                    cursor.fcursor.text_index_x(CURSOR, l), 
-                    0, 
-                    l + dl
-                    ))
-    except IndexError:
-        pass
 
 class Keyboard(dict):
     def __init__(self, shortcuts):
@@ -56,12 +45,12 @@ class Keyboard(dict):
         elif name == 'Up':
             un.history.undo_save(0)
             
-            hop(-1, CURSOR)
+            cursor.fcursor.hop(-1)
             match_cursors()
         elif name == 'Down':
             un.history.undo_save(0)
             
-            hop(1, CURSOR)
+            cursor.fcursor.hop(1)
             match_cursors()
 
         elif name in ['Home', 'End']:
@@ -152,8 +141,7 @@ class Keyboard(dict):
                 un.history.undo_save(3)
                 cursor.fcursor.delete()
             
-                return sel
-        
+                return sel        
 
         elif name in self._special_names:
             T = self[name]

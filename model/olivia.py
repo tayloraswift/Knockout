@@ -34,11 +34,6 @@ class Atomic_text(object):
             lineindex = bisect.bisect(yy, y)
 
         return ll[lineindex]
-    
-    def target_glyph(self, x, y, l=None, c=None):
-        if l is None:
-            l = self._target_row(y, c)
-        return self._SLUGS[l].I(x, y)
 
     ### FUNCTIONS USEFUL FOR DRAWING AND INTERFACE
 

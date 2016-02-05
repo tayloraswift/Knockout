@@ -21,7 +21,7 @@ class Page(object):
         self._recalc()
     
     def _recalc(self):
-        self._HALFGAP = self._GAP//2
+        self._HALFGAP = int(self._GAP//2)
         self._WIDTH_HALFGAP = self.WIDTH + self._HALFGAP
         self._HEIGHT_HALFGAP = self.HEIGHT + self._HALFGAP
         
@@ -45,13 +45,13 @@ class Page(object):
     
     def XY_to_page(self, x, y):
         if self.dual:
-            E = (y + self._HALFGAP) // self._HEIGHT_HALFGAP * 2
+            E = int((y + self._HALFGAP) // self._HEIGHT_HALFGAP) * 2
             if x > self._WIDTH_HALFGAP:
                 return E
             else:
                 return E - 1
         else:
-            return (y + self._HALFGAP) // self._HEIGHT_HALFGAP
+            return int((y + self._HALFGAP) // self._HEIGHT_HALFGAP)
     
     def normalize_XY(self, x, y, pp):
         if self.dual:

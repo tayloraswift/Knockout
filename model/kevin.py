@@ -1,4 +1,4 @@
-import html, itertools
+import html
 
 from pyparsing import Word, Suppress, CharsNotIn, nums, alphanums, dictOf
 
@@ -6,6 +6,8 @@ from model import table
 
 from bulletholes.counter import TCounter as Counter
 from fonts import styles
+
+from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image
 
 def _parse_tag(tag):
     int_value = Word(nums)
@@ -19,37 +21,24 @@ def _parse_tag(tag):
 def serialize(text):
     b = text.copy()
     for e, entity in enumerate(b):
-        if not isinstance(entity, str):
-            if entity[0] == '<f>':
-                if entity[1].name == 'emphasis':
-                    b[e] = '<em>'
-                elif entity[1].name == 'strong':
-                    b[e] = '<strong>'
-                else:
-                    b[e] = '<f class="' + entity[1].name + '">'
+        CT = type(entity)
+        if CT is not str:
+            if CT is OpenFontpost:
+                b[e] = repr(entity)
             
-            elif entity[0] == '</f>':
-                if entity[1].name == 'emphasis':
-                    b[e] = '</em>'
-                elif entity[1].name == 'strong':
-                    b[e] = '</strong>'
-                else:
-                    b[e] = '</f class="' + entity[1].name + '">'
+            elif CT is CloseFontpost:
+                b[e] = repr(entity)
             
-            elif entity[0] == '<p>':
-                if entity[1] != {styles.PTAGS['body']}:
-                    b[e] = '<p class="' + '&'.join(itertools.chain.from_iterable((P.name for i in range(V)) for P, V in entity[1].items())) + '">'
-                else:
-                    b[e] = '<p>'
+            elif CT is Paragraph:
+                b[e] = repr(entity)
 
-            elif entity[0] == '<image>':
-                source, width = entity[1]
-                b[e] = '<image src="' + source + '" width="' + str(width) + '">'
+            elif CT is Image:
+                b[e] = repr(entity)
             
-            elif entity[0] == '<td>':
-                b[e] = '<td rowspan="' + str(entity[1]) + '" colspan="' + str(entity[2]) + '">'
+            elif CT is table.CellPost:
+                b[e] = repr(entity)
 
-            elif entity[0] == '<table>':
+            elif CT is table.Table:
                 b[e] = '<table>' + serialize(entity.flatten()) + '</table>'
 
         elif entity == '<':
@@ -100,16 +89,19 @@ def _parse_entities(b):
                 ptags = Counter(styles.PTAGS[T.strip()] for T in fields['class'].split('&'))
             else:
                 ptags = Counter({styles.PTAGS['body']: 1})
-            build.append(['<p>', ptags])
+            build.append(Paragraph(ptags))
             del b[:closetag]
         
         elif tag in {'f', '/f'}:
             ftag = styles.FTAGS[fields['class']]
-            build.append(('<' + tag + '>', ftag))
+            if tag == 'f':
+                build.append(OpenFontpost(ftag))
+            else:
+                build.append(CloseFontpost(ftag))
             del b[:closetag]
         
         elif tag == 'image':
-            build.append(('<image>', (fields['src'], int(fields['width']))))
+            build.append(Image(fields['src'], int(fields['width'])))
             del b[:closetag]
         
         elif tag == 'table':
@@ -131,7 +123,7 @@ def _parse_entities(b):
                 cs = int(fields['colspan'])
             else:
                 cs = 1
-            build.append(('<td>', rs, cs))
+            build.append(table.CellPost(rs, cs))
             del b[:closetag]
         
         else:

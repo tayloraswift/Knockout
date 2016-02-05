@@ -1,12 +1,32 @@
 import bisect
 
-from itertools import groupby
+from itertools import groupby, chain
 
 from state import noticeboard
 
-from model.wonder import words, character, _breaking_chars
+from model.wonder import words
 
 from model.cat import typeset_chained, Glyphs_line
+
+def _deposit_misspellings(underscores, tract):
+    for pair in tract.misspellings:
+        u, v = pair[:2]
+
+        u_l = tract.index_to_line(u)
+        v_l = tract.index_to_line(v)
+        u_x = tract.text_index_x(u, u_l)
+        v_x = tract.text_index_x(v, v_l)
+        
+        first = tract._SLUGS[u_l]
+        if not u_l - v_l:
+                               # y, x1, x2
+            underscores.append((first['y'], u_x, v_x, first['page']))
+        
+        else:
+            last = self._SLUGS[v_l]
+            underscores.append((first['y'], u_x, first['GLYPHS'][-1][5] + first['x'], first['page']))
+            underscores.extend((line['y'], line['x'], line['GLYPHS'][-1][5] + line['x'], line['page']) for line in (tract._SLUGS[l] for l in range(u_l + 1, v_l)))
+            underscores.append((last['y'], last['x'], v_x, last['page']))
 
 class Atomic_text(object):
     def __init__(self, text):
@@ -34,11 +54,6 @@ class Atomic_text(object):
             lineindex = bisect.bisect(yy, y)
 
         return ll[lineindex]
-    
-    def target_glyph(self, x, y, l=None, c=None):
-        if l is None:
-            l = self._target_row(y, c)
-        return self._SLUGS[l].I(x, y)
 
     ### FUNCTIONS USEFUL FOR DRAWING AND INTERFACE
 
@@ -112,6 +127,14 @@ class Atomic_text(object):
             O = lineobject['i']
         
         return False, O
+
+    def collect_text(self):
+        mods = list(chain.from_iterable(map(lambda Q: Q.collect_text(), filter(lambda S: type(S) is not Glyphs_line, self._SLUGS))))
+        return [self] + mods
+
+    def deposit(self, repository):
+        for S in self._SLUGS:
+            S.deposit(repository)
 
 class Chained_text(Atomic_text):
     def __init__(self, text, channels):
@@ -199,27 +222,12 @@ class Chained_text(Atomic_text):
         self._SLUGS[:] = typeset_chained(self.channels.channels, self.text)
         self._precompute_search()
         self._sorted_pages.clear()
-    
-    def paint_misspellings(self):
-        underscores = []
-        for pair in self.misspellings:
-            u, v = pair[:2]
 
-            u_l = self.index_to_line(u)
-            v_l = self.index_to_line(v)
-            u_x = self.text_index_x(u, u_l)
-            v_x = self.text_index_x(v, v_l)
-            
-            first = self._SLUGS[u_l]
-            if not u_l - v_l:
-                                   # y, x1, x2
-                underscores.append((first['y'], u_x, v_x, first['page']))
-            
-            else:
-                last = self._SLUGS[v_l]
-                underscores.append((first['y'], u_x, first['GLYPHS'][-1][5] + first['x'], first['page']))
-                underscores.extend((line['y'], line['x'], line['GLYPHS'][-1][5] + line['x'], line['page']) for line in (self._SLUGS[l] for l in range(u_l + 1, v_l)))
-                underscores.append((last['y'], last['x'], v_x, last['page']))
+    def paint_misspellings(self):
+        tree = self.collect_text()
+        underscores = []
+        for tract in tree:
+            _deposit_misspellings(underscores, tract)
         return underscores
 
     def extract_glyphs(self, refresh=False):

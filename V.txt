@@ -1,28 +1,28 @@
-{'FONTSTYLES': {'Big': {'fontsize': 18, 'path': '/home/kelvin/.fonts/LinLibertine_R.otf'},
+{'FONTSTYLES': {'Big': {'fontsize': 16, 'path': 'fonts/Merriweather-Light.ttf'},
                 'Black': {'color': (0, 0, 0, 1), 'pegs': 'Standard pegs'},
-                'Bold': {'path': '/home/kelvin/.fonts/Proforma-Bold.otf'},
-                'Bold Italic': {'path': '/home/kelvin/.fonts/Proforma-BoldItalic.otf'},
+                'Bold': {'fontsize': 11, 'path': 'fonts/Merriweather-Bold.ttf'},
+                'Bold Italic': {'path': 'fonts/Merriweather-BoldItalic.ttf'},
                 'Gray': {'color': (0, 0, 0, 0.4)},
-                'Heading': {'fontsize': 36, 'path': '/home/kelvin/.fonts/Kabel.otf'},
-                'Italic': {'path': '/home/kelvin/.fonts/Proforma-MediumItalic.otf'},
-                'Link': {'color': (1, 0.2, 0.4, 1), 'path': '/home/kelvin/.fonts/Proforma-SemiboldItalic.otf'},
-                'Regular': {'path': '/home/kelvin/.fonts/Proforma-Medium.otf'},
+                'Heading': {'fontsize': 36, 'path': 'fonts/FiraSans-ExtraLight.otf'},
+                'Italic': {'fontsize': 11, 'path': 'fonts/Merriweather-Italic.ttf'},
+                'Link': {'color': (1, 0.2, 0.4, 1), 'fontsize': 11, 'path': 'fonts/Merriweather-BoldItalic.ttf'},
+                'Regular': {'path': 'fonts/r:FjordOne-Regular.ttf'},
                 'Small': {'fontsize': 10},
-                'Subheading': {'fontsize': 20, 'path': '/home/kelvin/.fonts/FiraSans-Light.otf', 'tracking': 1},
-                'Superbold': {'path': '/home/kelvin/.fonts/Merriweather_UltraBold.ttf'},
-                'Superitalic': {'path': '/home/kelvin/.fonts/GaramondPremrPro-MedItCapt.otf'}},
- 'FTAGLIST': [('emphasis', []),
+                'Subheading': {'fontsize': 20, 'path': 'fonts/FiraSans-Light.otf', 'tracking': 1},
+                'Superbold': {'path': 'fonts/Merriweather-Black.ttf'},
+                'Superitalic': {'path': 'fonts/Courgette-Regular.ttf'}},
+ 'FTAGLIST': [('big', []),
               ('caption', []),
-              ('big', []),
+              ('emphasis', []),
+              ('strong', []),
               ('sup', ['small']),
               ('sub', ['small']),
-              ('link', []),
-              ('strong', [])],
+              ('link', [])],
  'PARASTYLES': (3,
                 [({'fontclasses': (0, [('Black', {})])}, {}),
                  ({'fontclasses': (0, [('Heading', {})]), 'leading': 36}, {'h1': 1}),
                  ({'fontclasses': (0, [('Subheading', {})]), 'leading': 24, 'margin_bottom': 10}, {'h2': 1}),
-                 ({'fontclasses': (8,
+                 ({'fontclasses': (2,
                                    [('Regular', {}),
                                     ('Italic', {'emphasis': 1}),
                                     ('Bold', {'strong': 1}),
@@ -43,20 +43,20 @@
                  ({'leading': 200}, {'_meredith': 1})]),
  'PEGS': {'Standard pegs': ('', {'sub': [0, -0.2], 'sup': [0, 0.3]})},
  'PTAGLIST': [('indent demo', []),
+              ('body', []),
+              ('h1', []),
               ('h2', []),
               ('_meredith', []),
-              ('hanging indent', []),
-              ('h1', []),
-              ('body', []),
+              ('gray', []),
               ('signature', []),
-              ('gray', [])],
- 'contexts': {'channels': {'c': 7, 'p': 6, 't': 0}, 'text': {'i': 2890, 'j': 2890, 'p': 3, 't': 0}},
+              ('hanging indent', [])],
+ 'contexts': {'channels': {'c': 4, 'p': 4, 't': 0}, 'text': {'i': 1561, 'j': 1561, 'p': 1, 't': 0}},
  'grid': [[120, 480], [120, 480]],
  'kitty': [{'outline': [(([[120, 210, False], [120, 480, False]], [[480, 210, False], [480, 480, False]]), 0),
                         ([[[120, 120, False], [120, 480, False]], [[480, 120, False], [480, 480, False]]], 1),
-                        ([[[120, 120, False], [120, 460, False]], [[480, 120, False], [480, 460, False]]], 2),
+                        ([[[120, 120, False], [120, 480, False]], [[480, 120, False], [480, 480, False]]], 2),
                         ([[[120, 120, False], [120, 480, False]], [[480, 120, False], [480, 480, False]]], 3),
-                        ([[[120, 120, False], [120, 400, False]], [[480, 120, False], [480, 400, False]]], 4),
+                        ([[[120, 120, False], [120, 420, True]], [[480, 120, False], [480, 420, True]]], 4),
                         ([[[120, 120, False], [120, 480, False]],
                           [[300, 120, False], [70, 310, False], [290, 480, False]]],
                          5),
@@ -83,8 +83,8 @@
                     'which is where <strong>explicit styling</strong> is needed. An italic and a bold class both '
                     'define a font file, so a &lt;<strong><em>Bold-Italic</em></strong>&gt; class must be defined with '
                     'the specialized bold-italic font. </p><p>Additive styling is nevertheless very powerful. '
-                    '<em>Classes can overlap each other on the page, allowing <strong>interesting</em> effects, such '
-                    'as in this sentence where a pair of italic tags mixes with a pair of bold tags over the word '
+                    '<em>Classes can overlap each other on the page, allowing <strong>mixing</em> effects, such as in '
+                    'this sentence where a pair of italic tags mixes with a pair of bold tags over the word '
                     '“interesting”.</strong> Additive styling even allows the use of negative styles, and multistyles. '
                     '<em>This lets us do things such as <em>superitalics</em> o<strong></em>r '
                     '<strong>superbolds</strong> in our text.</strong> Negative styles are work too, though there is '
@@ -103,8 +103,8 @@
                     'and measurable. </p><p class="body&indent demo"><strong>Indentation</strong> is powerful in '
                     'Vedit. The lines over which it takes effect can be explicitly enumerated (in a relative count '
                     'from the start of the paragraph), and it can be set in terms of the character positions of the '
-                    'first line. </p><p class="body&hanging indent">—&gt;  This is very useful for creating '
-                    '<strong>hanging indents</strong>.</p><p class="body&gray">Paragraph styles even add their '
+                    'first line. </p><p class="hanging indent&body">—&gt;  This is very useful for creating '
+                    '<strong>hanging indents</strong>.</p><p class="gray&body">Paragraph styles even add their '
                     '<strong>constituent text styles</strong>, which allows for <em>very interesting</em> constructs, '
                     'such as this gray filter, which is made up of a paragraph class containing a single text class '
                     'which defines just a gray color, all overlayed over our standard body text style.</p><p '
@@ -130,12 +130,12 @@
                     'theory, other tables, though the parser cannot currently load nested tables. </p><p>At this '
                     'moment, the table cell structure itself is not editable through the UI.</p></td><td '
                     'colspan="3"><p class="h2">Who doesn’t love Meredith Grey?</p><p class="body&_meredith"><image '
-                    'src="meredith.png" width="200"></p><p class="body&gray">(Taylor, evidently.)</p><p '
-                    'class="body&gray">Also, hopefully you can see that these tablecells  arrange themselves according '
+                    'src="meredith.png" width="200"></p><p class="gray&body">(Taylor, evidently.)</p><p '
+                    'class="gray&body">Also, hopefully you can see that these tablecells  arrange themselves according '
                     'to the W3 HTML table specification.</p></td></tr><tr><td><p>cell 3</p><p>cell 3 (row '
                     '2)</p></td><td><p>cell 4</p></td><td><p>cell 5</p></td><td><p>cell 6</p></td></tr><tr><td '
                     'colspan="2"><p>cell 7</p></td><td><p>cell 8</p></td><td><p>cell 9</p></td></tr></table><p></p>'},
            {'outline': [(([[120, 120, False], [120, 200, True]], [[480, 120, False], [480, 200, True]]), 0)],
             'text': '<p class="h1">About this typesetting editor</p>'}],
  'page': {'dimensions': (600, 600), 'dual': True},
- 'view': {'H': -67, 'Hc': 672.799560546875, 'K': -1393, 'Kc': 323.0045166015625, 'Zoom': 11, 'mode': 'text'}}
+ 'view': {'H': -47, 'Hc': 546.7698974609375, 'K': -1013, 'Kc': 552.9117431640625, 'Zoom': 11, 'mode': 'text'}}

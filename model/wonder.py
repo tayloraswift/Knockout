@@ -1,7 +1,7 @@
-from hunspell import hunspell
+from libraries.hunspell import hunspell
 
-struck = hunspell.HunSpell('hunspell/en_US.dic', 'hunspell/en_US.aff')
-additional_words_file = 'hunspell/add.txt'
+struck = hunspell.HunSpell('libraries/hunspell/en_US.dic', 'libraries/hunspell/en_US.aff')
+additional_words_file = 'libraries/hunspell/add.txt'
 with open(additional_words_file) as A:
     for word in A.read().splitlines():
         struck.add(word.strip())

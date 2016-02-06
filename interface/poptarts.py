@@ -1,4 +1,5 @@
 import bisect
+
 from state import noticeboard
 from model import meredith
 

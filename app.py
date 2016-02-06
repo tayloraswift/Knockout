@@ -1,19 +1,12 @@
 from gi.repository import Gtk, Gdk, GObject
 import cairo
 
-from state import noticeboard
-from state import constants
-
-from model import kevin
-from model import errors
-from model import do
-from model import cursor
-
+from state import noticeboard, constants
+from IO import kevin, do
+from state import errors
+from edit import cursor
 from typing import compose
-
-from interface import karlie
-from interface import taylor
-from interface import menu
+from interface import karlie, taylor, menu
 
 import tree
 

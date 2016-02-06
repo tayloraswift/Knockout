@@ -2,11 +2,11 @@ import bisect
 from itertools import groupby
 from bulletholes.counter import TCounter as Counter
 from model.george import Swimming_pool
-from fonts import styles
+from style import styles
 
 from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image
 
-from pyphen import pyphen
+from libraries.pyphen import pyphen
 pyphen.language_fallback('en_US')
 
 hy = pyphen.Pyphen(lang='en_US')

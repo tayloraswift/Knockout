@@ -133,8 +133,7 @@ class Table(object):
                     for rs in range(cell.rs):
                         for cs in range(cell.cs):
                             MATRIX[i + rs][s + cs] = cell
-            
-        print(MATRIX)
+        
         self._MATRIX = MATRIX
 
     def fill(self, bounds, c, y):

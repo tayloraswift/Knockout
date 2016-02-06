@@ -1,5 +1,4 @@
 from gi.repository import Gtk, Gdk, GObject
-import cairo
 
 from state import noticeboard, constants
 from IO import kevin, do

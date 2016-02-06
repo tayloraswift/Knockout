@@ -119,7 +119,7 @@ class Keyboard(dict):
             
         elif name == 'Return':
             un.history.undo_save(1)
-            cursor.fcursor.insert(['<br>'])
+            cursor.fcursor.insert(['<br/>'])
 
         elif name == 'Paste':
             if char:

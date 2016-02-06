@@ -54,8 +54,13 @@ def load(name):
         constants.filename = name
         doc = ast.literal_eval(fi.read())
 
+    with open('r:X.html', 'r') as fi:
+        D = fi.read()
+
     styles.daydream()
     styles.faith(doc)
+    
+    doc['kitty'][0]['text'] = D
     
     # set up page, tract model, page grid objects
     meredith.page = page.Page(doc['page'])

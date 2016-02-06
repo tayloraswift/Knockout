@@ -1,12 +1,12 @@
-import freetype
+from libraries import freetype
 
-from fonts import pycairo_font
+from style import fontloader
 
 _type_registry = {}
 
 def get_cairo_font(path):
     if path not in _type_registry:
-        _type_registry[path] = pycairo_font.create_cairo_font_face_for_file(path)
+        _type_registry[path] = fontloader.create_cairo_font_face_for_file(path)
     
     return _type_registry[path]
 

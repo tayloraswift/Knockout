@@ -1,7 +1,6 @@
-from model import un
+from IO import un
 from model import meredith
-from fonts import styles
-from interface import karlie
+from style import styles
 from state import contexts
     
 def redo():

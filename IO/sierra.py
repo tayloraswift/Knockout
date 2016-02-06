@@ -1,16 +1,13 @@
-import pprint, pickle, ast
+import pprint, ast
 
-from fonts import fonts, styles
-
+from style import fonts, styles
 from state import constants
 from state.contexts import Text
-
-from model import meredith, page, cursor
-from model import kevin, un
-
+from model import meredith, page
+from edit import cursor, caramel
+from IO import kevin, un
 from typing import typing
-
-from interface import karlie, taylor, caramel, poptarts
+from interface import karlie, taylor, poptarts
 
 shortcuts = [
         ('Ctrl equal', 'Ctrl plus', 'sup'),

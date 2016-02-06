@@ -13,10 +13,10 @@ import platform
 from ctypes import *
 import ctypes.util
 
-from freetype.ft_types import *
-from freetype.ft_enums import *
-from freetype.ft_errors import *
-from freetype.ft_structs import *
+from .ft_types import *
+from .ft_enums import *
+from .ft_errors import *
+from .ft_structs import *
 
 # on windows all ctypes does when checking for the library
 # is to append .dll to the end and look for an exact match

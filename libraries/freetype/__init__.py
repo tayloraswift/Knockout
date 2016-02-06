@@ -18,7 +18,7 @@ Note: C Library will be searched using the ctypes.util.find_library. However,
 import sys
 from ctypes import *
 
-from freetype.raw import *
+from .raw import *
 
 # Hack to get unicode class in python3
 PY3 = sys.version_info[0] == 3

@@ -1,9 +1,9 @@
 from copy import deepcopy
 
-from fonts import styles
-
+from style import styles
 from model import meredith
-from model import kevin, cursor
+from IO import kevin
+from edit import cursor
 
 class UN(object):
     def __init__(self):

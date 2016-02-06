@@ -1,9 +1,10 @@
 import itertools
+from libraries.freetype import ft_errors
+
 from bulletholes.counter import TCounter as Counter
 
-from fonts import fonts
+from style import fonts
 from state import constants
-from freetype import ft_errors
 
 def _sign_counter(counter):
     return ''.join(K.name + str(V) for K, V in sorted(counter.items(), key=lambda T: T[0].name))
@@ -317,7 +318,7 @@ def daydream():
     _G_DNA = DB_Pegs(('', {}), '_undefined')
     
     F_DNA.update({'fontsize': 13,
-            'path': 'fonts/Ubuntu-R.ttf',
+            'path': 'style/Ubuntu-R.ttf',
             'pegs': _G_DNA,
             'tracking': 0,
             'color': (1, 0.15, 0.2, 1)})

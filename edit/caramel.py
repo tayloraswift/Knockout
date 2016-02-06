@@ -5,8 +5,9 @@ from state import noticeboard
 
 from interface.poptarts import accent
 
-from model import meredith, cursor
-from model import un
+from model import meredith
+from edit import cursor
+from IO import un
 
 def _draw_broken_bar(cr, x1, y1, x2, color_rgba, top):
     

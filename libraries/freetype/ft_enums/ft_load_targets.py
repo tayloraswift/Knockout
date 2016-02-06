@@ -52,7 +52,7 @@ FT_LOAD_TARGET_LCD_V
   displays.
 """
 
-from freetype.ft_enums.ft_render_modes import *
+from .ft_render_modes import *
 
 
 def _FT_LOAD_TARGET_(x):

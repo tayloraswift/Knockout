@@ -1,14 +1,13 @@
 import bisect
 from itertools import groupby
+
+from libraries.pyphen import pyphen
 from bulletholes.counter import TCounter as Counter
 from model.george import Swimming_pool
 from style import styles
-
 from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image
 
-from libraries.pyphen import pyphen
 pyphen.language_fallback('en_US')
-
 hy = pyphen.Pyphen(lang='en_US')
 
 # linebreaking characters
@@ -365,8 +364,8 @@ def cast_liquid_line(letters, startindex, width, leading, P, F, hyphenate=False)
             root_for = set()
             if CT == Image:
                 glyphwidth = letter.width
-                                                                 # additional fields
-                GLYPHS.append((-13, x, y - leading, FSTYLE, fstat, x + glyphwidth, (letter.src, letter.width)))
+                                                              # additional fields:  image object | scale ratio
+                GLYPHS.append((-13, x, y - leading, FSTYLE, fstat, x + glyphwidth, (letter.image_surface, letter.factor)))
 
             else:
                 glyphwidth = FSTYLE['fontmetrics'].advance_pixel_width(letter) * FSTYLE['fontsize']

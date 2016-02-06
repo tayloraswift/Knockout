@@ -3,7 +3,6 @@ import cairo
 
 import sys
 
-
 def _encode_filename(filename):
     encoded = filename.encode(sys.getfilesystemencoding())
     if "?" not in filename and b"?" in encoded:
@@ -74,6 +73,6 @@ def create_cairo_font_face_for_file (filename, faceindex=0, loadoptions=0):
     del u_filename
     del ft_face
     del _surface
-    print('Font loaded')
+    print( '\033[92mFont loaded from\033[0m: ' + filename)
 
     return face

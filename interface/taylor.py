@@ -648,10 +648,7 @@ class Document_view(ui.Cell):
 
     def _draw_images(self, cr, images):
         for IMAGE, x, y in images:
-            image_surface = cairo.ImageSurface.create_from_png(IMAGE[0])
-            
-            H = image_surface.get_width()
-            factor = IMAGE[1]/H
+            image_surface, factor = IMAGE
             
             cr.save()
             cr.translate(x, y)

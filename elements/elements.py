@@ -1,4 +1,5 @@
 from itertools import chain
+from cairo import ImageSurface
 
 class Paragraph(object):
     def __init__(self, counts):
@@ -58,6 +59,10 @@ class Image(object):
     def __init__(self, src, width):
         self.src = src
         self.width = width
+
+        # cache image surface creation
+        self.image_surface = ImageSurface.create_from_png(src)
+        self.factor = width / self.image_surface.get_width()
 
     def __str__(self):
         return '<image>'

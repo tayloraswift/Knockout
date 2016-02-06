@@ -1,5 +1,4 @@
 from gi.repository import Gtk, Gdk, GObject
-import cairo
 
 from state import noticeboard, constants
 from IO import kevin, do
@@ -74,8 +73,6 @@ class Display(Gtk.Window):
         self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
 
         self._HINTS = constants.HINTS
-
-        self._c_ = 0
         
         self._periodic = GObject.timeout_add(2000, self._on_periodic)
     
@@ -95,16 +92,10 @@ class Display(Gtk.Window):
         if self.errorpanel is not None:
             self.errorpanel.draw(cr, constants.UI[1])
 
-        print('BECKY: ' + str(self._c_))
-        self._c_ += 1
-
     def DRAW_KLOSSY(self, w, cr):
         cr.set_font_options(self._HINTS)
         
         karlie.klossy.render(cr, self._h, self._k)
-
-        print('KLOSSY: ' + str(self._c_))
-        self._c_ += 1
         
     def on_draw(self, wid, cr):
         menu.menu.render(cr)

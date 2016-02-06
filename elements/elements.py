@@ -68,7 +68,7 @@ class Image(object):
         return '<image>'
 
     def __repr__(self):
-        return '<image src="' + self.src + '" width="' + str(self.width) + '">'
+        return '<image src="' + self.src + '" width=' + str(self.width) + ' />'
 
     def __len__(self):
         return 7

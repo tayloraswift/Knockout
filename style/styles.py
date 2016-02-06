@@ -6,9 +6,6 @@ from bulletholes.counter import TCounter as Counter
 from style import fonts
 from state import constants
 
-def _sign_counter(counter):
-    return ''.join(K.name + str(V) for K, V in sorted(counter.items(), key=lambda T: T[0].name))
-
 def _new_name(name, namelist):
     if name in namelist:
         if not (len(name) > 3 and name[-4] == '.' and len([c for c in name[-3:] if c in '1234567890']) == 3):
@@ -124,9 +121,9 @@ class P_Library(_Active_list):
         _Active_list.__init__(self, active_i, (DB_Parastyle(P.copy(), Counter({PTAGS[T]: V for T, V in count.items()})) for P, count in E))
     
     def project_p(self, P):
-        hp = _sign_counter(P)
+        H = hash(frozenset(P.items()))
         try:
-            return self._projections[hp]
+            return self._projections[H]
         except KeyError:
             # iterate through stack
             projection = Layer(P_DNA)
@@ -134,14 +131,13 @@ class P_Library(_Active_list):
                 projection.overlay(B.attributes, B)
                 projection.members.append(B)
             
-            self._projections[hp] = projection
+            self._projections[H] = projection
             return projection
     
     def project_f(self, P, F):
-        hf = _sign_counter(F)
-        hp = _sign_counter(P)
+        H = 13 * hash(frozenset(P.items())) + hash(frozenset(F.items())) # we must give paragraph a different factor if a style has the same name as a fontstyle
         try:
-            return self._font_projections[(hp, hf)]
+            return self._font_projections[H]
         except KeyError:
             # add tag groups
             F = F.concat(Counter(itertools.chain.from_iterable((FTAGS[G] for G in T.groups) for T, n in F.items() if n)))
@@ -163,9 +159,9 @@ class P_Library(_Active_list):
                 projection['fontmetrics'] = fonts.Memo_font(path)
                 projection['font'] = fonts.get_cairo_font(path)
             
-            projection['hash'] = hash(hp + hf)
+            projection['hash'] = H
             
-            self._font_projections[(hp, hf)] = projection
+            self._font_projections[H] = projection
             return projection
     
     def update_p(self):

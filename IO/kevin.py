@@ -137,5 +137,24 @@ def deserialize(text, fragment=False):
     text = text.replace('</strong>', '</f class="strong">')
     return parse.feed(text.replace('</f', '<ff'))
 
+serialize_modules = {table.Table}
+structural_open = {Paragraph} | serialize_modules
+
+def ser(L, indent):
+    lines = []
+    gaps = [i for i, v in enumerate(L) if type(v) in structural_open]
+    containers = (L[i:j] for i, j in zip(gaps, gaps[1:] + [len(L)])) # to catch last blob
+    for C in containers:
+        if type(C[0]) in serialize_modules:
+            lines.extend(C[0].represent(ser, indent))
+            lines.append((indent, ''))
+        else:
+            lines.append((indent, ''.join(c if type(c) is str else repr(c) for c in C)))
+            lines.append((indent, ''))
+    
+    return lines[:-1]
+
 def serialize(L):
-    return 'Red deserved AOTY at the Grammys'
+    text = '\n'.join('    ' * indent + line for indent, line in ser(L, 0))
+#    print(text)
+    return text

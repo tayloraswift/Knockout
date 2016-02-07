@@ -171,6 +171,7 @@ class FCursor(object):
             del self.text[start:end]
 
             outside = outside_tag(ptags)
+            
             if outside:
                 if (outside[0], type(outside[1])) == ('</p>', Paragraph):
                     style = next(c.P for c in self.text[start::-1] if type(c) is Paragraph)

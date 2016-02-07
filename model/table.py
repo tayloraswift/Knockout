@@ -37,21 +37,6 @@ class CellPost(object):
     def __len__(self):
         return 4
 
-def _bin(data, odelimit, cdelimit):
-    for i, v in ((i, v) for i, v in enumerate(data) if str(v) == odelimit):
-        try:
-            j = data[i:].index(cdelimit) + i
-        except ValueError:
-            print('unclosed bin')
-            continue
-        
-        bindata = data[i + 1:j]
-        if odelimit not in bindata:
-            yield [v] + bindata + [cdelimit]
-        else:
-            print('superfluous bin tag')
-            continue
-
 class _Table_cell(Atomic_text):
     def __init__(self, text, rowspan, colspan):
         Atomic_text.__init__(self, text)
@@ -95,18 +80,21 @@ def _row_height(data, r, y):
 
 class Table(object):
     def __init__(self, L):
+        self._table = L
         self.data = [[_Table_cell(C, td.rowspan, td.colspan) for td, C in R] for tr, R in L[1]]
         self._build_matrix()
-
-    def flatten(self):
-        L = []
-        for row in self.data:
-            L.append('<tr>')
-            for cell in row:
-                L.extend([CellPost(cell.rs, cell.cs)] + cell.text + ['</td>'])
-            L.append('</tr>')
-            
-        return L
+    
+    def represent(self, serialize, indent):
+        lines = [(indent, '<table>')]
+        for tr, R in self._table[1]:
+            lines.append((indent + 1, '<tr>'))
+            for td, C in R:
+                lines.append((indent + 2, repr(td)))
+                lines.extend(serialize(C, indent + 3))
+                lines.append((indent + 2, '</td>'))
+            lines.append((indent + 1, '</tr>'))
+        lines.append((indent, '</table>'))
+        return lines
 
     def _build_matrix(self):
         MATRIX = Matrix()

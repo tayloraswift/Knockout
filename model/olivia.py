@@ -25,7 +25,7 @@ def _deposit_misspellings(underscores, tract):
         else:
             last = tract._SLUGS[v_l]
             underscores.append((first['y'], u_x, first['GLYPHS'][-1][5] + first['x'], first['page']))
-            underscores.extend((line['y'], line['x'], line['GLYPHS'][-1][5] + line['x'], line['page']) for line in (tract._SLUGS[l] for l in range(u_l + 1, v_l)))
+            underscores.extend((line['y'], line['x'], line['GLYPHS'][-1][5] + line['x'], line['page']) for line in tract._SLUGS[u_l + 1: v_l] if line['GLYPHS'])
             underscores.append((last['y'], last['x'], v_x, last['page']))
 
 class Atomic_text(object):

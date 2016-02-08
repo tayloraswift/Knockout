@@ -52,23 +52,30 @@ def save():
 def load(name):
     with open(name, 'r') as fi:
         constants.filename = name
-        doc = ast.literal_eval(fi.read())
+        doc = fi.read()
 
-    with open('r:X.html', 'r') as fi:
-        D = fi.read()
+    BODY = doc[doc.find('<body>') + 6 : doc.find('</body>')]
+    DATA = ast.literal_eval(doc[doc.find('<!-- #############') + 18 : doc.find('############# -->')])
+    
+    text = (H[:H.find('</section>')].strip() for H in BODY.split('<section>'))
+    text = [H for H in text if H]
+    channels = [K['outline'] for K in DATA['kitty']]
+    
+    if len(text) == len(channels):
+        KT = zip(text, channels)
+    else:
+        raise FileNotFoundError
 
     styles.daydream()
-    styles.faith(doc)
-    
-    doc['kitty'][0]['text'] = D
+    styles.faith(DATA)
     
     # set up page, tract model, page grid objects
-    meredith.page = page.Page(doc['page'])
-    meredith.mipsy = meredith.Meredith(doc['kitty'], grid=doc['grid'])
+    meredith.page = page.Page(DATA['page'])
+    meredith.mipsy = meredith.Meredith(KT, grid=DATA['grid'])
     
     # aim editor objects
-    cursor.fcursor = cursor.FCursor(doc['contexts']['text'])
-    caramel.delight = caramel.Channels_controls(doc['contexts']['channels'], poptarts.Sprinkles())
+    cursor.fcursor = cursor.FCursor(DATA['contexts']['text'])
+    caramel.delight = caramel.Channels_controls(DATA['contexts']['channels'], poptarts.Sprinkles())
     typing.keyboard = typing.Keyboard(shortcuts)
     
     meredith.mipsy.recalculate_all()
@@ -77,8 +84,7 @@ def load(name):
     # start undo tracking
     un.history = un.UN() 
 
-    taylor.becky = taylor.Document_view(save, doc['view'])
+    taylor.becky = taylor.Document_view(save, DATA['view'])
     karlie.klossy = karlie.Properties(tabs = (('page', 'M'), ('tags', 'T'), ('paragraph', 'P'), ('font', 'F'), ('pegs', 'G')), default=2, partition=1 )
 
     un.history.save()
-

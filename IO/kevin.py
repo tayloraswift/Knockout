@@ -1,5 +1,4 @@
 from html import parser, unescape
-import ast
 from itertools import chain
 
 from bulletholes.counter import TCounter as Counter
@@ -109,22 +108,14 @@ class Kevin_from_TN(Minion): # to capture the first and last blobs
         elif self._first: # register the first blob
             self._first = False
             self._breadcrumbs.append('p') # virtual paragraph container
-            O.extend(list(data))
-
-#with open('r:X.html', 'r') as fi:
-#    doc = fi.read()
+            liquid = list(data)
+            for i, v in enumerate(liquid):
+                if v == '\n':
+                    liquid[i] = '<br/>'
+            O.extend(liquid)
 
 Q = Minion()
 R = Kevin_from_TN()
-
-#with open('V.txt', 'r') as fi:
-   # d = ast.literal_eval(fi.read())
-
-#styles.daydream()
-#styles.faith(d)
-
-#doc = doc.replace('\u000A\u000A', '</p><p>')
-#doc = doc.replace('\u000A', '<br/>')
 
 def deserialize(text, fragment=False):
     if fragment:
@@ -141,11 +132,13 @@ serialize_modules = {table.Table}
 structural_open = {Paragraph} | serialize_modules
 
 def ser(L, indent):
+    lserialize_modules = serialize_modules
+    
     lines = []
-    gaps = [i for i, v in enumerate(L) if type(v) in structural_open]
-    containers = (L[i:j] for i, j in zip(gaps, gaps[1:] + [len(L)])) # to catch last blob
-    for C in containers:
-        if type(C[0]) in serialize_modules:
+    gaps = [0] + [i for i, v in enumerate(L) if type(v) in structural_open]
+
+    for C in (L[i:j] for i, j in zip(gaps, gaps[1:] + [len(L)]) if j != i): # to catch last blob
+        if type(C[0]) in lserialize_modules:
             lines.extend(C[0].represent(ser, indent))
             lines.append((indent, ''))
         else:
@@ -155,6 +148,4 @@ def ser(L, indent):
     return lines[:-1]
 
 def serialize(L):
-    text = '\n'.join('    ' * indent + line for indent, line in ser(L, 0))
-#    print(text)
-    return text
+    return '\n'.join('    ' * indent + line for indent, line in ser(L, 0))

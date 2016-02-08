@@ -10,13 +10,6 @@ from IO import kevin, un
 from typing import typing
 from interface import karlie, taylor, poptarts
 
-shortcuts = [
-        ('Ctrl equal', 'Ctrl plus', 'sup'),
-        ('Ctrl minus', 'Ctrl underscore', 'sub'),
-        ('Ctrl b', 'Ctrl B', 'strong'),
-        ('Ctrl i', 'Ctrl I', 'emphasis')
-        ]
-
 def save():
     HEADER = '<head><meta charset="UTF-8"></head>\n\n'
     
@@ -78,7 +71,7 @@ def load(name):
     # aim editor objects
     cursor.fcursor = cursor.FCursor(DATA['contexts']['text'])
     caramel.delight = caramel.Channels_controls(DATA['contexts']['channels'], poptarts.Sprinkles())
-    typing.keyboard = typing.Keyboard(shortcuts)
+    typing.keyboard = typing.Keyboard()
     
     meredith.mipsy.recalculate_all()
     Text.update()

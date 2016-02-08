@@ -1,4 +1,5 @@
-import pprint, ast
+from pprint import pformat
+from ast import literal_eval
 
 from style import fonts, styles
 from state import constants
@@ -17,18 +18,13 @@ shortcuts = [
         ]
 
 def save():
-    from interface import taylor
-    kitty = [
-            {
-            'text': kevin.serialize(t.text), 
-            'outline': [(c.railings, c.page) for c in t.channels.channels], 
-            } 
-            for t in meredith.mipsy]
+    HEADER = '<head><meta charset="UTF-8"></head>\n\n'
     
-    page = {
-            'dimensions': (meredith.page.WIDTH, meredith.page.HEIGHT),
-            'dual': meredith.page.dual
-            }
+    SECTIONS, channels = zip( * ((kevin.serialize(t.text), [(c.railings, c.page) for c in t.channels.channels]) for t in meredith.mipsy))
+    SECTIONS = '<body>\n<section>\n' + '\n</section>\n\n<section>\n'.join(SECTIONS) + '\n</section>\n</body>\n'
+
+    page = {'dimensions': (meredith.page.WIDTH, meredith.page.HEIGHT),
+            'dual': meredith.page.dual}
     
     grid = meredith.mipsy.page_grid
     textcontexts = cursor.fcursor.polaroid()
@@ -44,10 +40,16 @@ def save():
     PTT = [T.polaroid() for T in styles.PTAGS.values() if not T.is_group]
     FTT = [T.polaroid() for T in styles.FTAGS.values() if not T.is_group]
 
-    doc = {'kitty': kitty, 'grid': grid, 'contexts': {'text': textcontexts, 'channels': channelcontexts}, 'PARASTYLES': PPP, 'FONTSTYLES': FFF, 'PTAGLIST': PTT, 'FTAGLIST': FTT, 'PEGS': GGG, 'view': taylor.becky.read_display_state(), 'page': page}
+    from interface import taylor
+    
+    DATA = {'outlines': channels, 'grid': grid, 'contexts': {'text': textcontexts, 'channels': channelcontexts}, 'PARASTYLES': PPP, 'FONTSTYLES': FFF, 'PTAGLIST': PTT, 'FTAGLIST': FTT, 'PEGS': GGG, 'view': taylor.becky.read_display_state(), 'page': page}
     
     with open(constants.filename, 'w') as fi:
-        pprint.pprint(doc, fi, width=120)
+        fi.write(HEADER)
+        fi.write(SECTIONS)
+        fi.write('\n<!-- #############\n')
+        fi.write(pformat(DATA, width=189))
+        fi.write('\n############# -->\n')
 
 def load(name):
     with open(name, 'r') as fi:
@@ -55,11 +57,11 @@ def load(name):
         doc = fi.read()
 
     BODY = doc[doc.find('<body>') + 6 : doc.find('</body>')]
-    DATA = ast.literal_eval(doc[doc.find('<!-- #############') + 18 : doc.find('############# -->')])
+    DATA = literal_eval(doc[doc.find('<!-- #############') + 18 : doc.find('############# -->')])
     
     text = (H[:H.find('</section>')].strip() for H in BODY.split('<section>'))
     text = [H for H in text if H]
-    channels = [K['outline'] for K in DATA['kitty']]
+    channels = [K for K in DATA['outlines']]
     
     if len(text) == len(channels):
         KT = zip(text, channels)

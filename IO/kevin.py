@@ -1,149 +1,155 @@
-import html
-from pyparsing import Word, Suppress, CharsNotIn, nums, alphanums, dictOf
+from html import parser, unescape
+from itertools import chain
 
-from model import table
 from bulletholes.counter import TCounter as Counter
-from style import styles
 from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image
+from style import styles
+from model import table
 
-def _parse_tag(tag):
-    int_value = Word(nums)
-    str_value = Suppress("\"") + CharsNotIn("\"") + Suppress("\"")
-    value = int_value | str_value
-    identifier = Word(alphanums)
-    result = dictOf(identifier + Suppress("="), value)
+modules = {'table': {'tr', 'td'}}
+moduletags = set(modules) | set(chain.from_iterable(modules.values()))
+closing = {table.Table}
 
-    return result.parseString(tag).asDict()
-
-def serialize(text):
-    b = text.copy()
-    for e, entity in enumerate(b):
-        CT = type(entity)
-        if CT is not str:
-            if CT is OpenFontpost:
-                b[e] = repr(entity)
-            
-            elif CT is CloseFontpost:
-                b[e] = repr(entity)
-            
-            elif CT is Paragraph:
-                b[e] = repr(entity)
-
-            elif CT is Image:
-                b[e] = repr(entity)
-            
-            elif CT is table.CellPost:
-                b[e] = repr(entity)
-
-            elif CT is table.Table:
-                b[e] = '<table>' + serialize(entity.flatten()) + '</table>'
-
-        elif entity == '<':
-            b[e] = '&lt;'
-        elif entity == '>':
-            b[e] = '&gt;'
-
-#        elif entity == '</p>':
-#            b[e] = '</p>\n'
-
-    return ''.join(b)
-
-def _parse_entities(b):
-    gap_end = {'</table>', '</p>'}
-    whitespace = {' ', '\n', '<br>', '\t'}
-    b = b.copy()
-    build = []
-    while True:
-        try:
-            opentag = b.index('<')
-            closetag = b.index('>') + 1
-        except ValueError:
-            break
-
-        build += list(html.unescape(''.join(b[:opentag])))
-        entity = ''.join(b[opentag:closetag])
+class Minion(parser.HTMLParser):
+    def _trim(self):
+        if self._breadcrumbs != [None]:
+            last = len(self._O) - next(i for i, v in enumerate(reversed(self._O)) if type(v) is str)
+            del self._O[last:]
         
-        content = entity[1:-1].strip()
-        first_space = content.find(' ')
-        if first_space == -1:
-            tag = content
-            fields = {}
-        else:
-            tag = content[:first_space]
-            R = content[first_space + 1:]
-            fields = _parse_tag(R)
+    def feed(self, data):
+        self._first = True
+        self._O = []
+        self._C = [(None, self._O)]
+        self._breadcrumbs = [None]
         
+        self.rawdata = self.rawdata + data
+        self.goahead(0)
+        
+        self._trim()
+        return self._O
+
+    def handle_starttag(self, tag, attrs):
+        attrs = dict(attrs)
+        O = self._C[-1][1]
         if tag == 'p':
-            # clear the gap
-            try:
-                gap_begin = next(len(build) - i for i, v in enumerate(reversed(build)) if type(v) is str and v in gap_end)
-                if all(type(e) is str and e in whitespace for e in build[gap_begin:]):
-                    del build[gap_begin:]
-            except StopIteration:
-                pass
-            
-            if 'class' in fields:
-                ptags = Counter(styles.PTAGS[T.strip()] for T in fields['class'].split('&'))
+            if 'class' in attrs:
+                ptags = Counter(styles.PTAGS[T.strip()] for T in attrs['class'].split('&'))
             else:
                 ptags = Counter({styles.PTAGS['body']: 1})
-            build.append(Paragraph(ptags))
-            del b[:closetag]
-        
-        elif tag in {'f', '/f'}:
-            ftag = styles.FTAGS[fields['class']]
-            if tag == 'f':
-                build.append(OpenFontpost(ftag))
-            else:
-                build.append(CloseFontpost(ftag))
-            del b[:closetag]
-        
-        elif tag == 'image':
-            build.append(Image(fields['src'], int(fields['width'])))
-            del b[:closetag]
-        
-        elif tag == 'table':
-            del b[:closetag]
-            # recursivity
-            data, b = _parse_entities(b)
-            build.append(table.Table(fields, data))
+            O.append(Paragraph(ptags))
             
-        elif tag == '/table':
-            del b[:closetag]
-            return build, b
+            self._breadcrumbs.append('p')
         
-        elif tag == 'td':
-            if 'rowspan' in fields:
-                rs = int(fields['rowspan'])
-            else:
-                rs = 1
-            if 'colspan' in fields:
-                cs = int(fields['colspan'])
-            else:
-                cs = 1
-            build.append(table.CellPost(rs, cs))
-            del b[:closetag]
+        elif tag == 'f':
+            ftag = styles.FTAGS[attrs['class']]
+            O.append(OpenFontpost(ftag))
+
+        elif tag == 'ff':
+            ftag = styles.FTAGS[attrs['class']]
+            O.append(CloseFontpost(ftag))
         
-        else:
-            build.append(entity)
-            del b[:closetag]
+        elif tag in moduletags:
+            self._breadcrumbs.append(tag)
+            if tag == 'td':
+                T = table.CellPost(attrs)
+            else:
+                T = tag
+            M = (T, [])
+            O.append(M)
+            self._C.append(M)
             
-    build += list(html.unescape(''.join(b)))
-    # clear the gap
-    try:
-        gap_begin = next(len(build) - i for i, v in enumerate(reversed(build)) if type(v) is str and v in gap_end)
-        if all(type(e) is str and e in whitespace for e in build[gap_begin:]):
-            del build[gap_begin:]
-    except StopIteration:
+
+    def handle_startendtag(self, tag, attrs):
+        attrs = dict(attrs)
+        O = self._C[-1][1]
+        if tag == 'br':
+            O.append('<br/>')
+        if tag == 'image':
+            src = attrs.get('src', None)
+            width = int(attrs.get('width', 89))
+            O.append(Image(src, width))
+
+    def handle_endtag(self, tag):
+        O = self._C[-1][1]
+        if tag == 'p':
+            O.append('</p>')
+            if self._breadcrumbs[-1] == 'p':
+                self._breadcrumbs.pop()
+            else:
+                raise RuntimeError
+                
+        elif tag in moduletags:
+            if self._breadcrumbs[-1] == tag:
+                self._breadcrumbs.pop()
+            else:
+                raise RuntimeError
+            
+            L = self._C.pop()
+            
+            if tag in modules:
+                O = self._C[-1][1]
+                O[-1] = table.Table(L)
+
+    def handle_data(self, data):
+        # this should be disabled on the last blob, unless we are sure the container is 'p'
+        O = self._C[-1][1]
+        container = self._breadcrumbs[-1]
+        if container == 'p':
+            O.extend(list(data))
+
+class Kevin_from_TN(Minion): # to capture the first and last blobs
+    def _trim(self):
         pass
+    def handle_data(self, data):
+        O = self._C[-1][1]
+        container = self._breadcrumbs[-1]
+        if container == 'p':
+            O.extend(list(data))
+        elif self._first: # register the first blob
+            self._first = False
+            self._breadcrumbs.append('p') # virtual paragraph container
+            liquid = list(data)
+            for i, v in enumerate(liquid):
+                if v == '\n':
+                    liquid[i] = '<br/>'
+            O.extend(liquid)
+
+Q = Minion()
+R = Kevin_from_TN()
+
+def deserialize(text, fragment=False):
+    if fragment:
+        parse = R
+    else:
+        parse = Q
+    text = text.replace('<em>', '<f class="emphasis">')
+    text = text.replace('</em>', '</f class="emphasis">')
+    text = text.replace('<strong>', '<f class="strong">')
+    text = text.replace('</strong>', '</f class="strong">')
+    text = text.replace('<sup>', '<f class="sup">')
+    text = text.replace('</sup>', '</f class="sup">')
+    text = text.replace('<sub>', '<f class="sub">')
+    text = text.replace('</sub>', '</f class="sub">')
+    return parse.feed(text.replace('</f', '<ff'))
+
+serialize_modules = {table.Table}
+structural_open = {Paragraph} | serialize_modules
+
+def ser(L, indent):
+    lserialize_modules = serialize_modules
     
-    return build, []
+    lines = []
+    gaps = [0] + [i for i, v in enumerate(L) if type(v) in structural_open]
 
-def deserialize(string):
-    string = string.replace('\u000A\u000A', '</p><p>')
-    string = string.replace('\u000A', '<br>')
-    string = string.replace('<em>', '<f class="emphasis">')
-    string = string.replace('</em>', '</f class="emphasis">')
-    string = string.replace('<strong>', '<f class="strong">')
-    string = string.replace('</strong>', '</f class="strong">')
+    for C in (L[i:j] for i, j in zip(gaps, gaps[1:] + [len(L)]) if j != i): # to catch last blob
+        if type(C[0]) in lserialize_modules:
+            lines.extend(C[0].represent(ser, indent))
+            lines.append((indent, ''))
+        else:
+            lines.append((indent, ''.join(c if type(c) is str else repr(c) for c in C)))
+            lines.append((indent, ''))
+    
+    return lines[:-1]
 
-    return _parse_entities(list(string))[0]
+def serialize(L):
+    return '\n'.join('    ' * indent + line for indent, line in ser(L, 0))

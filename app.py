@@ -220,7 +220,7 @@ class Display(Gtk.Window):
                 do.redo()
             
             elif name == 'v':
-                tree.take_event(0, 0, 'Paste', key=True, char = kevin.deserialize(self.clipboard.wait_for_text()) )
+                tree.take_event(0, 0, 'Paste', key=True, char = kevin.deserialize(self.clipboard.wait_for_text(), fragment=True) )
 
             elif name in {'c', 'x'}:
                 if name == 'c':

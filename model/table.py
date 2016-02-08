@@ -9,9 +9,16 @@ from bulletholes.counter import TCounter as Counter
 from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image
 
 class CellPost(object):
-    def __init__(self, rowspan, colspan):
-        self.rowspan = rowspan
-        self.colspan = colspan
+    def __init__(self, fields):
+        if 'rowspan' in fields:
+            self.rowspan = int(fields['rowspan'])
+        else:
+            self.rowspan = 1
+        if 'colspan' in fields:
+            self.colspan = int(fields['colspan'])
+        else:
+            self.colspan = 1
+    
     def __str__(self):
         return '<td>'
 
@@ -30,26 +37,11 @@ class CellPost(object):
     def __len__(self):
         return 4
 
-def _bin(data, odelimit, cdelimit):
-    for i, v in ((i, v) for i, v in enumerate(data) if str(v) == odelimit):
-        try:
-            j = data[i:].index(cdelimit) + i
-        except ValueError:
-            print('unclosed bin')
-            continue
-        
-        bindata = data[i + 1:j]
-        if odelimit not in bindata:
-            yield [v] + bindata + [cdelimit]
-        else:
-            print('superfluous bin tag')
-            continue
-
 class _Table_cell(Atomic_text):
-    def __init__(self, text):
-        Atomic_text.__init__(self, text[1:-1])
-        self.rs = text[0].rowspan
-        self.cs = text[0].colspan
+    def __init__(self, text, rowspan, colspan):
+        Atomic_text.__init__(self, text)
+        self.rs = rowspan
+        self.cs = colspan
     
     def nail(self, i, j):
         self.col = j
@@ -87,22 +79,22 @@ def _row_height(data, r, y):
     return max(cell._SLUGS[-1]['y'] + cell._SLUGS[-1]['leading'] for cell in cells)
 
 class Table(object):
-    def __init__(self, fields, data):
-        self.fields = fields
-        # process table structure
-        # build rows
-        self.data = [list(_Table_cell(C) for C in _bin(R, '<td>', '</td>')) for R in _bin(data, '<tr>', '</tr>')]
+    def __init__(self, L):
+        self._table = L
+        self.data = [[_Table_cell(C, td.rowspan, td.colspan) for td, C in R] for tr, R in L[1]]
         self._build_matrix()
-
-    def flatten(self):
-        L = []
-        for row in self.data:
-            L.append('<tr>')
-            for cell in row:
-                L.extend([CellPost(cell.rs, cell.cs)] + cell.text + ['</td>'])
-            L.append('</tr>')
-            
-        return L
+    
+    def represent(self, serialize, indent):
+        lines = [(indent, '<table>')]
+        for tr, R in self._table[1]:
+            lines.append((indent + 1, '<tr>'))
+            for td, C in R:
+                lines.append((indent + 2, repr(td)))
+                lines.extend(serialize(C, indent + 3))
+                lines.append((indent + 2, '</td>'))
+            lines.append((indent + 1, '</tr>'))
+        lines.append((indent, '</table>'))
+        return lines
 
     def _build_matrix(self):
         MATRIX = Matrix()

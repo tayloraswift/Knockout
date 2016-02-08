@@ -17,7 +17,7 @@ class UN(object):
             del self._history[:89]
             self._i -= 89
         
-        kitty = [{'text': kevin.serialize(t.text), 'spelling': t.misspellings[:], 'outline': deepcopy(t.channels.channels)} for t in meredith.mipsy]
+        kitty = [(kevin.serialize(t.text), deepcopy(t.channels.channels), t.misspellings[:]) for t in meredith.mipsy]
         page_xy = (meredith.page.WIDTH, meredith.page.HEIGHT)
         
         textcontexts = cursor.fcursor.polaroid()
@@ -51,9 +51,10 @@ class UN(object):
         meredith.page.WIDTH, meredith.page.HEIGHT = image['page']
 
         for t in range(len(meredith.mipsy)):
-            meredith.mipsy[t].text = kevin.deserialize(image['kitty'][t]['text'])
-            meredith.mipsy[t].misspellings = image['kitty'][t]['spelling']
-            meredith.mipsy[t].channels.channels = image['kitty'][t]['outline']
+            text, channels, msp = image['kitty'][t]
+            meredith.mipsy[t].text = kevin.deserialize(text)
+            meredith.mipsy[t].misspellings = msp
+            meredith.mipsy[t].channels.channels = channels
         
         cursor.fcursor.__init__(image['contexts']['text'])
     

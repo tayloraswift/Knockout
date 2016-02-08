@@ -1,4 +1,5 @@
-import pprint, ast
+from pprint import pformat
+from ast import literal_eval
 
 from style import fonts, styles
 from state import constants
@@ -9,26 +10,14 @@ from IO import kevin, un
 from typing import typing
 from interface import karlie, taylor, poptarts
 
-shortcuts = [
-        ('Ctrl equal', 'Ctrl plus', 'sup'),
-        ('Ctrl minus', 'Ctrl underscore', 'sub'),
-        ('Ctrl b', 'Ctrl B', 'strong'),
-        ('Ctrl i', 'Ctrl I', 'emphasis')
-        ]
-
 def save():
-    from interface import taylor
-    kitty = [
-            {
-            'text': kevin.serialize(t.text), 
-            'outline': [(c.railings, c.page) for c in t.channels.channels], 
-            } 
-            for t in meredith.mipsy]
+    HEADER = '<head><meta charset="UTF-8"></head>\n\n'
     
-    page = {
-            'dimensions': (meredith.page.WIDTH, meredith.page.HEIGHT),
-            'dual': meredith.page.dual
-            }
+    SECTIONS, channels = zip( * ((kevin.serialize(t.text), [(c.railings, c.page) for c in t.channels.channels]) for t in meredith.mipsy))
+    SECTIONS = '<body>\n<section>\n' + '\n</section>\n\n<section>\n'.join(SECTIONS) + '\n</section>\n</body>\n'
+
+    page = {'dimensions': (meredith.page.WIDTH, meredith.page.HEIGHT),
+            'dual': meredith.page.dual}
     
     grid = meredith.mipsy.page_grid
     textcontexts = cursor.fcursor.polaroid()
@@ -44,27 +33,45 @@ def save():
     PTT = [T.polaroid() for T in styles.PTAGS.values() if not T.is_group]
     FTT = [T.polaroid() for T in styles.FTAGS.values() if not T.is_group]
 
-    doc = {'kitty': kitty, 'grid': grid, 'contexts': {'text': textcontexts, 'channels': channelcontexts}, 'PARASTYLES': PPP, 'FONTSTYLES': FFF, 'PTAGLIST': PTT, 'FTAGLIST': FTT, 'PEGS': GGG, 'view': taylor.becky.read_display_state(), 'page': page}
+    from interface import taylor
+    
+    DATA = {'outlines': channels, 'grid': grid, 'contexts': {'text': textcontexts, 'channels': channelcontexts}, 'PARASTYLES': PPP, 'FONTSTYLES': FFF, 'PTAGLIST': PTT, 'FTAGLIST': FTT, 'PEGS': GGG, 'view': taylor.becky.read_display_state(), 'page': page}
     
     with open(constants.filename, 'w') as fi:
-        pprint.pprint(doc, fi, width=120)
+        fi.write(HEADER)
+        fi.write(SECTIONS)
+        fi.write('\n<!-- #############\n')
+        fi.write(pformat(DATA, width=189))
+        fi.write('\n############# -->\n')
 
 def load(name):
     with open(name, 'r') as fi:
         constants.filename = name
-        doc = ast.literal_eval(fi.read())
+        doc = fi.read()
+
+    BODY = doc[doc.find('<body>') + 6 : doc.find('</body>')]
+    DATA = literal_eval(doc[doc.find('<!-- #############') + 18 : doc.find('############# -->')])
+    
+    text = (H[:H.find('</section>')].strip() for H in BODY.split('<section>'))
+    text = [H for H in text if H]
+    channels = [K for K in DATA['outlines']]
+    
+    if len(text) == len(channels):
+        KT = zip(text, channels)
+    else:
+        raise FileNotFoundError
 
     styles.daydream()
-    styles.faith(doc)
+    styles.faith(DATA)
     
     # set up page, tract model, page grid objects
-    meredith.page = page.Page(doc['page'])
-    meredith.mipsy = meredith.Meredith(doc['kitty'], grid=doc['grid'])
+    meredith.page = page.Page(DATA['page'])
+    meredith.mipsy = meredith.Meredith(KT, grid=DATA['grid'])
     
     # aim editor objects
-    cursor.fcursor = cursor.FCursor(doc['contexts']['text'])
-    caramel.delight = caramel.Channels_controls(doc['contexts']['channels'], poptarts.Sprinkles())
-    typing.keyboard = typing.Keyboard(shortcuts)
+    cursor.fcursor = cursor.FCursor(DATA['contexts']['text'])
+    caramel.delight = caramel.Channels_controls(DATA['contexts']['channels'], poptarts.Sprinkles())
+    typing.keyboard = typing.Keyboard()
     
     meredith.mipsy.recalculate_all()
     Text.update()
@@ -72,8 +79,7 @@ def load(name):
     # start undo tracking
     un.history = un.UN() 
 
-    taylor.becky = taylor.Document_view(save, doc['view'])
+    taylor.becky = taylor.Document_view(save, DATA['view'])
     karlie.klossy = karlie.Properties(tabs = (('page', 'M'), ('tags', 'T'), ('paragraph', 'P'), ('font', 'F'), ('pegs', 'G')), default=2, partition=1 )
 
     un.history.save()
-

@@ -4,7 +4,7 @@ from cairo import ImageSurface
 textstyles = {'emphasis': 'em', 'strong': 'strong', 'sup': 'sup', 'sub': 'sub'}
 
 class Paragraph(object):
-    def __init__(self, counts, element=None):
+    def __init__(self, counts, element=0):
         self.P = counts
         self.EP = element
     

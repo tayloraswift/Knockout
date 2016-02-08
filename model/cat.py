@@ -102,7 +102,7 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False):
         F = INIT['F'].copy()
         R = INIT['R'] + 1
         K_x = None
-        PSTYLE = styles.PARASTYLES.project_p(PP.P)
+        PSTYLE = styles.PARASTYLES.project_p(PP.P, PP.EP)
         gap = False
     
     page = channel.page
@@ -117,7 +117,7 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False):
             if type(container) is Paragraph:
                 PP = container
                 _p_i_ = i
-                PSTYLE = styles.PARASTYLES.project_p(PP.P)
+                PSTYLE = styles.PARASTYLES.project_p(PP.P, PP.EP)
                 
                 F = Counter()
                 R = 0

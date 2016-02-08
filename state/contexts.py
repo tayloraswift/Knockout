@@ -10,12 +10,12 @@ class Text_context(object):
 
     def update(self):
         PP, FSTYLE = cursor.fcursor.styling_at()
-        P = PP.P
+        P = (PP.P, PP.EP)
         if PP is not self.paragraph:
             print('update paragraph context')
             self.paragraph =  PP
             
-            if P is not self._previous_p:
+            if P != self._previous_p:
                 print('update parastyle context')
                 self._previous_p = P
                 Parastyle.update(P)
@@ -40,7 +40,7 @@ class Paragraph_context(object):
     def __init__(self):
         pass
     def update(self, P):
-        self.parastyle = styles.PARASTYLES.project_p(P)
+        self.parastyle = styles.PARASTYLES.project_p( * P)
 
 class Font_context(object):
     def __init__(self):

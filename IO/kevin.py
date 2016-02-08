@@ -126,6 +126,10 @@ def deserialize(text, fragment=False):
     text = text.replace('</em>', '</f class="emphasis">')
     text = text.replace('<strong>', '<f class="strong">')
     text = text.replace('</strong>', '</f class="strong">')
+    text = text.replace('<sup>', '<f class="sup">')
+    text = text.replace('</sup>', '</f class="sup">')
+    text = text.replace('<sub>', '<f class="sub">')
+    text = text.replace('</sub>', '</f class="sub">')
     return parse.feed(text.replace('</f', '<ff'))
 
 serialize_modules = {table.Table}

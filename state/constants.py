@@ -31,6 +31,12 @@ class Window(object):
 
 window = Window(1200, 800)
 
+shortcuts = [
+        ('Ctrl equal', 'Ctrl plus', 'sup'),
+        ('Ctrl minus', 'Ctrl underscore', 'sub'),
+        ('Ctrl b', 'Ctrl B', 'strong'),
+        ('Ctrl i', 'Ctrl I', 'emphasis')
+        ]
 
 interface_fstyles = {'_interface:LABEL': {'fontsize': 11,
                                      'path': 'interface/FiraSans-Book.otf',

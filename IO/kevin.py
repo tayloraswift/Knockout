@@ -36,7 +36,11 @@ class Minion(parser.HTMLParser):
                 ptags = Counter(styles.PTAGS[T.strip()] for T in attrs['class'].split('&'))
             else:
                 ptags = Counter({styles.PTAGS['body']: 1})
-            O.append(Paragraph(ptags))
+            if 'style' in attrs:
+                EP = int(attrs['style'])
+            else:
+                EP = 0
+            O.append(Paragraph(ptags, EP))
             
             self._breadcrumbs.append('p')
         

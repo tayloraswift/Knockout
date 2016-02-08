@@ -1,4 +1,4 @@
-import itertools
+from itertools import chain
 from libraries.freetype import ft_errors
 
 from bulletholes.counter import TCounter as Counter
@@ -117,17 +117,21 @@ class P_Library(_Active_list):
         
         self.update_f = self._font_projections.clear
     
-    def populate(self, active_i, E):
-        _Active_list.__init__(self, active_i, (DB_Parastyle(P.copy(), Counter({PTAGS[T]: V for T, V in count.items()})) for P, count in E))
+    def populate(self, active_i, D, E):
+        _Active_list.__init__(self, active_i, (DB_Parastyle(P.copy(), Counter({PTAGS[T]: V for T, V in count.items()})) for P, count in D))
+        self._ESTYLES = {i: _E_Parastyle(e.copy()) for i, e in E.items()}
     
-    def project_p(self, P):
-        H = hash(frozenset(P.items()))
+    def project_p(self, P, EP):
+        H = 13 * EP + hash(frozenset(P.items()))
         try:
             return self._projections[H]
         except KeyError:
             # iterate through stack
             projection = Layer(P_DNA)
-            for B in (b for b in self if b.tags <= P):
+            effective = (b for b in self if b.tags <= P)
+            if EP:
+                effective = chain(effective, [self._ESTYLES[EP]])
+            for B in effective:
                 projection.overlay(B.attributes, B)
                 projection.members.append(B)
             
@@ -135,12 +139,12 @@ class P_Library(_Active_list):
             return projection
     
     def project_f(self, P, F):
-        H = 13 * hash(frozenset(P.items())) + hash(frozenset(F.items())) # we must give paragraph a different factor if a style has the same name as a fontstyle
+        H = 22 * hash(frozenset(P.items())) + hash(frozenset(F.items())) # we must give paragraph a different factor if a style has the same name as a fontstyle
         try:
             return self._font_projections[H]
         except KeyError:
             # add tag groups
-            F = F.concat(Counter(itertools.chain.from_iterable((FTAGS[G] for G in T.groups) for T, n in F.items() if n)))
+            F = F.concat(Counter(chain.from_iterable((FTAGS[G] for G in T.groups) for T, n in F.items() if n)))
             # iterate through stack
             projection = Layer(F_DNA)
 
@@ -167,6 +171,13 @@ class P_Library(_Active_list):
     def update_p(self):
         self._projections.clear()
         self._font_projections.clear()
+
+    def polaroid(self):
+        if self.active is None or self.active not in self:
+            i = None
+        else:
+            i = self.index(self.active)
+        return i, [P.polaroid() for P in self], {I: P.polaroid() for I, P in self._ESTYLES.items()}
 
 class DB_Fontstyle(_DB):
     def __init__(self, fdict={}, name='New fontclass'):
@@ -223,6 +234,20 @@ class DB_Parastyle(object):
         P = self.polaroid()[0]
         return DB_Parastyle(P, self.tags.copy())
 
+class _E_Parastyle(object):
+    def __init__(self, E):
+        if 'fontclasses' in E:
+            self.layerable = _F_layers( * E.pop('fontclasses'))
+        else:
+            self.layerable = _F_layers()
+        self.attributes = E
+
+    def polaroid(self):
+        pdict = self.attributes.copy()
+        if self.layerable:
+            pdict['fontclasses'] = self.layerable.polaroid()
+        return pdict
+
 class Tag(_DB):
     def __init__(self, library, name, groups, is_group = False):
         _DB.__init__(self, name, library)
@@ -240,7 +265,7 @@ class T_Library(dict):
     def populate(self, L):
         self.clear()
         D = {T[0]: Tag(self, * T) for T in L}
-        groups = set(itertools.chain.from_iterable(G for T, G in L))
+        groups = set(chain.from_iterable(G for T, G in L))
         D.update({G: Tag(self, G, [G], True) for G in groups})
         self.update(D)
     

@@ -1,6 +1,7 @@
 from itertools import chain
 import time
 
+from state import constants
 from style import styles
 from edit import cursor
 
@@ -18,7 +19,8 @@ def match_cursors():
     cursor.fcursor.j = cursor.fcursor.i
 
 class Keyboard(dict):
-    def __init__(self, shortcuts):
+    def __init__(self):
+        shortcuts = constants.shortcuts
         _OPEN = set(k[0] for k in shortcuts)
         self._CLOSE = set(k[1] for k in shortcuts)
         self._special_names = set(_OPEN) | set(self._CLOSE)
@@ -119,7 +121,7 @@ class Keyboard(dict):
             
         elif name == 'Return':
             un.history.undo_save(1)
-            cursor.fcursor.insert(['<br>'])
+            cursor.fcursor.insert(['<br/>'])
 
         elif name == 'Paste':
             if char:

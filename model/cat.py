@@ -355,7 +355,7 @@ def cast_liquid_line(letters, startindex, width, leading, P, F, hyphenate=False)
             GLYPHS.append((-3, x, y, FSTYLE, fstat, x))
             break
         
-        elif letter == '<br>':
+        elif letter == '<br/>':
             root_for = set()
             GLYPHS.append((-6, x, y, FSTYLE, fstat, x))
             break

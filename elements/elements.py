@@ -1,19 +1,24 @@
 from itertools import chain
 from cairo import ImageSurface
 
+textstyles = {'emphasis': 'em', 'strong': 'strong', 'sup': 'sup', 'sub': 'sub'}
+
 class Paragraph(object):
-    def __init__(self, counts):
+    def __init__(self, counts, element=None):
         self.P = counts
+        self.EP = element
     
     def __str__(self):
         return '<p>'
     
     def __repr__(self):
         ptags = '&'.join(chain.from_iterable((P.name for i in range(V)) for P, V in self.P.items()))
-        if ptags == 'body':
+        if ptags == 'body' and self.EP is None:
             return '<p>'
-        else:
+        elif self.EP is None:
             return '<p class="' + ptags + '">'
+        else:
+            return '<p class="' + ptags + '" style=' + str(self.EP) + '>'
 
     def __len__(self):
         return 3
@@ -30,10 +35,8 @@ class OpenFontpost(_Fontpost):
         return '<f>'
 
     def __repr__(self):
-        if self.F.name == 'emphasis':
-            return '<em>'
-        elif self.F.name == 'strong':
-            return '<strong>'
+        if self.F.name in textstyles:
+            return '<' + textstyles[self.F.name] + '>'
         else:
             return '<f class="' + self.F.name + '">'
 
@@ -45,10 +48,8 @@ class CloseFontpost(_Fontpost):
         return '</f>'
 
     def __repr__(self):
-        if self.F.name == 'emphasis':
-            return '</em>'
-        elif self.F.name == 'strong':
-            return '</strong>'
+        if self.F.name in textstyles:
+            return '</' + textstyles[self.F.name] + '>'
         else:
             return '</f class="' + self.F.name + '">'
 
@@ -68,7 +69,7 @@ class Image(object):
         return '<image>'
 
     def __repr__(self):
-        return '<image src="' + self.src + '" width="' + str(self.width) + '">'
+        return '<image src="' + self.src + '" width=' + str(self.width) + ' />'
 
     def __len__(self):
         return 7

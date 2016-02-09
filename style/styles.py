@@ -123,10 +123,10 @@ class P_Library(_Active_list):
     def project_p(self, PP):
         P = PP.P
         EP = PP.EP
+        H = hash(frozenset(P.items()))
         if EP:
-            H = 13 * id(PP) + hash(frozenset(P.items()))
-        else:
-            H = hash(frozenset(P.items()))
+            H += 13 * id(PP)
+        
         try:
             return self._projections[H]
         except KeyError:
@@ -142,8 +142,13 @@ class P_Library(_Active_list):
             self._projections[H] = projection
             return projection
     
-    def project_f(self, P, F):
+    def project_f(self, PP, F):
+        P = PP.P
+        EP = PP.EP
         H = 22 * hash(frozenset(P.items())) + hash(frozenset(F.items())) # we must give paragraph a different factor if a style has the same name as a fontstyle
+        if EP:
+            H += 13 * id(PP)
+        
         try:
             return self._font_projections[H]
         except KeyError:
@@ -151,8 +156,10 @@ class P_Library(_Active_list):
             F = F.concat(Counter(chain.from_iterable((FTAGS[G] for G in T.groups) for T, n in F.items() if n)))
             # iterate through stack
             projection = Layer(F_DNA)
-
-            for B in (b for b in self if b.tags <= P):
+            effective = (b for b in self if b.tags <= P)
+            if EP:
+                effective = chain(effective, [EP])
+            for B in effective:
                 for C in (c for c in B.layerable if c.tags <= F and c.F is not None):
                     projection.overlay(C.F.attributes, C)
                     projection.members.append(C)

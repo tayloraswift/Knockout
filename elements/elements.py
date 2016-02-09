@@ -5,9 +5,12 @@ from style.styles import DB_Parastyle
 textstyles = {'emphasis': 'em', 'strong': 'strong', 'sup': 'sup', 'sub': 'sub'}
 
 class Paragraph(object):
-    def __init__(self, counts, element=DB_Parastyle()):
+    def __init__(self, counts, element=None):
         self.P = counts
-        self.EP = element
+        if element is None:
+            self.EP = DB_Parastyle()
+        else:
+            self.EP = element
     
     def __str__(self):
         return '<p>'

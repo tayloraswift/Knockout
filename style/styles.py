@@ -221,7 +221,7 @@ class _F_container(object):
         return N, {T.name: V for T, V in self.tags.items()}
 
 class _F_layers(_Active_list):
-    def __init__(self, active_i=None, E=[]):
+    def __init__(self, active_i=None, E=()):
         _Active_list.__init__(self, active_i, E)
         self.template = _F_container()
     

@@ -17,12 +17,16 @@ class Paragraph(object):
     
     def __repr__(self):
         ptags = '&'.join(chain.from_iterable((P.name for i in range(V)) for P, V in self.P.items()))
-        if ptags == 'body' and self.EP is None:
-            return '<p>'
-        elif not self.EP:
-            return '<p class="' + ptags + '">'
+        if not self.EP:
+            if ptags == 'body':
+                return '<p>'
+            else:
+                return '<p class="' + ptags + '">'
         else:
-            return '<p class="' + ptags + '" style="' + repr(self.EP.polaroid()[0]) + '">'
+            if ptags == 'body':
+                return '<p style="' + repr(self.EP.polaroid()[0]) + '">'
+            else:
+                return '<p class="' + ptags + '" style="' + repr(self.EP.polaroid()[0]) + '">'
 
     def __len__(self):
         return 3

@@ -24,11 +24,11 @@
 
 <p class="body">Instead of “single” or “double” spacing, Vedit lets the writer specify the literal point size of the <strong>leading</strong>, or line height. This helps you predict the amount of space that text will take up, and helps you avoid text alignment headaches, since the spacing is always constant and measurable. </p>
 
-<p class="body&indent demo"><strong>Indentation</strong> is powerful in Vedit. The lines over which it takes effect can be explicitly enumerated (in a relative count from the start of the paragraph), and it can be set in terms of the character positions of the first line. </p>
+<p class="indent demo&body"><strong>Indentation</strong> is powerful in Vedit. The lines over which it takes effect can be explicitly enumerated (in a relative count from the start of the paragraph), and it can be set in terms of the character positions of the first line. </p>
 
-<p class="body&hanging indent">—>  This is very useful for creating <strong>hanging indents</strong>.</p>
+<p class="hanging indent&body">—>  This is very useful for creating <strong>hanging indents</strong>.</p>
 
-<p class="body&gray">Paragraph styles even add their <strong>constituent text styles</strong>, which allows for <em>very interesting</em> constructs, such as this gray filter, which is made up of a paragraph class containing a single text class which defines just a gray color, all overlayed over our standard body text style.</p>
+<p class="gray&body">Paragraph styles even add their <strong>constituent text styles</strong>, which allows for <em>very interesting</em> constructs, such as this gray filter, which is made up of a paragraph class containing a single text class which defines just a gray color, all overlayed over our standard body text style.</p>
 
 <p class="h2">SUPERSCRIPTS AND SUBSCRIPTS</p>
 
@@ -92,18 +92,16 @@
         <td colspan="3">
             <p class="h2">Who doesn’t love Meredith Grey?</p>
             
-            <p class="body" style="{'leading': 200, 'fontclasses': (0, [('Italic', {})])}"><image src="meredith.png" width=200 />abcd</p>
+            <p class="body" style="{'fontclasses': (0, [('Italic', {}), ('Regular', {'emphasis': 1})]), 'leading': 200}"><image src="meredith.png" width=200 />ab<em>c</em>d</p>
             
-            <p class="body&gray">(Taylor, evidently.)</p>
+            <p class="gray&body">(Taylor, evidently.)</p>
             
-            <p class="body&gray">Also, hopefully you can see that these tablecells  arrange themselves according to the W3 HTML table specification.</p>
+            <p class="gray&body">Also, hopefully you can see that these tablecells  arrange themselves according to the W3 HTML table specification.</p>
         </td>
     </tr>
     <tr>
         <td>
             <p class="body">cell 3</p>
-            
-            <p class="body">cell 3 (row 2)</p>
         </td>
         <td>
             <p class="body">cell 4</p>
@@ -150,8 +148,8 @@
                 'Subheading': {'fontsize': 20, 'path': '/home/kelvin/.fonts/FiraSans-Light.otf', 'tracking': 1},
                 'Superbold': {'path': '/home/kelvin/.fonts/Merriweather_UltraBold.ttf'},
                 'Superitalic': {'path': '/home/kelvin/.fonts/GaramondPremrPro-MedItCapt.otf'}},
- 'FTAGLIST': [('caption', []), ('link', []), ('sup', ['small']), ('emphasis', []), ('strong', []), ('big', []), ('sub', ['small'])],
- 'PARASTYLES': (3,
+ 'FTAGLIST': [('link', []), ('big', []), ('strong', []), ('caption', []), ('sup', ['small']), ('sub', ['small']), ('emphasis', [])],
+ 'PARASTYLES': (None,
                 [({'fontclasses': (0, [('Black', {})])}, {}),
                  ({'fontclasses': (0, [('Heading', {})]), 'leading': 36}, {'h1': 1}),
                  ({'fontclasses': (0, [('Subheading', {})]), 'leading': 24, 'margin_bottom': 10}, {'h2': 1}),
@@ -174,8 +172,8 @@
                  ({'indent': (0, -1, 4), 'indent_range': {0}}, {'hanging indent': 1}),
                  ({'fontclasses': (0, [('Gray', {})])}, {'gray': 1})]),
  'PEGS': {'Standard pegs': ('', {'sub': [0, -0.2], 'sup': [0, 0.3]})},
- 'PTAGLIST': [('h1', []), ('gray', []), ('_meredith', []), ('h2', []), ('signature', []), ('indent demo', []), ('hanging indent', []), ('body', [])],
- 'contexts': {'channels': {'c': 7, 'p': 6, 't': 0}, 'text': {'i': 3903, 'j': 3903, 'p': 4, 't': 0}},
+ 'PTAGLIST': [('signature', []), ('_meredith', []), ('indent demo', []), ('h1', []), ('gray', []), ('body', []), ('h2', []), ('hanging indent', [])],
+ 'contexts': {'channels': {'c': 7, 'p': 6, 't': 0}, 'text': {'i': 4638, 'j': 4638, 'p': 6, 't': 0}},
  'grid': [[120, 480], [120, 480]],
  'outlines': ([(([[120, 210, False], [120, 480, False]], [[480, 210, False], [480, 480, False]]), 0),
                ([[[120, 120, False], [120, 480, False]], [[480, 120, False], [480, 480, False]]], 1),
@@ -187,5 +185,5 @@
                ([[[120, 120, False], [120, 580, False]], [[480, 120, False], [480, 580, False]]], 6)],
               [(([[120, 120, False], [120, 200, True]], [[480, 120, False], [480, 200, True]]), 0)]),
  'page': {'dimensions': (600, 600), 'dual': True},
- 'view': {'H': -415, 'Hc': 672.799560546875, 'K': -1319, 'Kc': 323.0045166015625, 'Zoom': 11, 'mode': 'text'}}
+ 'view': {'H': -353, 'Hc': 567.2343139648438, 'K': -1922, 'Kc': 611.8444213867188, 'Zoom': 13, 'mode': 'text'}}
 ############# -->

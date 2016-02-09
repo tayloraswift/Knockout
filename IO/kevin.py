@@ -40,7 +40,7 @@ class Minion(parser.HTMLParser):
             if 'style' in attrs:
                 EP = styles.cast_parastyle(literal_eval(attrs['style']), ())
             else:
-                EP = {}
+                EP = styles.DB_Parastyle()
             O.append(Paragraph(ptags, EP))
             
             self._breadcrumbs.append('p')

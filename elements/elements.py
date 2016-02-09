@@ -1,10 +1,11 @@
 from itertools import chain
 from cairo import ImageSurface
+from style.styles import DB_Parastyle
 
 textstyles = {'emphasis': 'em', 'strong': 'strong', 'sup': 'sup', 'sub': 'sub'}
 
 class Paragraph(object):
-    def __init__(self, counts, element={}):
+    def __init__(self, counts, element=DB_Parastyle()):
         self.P = counts
         self.EP = element
     

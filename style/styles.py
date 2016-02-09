@@ -255,7 +255,16 @@ class DB_Parastyle(object):
 
     def copy(self):
         return DB_Parastyle(self.attributes.copy(), self.layerable.copy(), self.tags.copy())
-
+    
+    def __bool__(self):
+        return bool(self.layerable) and bool(self.attributes)
+    
+    def __eq__(self, other):
+        if not self and not other:
+            return True
+        else:
+            return id(self) == id(other)
+          
 
 class Tag(_DB):
     def __init__(self, library, name, groups, is_group = False):

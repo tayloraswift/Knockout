@@ -6,7 +6,7 @@
 
 <p class="body">Vedit was designed to be both flexible and efficient. The end goal of the project is to include all the tools and parameters handled by “serious” typesetters, and allow editing of them in the least verbose manner. Hence, Vedit offers granular control, with a strong emphasis on <strong>additive styling</strong>.</p>
 
-<p class="signature&body">—Kelvin Ma</p>
+<p class="body" style="{'fontclasses': (0, [('Italic', {})]), 'margin_top': 6, 'margin_left': 20}">—Kelvin Ma</p>
 
 <p class="h2">WHAT IS ADDITIVE STYLING?</p>
 
@@ -24,11 +24,11 @@
 
 <p class="body">Instead of “single” or “double” spacing, Vedit lets the writer specify the literal point size of the <strong>leading</strong>, or line height. This helps you predict the amount of space that text will take up, and helps you avoid text alignment headaches, since the spacing is always constant and measurable. </p>
 
-<p class="indent demo&body"><strong>Indentation</strong> is powerful in Vedit. The lines over which it takes effect can be explicitly enumerated (in a relative count from the start of the paragraph), and it can be set in terms of the character positions of the first line. </p>
+<p class="body" style="{'indent': (30, 1, 0), 'indent_range': {0, 1}}"><strong>Indentation</strong> is powerful in Vedit. The lines over which it takes effect can be explicitly enumerated (in a relative count from the start of the paragraph), and it can be set in terms of the character positions of the first line. </p>
 
-<p class="hanging indent&body">—>  This is very useful for creating <strong>hanging indents</strong>.</p>
+<p class="body" style="{'indent': (0, -1, 4)}">—>  This is very useful for creating <strong>hanging indents</strong>.</p>
 
-<p class="gray&body">Paragraph styles even add their <strong>constituent text styles</strong>, which allows for <em>very interesting</em> constructs, such as this gray filter, which is made up of a paragraph class containing a single text class which defines just a gray color, all overlayed over our standard body text style.</p>
+<p class="body&gray">Paragraph styles even add their <strong>constituent text styles</strong>, which allows for <em>very interesting</em> constructs, such as this gray filter, which is made up of a paragraph class containing a single text class which defines just a gray color, all overlayed over our standard body text style.</p>
 
 <p class="h2">SUPERSCRIPTS AND SUBSCRIPTS</p>
 
@@ -94,9 +94,9 @@
             
             <p class="body" style="{'fontclasses': (0, [('Italic', {}), ('Regular', {'emphasis': 1})]), 'leading': 200}"><image src="meredith.png" width=200 />ab<em>c</em>d</p>
             
-            <p class="gray&body">(Taylor, evidently.)</p>
+            <p class="body&gray">(Taylor, evidently.)</p>
             
-            <p class="gray&body">Also, hopefully you can see that these tablecells  arrange themselves according to the W3 HTML table specification.</p>
+            <p class="body&gray">Also, hopefully you can see that these tablecells  arrange themselves according to the W3 HTML table specification.</p>
         </td>
     </tr>
     <tr>
@@ -148,11 +148,9 @@
                 'Subheading': {'fontsize': 20, 'path': '/home/kelvin/.fonts/FiraSans-Light.otf', 'tracking': 1},
                 'Superbold': {'path': '/home/kelvin/.fonts/Merriweather_UltraBold.ttf'},
                 'Superitalic': {'path': '/home/kelvin/.fonts/GaramondPremrPro-MedItCapt.otf'}},
- 'FTAGLIST': [('link', []), ('big', []), ('strong', []), ('caption', []), ('sup', ['small']), ('sub', ['small']), ('emphasis', [])],
- 'PARASTYLES': (None,
+ 'FTAGLIST': [('emphasis', []), ('sub', ['small']), ('big', []), ('caption', []), ('sup', ['small']), ('link', []), ('strong', [])],
+ 'PARASTYLES': (1,
                 [({'fontclasses': (0, [('Black', {})])}, {}),
-                 ({'fontclasses': (0, [('Heading', {})]), 'leading': 36}, {'h1': 1}),
-                 ({'fontclasses': (0, [('Subheading', {})]), 'leading': 24, 'margin_bottom': 10}, {'h2': 1}),
                  ({'fontclasses': (8,
                                    [('Regular', {}),
                                     ('Italic', {'emphasis': 1}),
@@ -167,13 +165,12 @@
                    'leading': 20,
                    'margin_bottom': 6},
                   {'body': 1}),
-                 ({'fontclasses': (0, [('Italic', {})]), 'indent': (20, 1, 0), 'margin_top': 6}, {'signature': 1}),
-                 ({'indent': (30, 1, 0), 'indent_range': {0, 1}}, {'indent demo': 1}),
-                 ({'indent': (0, -1, 4), 'indent_range': {0}}, {'hanging indent': 1}),
+                 ({'fontclasses': (0, [('Heading', {})]), 'leading': 36}, {'h1': 1}),
+                 ({'fontclasses': (0, [('Subheading', {})]), 'leading': 24, 'margin_bottom': 10}, {'h2': 1}),
                  ({'fontclasses': (0, [('Gray', {})])}, {'gray': 1})]),
  'PEGS': {'Standard pegs': ('', {'sub': [0, -0.2], 'sup': [0, 0.3]})},
- 'PTAGLIST': [('signature', []), ('_meredith', []), ('indent demo', []), ('h1', []), ('gray', []), ('body', []), ('h2', []), ('hanging indent', [])],
- 'contexts': {'channels': {'c': 7, 'p': 6, 't': 0}, 'text': {'i': 4638, 'j': 4638, 'p': 6, 't': 0}},
+ 'PTAGLIST': [('h1', []), ('h2', []), ('body', []), ('gray', [])],
+ 'contexts': {'channels': {'c': 7, 'p': 6, 't': 0}, 'text': {'i': 666, 'j': 666, 'p': 0, 't': 0}},
  'grid': [[120, 480], [120, 480]],
  'outlines': ([(([[120, 210, False], [120, 480, False]], [[480, 210, False], [480, 480, False]]), 0),
                ([[[120, 120, False], [120, 480, False]], [[480, 120, False], [480, 480, False]]], 1),
@@ -185,5 +182,5 @@
                ([[[120, 120, False], [120, 580, False]], [[480, 120, False], [480, 580, False]]], 6)],
               [(([[120, 120, False], [120, 200, True]], [[480, 120, False], [480, 200, True]]), 0)]),
  'page': {'dimensions': (600, 600), 'dual': True},
- 'view': {'H': -353, 'Hc': 567.2343139648438, 'K': -1922, 'Kc': 611.8444213867188, 'Zoom': 13, 'mode': 'text'}}
+ 'view': {'H': -276, 'Hc': 810.7052001953125, 'K': 6, 'Kc': 368.29217529296875, 'Zoom': 14, 'mode': 'text'}}
 ############# -->

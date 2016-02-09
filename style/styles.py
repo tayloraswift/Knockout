@@ -241,10 +241,19 @@ def cast_parastyle(pdict, count):
     return DB_Parastyle(pdict, layerable, Counter(count))
 
 class DB_Parastyle(object):
-    def __init__(self, A={}, layerable=_F_layers(), count=Counter()):
-        self.tags = count
-        self.layerable = layerable
-        self.attributes = A
+    def __init__(self, A=None, layerable=None, count=None):
+        if count is None:
+            self.tags = Counter()
+        else:
+            self.tags = count
+        if layerable is None:
+            self.layerable = _F_layers()
+        else:
+            self.layerable = layerable
+        if A is None:
+            self.attributes = {}
+        else:
+            self.attributes = A
         
 #        ('leading', 'indent', 'indent_range', 'margin_bottom', 'margin_top', 'margin_left', 'margin_right', 'hyphenate')
     def polaroid(self):
@@ -257,7 +266,7 @@ class DB_Parastyle(object):
         return DB_Parastyle(self.attributes.copy(), self.layerable.copy(), self.tags.copy())
     
     def __bool__(self):
-        return bool(self.layerable) and bool(self.attributes)
+        return bool(self.layerable) or bool(self.attributes)
     
     def __eq__(self, other):
         if not self and not other:

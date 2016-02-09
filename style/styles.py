@@ -297,7 +297,7 @@ ISTYLES = {}
 def _create_interface():
     font_projections = {}
     FD = TREES(DB_Fontstyle, constants.interface_fstyles)
-    P = [_F_container(FD[F], Counter(tags)) for tags, F in constants.interface_pstyle]
+    P = [_F_container(FD[F], Counter(tags)) for F, tags in constants.interface_pstyle]
     ui_styles = ((), ('title',), ('strong',), ('label',))
     for U in ui_styles:
         F = Counter(U)

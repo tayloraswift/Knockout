@@ -117,12 +117,16 @@ class P_Library(_Active_list):
         
         self.update_f = self._font_projections.clear
     
-    def populate(self, active_i, D, E):
-        _Active_list.__init__(self, active_i, (DB_Parastyle(P.copy(), Counter({PTAGS[T]: V for T, V in count.items()})) for P, count in D))
-        self._ESTYLES = {i: _E_Parastyle(e.copy()) for i, e in E.items()}
+    def populate(self, active_i, D):
+        _Active_list.__init__(self, active_i, (cast_parastyle(P.copy(), {PTAGS[T]: V for T, V in count.items()}) for P, count in D))
     
-    def project_p(self, P, EP):
-        H = 13 * EP + hash(frozenset(P.items()))
+    def project_p(self, PP):
+        P = PP.P
+        EP = PP.EP
+        if EP:
+            H = 13 * id(PP) + hash(frozenset(P.items()))
+        else:
+            H = hash(frozenset(P.items()))
         try:
             return self._projections[H]
         except KeyError:
@@ -130,7 +134,7 @@ class P_Library(_Active_list):
             projection = Layer(P_DNA)
             effective = (b for b in self if b.tags <= P)
             if EP:
-                effective = chain(effective, [self._ESTYLES[EP]])
+                effective = chain(effective, [EP])
             for B in effective:
                 projection.overlay(B.attributes, B)
                 projection.members.append(B)
@@ -177,7 +181,7 @@ class P_Library(_Active_list):
             i = None
         else:
             i = self.index(self.active)
-        return i, [P.polaroid() for P in self], {I: P.polaroid() for I, P in self._ESTYLES.items()}
+        return i, [P.polaroid() for P in self]
 
 class DB_Fontstyle(_DB):
     def __init__(self, fdict={}, name='New fontclass'):
@@ -214,14 +218,18 @@ class _F_layers(_Active_list):
         _Active_list.__init__(self, active_i, (_F_container(FONTSTYLES[F], Counter({FTAGS[T]:V for T, V in tags.items()})) for F, tags in E))
         self.template = _F_container()
 
+def cast_parastyle(pdict, count):
+    if 'fontclasses' in pdict:
+        layerable = _F_layers( * pdict.pop('fontclasses'))
+    else:
+        layerable = _F_layers()
+    return DB_Parastyle(pdict, layerable, Counter(count))
+
 class DB_Parastyle(object):
-    def __init__(self, pdict={}, count=Counter()):
+    def __init__(self, A={}, layerable=_F_layers(), count=Counter()):
         self.tags = count
-        if 'fontclasses' in pdict:
-            self.layerable = _F_layers( * pdict.pop('fontclasses'))
-        else:
-            self.layerable = _F_layers()
-        self.attributes = pdict
+        self.layerable = layerable
+        self.attributes = A
         
 #        ('leading', 'indent', 'indent_range', 'margin_bottom', 'margin_top', 'margin_left', 'margin_right', 'hyphenate')
     def polaroid(self):
@@ -234,19 +242,6 @@ class DB_Parastyle(object):
         P = self.polaroid()[0]
         return DB_Parastyle(P, self.tags.copy())
 
-class _E_Parastyle(object):
-    def __init__(self, E):
-        if 'fontclasses' in E:
-            self.layerable = _F_layers( * E.pop('fontclasses'))
-        else:
-            self.layerable = _F_layers()
-        self.attributes = E
-
-    def polaroid(self):
-        pdict = self.attributes.copy()
-        if self.layerable:
-            pdict['fontclasses'] = self.layerable.polaroid()
-        return pdict
 
 class Tag(_DB):
     def __init__(self, library, name, groups, is_group = False):

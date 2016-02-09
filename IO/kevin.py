@@ -1,5 +1,6 @@
 from html import parser, unescape
 from itertools import chain
+from ast import literal_eval
 
 from bulletholes.counter import TCounter as Counter
 from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image
@@ -15,7 +16,7 @@ class Minion(parser.HTMLParser):
         if self._breadcrumbs != [None]:
             last = len(self._O) - next(i for i, v in enumerate(reversed(self._O)) if type(v) is str)
             del self._O[last:]
-        
+
     def feed(self, data):
         self._first = True
         self._O = []
@@ -37,9 +38,9 @@ class Minion(parser.HTMLParser):
             else:
                 ptags = Counter({styles.PTAGS['body']: 1})
             if 'style' in attrs:
-                EP = int(attrs['style'])
+                EP = styles.cast_parastyle(literal_eval(attrs['style']), ())
             else:
-                EP = 0
+                EP = {}
             O.append(Paragraph(ptags, EP))
             
             self._breadcrumbs.append('p')

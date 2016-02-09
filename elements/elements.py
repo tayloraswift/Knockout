@@ -4,7 +4,7 @@ from cairo import ImageSurface
 textstyles = {'emphasis': 'em', 'strong': 'strong', 'sup': 'sup', 'sub': 'sub'}
 
 class Paragraph(object):
-    def __init__(self, counts, element=0):
+    def __init__(self, counts, element={}):
         self.P = counts
         self.EP = element
     
@@ -15,10 +15,10 @@ class Paragraph(object):
         ptags = '&'.join(chain.from_iterable((P.name for i in range(V)) for P, V in self.P.items()))
         if ptags == 'body' and self.EP is None:
             return '<p>'
-        elif self.EP is None:
+        elif not self.EP:
             return '<p class="' + ptags + '">'
         else:
-            return '<p class="' + ptags + '" style=' + str(self.EP) + '>'
+            return '<p class="' + ptags + '" style="' + repr(self.EP.polaroid()[0]) + '">'
 
     def __len__(self):
         return 3

@@ -3,7 +3,7 @@ import itertools
 
 from state import constants, contexts, noticeboard
 from style import styles
-from interface import kookies, ui, outliner
+from interface import kookies, ui
 from edit import ops, caramel, cursor
 from model import meredith
 from IO import un
@@ -206,16 +206,16 @@ class Properties(_Properties_panel):
         # ALWAYS REQUIRES CALL TO _stack()
         print('reconstruct')
         
-        self._items = [self._tabstrip, outliner.Outliner(15, 60, 250, 300, styles.PARASTYLES, contexts.Text.paragraph)]
+        self._items = [self._tabstrip]
         self._active_box_i = None
         self._hover_box_ij = (None, None)
         
-        y = 400
+        y = 110
 
         if self._tab == 'font':
             if styles.PARASTYLES.active is not None:
                 
-                self._items.append(kookies.Heading( 15, 350, 250, 30, ', '.join(T.name for T in styles.PARASTYLES.active.tags), upper=True))
+                self._items.append(kookies.Heading( 15, 70, 250, 30, ', '.join(T.name for T in styles.PARASTYLES.active.tags), upper=True))
                 self._items.append(kookies.Ordered(15, y, 250, 300,
                             library = styles.PARASTYLES.active.layerable, 
                             display = _print_counter,
@@ -298,7 +298,7 @@ class Properties(_Properties_panel):
                 self._items.append(kookies.Heading( 15, 90, 250, 30, '', upper=True))
         
         if self._tab == 'paragraph':
-            self._items.append(kookies.Heading( 15, 350, 250, 30, ', '.join(T.name if V == 1 else T.name + ' (' + str(V) + ')' for T, V in contexts.Text.paragraph.P.items() if V), upper=True))
+            self._items.append(kookies.Heading( 15, 70, 250, 30, ', '.join(T.name if V == 1 else T.name + ' (' + str(V) + ')' for T, V in contexts.Text.paragraph.P.items() if V), upper=True))
 
             self._items.append(kookies.Para_control_panel(15, y, 250, 280, 
                     get_paragraph = lambda: contexts.Text.paragraph, 

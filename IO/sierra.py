@@ -8,7 +8,7 @@ from model import meredith, page
 from edit import cursor, caramel
 from IO import kevin, un
 from typing import typing
-from interface import karlie, taylor, poptarts, outliner #
+from interface import karlie, taylor, poptarts
 
 def save():
     HEADER = '<head><meta charset="UTF-8"></head>\n\n'
@@ -63,8 +63,6 @@ def load(name):
 
     styles.daydream()
     styles.faith(DATA)
-    
-#    outliner.load_tree(DATA['FONTSTYLES'], DATA['PARASTYLES'][0])
     
     # set up page, tract model, page grid objects
     meredith.page = page.Page(DATA['page'])

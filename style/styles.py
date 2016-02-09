@@ -215,12 +215,20 @@ class _F_container(object):
 
 class _F_layers(_Active_list):
     def __init__(self, active_i=None, E=[]):
-        _Active_list.__init__(self, active_i, (_F_container(FONTSTYLES[F], Counter({FTAGS[T]:V for T, V in tags.items()})) for F, tags in E))
+        _Active_list.__init__(self, active_i, E)
         self.template = _F_container()
+    
+    def copy(self):
+        try:
+            i = self.index(self.active)
+        except ValueError:
+            i = None
+        return _F_layers(i, (c.copy() for c in self))
 
 def cast_parastyle(pdict, count):
     if 'fontclasses' in pdict:
-        layerable = _F_layers( * pdict.pop('fontclasses'))
+        i, E = pdict.pop('fontclasses')
+        layerable = _F_layers(i, (_F_container(FONTSTYLES[F], Counter({FTAGS[T]:V for T, V in tags.items()})) for F, tags in E))
     else:
         layerable = _F_layers()
     return DB_Parastyle(pdict, layerable, Counter(count))
@@ -239,8 +247,7 @@ class DB_Parastyle(object):
         return pdict, {T.name: V for T, V in self.tags.items()}
 
     def copy(self):
-        P = self.polaroid()[0]
-        return DB_Parastyle(P, self.tags.copy())
+        return DB_Parastyle(self.attributes.copy(), self.layerable.copy(), self.tags.copy())
 
 
 class Tag(_DB):

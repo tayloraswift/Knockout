@@ -379,6 +379,6 @@ def daydream():
             'margin_left': 0,
             'margin_right': 0,
             'margin_top': 0,
-            'stops': [89, 178, 267, 356]})
+            'align': 1})
 
     ISTYLES.update(_create_interface())

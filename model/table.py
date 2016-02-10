@@ -125,8 +125,7 @@ class Atomic_table(dict):
             for cell in row:
                 # calculate percentages
                 cellbounds = TCell_container(bounds, cell.col/cellcount, (cell.col + cell.cs)/cellcount)
-                cell._SLUGS[:] = typeset_liquid(cellbounds, cell.text, {'j': 0, 'l': -1, 'P_BREAK': True}, 0, y, c, False)
-                cell._precompute_search()
+                cell.cast(cellbounds, c, y)
             y = _row_height(data, r, y)
             row_y.append(y)
         

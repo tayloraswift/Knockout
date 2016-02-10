@@ -1219,6 +1219,7 @@ class Para_control_panel(Ordered):
                 radius = 5
 
                 y2 = y1 + self._itemheight
+                cr.move_to(self._x, y1 + radius)
                 cr.arc(self._x + radius, y1 + radius, radius, 2*(pi/2), 3*(pi/2))
                 cr.arc(self._x_right - radius, y1 + radius, radius, 3*(pi/2), 4*(pi/2))
                 cr.arc(self._x_right - radius, y2 - radius, radius, 0*(pi/2), 1*(pi/2))
@@ -1246,6 +1247,9 @@ class Para_control_panel(Ordered):
                 if len(PSTYLE.tags) == 1:
                     minus_sign(cr, self._x, y1)
                     plus_sign(cr, self._x + 25, y1)
+                    k = next(iter(PSTYLE.tags.keys()))
+                    cr.move_to(self._x + 22, y1 + 17)
+                    cr.show_text(str(self._paragraph.P[k]))
                     cr.fill()
 
                 cr.set_source_rgb(1, 1, 1)
@@ -1286,6 +1290,9 @@ class Para_control_panel(Ordered):
                         cr.set_source_rgba(0, 0, 0, 0.7)
                     plus_sign(cr, self._x + 25, y1)
                     cr.fill()
+                    k = next(iter(PSTYLE.tags.keys()))
+                    cr.move_to(self._x + 22, y1 + 17)
+                    cr.show_text(str(self._paragraph.P[k]))
                 
                 if PSTYLE.tags <= self._paragraph.P:
                     cr.set_source_rgb( * accent)
@@ -1294,6 +1301,11 @@ class Para_control_panel(Ordered):
 
             elif PSTYLE.tags <= self._paragraph.P:
                 cr.set_source_rgba(0, 0, 0, 0.7)
+                
+                if len(PSTYLE.tags) == 1:
+                    k = next(iter(PSTYLE.tags.keys()))
+                    cr.move_to(self._x + 22, y1 + 17)
+                    cr.show_text(str(self._paragraph.P[k]))
 
             else:
                 cr.set_source_rgba(0, 0, 0, 0.4)

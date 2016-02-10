@@ -7,8 +7,8 @@ from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image
 from style import styles
 from model import table
 
-modules = {'table': {'tr', 'td'}}
-moduletags = set(modules) | set(chain.from_iterable(modules.values()))
+modules = {'table': (table.Table, {'tr', 'td'})}
+moduletags = set(modules) | set(chain.from_iterable(v[1] for v in modules.values()))
 closing = {table.Table}
 
 class Minion(parser.HTMLParser):
@@ -89,7 +89,7 @@ class Minion(parser.HTMLParser):
             if tag in modules:
                 print(L)
                 O = self._C[-1][1]
-                O[-1] = table.Table(L)
+                O[-1] = modules[tag][0](L)
 
     def handle_data(self, data):
         # this should be disabled on the last blob, unless we are sure the container is 'p'

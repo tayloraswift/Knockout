@@ -6,7 +6,7 @@ from state import noticeboard
 
 from model.wonder import words
 
-from model.cat import typeset_chained, Glyphs_line
+from model.cat import typeset_chained, typeset_liquid, Glyphs_line
 
 def _deposit_misspellings(underscores, tract):
     for pair in tract.misspellings:
@@ -41,6 +41,10 @@ class Atomic_text(object):
         self._line_startindices = [line['i'] for line in self._SLUGS]
         self._line_yl = { cc: list(h[:2] for h in list(g)) for cc, g in groupby( ((LINE['y'], LINE['l'], LINE['c']) for LINE in self._SLUGS if LINE['GLYPHS']), key=lambda k: k[2]) }
 
+    def cast(self, bounds, c, y):
+        self._SLUGS[:] = typeset_liquid(bounds, self.text, {'j': 0, 'l': -1, 'P_BREAK': True}, 0, y, c, False)
+        self._precompute_search()
+                
     def _target_row(self, y, c):
         try:
             yy, ll = zip( * self._line_yl[c])
@@ -237,7 +241,7 @@ class Chained_text(Atomic_text):
         if not self._sorted_pages:
             for page, pageslugs in ((p, list(ps)) for p, ps in groupby((line for line in self._SLUGS), key=lambda line: line['page'])):
                 if page not in self._sorted_pages:
-                    self._sorted_pages[page] = {'_annot': [], '_images': []}
+                    self._sorted_pages[page] = {'_annot': [], '_images': [], '_paint': []}
                 sorted_page = self._sorted_pages[page]
                 
                 for line in pageslugs:

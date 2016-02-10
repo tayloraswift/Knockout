@@ -5,11 +5,14 @@ from ast import literal_eval
 from bulletholes.counter import TCounter as Counter
 from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image
 from style import styles
-from model import table
+from model import table, pie
 
-modules = {'table': (table.Table, {'tr', 'td'})}
+modules = {'table': (table.Table, {'tr', 'td'}), 'module:pie': (pie.PieChart, {'module:pie:title', 'module:pie:slice'})}
 moduletags = set(modules) | set(chain.from_iterable(v[1] for v in modules.values()))
 closing = {table.Table}
+
+serialize_modules = {table.Table, pie.PieChart}
+structural_open = {Paragraph} | serialize_modules
 
 class Minion(parser.HTMLParser):
     def _trim(self):
@@ -87,7 +90,6 @@ class Minion(parser.HTMLParser):
             
             L = self._C.pop()
             if tag in modules:
-                print(L)
                 O = self._C[-1][1]
                 O[-1] = modules[tag][0](L)
 
@@ -132,9 +134,6 @@ def deserialize(text, fragment=False):
     text = text.replace('<sub>', '<f class="sub">')
     text = text.replace('</sub>', '</f class="sub">')
     return parse.feed(text.replace('</f', '<ff'))
-
-serialize_modules = {table.Table}
-structural_open = {Paragraph} | serialize_modules
 
 def ser(L, indent):
     lserialize_modules = serialize_modules

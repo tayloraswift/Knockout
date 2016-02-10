@@ -557,16 +557,18 @@ class Document_view(ui.Cell):
         for dictionary in jumbled_pages:
             for page, sorted_glyphs in dictionary.items():
                 if page in classed_pages:
-                    for name, font, glyphs in ((key, * L) for key, L in sorted_glyphs.items() if L and (isinstance(key, int) or key == '_images')):
+                    for name, font, glyphs in ((key, * L) for key, L in sorted_glyphs.items() if L and (isinstance(key, int) or key in {'_images', '_paint'})):
                         classed_pages[page].setdefault(name, (font, []))[1].extend(glyphs)
                 else:
-                    classed_pages[page] = {name: L for name, L in sorted_glyphs.items() if isinstance(name, int) or name == '_images'}
+                    classed_pages[page] = {name: L for name, L in sorted_glyphs.items() if isinstance(name, int) or name in {'_images', '_paint'}}
         
         return classed_pages
     
     def print_page(self, cr, p, classed_pages):
         if p in classed_pages:
             self._draw_images(cr, classed_pages[p]['_images'])
+            for operation in classed_pages[p]['_paint']:
+                operation(cr)
             self._print_sorted(cr, classed_pages[p])
             
     def _draw_by_page(self, cr, mx_cx, my_cy, cx, cy, A=1, refresh=False):
@@ -588,7 +590,10 @@ class Document_view(ui.Cell):
                 cr.scale(A, A)
 
                 self._draw_images(cr, sorted_glyphs['_images'])
+                for operation in sorted_glyphs['_paint']:
+                    operation(cr)
                 self._print_sorted(cr, sorted_glyphs)
+
 
                 cr.restore()
                 

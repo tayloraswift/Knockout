@@ -8,34 +8,18 @@ from bulletholes.counter import TCounter as Counter
 
 from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image
 
-class CellPost(object):
-    def __init__(self, fields):
-        if 'rowspan' in fields:
-            self.rowspan = int(fields['rowspan'])
-        else:
-            self.rowspan = 1
-        if 'colspan' in fields:
-            self.colspan = int(fields['colspan'])
-        else:
-            self.colspan = 1
-    
-    def __str__(self):
-        return '<td>'
-
-    def __repr__(self):
-        if self.rowspan == 1:
-            if self.colspan == 1:
+def _print_td(td):
+        A = td[1]
+        if 'rowspan' not in A or A['rowspan'] == 1:
+            if 'colspan' not in A or A['colspan'] == 1:
                 return '<td>'
             else:
-                return '<td colspan="' + str(self.colspan) + '">'
+                return '<td colspan="' + A['colspan'] + '">'
         else:
-            if self.colspan == 1:
-                return '<td rowspan="' + str(self.rowspan) + '">'
+            if 'colspan' not in A or A['colspan'] == 1:
+                return '<td rowspan="' + A['rowspan'] + '">'
             else:
-                return '<td rowspan="' + str(self.rowspan) + '" colspan="' + str(self.colspan) + '">'
-
-    def __len__(self):
-        return 4
+                return '<td rowspan="' + A['rowspan'] + '" colspan="' + A['colspan'] + '">'
 
 class _Table_cell(Atomic_text):
     def __init__(self, text, rowspan, colspan):
@@ -46,7 +30,6 @@ class _Table_cell(Atomic_text):
     def nail(self, i, j):
         self.col = j
         self.row = i
-
 
 class TCell_container(Swimming_pool):
     def __init__(self, SP, i, j):
@@ -81,7 +64,7 @@ def _row_height(data, r, y):
 class Table(object):
     def __init__(self, L):
         self._table = L
-        self.data = [[_Table_cell(C, td.rowspan, td.colspan) for td, C in R] for tr, R in L[1]]
+        self.data = [[_Table_cell(C, int(td[1].get('rowspan', 1)), int(td[1].get('colspan', 1))) for td, C in R] for tr, R in L[1]]
         self._build_matrix()
     
     def represent(self, serialize, indent):
@@ -89,7 +72,7 @@ class Table(object):
         for tr, R in self._table[1]:
             lines.append((indent + 1, '<tr>'))
             for td, C in R:
-                lines.append((indent + 2, repr(td)))
+                lines.append((indent + 2, _print_td(td)))
                 lines.extend(serialize(C, indent + 3))
                 lines.append((indent + 2, '</td>'))
             lines.append((indent + 1, '</tr>'))
@@ -149,6 +132,7 @@ class Atomic_table(dict):
         
         x1, x2 = bounds.bounds(top)
         self['x'] = x1
+        self['left'] = x1
         self['width'] = x2 - x1
         self['y'] = y
         self['leading'] = y - top

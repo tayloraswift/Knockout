@@ -6,7 +6,7 @@
 
 <p>Vedit was designed to be both flexible and efficient. The end goal of the project is to include all the tools and parameters handled by “serious” typesetters, and allow editing of them in the least verbose manner. Hence, Vedit offers granular control, with a strong emphasis on <strong>additive styling</strong>.</p>
 
-<p style="{'margin_top': 6, 'fontclasses': (0, [('Italic', {})]), 'margin_left': 20}">—Kelvin Ma</p>
+<p style="{'margin_left': 20, 'margin_top': 6, 'fontclasses': (0, [('Italic', {})])}">—Kelvin Ma</p>
 
 <p class="h2">WHAT IS ADDITIVE STYLING?</p>
 
@@ -24,11 +24,11 @@
 
 <p>Instead of “single” or “double” spacing, Vedit lets the writer specify the literal point size of the <strong>leading</strong>, or line height. This helps you predict the amount of space that text will take up, and helps you avoid text alignment headaches, since the spacing is always constant and measurable. </p>
 
-<p style="{'indent_range': {0, 1}, 'indent': (30, 1, 0)}"><strong>Indentation</strong> is powerful in Vedit. The lines over which it takes effect can be explicitly enumerated (in a relative count from the start of the paragraph), and it can be set in terms of the character positions of the first line. </p>
+<p style="{'indent': (30, 1, 0), 'indent_range': {0, 1}}"><strong>Indentation</strong> is powerful in Vedit. The lines over which it takes effect can be explicitly enumerated (in a relative count from the start of the paragraph), and it can be set in terms of the character positions of the first line. </p>
 
 <p style="{'indent': (0, -1, 4)}">—>  This is very useful for creating <strong>hanging indents</strong>.</p>
 
-<p class="gray&body">Paragraph styles even add their <strong>constituent text styles</strong>, which allows for <em>very interesting</em> constructs, such as this gray filter, which is made up of a paragraph class containing a single text class which defines just a gray color, all overlayed over our standard body text style.</p>
+<p class="body&gray">Paragraph styles even add their <strong>constituent text styles</strong>, which allows for <em>very interesting</em> constructs, such as this gray filter, which is made up of a paragraph class containing a single text class which defines just a gray color, all overlayed over our standard body text style.</p>
 
 <p class="h2">SUPERSCRIPTS AND SUBSCRIPTS</p>
 
@@ -92,11 +92,11 @@
         <td colspan="3">
             <p class="h2">Who doesn’t love Meredith Grey?</p>
             
-            <p style="{'fontclasses': (0, [('Italic', {}), ('Regular', {'emphasis': 1})]), 'leading': 200}"><image src="meredith.png" width=200 />ab<em>c</em>d</p>
+            <p style="{'leading': 200, 'fontclasses': (0, [('Italic', {}), ('Regular', {'emphasis': 1})])}"><image src="meredith.png" width=200 />ab<em>c</em>d</p>
             
-            <p class="gray&body">(Taylor, evidently.)</p>
+            <p class="body&gray">(Taylor, evidently.)</p>
             
-            <p class="gray&body">Also, hopefully you can see that these tablecells  arrange themselves according to the W3 HTML table specification.</p>
+            <p class="body&gray">Also, hopefully you can see that these tablecells  arrange themselves according to the W3 HTML table specification.</p>
         </td>
     </tr>
     <tr>
@@ -148,8 +148,8 @@
                 'Subheading': {'fontsize': 20, 'path': '/home/kelvin/.fonts/FiraSans-Light.otf', 'tracking': 1},
                 'Superbold': {'path': '/home/kelvin/.fonts/Merriweather_UltraBold.ttf'},
                 'Superitalic': {'path': '/home/kelvin/.fonts/GaramondPremrPro-MedItCapt.otf'}},
- 'FTAGLIST': [('big', []), ('sup', ['small']), ('sub', ['small']), ('caption', []), ('link', []), ('emphasis', []), ('strong', [])],
- 'PARASTYLES': (1,
+ 'FTAGLIST': [('emphasis', []), ('sub', ['small']), ('strong', []), ('big', []), ('caption', []), ('sup', ['small']), ('link', [])],
+ 'PARASTYLES': (None,
                 [({'fontclasses': (0, [('Black', {})])}, {}),
                  ({'fontclasses': (8,
                                    [('Regular', {}),
@@ -169,8 +169,8 @@
                  ({'fontclasses': (0, [('Subheading', {})]), 'leading': 24, 'margin_bottom': 10}, {'h2': 1}),
                  ({'fontclasses': (0, [('Gray', {})])}, {'gray': 1})]),
  'PEGS': {'Standard pegs': ('', {'sub': [0, -0.2], 'sup': [0, 0.3]})},
- 'PTAGLIST': [('body', []), ('gray', []), ('h1', []), ('h2', [])],
- 'contexts': {'channels': {'c': 7, 'p': 6, 't': 0}, 'text': {'i': 666, 'j': 666, 'p': 0, 't': 0}},
+ 'PTAGLIST': [('h1', []), ('h2', []), ('gray', []), ('body', [])],
+ 'contexts': {'channels': {'c': 7, 'p': 6, 't': 0}, 'text': {'i': 3379, 'j': 3379, 'p': 3, 't': 0}},
  'grid': [[120, 480], [120, 480]],
  'outlines': ([(([[120, 210, False], [120, 480, False]], [[480, 210, False], [480, 480, False]]), 0),
                ([[[120, 120, False], [120, 480, False]], [[480, 120, False], [480, 480, False]]], 1),
@@ -182,5 +182,5 @@
                ([[[120, 120, False], [120, 580, False]], [[480, 120, False], [480, 580, False]]], 6)],
               [(([[120, 120, False], [120, 200, True]], [[480, 120, False], [480, 200, True]]), 0)]),
  'page': {'dimensions': (600, 600), 'dual': True},
- 'view': {'H': -276, 'Hc': 810.7052001953125, 'K': 6, 'Kc': 368.29217529296875, 'Zoom': 14, 'mode': 'text'}}
+ 'view': {'H': 22, 'Hc': 428.32037353515625, 'K': -1045, 'Kc': 470.52777099609375, 'Zoom': 8, 'mode': 'text'}}
 ############# -->

@@ -75,9 +75,9 @@ class Atomic_text(object):
         
         else:
             last = self._SLUGS[v_l]
-            select.append((first['y'], u_x, first['width'] + first['x'], first['leading'], first['page']))
-            select.extend((line['y'], line['x'], line['width'] + line['x'], line['leading'], line['page']) for line in (self._SLUGS[l] for l in range(u_l + 1, v_l)))
-            select.append((last['y'], last['x'], v_x, last['leading'], last['page']))
+            select.append((first['y'], u_x, first['width'] + first['left'], first['leading'], first['page']))
+            select.extend((line['y'], line['left'], line['width'] + line['left'], line['leading'], line['page']) for line in (self._SLUGS[l] for l in range(u_l + 1, v_l)))
+            select.append((last['y'], last['left'], v_x, last['leading'], last['page']))
 
         return select
 

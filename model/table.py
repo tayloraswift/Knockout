@@ -1,12 +1,8 @@
 import bisect
 from itertools import chain
 
-from model.cat import typeset_liquid
-from model.olivia import Atomic_text
+from model.olivia import Atomic_text, Block
 from model.george import Swimming_pool
-from bulletholes.counter import TCounter as Counter
-
-from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image
 
 def _print_td(td):
         A = td[1]
@@ -61,11 +57,43 @@ def _row_height(data, r, y):
     cells = (cell for cell in chain.from_iterable(row for row in data) if cell.row + cell.rs - 1 == r)
     return max(cell._SLUGS[-1]['y'] + cell._SLUGS[-1]['leading'] for cell in cells)
 
+def _build_matrix(data):
+    MATRIX = Matrix()
+    length = 0
+    for i, row in enumerate(data):
+        # append rows to matrix if needed
+        height = max(r.rs for r in row)
+        if i + height > len(MATRIX):
+            MATRIX += [[None] for k in range(i + height - len(MATRIX))]
+
+        # extend matrix to fit the width
+        length = max(length, sum(r.cs for r in row) + sum(k is not None for k in MATRIX[i]))
+        empty = [None] * length
+        if length > len(MATRIX[-1]):
+            MATRIX[:] = [R + empty[:max(0, length - len(R))] for R in MATRIX]
+        
+        # drop in cells
+        _cellnumber_ = 0
+        for s, slot in enumerate(MATRIX[i]):
+            # check if cell is occupied
+            if slot is None:
+                try:
+                    cell = row[_cellnumber_]
+                    _cellnumber_ += 1
+                except IndexError:
+                    break
+                cell.nail(i, s)
+                for rs in range(cell.rs):
+                    for cs in range(cell.cs):
+                        MATRIX[i + rs][s + cs] = cell
+    return MATRIX
+
 class Table(object):
     def __init__(self, L):
         self._table = L
         self.data = [[_Table_cell(C, int(td[1].get('rowspan', 1)), int(td[1].get('colspan', 1))) for td, C in R] for tr, R in L[1]]
-        self._build_matrix()
+        self._FLOW = [cell for row in self.data for cell in row]
+        self._MATRIX = _build_matrix(self.data)
     
     def represent(self, serialize, indent):
         lines = [(indent, '<table>')]
@@ -79,83 +107,35 @@ class Table(object):
         lines.append((indent, '</table>'))
         return lines
 
-    def _build_matrix(self):
-        MATRIX = Matrix()
-        length = 0
-        for i, row in enumerate(self.data):
-            # append rows to matrix if needed
-            height = max(r.rs for r in row)
-            if i + height > len(MATRIX):
-                MATRIX += [[None] for k in range(i + height - len(MATRIX))]
-
-            # extend matrix to fit the width
-            length = max(length, sum(r.cs for r in row) + sum(k is not None for k in MATRIX[i]))
-            empty = [None] * length
-            if length > len(MATRIX[-1]):
-                MATRIX[:] = [R + empty[:max(0, length - len(R))] for R in MATRIX]
-            
-            # drop in cells
-            _cellnumber_ = 0
-            for s, slot in enumerate(MATRIX[i]):
-                # check if cell is occupied
-                if slot is None:
-                    try:
-                        cell = row[_cellnumber_]
-                        _cellnumber_ += 1
-                    except IndexError:
-                        break
-                    cell.nail(i, s)
-                    for rs in range(cell.rs):
-                        for cs in range(cell.cs):
-                            MATRIX[i + rs][s + cs] = cell
-        
-        self._MATRIX = MATRIX
-
     def fill(self, bounds, c, y):
-        return Atomic_table(self._MATRIX, self.data, bounds, c, y)
-
-class Atomic_table(dict):
-    def __init__(self, matrix, data, bounds, c, y):
-        self._matrix = matrix
-        self._cells = [cell for row in data for cell in row]
         top = y
         row_y = []
-        for r, row in enumerate(data):
-            cellcount = len(self._matrix[r])
+        for r, row in enumerate(self.data):
+            cellcount = len(self._MATRIX[r])
             for cell in row:
                 # calculate percentages
                 cellbounds = TCell_container(bounds, cell.col/cellcount, (cell.col + cell.cs)/cellcount)
                 cell.cast(cellbounds, c, y)
-            y = _row_height(data, r, y)
+            y = _row_height(self.data, r, y)
             row_y.append(y)
         
+        return _MBlock(self._FLOW, self._MATRIX, bounds, top, y, row_y)
+
+class _MBlock(Block):
+    def __init__(self, FLOW, matrix, bounds, top, bottom, row_y):
         x1, x2 = bounds.bounds(top)
-        self['x'] = x1
-        self['left'] = x1
-        self['width'] = x2 - x1
-        self['y'] = y
-        self['leading'] = y - top
-        self['GLYPHS'] = [(-2, 0, y, None, None, x2 - x1)]
-        self['P_BREAK'] = True
-        self['PP'] = Paragraph(Counter())
+        Block.__init__(self, FLOW, top, bottom, x1, x2)
         
-        self['_row_y'] = row_y
-        self['_bounds'] = bounds
-        self['_cellcount'] = cellcount
+        self._matrix = matrix
+        self._row_y = row_y
+        self._bounds = bounds
     
     def I(self, x, y):
-        x1, x2 = self['_bounds'].bounds(y)
-        r = bisect.bisect(self['_row_y'], y)
-        c = int((x - x1) // ((x2 - x1) / self['_cellcount']))
+        x1, x2 = self._bounds.bounds(y)
+        r = bisect.bisect(self._row_y, y)
+        c = int((x - x1) // ((x2 - x1) / len(self._matrix[r])))
         try:
             return self._matrix[r][c]
         except IndexError:
             print('Empty cell selected')
             return self['j']
-
-    def collect_text(self):
-        return list(chain.from_iterable(cell.collect_text() for cell in self._cells))
-    
-    def deposit(self, repository):
-        for cell in self._cells:
-            cell.deposit(repository)

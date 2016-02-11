@@ -1,8 +1,7 @@
 from math import pi
 from itertools import chain
-from model.olivia import Atomic_text
-from elements.elements import Paragraph
-from bulletholes.counter import TCounter as Counter
+
+from model.olivia import Atomic_text, Block
 from edit.paperairplanes import interpret_rgba
 
 def _print_attrs(name, attrs):
@@ -51,27 +50,15 @@ class PieChart(object):
             y += 20
         bottom = y
         left, right = bounds.bounds(top)
-        return _Atomic_pie(self._FLOW, top, bottom, left, right, lambda cr: self._print_pie(cr, (right + left)/2, top + 120))
+        return _MBlock(self._FLOW, top, bottom, left, right, lambda cr: self._print_pie(cr, (right + left)/2, top + 120))
 
-class _Atomic_pie(dict):
+class _MBlock(Block):
     def __init__(self, FLOW, top, bottom, left, right, paint):
-        self._FLOW = FLOW
-        self['x'] = left
-        self['left'] = left
-        self['width'] = right - left
-        self['y'] = bottom
-        self['leading'] = bottom - top
-        self['GLYPHS'] = [(-2, 0, bottom, None, None, right - left)]
-        self['P_BREAK'] = True
-        self['PP'] = Paragraph(Counter())
-        
+        Block.__init__(self, FLOW, top, bottom, left, right)
         self._print = paint
     
     def I(self, x, y):
         return self['j']
-
-    def collect_text(self):
-        return list(chain.from_iterable(A.collect_text() for A in self._FLOW))
     
     def deposit(self, repository):
         for A in self._FLOW:

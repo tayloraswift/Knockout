@@ -594,12 +594,14 @@ class Document_view(ui.Cell):
                     operation(cr)
                 self._print_sorted(cr, sorted_glyphs)
 
-
-                cr.restore()
-                
                 # only annotate active tract
                 if tract is self.fcursor.TRACT and self._mode == 'text':
+                    for operation in sorted_glyphs['_paint_annot']:
+                        operation(cr, self.fcursor.FTX)
+                    cr.restore()
                     self._draw_annotations(cr, sorted_glyphs['_annot'], page)
+                else:
+                    cr.restore()
                 
             if self._mode == 'text':
                 self._draw_spelling(cr, tract.paint_misspellings())

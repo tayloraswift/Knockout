@@ -3,6 +3,7 @@ from itertools import chain
 
 from model.olivia import Atomic_text, Block
 from model.george import Swimming_pool
+from interface.base import accent
 
 def _print_td(td):
         A = td[1]
@@ -55,7 +56,7 @@ class Matrix(list):
 
 def _row_height(data, r, y):
     cells = (cell for cell in chain.from_iterable(row for row in data) if cell.row + cell.rs - 1 == r)
-    return max(cell._SLUGS[-1]['y'] + cell._SLUGS[-1]['leading'] for cell in cells)
+    return max(cell._SLUGS[-1]['y'] for cell in cells)
 
 def _build_matrix(data):
     MATRIX = Matrix()
@@ -129,7 +130,19 @@ class _MBlock(Block):
         self._matrix = matrix
         self._row_y = row_y
         self._bounds = bounds
-    
+
+    def _print_annot(self, cr, O):
+        if O in self._FLOW:
+            cr.set_source_rgb( * accent)
+            cl = len(self._matrix[0])
+            for r, y in enumerate(self._row_y[:-1]):
+                x1, x2 = self._bounds.bounds(y)
+                cw = (x2 - x1)/cl
+                for c in range(1, cl):
+                    cr.rectangle(int(x1 + cw*c), y - 3, 1, 7)
+                    cr.rectangle(int(x1 + cw*c) - 3, y, 7, 1)
+            cr.fill()
+
     def I(self, x, y):
         x1, x2 = self._bounds.bounds(y)
         r = bisect.bisect(self._row_y, y)
@@ -139,3 +152,8 @@ class _MBlock(Block):
         except IndexError:
             print('Empty cell selected')
             return self['j']
+
+    def deposit(self, repository):
+        for A in self._FLOW:
+            A.deposit(repository)
+        repository['_paint_annot'].append(self._print_annot)

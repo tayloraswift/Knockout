@@ -5,7 +5,7 @@ from ast import literal_eval
 from bulletholes.counter import TCounter as Counter
 from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image
 from style import styles
-from model import table, pie
+from modules import table, pie
 
 modules = {'table': (table.Table, {'tr', 'td'}), 'module:pie': (pie.PieChart, {'module:pie:title', 'module:pie:slice'})}
 moduletags = set(modules) | set(chain.from_iterable(v[1] for v in modules.values()))

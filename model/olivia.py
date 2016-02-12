@@ -60,6 +60,7 @@ class Atomic_text(object):
         self._line_yl = { cc: list(h[:2] for h in list(g)) for cc, g in groupby( ((LINE['y'], LINE['l'], LINE['c']) for LINE in self._SLUGS if LINE['GLYPHS']), key=lambda k: k[2]) }
 
     def cast(self, bounds, c, y):
+        self._c = c
         self._SLUGS[:] = typeset_liquid(bounds, self.text, {'j': 0, 'l': -1, 'P_BREAK': True}, 0, y, c, False)
         self._precompute_search()
                 
@@ -126,13 +127,10 @@ class Atomic_text(object):
             self.word_count = words(self.text)
 
     def I(self, x, y):
-        c = self._SLUGS[0]['c']
-        return self._SLUGS[self._target_row(y, c)]
+        return self._SLUGS[self._target_row(y, self._c)]
     
     def target_select(self, x, y, page, i):
-        c = self._SLUGS[0]['c']
-        lineobject = self._SLUGS[self._target_row(y, c)]
-        
+        lineobject = self._SLUGS[self._target_row(y, self._c)]
         O = lineobject.I(x, y)
         if type(O) is not int:
             O = lineobject['i']

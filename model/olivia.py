@@ -74,7 +74,6 @@ class Atomic_text(object):
             lineindex = len(yy) - 1
         else:
             lineindex = bisect(yy, y)
-
         return ll[lineindex]
 
     ### FUNCTIONS USEFUL FOR DRAWING AND INTERFACE
@@ -128,17 +127,7 @@ class Atomic_text(object):
 
     def I(self, x, y):
         c = self._SLUGS[0]['c']
-        lineobject = self._SLUGS[self._target_row(y, c)]
-        
-        ftx = self
-        O = lineobject
-        while 1:
-            O = O.I(x, y)
-            if type(O) is int:
-                break
-            else:
-                ftx = O
-        return O
+        return self._SLUGS[self._target_row(y, c)]
     
     def target_select(self, x, y, page, i):
         c = self._SLUGS[0]['c']
@@ -189,9 +178,10 @@ class Chained_text(Atomic_text):
             
             while 1:
                 O = O.I(x, y)
-                if type(O) is int:
+                TO = type(O)
+                if TO is int:
                     break
-                else:
+                elif TO is not Glyphs_line:
                     ftx = O
         else:
             O = si

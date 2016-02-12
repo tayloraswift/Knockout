@@ -7,7 +7,7 @@
 
 <p>Vedit was designed to be both flexible and efficient. The end goal of the project is to include all the tools and parameters handled by “serious” typesetters, and allow editing of them in the least verbose manner. Hence, Vedit offers granular control, with a strong emphasis on <strong>additive styling</strong>.</p>
 
-<p style="{'margin_left': 20, 'margin_top': 6, 'fontclasses': (0, [('Italic', {})])}">—Kelvin Ma</p>
+<p style="{'margin_left': 20, 'fontclasses': (0, [('Italic', {})]), 'margin_top': 6}">—Kelvin Ma</p>
 
 <p class="h2">WHAT IS ADDITIVE STYLING?</p>
 
@@ -16,19 +16,19 @@
 <p style="{'align': 0}">Subtitle</p>
 
 <module:pie radius="60">
-    <module:pie:slice color="#ff3085" prop="13">
+    <module:pie:slice prop="13" color="#ff3085">
         <p>Section A</p>
     </module:pie:slice>
-    <module:pie:slice color="#ff50a0" prop="22">
+    <module:pie:slice prop="22" color="#ff50a0">
         <p>Section B</p>
     </module:pie:slice>
-    <module:pie:slice color="#f020ff" prop="69">
+    <module:pie:slice prop="69" color="#f020ff">
         <p>Section C</p>
     </module:pie:slice>
-    <module:pie:slice color="#b050ff" prop="89">
+    <module:pie:slice prop="89" color="#b050ff">
         <p>Section D</p>
     </module:pie:slice>
-    <module:pie:slice color="#7080ff" prop="113">
+    <module:pie:slice prop="113" color="#7080ff">
         <p>Section E</p>
     </module:pie:slice>
 </module:pie>
@@ -84,7 +84,18 @@
             <p>cell 4</p>
         </td>
         <td>
-            <p>cell 55</p>
+            <p class="h3">PIE CHART EXAMPLE</p>
+            
+            <p style="{'align': 0}">Subtitle</p>
+            
+            <module:pie radius="40">
+                <module:pie:slice prop="13" color="#ff3085">
+                    <p>Section A</p>
+                </module:pie:slice>
+                <module:pie:slice prop="22" color="#ff50a0">
+                    <p>Section B</p>
+                </module:pie:slice>
+            </module:pie>
         </td>
         <td>
             <p>cell 6</p>
@@ -115,7 +126,7 @@
         <td colspan="3">
             <p class="h2">Who doesn’t love Meredith Grey?</p>
             
-            <p style="{'align': 0, 'leading': 200, 'fontclasses': (0, [('Italic', {}), ('Regular', {'emphasis': 1})])}"><image src="meredith.png" width=200 />ab<em>c</em>d</p>
+            <p style="{'leading': 200, 'align': 0, 'fontclasses': (0, [('Italic', {}), ('Regular', {'emphasis': 1})])}"><image src="meredith.png" width=200 />ab<em>c</em>d</p>
             
             <p class="body&gray">(Taylor, evidently.)</p>
             
@@ -172,7 +183,7 @@
                 'Superbold': {'path': '/home/kelvin/.fonts/Merriweather_UltraBold.ttf'},
                 'Superitalic': {'path': '/home/kelvin/.fonts/GaramondPremrPro-MedItCapt.otf'},
                 'h3': {'fontsize': 16, 'path': '/home/kelvin/.fonts/FiraSans-Book.otf', 'tracking': 1}},
- 'FTAGLIST': [('big', []), ('strong', []), ('caption', []), ('sub', ['small']), ('emphasis', []), ('link', []), ('sup', ['small'])],
+ 'FTAGLIST': [('strong', []), ('sub', ['small']), ('emphasis', []), ('caption', []), ('big', []), ('sup', ['small']), ('link', [])],
  'PARASTYLES': (None,
                 [({'fontclasses': (0, [('Black', {})])}, {}),
                  ({'fontclasses': (8,
@@ -194,19 +205,19 @@
                  ({'align': 0, 'fontclasses': (0, [('h3', {})])}, {'h3': 1}),
                  ({'fontclasses': (0, [('Gray', {})])}, {'gray': 1})]),
  'PEGS': {'Standard pegs': ('', {'sub': [0, -0.2], 'sup': [0, 0.3]})},
- 'PTAGLIST': [('h1', []), ('h2', []), ('gray', []), ('h3', []), ('body', [])],
- 'contexts': {'channels': {'c': 7, 'p': 6, 't': 0}, 'text': {'i': 4666, 'j': 4666, 'p': 7, 't': 0}},
+ 'PTAGLIST': [('gray', []), ('h2', []), ('h3', []), ('body', []), ('h1', [])],
+ 'contexts': {'channels': {'c': 7, 'p': 6, 't': 0}, 'text': {'i': 4613, 'j': 4613, 'p': 6, 't': 0}},
  'grid': [[120, 480], [120, 480]],
  'outlines': ([(([[120, 210, False], [120, 480, False]], [[480, 210, False], [480, 480, False]]), 0),
                ([[[120, 120, False], [120, 480, False]], [[480, 120, False], [480, 480, False]]], 1),
                ([[[120, 120, False], [120, 460, False]], [[480, 120, False], [480, 460, False]]], 2),
                ([[[120, 120, False], [120, 480, False]], [[480, 120, False], [480, 480, False]]], 3),
-               ([[[120, 120, False], [120, 400, False]], [[480, 120, False], [480, 400, False]]], 4),
+               ([[[120, 120, False], [120, 480, False]], [[480, 120, False], [480, 480, False]]], 4),
                ([[[120, 120, False], [120, 480, False]], [[300, 120, False], [70, 310, False], [290, 480, False]]], 5),
                ([[[360, 120, False], [160, 310, False], [360, 480, False]], [[410, 120, False], [590, 300, False], [410, 480, False]]], 5),
-               ([[[120, 120, False], [120, 480, False]], [[480, 120, False], [280, 480, True]]], 6),
-               ([[[120, 120, False], [120, 560, False]], [[480, 120, False], [480, 560, False]]], 7)],
+               ([[[120, 120, False], [120, 480, False]], [[280, 120, False], [490, 300, True], [280, 480, False]]], 6),
+               ([[[120, 120, False], [120, 540, False]], [[480, 120, False], [480, 540, False]]], 7)],
               [(([[120, 120, False], [120, 200, True]], [[480, 120, False], [480, 200, True]]), 0)]),
  'page': {'dimensions': (600, 600), 'dual': True},
- 'view': {'H': 143, 'Hc': 641.2102661132812, 'K': -2430, 'Kc': 435.05181884765625, 'Zoom': 11, 'mode': 'text'}}
+ 'view': {'H': -233, 'Hc': 460.89044189453125, 'K': -2068, 'Kc': 342.94378662109375, 'Zoom': 8, 'mode': 'text'}}
 ############# -->

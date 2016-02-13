@@ -262,7 +262,7 @@ class Properties(_Properties_panel):
             self._items.append(kookies.Heading( 15, 70, 250, 30, ', '.join(T.name if V == 1 else T.name + ' (' + str(V) + ')' for T, V in contexts.Text.paragraph.P.items() if V), upper=True))
 
             self._items.append(kookies.Para_control_panel(15, y, 250, 280, 
-                    get_paragraph = lambda: contexts.Text.paragraph, 
+                    paragraph = contexts.Text.paragraph, 
                     display = _print_counter,
                     library = styles.PARASTYLES,
                     before = un.history.save, after = lambda: (styles.PARASTYLES.update_p(), meredith.mipsy.recalculate_all(), self._reconstruct()), refresh = self._reconstruct))

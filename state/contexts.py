@@ -19,9 +19,9 @@ class Text_context(object):
                 print('update parastyle context')
                 self._previous_p = P
                 Parastyle.update(PP)
-                noticeboard.refresh_properties_stack.push_change()
+            noticeboard.refresh_properties_stack.push_change()
 
-        if self._FSTYLE is not FSTYLE:
+        if self._FSTYLE != FSTYLE:
             print('update font context')
             self._FSTYLE = FSTYLE
             Fontstyle.update(FSTYLE)

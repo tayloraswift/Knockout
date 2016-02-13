@@ -36,6 +36,5 @@ redraw_overlay = Refresh_draw()
 redraw_klossy = Refresh_draw()
 redraw_becky = Refresh_draw()
 
-refresh_properties_values = Refresh_draw()
 refresh_properties_stack = Refresh_draw()
 refresh_properties_type = Refresh_with_param()

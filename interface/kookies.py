@@ -1145,11 +1145,11 @@ class Ordered(_Enumerated):
         cr.fill()
 
 class Para_control_panel(Ordered):
-    def __init__(self, x, y, width, height, get_paragraph, library, display=lambda: None, before=lambda: None, after=lambda: None, refresh=lambda: None):
+    def __init__(self, x, y, width, height, paragraph, library, display=lambda: None, before=lambda: None, after=lambda: None, refresh=lambda: None):
         self._display = display
         _Enumerated.__init__(self, x, y, width, height, itemheight=26, library=library, before=before, after=after, refresh=refresh, lcap=1)
 
-        self._get_paragraph = get_paragraph
+        self._paragraph = paragraph
 
         # set hover function equal to press function
         self.is_over_hover = self.is_over
@@ -1161,7 +1161,6 @@ class Para_control_panel(Ordered):
         self._make_sd([(x + 25, 5), (x + 50, 6), (x2 - 69, 1), (x2 - 47, 2), (x2 - 25, 3)], 4)
         
     def _ACQUIRE_REPRESENT(self):
-        self._paragraph = self._get_paragraph()
         self._texts = []
         for i, l in enumerate(chain((self._display(L) for L in self._LIBRARY), ['ELEMENT'])):
             self._add_static_text(self._x + 55, self._y + self._itemheight*i + 17, l, align=1)

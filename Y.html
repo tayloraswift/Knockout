@@ -51,11 +51,11 @@
 
 <p>Instead of “single” or “double” spacing, Vedit lets the writer specify the literal point size of the <strong>leading</strong>, or line height. This helps you predict the amount of space that text will take up, and helps you avoid text alignment headaches, since the spacing is always constant and measurable. </p>
 
-<p style="{'indent': (30, 1, 0), 'indent_range': {0, 1}}"><strong>Indentation</strong> is powerful in Vedit. The lines over which it takes effect can be explicitly enumerated (in a relative count from the start of the paragraph), and it can be set in terms of the character positions of the first line. </p>
+<p style="{'indent_range': {0, 1}, 'indent': (30, 1, 0)}"><strong>Indentation</strong> is powerful in Vedit. The lines over which it takes effect can be explicitly enumerated (in a relative count from the start of the paragraph), and it can be set in terms of the character positions of the first line. </p>
 
 <p style="{'indent': (0, -1, 4)}">—>  This is very useful for creating <strong>hanging indents</strong>.</p>
 
-<p class="body&gray">Paragraph styles even add their <strong>constituent text styles</strong>, which allows for <em>very interesting</em> constructs, such as this gray filter, which is made up of a paragraph class containing a single text class which defines just a gray color, all overlayed over our standard body text style.</p>
+<p class="gray&body">Paragraph styles even add their <strong>constituent text styles</strong>, which allows for <em>very interesting</em> constructs, such as this gray filter, which is made up of a paragraph class containing a single text class which defines just a gray color, all overlayed over our standard body text style.</p>
 
 <p class="h2">SUPERSCRIPTS AND SUBSCRIPTS</p>
 
@@ -126,11 +126,11 @@
         <td colspan="3">
             <p class="h2">Who doesn’t love Meredith Grey?</p>
             
-            <p style="{'fontclasses': (0, [('Italic', {}), ('Regular', {'emphasis': 1})]), 'leading': 200, 'align': 0}"><image src="meredith.png" width=200 />ab<em>c</em>d</p>
+            <p style="{'leading': 200, 'align': 0, 'fontclasses': (0, [('Italic', {}), ('Regular', {'emphasis': 1})])}"><image src="meredith.png" width=200 />ab<em>c</em>d</p>
             
-            <p class="body&gray">(Taylor, evidently.)</p>
+            <p class="gray&body">(Taylor, evidently.)</p>
             
-            <p class="body&gray">Also, hopefully you can see that these tablecells  arrange themselves according to the W3 HTML table specification.</p>
+            <p class="gray&body">Also, hopefully you can see that these tablecells  arrange themselves according to the W3 HTML table specification.</p>
         </td>
     </tr>
     <tr>
@@ -165,24 +165,24 @@
 </body>
 
 <!-- #############
-{'FONTSTYLES': {'Big': {'fontsize': 18, 'path': '/home/kelvin/.fonts/LinLibertine_R.otf'},
+{'FONTSTYLES': {'Big': {'fontsize': 18, 'path': 'fonts/Merriweather-Light.ttf'},
                 'Black': {'color': (0, 0, 0, 1), 'pegs': 'Standard pegs'},
-                'Bold': {'path': '/home/kelvin/.fonts/Proforma-Bold.otf'},
-                'Bold Italic': {'path': '/home/kelvin/.fonts/Proforma-BoldItalic.otf'},
+                'Bold': {'path': 'fonts/Merriweather-Bold.ttf'},
+                'Bold Italic': {'path': 'fonts/Merriweather-BoldItalic.ttf'},
                 'Gray': {'color': (0, 0, 0, 0.4)},
-                'Heading': {'fontsize': 36, 'path': '/home/kelvin/.fonts/Kabel.otf'},
-                'Italic': {'path': '/home/kelvin/.fonts/Proforma-MediumItalic.otf'},
-                'Link': {'color': (1, 0.2, 0.4, 1), 'path': '/home/kelvin/.fonts/Proforma-SemiboldItalic.otf'},
-                'Regular': {'path': '/home/kelvin/.fonts/Proforma-Medium.otf'},
+                'Heading': {'fontsize': 36, 'path': 'fonts/FiraSans-ExtraLight.otf'},
+                'Italic': {'path': 'fonts/Merriweather-Italic.ttf'},
+                'Link': {'color': (1, 0.2, 0.4, 1), 'path': 'fonts/Merriweather-BoldItalic.ttf'},
+                'Regular': {'path': 'fonts/FjordOne-Regular.ttf'},
                 'Small': {'fontsize': 10},
-                'Subheading': {'fontsize': 20, 'path': '/home/kelvin/.fonts/FiraSans-Light.otf', 'tracking': 1},
-                'Superbold': {'path': '/home/kelvin/.fonts/Merriweather_UltraBold.ttf'},
-                'Superitalic': {'path': '/home/kelvin/.fonts/GaramondPremrPro-MedItCapt.otf'},
-                'h3': {'fontsize': 16, 'path': '/home/kelvin/.fonts/FiraSans-Book.otf', 'tracking': 1}},
- 'FTAGLIST': [('strong', []), ('emphasis', []), ('link', []), ('sup', ['small']), ('sub', ['small']), ('big', []), ('caption', [])],
- 'PARASTYLES': (1,
+                'Subheading': {'fontsize': 20, 'path': 'fonts/FiraSans-Light.otf', 'tracking': 1},
+                'Superbold': {'path': 'fonts/Merriweather-Black.ttf'},
+                'Superitalic': {'path': 'fonts/Courgette-Regular.ttf'},
+                'h3': {'fontsize': 16, 'path': 'fonts/FiraSans-Book.otf', 'tracking': 1}},
+ 'FTAGLIST': [('sub', ['small']), ('sup', ['small']), ('emphasis', []), ('link', []), ('big', []), ('strong', []), ('caption', [])],
+ 'PARASTYLES': (4,
                 [({'fontclasses': (0, [('Black', {})])}, {}),
-                 ({'fontclasses': (8,
+                 ({'fontclasses': (5,
                                    [('Regular', {}),
                                     ('Italic', {'emphasis': 1}),
                                     ('Bold', {'strong': 1}),
@@ -201,8 +201,8 @@
                  ({'align': 0, 'fontclasses': (0, [('h3', {})])}, {'h3': 1}),
                  ({'fontclasses': (0, [('Gray', {})])}, {'gray': 1})]),
  'PEGS': {'Standard pegs': ('', {'sub': [0, -0.2], 'sup': [0, 0.3]})},
- 'PTAGLIST': [('body', []), ('h3', []), ('h1', []), ('gray', []), ('h2', [])],
- 'contexts': {'channels': {'c': 7, 'p': 6, 't': 0}, 'text': {'i': 4376, 'j': 4376, 'p': 5, 't': 1}},
+ 'PTAGLIST': [('gray', []), ('h2', []), ('h3', []), ('body', []), ('h1', [])],
+ 'contexts': {'channels': {'c': 7, 'p': 6, 't': 0}, 'text': {'i': 689, 'j': 689, 'p': 1, 't': 1}},
  'grid': [[120, 480], [120, 480]],
  'outlines': ([(([[120, 120, False], [120, 200, True]], [[480, 120, False], [480, 200, True]]), 0)],
               [(([[120, 210, False], [120, 480, False]], [[480, 210, False], [480, 480, False]]), 0),
@@ -215,5 +215,5 @@
                ([[[120, 120, False], [120, 480, False]], [[280, 120, False], [490, 300, True], [280, 480, False]]], 6),
                ([[[120, 120, False], [120, 540, False]], [[480, 120, False], [480, 540, False]]], 7)]),
  'page': {'dimensions': (600, 600), 'dual': True},
- 'view': {'H': -58, 'Hc': 328.03839111328125, 'K': -1960, 'Kc': 235.53713989257812, 'Zoom': 9, 'mode': 'text'}}
+ 'view': {'H': 253, 'Hc': 485.326904296875, 'K': -676, 'Kc': 374.34197998046875, 'Zoom': 9, 'mode': 'text'}}
 ############# -->

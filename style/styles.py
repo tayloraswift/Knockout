@@ -62,52 +62,6 @@ class _DB(object):
     def _copy(self, name):
         return type(self)(self.polaroid(), name)
 
-class _DB_with_dict(_DB):
-    def __init__(self, elements, active, name, library):
-        _DB.__init__(self, name, library)
-        self.active = active
-        self.elements = elements
-
-    def _delete_element(self, key=None):
-        if key is None or self.active == key:
-            del self.elements[self.active]
-            if self.elements:
-                keys = list(sorted(self.elements.keys()))
-                if self.active == keys[0]:
-                    self.active = keys[-1]
-                else:
-                    self.active = keys[0]
-            else:
-                self.active = None
-        else:
-            del self.elements[key]
-
-class DB_Pegs(_DB_with_dict):
-    def __init__(self, pegs=('', {}), name='New peg set'):
-        ACT = None
-        E = {FTAGS[k]: v for k, v in pegs[1].items()}
-        _DB_with_dict.__init__(self, E, ACT, name, PEGS)
-
-        if pegs[0]:
-            self.applies_to = set(pegs[0])
-        else:
-            self.applies_to = None
-
-    def add_slot(self, key=None):
-        self.elements[key] = [0, 0]
-        self.active = self.elements[key]
-    
-    def delete_slot(self, key=None):
-        self._delete_element(key)
-
-    def polaroid(self):
-        D = {k.name: v.copy() for k, v in self.elements.items()}
-        if self.applies_to:
-            C = ''.join(self.applies_to)
-        else:
-            C = ''
-        return C, D
-
 class P_Library(_Active_list):
     def __init__(self):
         self.template = DB_Parastyle()
@@ -193,17 +147,11 @@ class P_Library(_Active_list):
 class DB_Fontstyle(_DB):
     def __init__(self, fdict={}, name='New fontclass'):
         _DB.__init__(self, name, library=FONTSTYLES)
-        fdict = fdict.copy()
-        if 'pegs' in fdict:
-            fdict['pegs'] = PEGS[fdict['pegs']]
-        self.attributes = fdict
+        self.attributes = fdict.copy()
         
 #        ('path', 'fontsize', 'tracking', 'color')
     def polaroid(self):
-        fdict = self.attributes.copy()
-        if 'pegs' in fdict:
-            fdict['pegs'] = fdict['pegs'].name
-        return fdict
+        return self.attributes.copy()
 
 class _F_container(object):
     def __init__(self, F=None, count=Counter()):
@@ -313,8 +261,6 @@ F_DNA = {}
 FTAGS = T_Library()
 PTAGS = T_Library()
 
-PEGS = {}
-
 FONTSTYLES = {}
 PARASTYLES = P_Library()
 
@@ -352,23 +298,19 @@ def TREES(DB_TYPE, tree):
 def faith(woods):
     FTAGS.populate(woods['FTAGLIST'])
     PTAGS.populate(woods['PTAGLIST'])
-    PEGS.clear()
     FONTSTYLES.clear()
     PARASTYLES.clear()
 
-    PEGS.update(TREES(DB_Pegs, woods['PEGS']))
     FONTSTYLES.update(TREES(DB_Fontstyle, woods['FONTSTYLES']))
     
     PARASTYLES.populate( * woods['PARASTYLES'])
 
 def daydream():
     # set up emergency undefined classes
-    _G_DNA = DB_Pegs(('', {}), '_undefined')
-    
     F_DNA.update({'fontsize': 13,
             'path': 'style/Ubuntu-R.ttf',
-            'pegs': _G_DNA,
             'tracking': 0,
+            'shift': 0,
             'color': (1, 0.15, 0.2, 1)})
     
     P_DNA.update({'hyphenate': False,

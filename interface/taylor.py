@@ -716,6 +716,10 @@ class Document_view(ui.Cell):
                 cr.rel_line_to(3, -6)
                 cr.close_path()
                 cr.fill()
+            
+            elif a == -23:
+                cr.rectangle(x, y - fontsize, fontsize, fontsize)
+                cr.fill()
 
     def _draw_spelling(self, cr, underscores):
         cr.set_source_rgba(1, 0.15, 0.2, 0.8)

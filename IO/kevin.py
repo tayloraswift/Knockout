@@ -5,10 +5,11 @@ from ast import literal_eval
 from bulletholes.counter import TCounter as Counter
 from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image
 from style import styles
-from modules import table, pie
+from modules import table, pie, fraction
 
-modules = {'table': (table.Table, {'tr', 'td'}), 'module:pie': (pie.PieChart, {'module:pie:title', 'module:pie:slice'})}
+modules = {'table': (table.Table, {'tr', 'td'}), 'module:pie': (pie.PieChart, {'module:pie:slice'}), 'module:fraction': (fraction.Fraction, {'module:fraction:numerator', 'module:fraction:denominator'})}
 moduletags = set(modules) | set(chain.from_iterable(v[1] for v in modules.values()))
+inline = {'p', 'module:fraction:numerator', 'module:fraction:denominator'}
 closing = {table.Table}
 
 serialize_modules = {table.Table, pie.PieChart}
@@ -97,7 +98,7 @@ class Minion(parser.HTMLParser):
         # this should be disabled on the last blob, unless we are sure the container is 'p'
         O = self._C[-1][1]
         container = self._breadcrumbs[-1]
-        if container == 'p':
+        if container in inline:
             O.extend(list(data))
 
 class Kevin_from_TN(Minion): # to capture the first and last blobs

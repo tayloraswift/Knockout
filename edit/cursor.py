@@ -16,10 +16,15 @@ class FCursor(object):
     def __init__(self, ctx):
         self.TRACT = meredith.mipsy[ctx['t']]
         self.assign_text(self.TRACT)
-        self.si = ctx['i']
-        self.i = ctx['i']
-        self.j = ctx['j']
-        
+        if max(ctx['i'], ctx['j']) < len(self.text):
+            self.si = ctx['i']
+            self.i = ctx['i']
+            self.j = ctx['j']
+        else:
+            self.si = 0
+            self.i = 0
+            self.j = 0
+
         self.PG = ctx['p']
 
     def polaroid(self):

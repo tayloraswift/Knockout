@@ -1,5 +1,6 @@
 import bisect
 from math import pi
+from itertools import chain
 
 from style.styles import ISTYLES
 from edit.paperairplanes import interpret_float, interpret_int, interpret_rgba, pack_binomial, read_binomial
@@ -1146,7 +1147,7 @@ class Ordered(_Enumerated):
 class Para_control_panel(Ordered):
     def __init__(self, x, y, width, height, get_paragraph, library, display=lambda: None, before=lambda: None, after=lambda: None, refresh=lambda: None):
         self._display = display
-        _Enumerated.__init__(self, x, y, width, height, itemheight=26, library=library, before=before, after=after, refresh=refresh)
+        _Enumerated.__init__(self, x, y, width, height, itemheight=26, library=library, before=before, after=after, refresh=refresh, lcap=1)
 
         self._get_paragraph = get_paragraph
 
@@ -1162,44 +1163,46 @@ class Para_control_panel(Ordered):
     def _ACQUIRE_REPRESENT(self):
         self._paragraph = self._get_paragraph()
         self._texts = []
-        for i, l in enumerate(self._LIBRARY):
-            self._add_static_text(self._x + 55, self._y + self._itemheight*i + 17, self._display(l), align=1)
+        for i, l in enumerate(chain((self._display(L) for L in self._LIBRARY), ['ELEMENT'])):
+            self._add_static_text(self._x + 55, self._y + self._itemheight*i + 17, l, align=1)
 
     def focus(self, x, y):
         F, C = self.hover(x, y)
+        items = self._LIBRARY + [self._paragraph.EP]
 
-        if F == len(self._LIBRARY):
+        if F == len(items):
             self._BEFORE()
             self._add()
             self._SYNCHRONIZE()
             self._AFTER()
 
         else:
-            PSTYLE = self._LIBRARY[F]
-            if C == 1 or len(PSTYLE.tags) != 1:
+            PSTYLE = items[F]
+            if C == 1:
                 self._LIBRARY.active = PSTYLE
                 self._REFRESH()
                 return C
-                
-            elif C == 2:
-                self._BEFORE()
-                self._move(F, F - 1)
+            
+            elif F < len(items) - 1:
+                if C == 2:
+                    self._BEFORE()
+                    self._move(F, F - 1)
 
-            elif C == 3:
-                self._BEFORE()
-                self._move(F, F + 1)
-            
-            elif C == 4:
-                self._BEFORE()
-                del self._LIBRARY[F]
-            
-            elif C == 5 or C == 6:
-                tag, count = next(iter(PSTYLE.tags.items()))
-                self._BEFORE()
-                if C == 5:
-                    self._paragraph.P[tag] -= 1
-                else:
-                    self._paragraph.P[tag] += 1
+                elif C == 3:
+                    self._BEFORE()
+                    self._move(F, F + 1)
+                
+                elif C == 4:
+                    self._BEFORE()
+                    del self._LIBRARY[F]
+                
+                if C == 5 or C == 6 and len(PSTYLE.tags) == 1:
+                    tag, count = next(iter(PSTYLE.tags.items()))
+                    self._BEFORE()
+                    if C == 5:
+                        self._paragraph.P[tag] -= 1
+                    else:
+                        self._paragraph.P[tag] += 1
 
             self._SYNCHRONIZE()
             self._AFTER()
@@ -1210,12 +1213,13 @@ class Para_control_panel(Ordered):
         cr.set_line_width(2)
         y1 = self._y
         
-        for i, PSTYLE in enumerate(self._LIBRARY):
+        for i, PSTYLE in enumerate(chain(self._LIBRARY, [self._paragraph.EP])):
 
             if PSTYLE is self._LIBRARY.active:
                 radius = 5
 
                 y2 = y1 + self._itemheight
+                cr.move_to(self._x, y1 + radius)
                 cr.arc(self._x + radius, y1 + radius, radius, 2*(pi/2), 3*(pi/2))
                 cr.arc(self._x_right - radius, y1 + radius, radius, 3*(pi/2), 4*(pi/2))
                 cr.arc(self._x_right - radius, y2 - radius, radius, 0*(pi/2), 1*(pi/2))
@@ -1243,6 +1247,9 @@ class Para_control_panel(Ordered):
                 if len(PSTYLE.tags) == 1:
                     minus_sign(cr, self._x, y1)
                     plus_sign(cr, self._x + 25, y1)
+                    k = next(iter(PSTYLE.tags.keys()))
+                    cr.move_to(self._x + 22, y1 + 17)
+                    cr.show_text(str(self._paragraph.P[k]))
                     cr.fill()
 
                 cr.set_source_rgb(1, 1, 1)
@@ -1283,6 +1290,9 @@ class Para_control_panel(Ordered):
                         cr.set_source_rgba(0, 0, 0, 0.7)
                     plus_sign(cr, self._x + 25, y1)
                     cr.fill()
+                    k = next(iter(PSTYLE.tags.keys()))
+                    cr.move_to(self._x + 22, y1 + 17)
+                    cr.show_text(str(self._paragraph.P[k]))
                 
                 if PSTYLE.tags <= self._paragraph.P:
                     cr.set_source_rgb( * accent)
@@ -1291,6 +1301,11 @@ class Para_control_panel(Ordered):
 
             elif PSTYLE.tags <= self._paragraph.P:
                 cr.set_source_rgba(0, 0, 0, 0.7)
+                
+                if len(PSTYLE.tags) == 1:
+                    k = next(iter(PSTYLE.tags.keys()))
+                    cr.move_to(self._x + 22, y1 + 17)
+                    cr.show_text(str(self._paragraph.P[k]))
 
             else:
                 cr.set_source_rgba(0, 0, 0, 0.4)
@@ -1298,7 +1313,7 @@ class Para_control_panel(Ordered):
             cr.show_glyphs(self._texts[i])
             y1 += self._itemheight
 
-        if hover[1] is not None and hover[1][0] == len(self._LIBRARY):
+        if hover[1] is not None and hover[1][0] == len(self._LIBRARY) + 1:
             cr.set_source_rgb( * accent)
         else:
             cr.set_source_rgba(0, 0, 0, 0.7)

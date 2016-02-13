@@ -11,7 +11,7 @@ from typing import typing
 from interface import karlie, taylor, poptarts
 
 def save():
-    HEADER = '<head><meta charset="UTF-8"></head>\n\n'
+    HEADER = '<head><meta charset="UTF-8"></head>\n<title>' + constants.filename + '</title>\n\n'
     
     SECTIONS, channels = zip( * ((kevin.serialize(t.text), [(c.railings, c.page) for c in t.channels.channels]) for t in meredith.mipsy))
     SECTIONS = '<body>\n<section>\n' + '\n</section>\n\n<section>\n'.join(SECTIONS) + '\n</section>\n</body>\n'

@@ -1,12 +1,30 @@
-import bisect
-
+from bisect import bisect
 from itertools import groupby, chain
 
+from bulletholes.counter import TCounter as Counter
 from state import noticeboard
-
 from model.wonder import words
+from model.cat import typeset_chained, typeset_liquid, Glyphs_line
+from elements.elements import Paragraph
 
-from model.cat import typeset_chained, Glyphs_line
+class Block(dict):
+    def __init__(self, FLOW, top, bottom, left, right):
+        self._FLOW = FLOW
+        self['x'] = left
+        self['left'] = left
+        self['width'] = right - left
+        self['y'] = bottom
+        self['leading'] = bottom - top
+        self['GLYPHS'] = [(-2, 0, bottom, None, None, right - left)]
+        self['P_BREAK'] = True
+        self['PP'] = Paragraph(Counter())
+        
+    def collect_text(self):
+        return list(chain.from_iterable(A.collect_text() for A in self._FLOW))
+    
+    def deposit(self, repository):
+        for A in self._FLOW:
+            A.deposit(repository)
 
 def _deposit_misspellings(underscores, tract):
     for pair in tract.misspellings:
@@ -41,6 +59,11 @@ class Atomic_text(object):
         self._line_startindices = [line['i'] for line in self._SLUGS]
         self._line_yl = { cc: list(h[:2] for h in list(g)) for cc, g in groupby( ((LINE['y'], LINE['l'], LINE['c']) for LINE in self._SLUGS if LINE['GLYPHS']), key=lambda k: k[2]) }
 
+    def cast(self, bounds, c, y):
+        self._c = c
+        self._SLUGS[:] = typeset_liquid(bounds, self.text, {'j': 0, 'l': -1, 'P_BREAK': True}, 0, y, c, False)
+        self._precompute_search()
+                
     def _target_row(self, y, c):
         try:
             yy, ll = zip( * self._line_yl[c])
@@ -51,8 +74,7 @@ class Atomic_text(object):
         if y >= yy[-1]:
             lineindex = len(yy) - 1
         else:
-            lineindex = bisect.bisect(yy, y)
-
+            lineindex = bisect(yy, y)
         return ll[lineindex]
 
     ### FUNCTIONS USEFUL FOR DRAWING AND INTERFACE
@@ -75,15 +97,15 @@ class Atomic_text(object):
         
         else:
             last = self._SLUGS[v_l]
-            select.append((first['y'], u_x, first['width'] + first['x'], first['leading'], first['page']))
-            select.extend((line['y'], line['x'], line['width'] + line['x'], line['leading'], line['page']) for line in (self._SLUGS[l] for l in range(u_l + 1, v_l)))
-            select.append((last['y'], last['x'], v_x, last['leading'], last['page']))
+            select.append((first['y'], u_x, first['width'] + first['left'], first['leading'], first['page']))
+            select.extend((line['y'], line['left'], line['width'] + line['left'], line['leading'], line['page']) for line in (self._SLUGS[l] for l in range(u_l + 1, v_l)))
+            select.append((last['y'], last['left'], v_x, last['leading'], last['page']))
 
         return select
 
     # get line number given character index
     def index_to_line(self, index):
-        return bisect.bisect(self._line_startindices, index) - 1
+        return bisect(self._line_startindices, index) - 1
     
     # get x position of specific glyph
     def text_index_x(self, i, l):
@@ -105,23 +127,10 @@ class Atomic_text(object):
             self.word_count = words(self.text)
 
     def I(self, x, y):
-        c = self._SLUGS[0]['c']
-        lineobject = self._SLUGS[self._target_row(y, c)]
-        
-        ftx = self
-        O = lineobject
-        while 1:
-            O = O.I(x, y)
-            if type(O) is int:
-                break
-            else:
-                ftx = O
-        return O
+        return self._SLUGS[self._target_row(y, self._c)]
     
     def target_select(self, x, y, page, i):
-        c = self._SLUGS[0]['c']
-        lineobject = self._SLUGS[self._target_row(y, c)]
-        
+        lineobject = self._SLUGS[self._target_row(y, self._c)]
         O = lineobject.I(x, y)
         if type(O) is not int:
             O = lineobject['i']
@@ -167,9 +176,10 @@ class Chained_text(Atomic_text):
             
             while 1:
                 O = O.I(x, y)
-                if type(O) is int:
+                TO = type(O)
+                if TO is int:
                     break
-                else:
+                elif TO is not Glyphs_line:
                     ftx = O
         else:
             O = si
@@ -237,7 +247,7 @@ class Chained_text(Atomic_text):
         if not self._sorted_pages:
             for page, pageslugs in ((p, list(ps)) for p, ps in groupby((line for line in self._SLUGS), key=lambda line: line['page'])):
                 if page not in self._sorted_pages:
-                    self._sorted_pages[page] = {'_annot': [], '_images': []}
+                    self._sorted_pages[page] = {'_annot': [], '_images': [], '_paint': [], '_paint_annot': []}
                 sorted_page = self._sorted_pages[page]
                 
                 for line in pageslugs:

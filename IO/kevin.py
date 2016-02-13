@@ -1,21 +1,25 @@
 from html import parser, unescape
 from itertools import chain
+from ast import literal_eval
 
 from bulletholes.counter import TCounter as Counter
 from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image
 from style import styles
-from model import table
+from modules import table, pie
 
-modules = {'table': {'tr', 'td'}}
-moduletags = set(modules) | set(chain.from_iterable(modules.values()))
+modules = {'table': (table.Table, {'tr', 'td'}), 'module:pie': (pie.PieChart, {'module:pie:title', 'module:pie:slice'})}
+moduletags = set(modules) | set(chain.from_iterable(v[1] for v in modules.values()))
 closing = {table.Table}
+
+serialize_modules = {table.Table, pie.PieChart}
+structural_open = {Paragraph} | serialize_modules
 
 class Minion(parser.HTMLParser):
     def _trim(self):
         if self._breadcrumbs != [None]:
             last = len(self._O) - next(i for i, v in enumerate(reversed(self._O)) if type(v) is str)
             del self._O[last:]
-        
+
     def feed(self, data):
         self._first = True
         self._O = []
@@ -36,7 +40,11 @@ class Minion(parser.HTMLParser):
                 ptags = Counter(styles.PTAGS[T.strip()] for T in attrs['class'].split('&'))
             else:
                 ptags = Counter({styles.PTAGS['body']: 1})
-            O.append(Paragraph(ptags))
+            if 'style' in attrs:
+                EP = styles.cast_parastyle(literal_eval(attrs['style']), ())
+            else:
+                EP = styles.DB_Parastyle()
+            O.append(Paragraph(ptags, EP))
             
             self._breadcrumbs.append('p')
         
@@ -50,11 +58,7 @@ class Minion(parser.HTMLParser):
         
         elif tag in moduletags:
             self._breadcrumbs.append(tag)
-            if tag == 'td':
-                T = table.CellPost(attrs)
-            else:
-                T = tag
-            M = (T, [])
+            M = ((tag, attrs), [])
             O.append(M)
             self._C.append(M)
             
@@ -85,10 +89,9 @@ class Minion(parser.HTMLParser):
                 raise RuntimeError
             
             L = self._C.pop()
-            
             if tag in modules:
                 O = self._C[-1][1]
-                O[-1] = table.Table(L)
+                O[-1] = modules[tag][0](L)
 
     def handle_data(self, data):
         # this should be disabled on the last blob, unless we are sure the container is 'p'
@@ -131,9 +134,6 @@ def deserialize(text, fragment=False):
     text = text.replace('<sub>', '<f class="sub">')
     text = text.replace('</sub>', '</f class="sub">')
     return parse.feed(text.replace('</f', '<ff'))
-
-serialize_modules = {table.Table}
-structural_open = {Paragraph} | serialize_modules
 
 def ser(L, indent):
     lserialize_modules = serialize_modules

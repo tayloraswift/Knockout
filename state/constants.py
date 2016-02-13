@@ -49,7 +49,7 @@ interface_fstyles = {'_interface:LABEL': {'fontsize': 11,
                                       'tracking': 0.5},
                 '_interface:TITLE': {'fontsize': 18, 'tracking': 4}}
 
-interface_pstyle = [((), '_interface:REGULAR'),
-                          (('label',), '_interface:LABEL'),
-                          (('strong',), '_interface:STRONG'),
-                          (('title',), '_interface:TITLE')]
+interface_pstyle = [('_interface:REGULAR', ()),
+                          ('_interface:LABEL', ('label',)),
+                          ('_interface:STRONG', ('strong',)),
+                          ('_interface:TITLE', ('title',))]

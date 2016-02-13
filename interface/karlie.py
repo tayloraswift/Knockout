@@ -317,6 +317,9 @@ class Properties(_Properties_panel):
                 self._items += _columns(_create_p_field(kookies.Numeric_field, 15, y, 255, 'leading', after=self.synchronize, name='LEADING'))
                 y += 45
 
+                self._items += _columns(_create_p_field(kookies.Integer_field, 15, y, 255, 'align', after=self.synchronize, name='ALIGN'))
+                y += 45
+
                 self._items += _columns(_create_p_field(kookies.Binomial_field, 15, y, 145, 'indent', after=self.synchronize, name='INDENT', letter='K') +
                                 _create_p_field(kookies.Enumerate_field, 175, y, 95, 'indent_range', after=self.synchronize, name='FOR LINES'))
                 y += 45

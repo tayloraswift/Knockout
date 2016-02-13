@@ -102,7 +102,7 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False):
         F = INIT['F'].copy()
         R = INIT['R'] + 1
         K_x = None
-        PSTYLE = styles.PARASTYLES.project_p(PP.P)
+        PSTYLE = styles.PARASTYLES.project_p(PP)
         gap = False
     
     page = channel.page
@@ -117,7 +117,7 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False):
             if type(container) is Paragraph:
                 PP = container
                 _p_i_ = i
-                PSTYLE = styles.PARASTYLES.project_p(PP.P)
+                PSTYLE = styles.PARASTYLES.project_p(PP)
                 
                 F = Counter()
                 R = 0
@@ -168,7 +168,7 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False):
                         
                         1989, 
                         0,
-                        PP.P,
+                        PP,
                         F.copy(), 
                         
                         hyphenate = False
@@ -194,19 +194,28 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False):
                 
                 x2 - x1, 
                 PSTYLE['leading'],
-                PP.P,
+                PP,
                 F.copy(), 
                 
                 hyphenate = PSTYLE['hyphenate']
                 )
         # stamp line data
         LINE['R'] = R # line number (within paragraph)
-        LINE['x'] = x1
+        LINE['left'] = x1
+        if PSTYLE['align'] > 0:
+            LINE['x'] = x1
+        elif LINE['GLYPHS']:
+            rag = LINE['width'] - LINE['GLYPHS'][-1][5]
+            if PSTYLE['align']:
+                LINE['x'] = x1 + rag
+            else:
+                LINE['x'] = x1 + rag/2
+        else:
+            LINE['x'] = x1
         LINE['y'] = y
         LINE['l'] = l
         LINE['c'] = c
         LINE['page'] = page
-        LINE['PP'] = PP
 
         l += 1
         SLUGS.append(LINE)
@@ -223,7 +232,7 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False):
 
     return SLUGS
 
-def cast_liquid_line(letters, startindex, width, leading, P, F, hyphenate=False):
+def cast_liquid_line(letters, startindex, width, leading, PP, F, hyphenate=False):
     LINE = Glyphs_line({
             'i': startindex,
             
@@ -233,7 +242,8 @@ def cast_liquid_line(letters, startindex, width, leading, P, F, hyphenate=False)
             'hyphen': None,
             
             'P_BREAK': False,
-            'F': F
+            'F': F,
+            'PP': PP
             })
     
     # list that contains glyphs
@@ -243,7 +253,7 @@ def cast_liquid_line(letters, startindex, width, leading, P, F, hyphenate=False)
 
     # retrieve font style
     fstat = F.copy()
-    FSTYLE = styles.PARASTYLES.project_f(P, F)
+    FSTYLE = styles.PARASTYLES.project_f(PP, F)
 
     # blank pegs
     glyphwidth = 0
@@ -300,7 +310,7 @@ def cast_liquid_line(letters, startindex, width, leading, P, F, hyphenate=False)
                 else:
                     brackets[V].append([x, False])
             
-            FSTYLE = styles.PARASTYLES.project_f(P, F)
+            FSTYLE = styles.PARASTYLES.project_f(PP, F)
             GLYPHS.append((-4, x, y, FSTYLE, fstat, x))
             
         elif CT is CloseFontpost:
@@ -332,7 +342,7 @@ def cast_liquid_line(letters, startindex, width, leading, P, F, hyphenate=False)
                 else:
                     front = x
             
-            FSTYLE = styles.PARASTYLES.project_f(P, F)
+            FSTYLE = styles.PARASTYLES.project_f(PP, F)
             GLYPHS.append((-5, x, y, FSTYLE, fstat, x))
             
         elif CT is Paragraph:
@@ -426,7 +436,7 @@ def cast_liquid_line(letters, startindex, width, leading, P, F, hyphenate=False)
                             # check if the hyphen overflows
 
                             h_F = GLYPHS[i - 1 + k][4]
-                            HFS = styles.PARASTYLES.project_f(P, h_F)
+                            HFS = styles.PARASTYLES.project_f(PP, h_F)
                                 
                             if GLYPHS[i - 1 + k][5] + HFS['fontmetrics'].advance_pixel_width('-') * HFS['fontsize'] < width:
                                 i = i + k

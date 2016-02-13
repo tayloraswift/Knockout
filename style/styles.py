@@ -1,4 +1,4 @@
-import itertools
+from itertools import chain
 from libraries.freetype import ft_errors
 
 from bulletholes.counter import TCounter as Counter
@@ -117,34 +117,49 @@ class P_Library(_Active_list):
         
         self.update_f = self._font_projections.clear
     
-    def populate(self, active_i, E):
-        _Active_list.__init__(self, active_i, (DB_Parastyle(P.copy(), Counter({PTAGS[T]: V for T, V in count.items()})) for P, count in E))
+    def populate(self, active_i, D):
+        _Active_list.__init__(self, active_i, (cast_parastyle(P.copy(), {PTAGS[T]: V for T, V in count.items()}) for P, count in D))
     
-    def project_p(self, P):
+    def project_p(self, PP):
+        P = PP.P
+        EP = PP.EP
         H = hash(frozenset(P.items()))
+        if EP:
+            H += 13 * id(PP)
+        
         try:
             return self._projections[H]
         except KeyError:
             # iterate through stack
             projection = Layer(P_DNA)
-            for B in (b for b in self if b.tags <= P):
+            effective = (b for b in self if b.tags <= P)
+            if EP:
+                effective = chain(effective, [EP])
+            for B in effective:
                 projection.overlay(B.attributes, B)
                 projection.members.append(B)
             
             self._projections[H] = projection
             return projection
     
-    def project_f(self, P, F):
-        H = 13 * hash(frozenset(P.items())) + hash(frozenset(F.items())) # we must give paragraph a different factor if a style has the same name as a fontstyle
+    def project_f(self, PP, F):
+        P = PP.P
+        EP = PP.EP
+        H = 22 * hash(frozenset(P.items())) + hash(frozenset(F.items())) # we must give paragraph a different factor if a style has the same name as a fontstyle
+        if EP:
+            H += 13 * id(PP)
+        
         try:
             return self._font_projections[H]
         except KeyError:
             # add tag groups
-            F = F.concat(Counter(itertools.chain.from_iterable((FTAGS[G] for G in T.groups) for T, n in F.items() if n)))
+            F = F.concat(Counter(chain.from_iterable((FTAGS[G] for G in T.groups) for T, n in F.items() if n)))
             # iterate through stack
             projection = Layer(F_DNA)
-
-            for B in (b for b in self if b.tags <= P):
+            effective = (b for b in self if b.tags <= P)
+            if EP:
+                effective = chain(effective, [EP])
+            for B in effective:
                 for C in (c for c in B.layerable if c.tags <= F and c.F is not None):
                     projection.overlay(C.F.attributes, C)
                     projection.members.append(C)
@@ -167,6 +182,13 @@ class P_Library(_Active_list):
     def update_p(self):
         self._projections.clear()
         self._font_projections.clear()
+
+    def polaroid(self):
+        if self.active is None or self.active not in self:
+            i = None
+        else:
+            i = self.index(self.active)
+        return i, [P.polaroid() for P in self]
 
 class DB_Fontstyle(_DB):
     def __init__(self, fdict={}, name='New fontclass'):
@@ -199,18 +221,39 @@ class _F_container(object):
         return N, {T.name: V for T, V in self.tags.items()}
 
 class _F_layers(_Active_list):
-    def __init__(self, active_i=None, E=[]):
-        _Active_list.__init__(self, active_i, (_F_container(FONTSTYLES[F], Counter({FTAGS[T]:V for T, V in tags.items()})) for F, tags in E))
+    def __init__(self, active_i=None, E=()):
+        _Active_list.__init__(self, active_i, E)
         self.template = _F_container()
+    
+    def copy(self):
+        try:
+            i = self.index(self.active)
+        except ValueError:
+            i = None
+        return _F_layers(i, (c.copy() for c in self))
+
+def cast_parastyle(pdict, count):
+    if 'fontclasses' in pdict:
+        i, E = pdict.pop('fontclasses')
+        layerable = _F_layers(i, (_F_container(FONTSTYLES[F], Counter({FTAGS[T]:V for T, V in tags.items()})) for F, tags in E))
+    else:
+        layerable = _F_layers()
+    return DB_Parastyle(pdict, layerable, Counter(count))
 
 class DB_Parastyle(object):
-    def __init__(self, pdict={}, count=Counter()):
-        self.tags = count
-        if 'fontclasses' in pdict:
-            self.layerable = _F_layers( * pdict.pop('fontclasses'))
+    def __init__(self, A=None, layerable=None, count=None):
+        if count is None:
+            self.tags = Counter()
         else:
+            self.tags = count
+        if layerable is None:
             self.layerable = _F_layers()
-        self.attributes = pdict
+        else:
+            self.layerable = layerable
+        if A is None:
+            self.attributes = {}
+        else:
+            self.attributes = A
         
 #        ('leading', 'indent', 'indent_range', 'margin_bottom', 'margin_top', 'margin_left', 'margin_right', 'hyphenate')
     def polaroid(self):
@@ -220,8 +263,17 @@ class DB_Parastyle(object):
         return pdict, {T.name: V for T, V in self.tags.items()}
 
     def copy(self):
-        P = self.polaroid()[0]
-        return DB_Parastyle(P, self.tags.copy())
+        return DB_Parastyle(self.attributes.copy(), self.layerable.copy(), self.tags.copy())
+    
+    def __bool__(self):
+        return bool(self.layerable) or bool(self.attributes)
+    
+    def __eq__(self, other):
+        if not self and not other:
+            return True
+        else:
+            return id(self) == id(other)
+          
 
 class Tag(_DB):
     def __init__(self, library, name, groups, is_group = False):
@@ -240,7 +292,7 @@ class T_Library(dict):
     def populate(self, L):
         self.clear()
         D = {T[0]: Tag(self, * T) for T in L}
-        groups = set(itertools.chain.from_iterable(G for T, G in L))
+        groups = set(chain.from_iterable(G for T, G in L))
         D.update({G: Tag(self, G, [G], True) for G in groups})
         self.update(D)
     
@@ -272,7 +324,7 @@ ISTYLES = {}
 def _create_interface():
     font_projections = {}
     FD = TREES(DB_Fontstyle, constants.interface_fstyles)
-    P = [_F_container(FD[F], Counter(tags)) for tags, F in constants.interface_pstyle]
+    P = [_F_container(FD[F], Counter(tags)) for F, tags in constants.interface_pstyle]
     ui_styles = ((), ('title',), ('strong',), ('label',))
     for U in ui_styles:
         F = Counter(U)
@@ -327,6 +379,6 @@ def daydream():
             'margin_left': 0,
             'margin_right': 0,
             'margin_top': 0,
-            'stops': [89, 178, 267, 356]})
+            'align': 1})
 
     ISTYLES.update(_create_interface())

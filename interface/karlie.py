@@ -252,52 +252,13 @@ class Properties(_Properties_panel):
                         y += 45
                         self._items += _columns(_create_f_field(kookies.Numeric_field, 15, y, 250, 'tracking', after=self.synchronize, name='TRACKING'))
                         y += 45
+                        self._items += _columns(_create_f_field(kookies.Numeric_field, 15, y, 250, 'shift', after=self.synchronize, name='VERTICAL SHIFT'))
+                        y += 45
                         self._items += _columns(_create_f_field(kookies.RGBA_field, 15, y, 250, 'color', after=self.synchronize, name='COLOR'))
             else:
                 self._items.append(kookies.Heading( 15, 90, 250, 30, '', upper=True))
-
-        elif self._tab == 'pegs':
-            if styles.PARASTYLES.active is not None and styles.PARASTYLES.active.layerable.active is not None and styles.PARASTYLES.active.layerable.active.F is not None:
-                self._items.append(kookies.Heading( 15, 70, 250, 30, styles.PARASTYLES.active.layerable.active.F.name, upper=True))
-                
-                FG = lambda: styles.PARASTYLES.active.layerable.active.F.attributes['pegs'] if 'pegs' in styles.PARASTYLES.active.layerable.active.F.attributes else None
-                G = FG()
-                if G is None:
-                    self._items.append(kookies.New_object_menu(15, y, 250,
-                                value_push = ops.link_pegs, 
-                                library = styles.PEGS, 
-                                TYPE = styles.DB_Pegs,
-                                before = un.history.save, after = self.refresh, name='PEGS', source=self._partition))
-
-                else:
-                    self._items.append(kookies.Object_menu(15, y, 250,
-                                value_acquire = FG, 
-                                value_push = ops.link_pegs, 
-                                library = styles.PEGS, 
-                                before = un.history.save, after = self.refresh, name='PEGS', source=self._partition))
-                    y += 45
-                    
-                    self._items.append(kookies.Subset_table( 15, y, 250, 250,
-                            datablock = G,
-                            superset = styles.FTAGS,
-                            before=un.history.save, after=self.refresh, refresh=self.refresh))
-                    y += 250
-                    
-                    if G.active is not None:
-                        _after_ = lambda: (styles.PARASTYLES.update_f(), meredith.mipsy.recalculate_all(), self.synchronize())
-                        self._items += _columns([kookies.Numeric_field(15, y, 120, 
-                                    callback = ops.g_set_active_x,
-                                    value_acquire = lambda: G.active[0],
-                                    before = un.history.save, after = _after_, name = 'X' ) ,
-                            kookies.Numeric_field(145, y, 120, 
-                                    callback = ops.g_set_active_y,
-                                    value_acquire = lambda: G.active[1],
-                                    before = un.history.save, after = _after_, name = 'Y' )])
-                        y += 45
-            else:
-                self._items.append(kookies.Heading( 15, 90, 250, 30, '', upper=True))
         
-        if self._tab == 'paragraph':
+        elif self._tab == 'paragraph':
             self._items.append(kookies.Heading( 15, 70, 250, 30, ', '.join(T.name if V == 1 else T.name + ' (' + str(V) + ')' for T, V in contexts.Text.paragraph.P.items() if V), upper=True))
 
             self._items.append(kookies.Para_control_panel(15, y, 250, 280, 

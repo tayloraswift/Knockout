@@ -37,9 +37,9 @@ class Glyphs_line(dict):
     # glyphline is root, index
         return i + self['i']
 
-    def deposit(self, repository):
-        x = self['x']
-        y = self['y']
+    def deposit(self, repository, x=0, y=0):
+        x += self['x']
+        y += self['y']
         PP = self['PP']
         hyphen = self['hyphen']
 
@@ -54,6 +54,8 @@ class Glyphs_line(dict):
                     repository['_annot'].append( (glyph[0], x, y + self['leading'], PP, glyph[3]))
                 elif glyph[0] == -13:
                     repository['_images'].append( (glyph[6], glyph[1] + x, glyph[2] + y) )
+                elif glyph[0] == -89:
+                    glyph[6].deposit_glyphs(repository, x, y)
                 else:
                     repository['_annot'].append((glyph[0], glyph[1] + x, glyph[2] + y) + (PP, glyph[3]))
             else:
@@ -308,12 +310,7 @@ def cast_liquid_line(letters, startindex, width, leading, PP, F, hyphenate=False
             break
 
         else:
-            if CT == Image:
-                glyphwidth = letter.width
-                                                              # additional fields:  image object | scale ratio
-                GLYPHS.append((-13, x, y - leading, FSTYLE, fstat, x + glyphwidth, (letter.image_surface, letter.factor)))
-
-            else:
+            if CT is str:
                 glyphwidth = FSTYLE['fontmetrics'].advance_pixel_width(letter) * FSTYLE['fontsize']
                 GLYPHS.append((
                         FSTYLE['fontmetrics'].character_index(letter),  # 0
@@ -324,6 +321,20 @@ def cast_liquid_line(letters, startindex, width, leading, PP, F, hyphenate=False
                         fstat,                                          # 4
                         x + glyphwidth                                  # 5
                         ))
+            
+            elif CT is Image:
+                glyphwidth = letter.width
+                                                              # additional fields:  image object | scale ratio
+                GLYPHS.append((-13, x, y - leading, FSTYLE, fstat, x + glyphwidth, (letter.image_surface, letter.factor)))
+
+            else:
+                try:
+                    inline = letter.cast_inline(x, y, leading, PP, F, FSTYLE)
+                    glyphwidth = inline.width                               #6. object
+                    GLYPHS.append((-89, x, y, FSTYLE, fstat, x + glyphwidth, inline))
+                except AttributeError:
+                    glyphwidth = leading
+                    GLYPHS.append((-23, x, y, FSTYLE, fstat, x + leading))
             
             x += glyphwidth
 

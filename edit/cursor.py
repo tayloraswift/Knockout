@@ -39,8 +39,6 @@ class FCursor(object):
     def assign_text(self, ftext):
         self.FTX = ftext
         self.text = ftext.text
-        self.index_to_line = ftext.index_to_line
-        self.text_index_x = ftext.text_index_x
 
     # TARGETING SYSTEM
     def target(self, xo, yo):
@@ -154,7 +152,7 @@ class FCursor(object):
     def _recalculate(self):
         if self.FTX is self.TRACT:
             self.si = self.i
-        self.TRACT._dbuff( self.si )
+        self.TRACT.partial_recalculate( self.si )
 
     def delete(self, start=None, end=None, da=0, db=0):
         self.i, self.j = sorted((self.i, self.j))
@@ -389,4 +387,4 @@ class FCursor(object):
         return line['PP'], glyph[3]
 
     def front_and_back(self):
-        return self.FTX.line_indices(self.index_to_line(self.i))
+        return self.FTX.line_indices(self.i)

@@ -151,7 +151,7 @@ class _MBlock(Block):
             return self._matrix[r][c]
         except IndexError:
             print('Empty cell selected')
-            return self['j']
+            return self['i']
 
     def deposit(self, repository):
         for A in self._FLOW:

@@ -30,10 +30,10 @@ def _deposit_misspellings(underscores, tract):
     for pair in tract.misspellings:
         u, v = pair[:2]
 
-        u_l = tract.index_to_line(u)
-        v_l = tract.index_to_line(v)
-        u_x = tract.text_index_x(u, u_l)
-        v_x = tract.text_index_x(v, v_l)
+        u_l = tract._index_to_line(u)
+        v_l = tract._index_to_line(v)
+        u_x = tract._text_index_x(u, u_l)
+        v_x = tract._text_index_x(v, v_l)
         
         first = tract._SLUGS[u_l]
         if not u_l - v_l:
@@ -81,13 +81,13 @@ class Atomic_text(object):
 
     def paint_select(self, u, v):
         select = []
-        u_l = self.index_to_line(u)
-        v_l = self.index_to_line(v)
+        u_l = self._index_to_line(u)
+        v_l = self._index_to_line(v)
         
         u_l, v_l = sorted((u_l, v_l))
         u, v = sorted((u, v))
-        u_x = self.text_index_x(u, u_l)
-        v_x = self.text_index_x(v, v_l)
+        u_x = self._text_index_x(u, u_l)
+        v_x = self._text_index_x(v, v_l)
         
         first = self._SLUGS[u_l]
         if not u_l - v_l:
@@ -103,11 +103,11 @@ class Atomic_text(object):
         return select
 
     # get line number given character index
-    def index_to_line(self, index):
+    def _index_to_line(self, index):
         return bisect(self._line_startindices, index) - 1
     
     # get x position of specific glyph
-    def text_index_x(self, i, l):
+    def _text_index_x(self, i, l):
         line = self._SLUGS[l]
         try:
             glyph = line['GLYPHS'][i - line['i']]
@@ -116,11 +116,12 @@ class Atomic_text(object):
 
         return glyph[1] + line['x']
 
-    def line_indices(self, l):
-        return self._SLUGS[l]['i'], self._SLUGS[l]['j'] - 1
+    def line_indices(self, i):
+        lineobject = self._SLUGS[self._index_to_line(i)]
+        return lineobject['i'], lineobject['j'] - 1
 
     def line_at(self, i):
-        return self._SLUGS[self.index_to_line(i)]
+        return self._SLUGS[self._index_to_line(i)]
 
     def stats(self, spell=False):
         if spell:
@@ -140,13 +141,13 @@ class Atomic_text(object):
         return False, O
 
     def line_jump(self, i, direction):
-        l = self.index_to_line(i)
-        x = self.text_index_x(self.i, l)
+        l = self._index_to_line(i)
+        x = self._text_index_x(i, l)
         try:
             if direction: #down
                 lineobject = next(S for S in self._SLUGS[l + 1:] if S['GLYPHS'])
             else:
-                lineobject = next(S for S in reversed(self._SLUGS[:L]) if S['GLYPHS'])
+                lineobject = next(S for S in reversed(self._SLUGS[:l]) if S['GLYPHS'])
         except StopIteration:
             return i
         O = lineobject.I(x, lineobject['y'] - lineobject['leading'])
@@ -173,7 +174,7 @@ class Chained_text(Atomic_text):
         c = self.channels.target_channel(x, y, page, 20)
         if c is None:
             if i is not None:
-                c = self._SLUGS[self.index_to_line(i)]['c']
+                c = self._SLUGS[self._index_to_line(i)]['c']
                 imperfect = True
             else:
                 return True, None, None, None
@@ -208,7 +209,7 @@ class Chained_text(Atomic_text):
         c = self.channels.target_channel(x, y, page, 20)
         if c is None:
             if i is not None:
-                c = self._SLUGS[self.index_to_line(i)]['c']
+                c = self._SLUGS[self._index_to_line(i)]['c']
                 imperfect = True
             else:
                 return True, None
@@ -223,8 +224,8 @@ class Chained_text(Atomic_text):
 
         return imperfect, O
     
-    def _dbuff(self, i):
-        l = self.index_to_line(i)
+    def partial_recalculate(self, i):
+        l = self._index_to_line(i)
         # avoid recalculating lines that weren't affected
         del self._SLUGS[l + 1:]
 

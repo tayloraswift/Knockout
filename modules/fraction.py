@@ -1,6 +1,7 @@
 from model.cat import Glyphs_line
 from style import styles
 from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image
+from IO.xml import print_attrs
 
 def _fracbound(glyphs, fontsize):
     if glyphs:
@@ -12,7 +13,7 @@ def _fracbound(glyphs, fontsize):
             height = fontsize
     else:
         width = 0
-        height = leading
+        height = fontsize
     return width, height
 
 class Fraction(object):
@@ -23,10 +24,21 @@ class Fraction(object):
         denominator = next(E for tag, E in L[1] if tag[0] == 'module:fraction:denominator')
         
         self._INLINE = [numerator, denominator]
-    
+
+    def represent(self, serialize, indent):
+        lines = [[indent, print_attrs( * self._fraction[0])]]
+        for tag, E in self._fraction[1]:
+            content = serialize(E, indent + 2)
+            content[0] = [indent + 1, print_attrs( * tag) + content[0][1]]
+            content[-1][1] += '</' + tag[0] + '>'
+            
+            lines.extend(content)
+        lines.append([indent, '</module:fraction>'])
+        return lines
+
     def _draw_vinculum(self, cr, x, y):
         cr.set_source_rgba( * self._color)
-        cr.rectangle(x + self._vx, y + self._vy, self._fracwidth, 0.5)
+        cr.rectangle(x + self._vx, int(y + self._vy), self._fracwidth, 0.5)
         cr.fill()
     
     def cast_inline(self, x, y, leading, PP, F, FSTYLE):

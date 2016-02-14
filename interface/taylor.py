@@ -551,13 +551,14 @@ class Document_view(ui.Cell):
     
     def page_classes(self):
         classed_pages = {}
-
         jumbled_pages = [tract.extract_glyphs() for tract in meredith.mipsy]
 
         for dictionary in jumbled_pages:
             for page, sorted_glyphs in dictionary.items():
                 if page in classed_pages:
-                    for name, font, glyphs in ((key, * L) for key, L in sorted_glyphs.items() if L and (isinstance(key, int) or key in {'_images', '_paint'})):
+                    classed_pages[page]['_images'].extend(sorted_glyphs['_images'])
+                    classed_pages[page]['_paint'].extend(sorted_glyphs['_paint'])
+                    for name, font, glyphs in ((key, * L) for key, L in sorted_glyphs.items() if L and (isinstance(key, int))):
                         classed_pages[page].setdefault(name, (font, []))[1].extend(glyphs)
                 else:
                     classed_pages[page] = {name: L for name, L in sorted_glyphs.items() if isinstance(name, int) or name in {'_images', '_paint'}}

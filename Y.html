@@ -9,18 +9,18 @@
 <section>
 <p>This typesetting editor is an application I have been developing for over half a year. The codebase was written from scratch in Python 3, and uses its own UI toolkit which I also wrote. Although still in alpha stages, the codebase can be synced from <<f class="link">https://github.com/kelvin13/shifty-octocat</f class="link">>, where it will work out of the box on any Linux installation.</p>
 
-<p>Vedit was designed to be <module:fraction>
+<p>Vedit was designed to be both flexible and <module:fraction>
     <module:fraction:numerator>abc + <module:fraction>
             <module:fraction:numerator>e</module:fraction:numerator>
             <module:fraction:denominator>n</module:fraction:denominator>
         </module:fraction></module:fraction:numerator>
     <module:fraction:denominator><em>x</em></module:fraction:denominator>
-</module:fraction> both flexible and efficient. <module:fraction>
+</module:fraction> efficient.  The end goal of the project is to include all the tools and parameters handled by “serious” typesetters, and allow editing of them in the least verbose manner. Hence, Vedit offers granular control, with a strong emphasis on <strong>additive styling</strong>. <module:fraction>
     <module:fraction:numerator>a</module:fraction:numerator>
     <module:fraction:denominator><em>x</em></module:fraction:denominator>
-</module:fraction> The end goal of the project is to include all the tools and parameters handled by “serious” typesetters, and allow editing of them in the least verbose manner. Hence, Vedit offers granular control, with a strong emphasis on <strong>additive styling</strong>.</p>
+</module:fraction></p>
 
-<p style="{'fontclasses': (0, [('Italic', {})]), 'margin_top': 6, 'margin_left': 20}">—Kelvin Ma</p>
+<p style="{'margin_top': 6, 'fontclasses': (0, [('Italic', {})]), 'margin_left': 20}">—Kelvin Ma</p>
 
 <p class="h2">WHAT IS ADDITIVE STYLING?</p>
 
@@ -30,7 +30,13 @@
 
 <module:pie radius="60">
     <module:pie:slice color="#ff3085" prop="13">
-        <p>Section A</p>
+        <p>A = <module:fraction>
+            <module:fraction:numerator>abc + <module:fraction>
+                    <module:fraction:numerator>e</module:fraction:numerator>
+                    <module:fraction:denominator>n</module:fraction:denominator>
+                </module:fraction></module:fraction:numerator>
+            <module:fraction:denominator><em>x</em></module:fraction:denominator>
+        </module:fraction> </p>
     </module:pie:slice>
     <module:pie:slice color="#ff50a0" prop="22">
         <p>Section B</p>
@@ -133,7 +139,7 @@
         <td colspan="3">
             <p class="h2">Who doesn’t love Meredith Grey?</p>
             
-            <p style="{'align': 0, 'fontclasses': (0, [('Italic', {}), ('Regular', {'emphasis': 1})]), 'leading': 200}"><image src="meredith.png" width=200 />ab<em>c</em>d</p>
+            <p style="{'fontclasses': (0, [('Italic', {}), ('Regular', {'emphasis': 1})]), 'align': 0, 'leading': 200}"><image src="meredith.png" width=200 />ab<em>c</em>d</p>
             
             <p class="gray&body">(Taylor, evidently.)</p>
             
@@ -188,7 +194,7 @@
                 'Superitalic': {'path': 'fonts/Courgette-Regular.ttf'},
                 'Superscript': {'shift': 7},
                 'h3': {'fontsize': 16, 'path': 'fonts/FiraSans-Book.otf', 'tracking': 1}},
- 'FTAGLIST': [('big', []), ('strong', []), ('sub', ['small']), ('sup', ['small']), ('caption', []), ('link', []), ('emphasis', [])],
+ 'FTAGLIST': [('big', []), ('sup', ['small']), ('sub', ['small']), ('caption', []), ('strong', []), ('link', []), ('emphasis', [])],
  'PARASTYLES': (0,
                 [({'fontclasses': (2, [('Black', {}), ('Subscript', {'sub': 1}), ('Superscript', {'sup': 1})])}, {}),
                  ({'fontclasses': (5,
@@ -209,8 +215,8 @@
                  ({'fontclasses': (0, [('Subheading', {})]), 'leading': 24, 'margin_bottom': 10}, {'h2': 1}),
                  ({'align': 0, 'fontclasses': (0, [('h3', {})])}, {'h3': 1}),
                  ({'fontclasses': (0, [('Gray', {})])}, {'gray': 1})]),
- 'PTAGLIST': [('h1', []), ('body', []), ('h2', []), ('h3', []), ('gray', [])],
- 'contexts': {'channels': {'c': 7, 'p': 7, 't': 1}, 'text': {'i': 444, 'j': 444, 'p': 0, 't': 1}},
+ 'PTAGLIST': [('h2', []), ('h1', []), ('gray', []), ('body', []), ('h3', [])],
+ 'contexts': {'channels': {'c': 7, 'p': 7, 't': 1}, 'text': {'i': 586, 'j': 586, 'p': 0, 't': 1}},
  'grid': [[120, 480], [120, 480]],
  'outlines': ([(([[120, 120, False], [120, 200, False]], [[480, 120, False], [480, 200, False]]), 0)],
               [(([[120, 210, False], [120, 480, False]], [[480, 210, False], [480, 480, False]]), 0),
@@ -222,5 +228,5 @@
                ([[[360, 120, False], [160, 310, False], [360, 480, False]], [[410, 120, False], [590, 300, False], [410, 480, False]]], 5),
                ([[[120, 120, True], [120, 540, False]], [[480, 120, True], [480, 540, False]]], 6)]),
  'page': {'dimensions': (600, 600), 'dual': True},
- 'view': {'H': -401, 'Hc': 292.30078125, 'K': 8, 'Kc': 458.26226806640625, 'Zoom': 11, 'mode': 'text'}}
+ 'view': {'H': -325, 'Hc': 754.4063720703125, 'K': -116, 'Kc': 111.98892211914062, 'Zoom': 14, 'mode': 'text'}}
 ############# -->

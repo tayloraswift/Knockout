@@ -4,12 +4,7 @@ from bisect import bisect
 
 from model.olivia import Atomic_text, Block
 from edit.paperairplanes import interpret_rgba
-
-def _print_attrs(name, attrs):
-    if attrs:
-        return '<' + name + ' ' + ' '.join(A + '="' + repr(V)[1:-1] + '"' for A, V in attrs.items()) + '>'  
-    else:
-        return '<' + name + '>'
+from IO.xml import print_attrs
 
 class _Pie(object):
     def __init__(self, slices, radius, active=0):
@@ -32,12 +27,12 @@ class PieChart(object):
         self._FLOW = [Atomic_text(text) for text in labels]
 
     def represent(self, serialize, indent):
-        lines = [(indent, _print_attrs( * self._chart[0]))]
+        lines = [[indent, print_attrs( * self._chart[0])]]
         for tag, E in self._chart[1]:
-            lines.append((indent + 1, _print_attrs( * tag)))
+            lines.append([indent + 1, print_attrs( * tag)])
             lines.extend(serialize(E, indent + 2))
-            lines.append((indent + 1, '</' + tag[0] + '>'))
-        lines.append((indent, '</module:pie>'))
+            lines.append([indent + 1, '</' + tag[0] + '>'])
+        lines.append([indent, '</module:pie>'])
         return lines
 
     def fill(self, bounds, c, y):

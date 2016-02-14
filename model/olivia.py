@@ -83,7 +83,6 @@ class Atomic_text(object):
         select = []
         u_l = self.index_to_line(u)
         v_l = self.index_to_line(v)
-        page = self._SLUGS[v_l]['page']
         
         u_l, v_l = sorted((u_l, v_l))
         u, v = sorted((u, v))
@@ -120,6 +119,9 @@ class Atomic_text(object):
     def line_indices(self, l):
         return self._SLUGS[l]['i'], self._SLUGS[l]['j'] - 1
 
+    def line_at(self, i):
+        return self._SLUGS[self.index_to_line(i)]
+
     def stats(self, spell=False):
         if spell:
             self.word_count, self.misspellings = words(self.text, spell=True)
@@ -136,6 +138,21 @@ class Atomic_text(object):
             O = lineobject['i']
         
         return False, O
+
+    def line_jump(self, i, direction):
+        l = self.index_to_line(i)
+        x = self.text_index_x(self.i, l)
+        try:
+            if direction: #down
+                lineobject = next(S for S in self._SLUGS[l + 1:] if S['GLYPHS'])
+            else:
+                lineobject = next(S for S in reversed(self._SLUGS[:L]) if S['GLYPHS'])
+        except StopIteration:
+            return i
+        O = lineobject.I(x, lineobject['y'] - lineobject['leading'])
+        if type(O) is not int:
+            O = lineobject['i']
+        return O
 
     def collect_text(self):
         mods = list(chain.from_iterable(map(lambda Q: Q.collect_text(), filter(lambda S: type(S) is not Glyphs_line, self._SLUGS))))

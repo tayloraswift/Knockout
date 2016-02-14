@@ -373,23 +373,14 @@ class FCursor(object):
             else:
                 return False
 
-    def hop(self, dl): #implemented exclusively for arrow-up/down events
-        l = self.index_to_line(self.i)
-        x = self.text_index_x(self.i, l)
-        l += dl
-        if l >= len(self.FTX._SLUGS):
-            l = 0
-        lineobject = self.FTX._SLUGS[l]
-        O = lineobject.I(x, lineobject['y'] - lineobject['leading'])
-        if type(O) is not int:
-            O = lineobject['i']
-        self.i = self.skip(O)
+    def hop(self, direction): #implemented exclusively for arrow-up/down events
+        self.i = self.skip(self.FTX.line_jump(self.i, direction))
 
     def pp_at(self):
-        return self.FTX._SLUGS[self.index_to_line(self.i)]['PP']
+        return self.FTX.line_at(self.i)['PP']
 
     def styling_at(self):
-        line = self.FTX._SLUGS[self.index_to_line(self.i)]
+        line = self.FTX.line_at(self.i)
         try:
             glyph = line['GLYPHS'][self.i - line['i']]
         except IndexError:

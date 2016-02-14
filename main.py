@@ -11,13 +11,13 @@ def main(argv):
         filename = argv[1]
     except IndexError:
         print (_fail + _bold + 'ERROR:' + _endc + _fail + ' No document file specified!' + _endc)
-        filename = 'default.txt'
+        filename = 'default.html'
     try:
         sierra.load(filename)
 
     except FileNotFoundError:
         print (_fail + _bold + 'ERROR:' + _endc + _fail + ' Document file \'' + filename + '\' does not exist!' + _endc)
-        sierra.load('default.txt')
+        sierra.load('default.html')
     
     import app
     app.main()

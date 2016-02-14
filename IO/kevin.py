@@ -13,7 +13,8 @@ inline = {'p', 'module:fraction:numerator', 'module:fraction:denominator'}
 closing = {table.Table}
 
 serialize_modules = {table.Table, pie.PieChart}
-structural_open = {Paragraph} | serialize_modules
+inline_serialize_modules = {fraction.Fraction}
+structural_open = {Paragraph} | serialize_modules | inline_serialize_modules
 
 class Minion(parser.HTMLParser):
     def _trim(self):
@@ -36,6 +37,7 @@ class Minion(parser.HTMLParser):
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
         O = self._C[-1][1]
+        self._first = False
         if tag == 'p':
             if 'class' in attrs:
                 ptags = Counter(styles.PTAGS[T.strip()] for T in attrs['class'].split('&'))
@@ -62,7 +64,6 @@ class Minion(parser.HTMLParser):
             M = ((tag, attrs), [])
             O.append(M)
             self._C.append(M)
-            
 
     def handle_startendtag(self, tag, attrs):
         attrs = dict(attrs)
@@ -107,7 +108,7 @@ class Kevin_from_TN(Minion): # to capture the first and last blobs
     def handle_data(self, data):
         O = self._C[-1][1]
         container = self._breadcrumbs[-1]
-        if container == 'p':
+        if container in inline:
             O.extend(list(data))
         elif self._first: # register the first blob
             self._first = False
@@ -125,6 +126,7 @@ def deserialize(text, fragment=False):
     if fragment:
         parse = R
     else:
+        text.replace('\n', '')
         parse = Q
     text = text.replace('<em>', '<f class="emphasis">')
     text = text.replace('</em>', '</f class="emphasis">')
@@ -137,20 +139,25 @@ def deserialize(text, fragment=False):
     return parse.feed(text.replace('</f', '<ff'))
 
 def ser(L, indent):
-    lserialize_modules = serialize_modules
-    
     lines = []
     gaps = [0] + [i for i, v in enumerate(L) if type(v) in structural_open]
-
+    lead = 0
     for C in (L[i:j] for i, j in zip(gaps, gaps[1:] + [len(L)]) if j != i): # to catch last blob
-        if type(C[0]) in lserialize_modules:
+        if type(C[0]) in serialize_modules:
+            lines.append([indent, ''])
             lines.extend(C[0].represent(ser, indent))
-            lines.append((indent, ''))
+            lead = 1
+        elif type(C[0]) in inline_serialize_modules:
+            LL = C[0].represent(ser, indent)
+            if lines:
+                lines[-1][1] += LL.pop(0)[1]
+            lines.extend(LL)
+            lines[-1][1] += ''.join(c if type(c) is str else repr(c) for c in C[1:])
         else:
-            lines.append((indent, ''.join(c if type(c) is str else repr(c) for c in C)))
-            lines.append((indent, ''))
-    
-    return lines[:-1]
+            lines.append([indent, ''])
+            lines.append([indent, ''.join(c if type(c) is str else repr(c) for c in C)])
+            lead = 1
+    return lines[lead:]
 
 def serialize(L):
     return '\n'.join('    ' * indent + line for indent, line in ser(L, 0))

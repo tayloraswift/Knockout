@@ -97,15 +97,15 @@ class Table(object):
         self._MATRIX = _build_matrix(self.data)
     
     def represent(self, serialize, indent):
-        lines = [(indent, '<table>')]
+        lines = [[indent, '<table>']]
         for tr, R in self._table[1]:
-            lines.append((indent + 1, '<tr>'))
+            lines.append([indent + 1, '<tr>'])
             for td, C in R:
-                lines.append((indent + 2, _print_td(td)))
+                lines.append([indent + 2, _print_td(td)])
                 lines.extend(serialize(C, indent + 3))
-                lines.append((indent + 2, '</td>'))
-            lines.append((indent + 1, '</tr>'))
-        lines.append((indent, '</table>'))
+                lines.append([indent + 2, '</td>'])
+            lines.append([indent + 1, '</tr>'])
+        lines.append([indent, '</table>'])
         return lines
 
     def fill(self, bounds, c, y):

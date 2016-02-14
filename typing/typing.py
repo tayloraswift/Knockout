@@ -46,12 +46,12 @@ class Keyboard(dict):
         elif name == 'Up':
             un.history.undo_save(0)
             
-            cursor.fcursor.hop(-1)
+            cursor.fcursor.hop(False)
             match_cursors()
         elif name == 'Down':
             un.history.undo_save(0)
             
-            cursor.fcursor.hop(1)
+            cursor.fcursor.hop(True)
             match_cursors()
 
         elif name in ['Home', 'End']:

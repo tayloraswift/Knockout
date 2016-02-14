@@ -20,7 +20,7 @@
     <module:fraction:denominator><em>x</em></module:fraction:denominator>
 </module:fraction></p>
 
-<p style="{'margin_top': 6, 'fontclasses': (0, [('Italic', {})]), 'margin_left': 20}">—Kelvin Ma</p>
+<p style="{'margin_top': 6, 'margin_left': 20, 'fontclasses': (0, [('Italic', {})])}">—Kelvin Ma</p>
 
 <p class="h2">WHAT IS ADDITIVE STYLING?</p>
 
@@ -52,7 +52,7 @@
     </module:pie:slice>
 </module:pie>
 
-<p>Additive styling is the idea that multiple “building block” text styles can be defined and combined to create the visual styles seen on the page. For example, an <<em>Italic</em>> class may be defined which simply declares an italic font file, while a <<sup>Superscript</sup>> class might define a reduced font size (the raised position is the result of <strong>keypegging</strong>, which we’ll get to later). The superscript and italic classes can then be stacked to infer a <<sup><em>Superscript-Italic</em></sup>> class. </p>
+<p>Additive styling is the idea that multiple “building block” text styles can be defined and combined to create the visual styles seen on the page. For example, an <<em>Italic</em>> class may be defined which simply declares an italic font file, while a <<sup>Superscript</sup>> class might define a reduced font size and raised position. The superscript and italic classes can then be stacked to infer a <<sup><em>Superscript-Italic</em></sup>> class with the attributes of both. </p>
 
 <p>Of course, in real typesetting, superscripts require a slightly heavier fontweight, which is where <strong>explicit styling</strong> is needed. An italic and a bold class both define a font file, so a <<strong><em>Bold-Italic</em></strong>> class must be defined with the specialized bold-italic font. </p>
 
@@ -139,7 +139,7 @@
         <td colspan="3">
             <p class="h2">Who doesn’t love Meredith Grey?</p>
             
-            <p style="{'fontclasses': (0, [('Italic', {}), ('Regular', {'emphasis': 1})]), 'align': 0, 'leading': 200}"><image src="meredith.png" width=200 />ab<em>c</em>d</p>
+            <p style="{'align': 0, 'leading': 200, 'fontclasses': (0, [('Italic', {}), ('Regular', {'emphasis': 1})])}"><image src="meredith.png" width=200 />ab<em>c</em>d</p>
             
             <p class="gray&body">(Taylor, evidently.)</p>
             
@@ -194,7 +194,7 @@
                 'Superitalic': {'path': 'fonts/Courgette-Regular.ttf'},
                 'Superscript': {'shift': 7},
                 'h3': {'fontsize': 16, 'path': 'fonts/FiraSans-Book.otf', 'tracking': 1}},
- 'FTAGLIST': [('big', []), ('sup', ['small']), ('sub', ['small']), ('caption', []), ('strong', []), ('link', []), ('emphasis', [])],
+ 'FTAGLIST': [('caption', []), ('link', []), ('emphasis', []), ('sub', ['small']), ('sup', ['small']), ('strong', []), ('big', [])],
  'PARASTYLES': (0,
                 [({'fontclasses': (2, [('Black', {}), ('Subscript', {'sub': 1}), ('Superscript', {'sup': 1})])}, {}),
                  ({'fontclasses': (5,
@@ -215,8 +215,8 @@
                  ({'fontclasses': (0, [('Subheading', {})]), 'leading': 24, 'margin_bottom': 10}, {'h2': 1}),
                  ({'align': 0, 'fontclasses': (0, [('h3', {})])}, {'h3': 1}),
                  ({'fontclasses': (0, [('Gray', {})])}, {'gray': 1})]),
- 'PTAGLIST': [('h2', []), ('h1', []), ('gray', []), ('body', []), ('h3', [])],
- 'contexts': {'channels': {'c': 7, 'p': 7, 't': 1}, 'text': {'i': 586, 'j': 586, 'p': 0, 't': 1}},
+ 'PTAGLIST': [('gray', []), ('h2', []), ('h1', []), ('body', []), ('h3', [])],
+ 'contexts': {'channels': {'c': 7, 'p': 7, 't': 1}, 'text': {'i': 1535, 'j': 1535, 'p': 2, 't': 1}},
  'grid': [[120, 480], [120, 480]],
  'outlines': ([(([[120, 120, False], [120, 200, False]], [[480, 120, False], [480, 200, False]]), 0)],
               [(([[120, 210, False], [120, 480, False]], [[480, 210, False], [480, 480, False]]), 0),
@@ -228,5 +228,5 @@
                ([[[360, 120, False], [160, 310, False], [360, 480, False]], [[410, 120, False], [590, 300, False], [410, 480, False]]], 5),
                ([[[120, 120, True], [120, 540, False]], [[480, 120, True], [480, 540, False]]], 6)]),
  'page': {'dimensions': (600, 600), 'dual': True},
- 'view': {'H': -325, 'Hc': 754.4063720703125, 'K': -116, 'Kc': 111.98892211914062, 'Zoom': 14, 'mode': 'text'}}
+ 'view': {'H': -162, 'Hc': 738.139404296875, 'K': -413, 'Kc': 399.77154541015625, 'Zoom': 9, 'mode': 'text'}}
 ############# -->

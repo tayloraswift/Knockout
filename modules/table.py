@@ -56,7 +56,7 @@ class Matrix(list):
 
 def _row_height(data, r, y):
     cells = (cell for cell in chain.from_iterable(row for row in data) if cell.row + cell.rs - 1 == r)
-    return max(cell._SLUGS[-1]['y'] for cell in cells)
+    return max(cell.y for cell in cells)
 
 def _build_matrix(data):
     MATRIX = Matrix()

@@ -291,12 +291,12 @@ def cast_liquid_line(letters, startindex, width, leading, PP, F, hyphenate=False
                 # we don’t load the style because the outer function takes care of that
                 GLYPHS.append((
                         -2,                      # 0
-                        x - FSTYLE['fontsize'],  # 1
+                        x - leading,             # 1
                         y,                       # 2
                         
                         FSTYLE,                  # 3
                         fstat,                   # 4
-                        x - FSTYLE['fontsize']   # 5
+                        x - leading              # 5
                         ))
         
         elif letter == '</p>':
@@ -467,12 +467,12 @@ def cast_mono_line(letters, leading, PP, F):
         elif CT is Paragraph:
             GLYPHS.append((
                     -2,                      # 0
-                    x - FSTYLE['fontsize'],  # 1
+                    x - leading,             # 1
                     y,                       # 2
                     
                     FSTYLE,                  # 3
                     fstat,                   # 4
-                    x - FSTYLE['fontsize']   # 5
+                    x - leading              # 5
                     ))
         
         elif letter == '</p>':

@@ -62,6 +62,10 @@ class Atomic_text(object):
     def cast(self, bounds, c, y):
         self._c = c
         self._SLUGS[:] = typeset_liquid(bounds, self.text, {'j': 0, 'l': -1, 'P_BREAK': True}, 0, y, c, False)
+        if self._SLUGS:
+            self.y = self._SLUGS[-1]['y']
+        else:
+            self.y = y
         self._precompute_search()
                 
     def _target_row(self, y, c):
@@ -225,15 +229,9 @@ class Chained_text(Atomic_text):
         return imperfect, O
     
     def partial_recalculate(self, i):
-        l = self._index_to_line(i)
+        l = max(self._index_to_line(i) - 1, 0)
         # avoid recalculating lines that weren't affected
         del self._SLUGS[l + 1:]
-
-        if type(self._SLUGS[l]) is Glyphs_line:
-            l -= 1
-            l = max(0, l)
-            if type(self._SLUGS[l]) is Glyphs_line:
-                del self._SLUGS[l + 1:]
 
         trace = self._SLUGS.pop()
         c = trace['c']

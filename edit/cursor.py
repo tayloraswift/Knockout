@@ -2,7 +2,10 @@ import bisect
 from model.wonder import words, _breaking_chars
 from model import meredith, olivia
 
+from IO.kevin import serialize_modules
 from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image
+B_OPEN = {Paragraph} | serialize_modules
+deletion = {str} | serialize_modules
 
 def outside_tag(sequence):
     for i in reversed(range(len(sequence) - 1)):
@@ -138,58 +141,81 @@ class FCursor(object):
     def _recalculate(self):
         if self.FTX is self.TRACT:
             self.si = self.i
-        self.TRACT.partial_recalculate( self.si )
+        self.TRACT.partial_recalculate(self.si)
 
-    def delete(self, start=None, end=None, da=0, db=0):
-        self.i, self.j = sorted((self.i, self.j))
-
-        if start is None:
-            start = self.i + da
-            
-        if end is None:
-            end = self.j + db
-
-        if [str(e) for e in self.text[start:end]] == ['</p>', '<p>']:
-            del self.text[start:end]
-            
-            offset = start - end
+    def _burn(self, i, j):
+        # filter for paragraph elements
+        ptags = [e for e in self.text[i:j] if e == '</p>' or type(e) is Paragraph]
         
+        ash = []
+        di = 0
+        if ptags:
+            left = ptags[0]
+            if left == '</p>': 
+                ash.append(left)
+                
+            right = ptags[-1]
+            if type(right) is Paragraph:
+                ash.append(right)
+                di = 1
+        if len(ash) == 2:
+            ash = []
+            di = 0
+        
+        self.i = i + di
+        self.text[i:j] = ash
+        self.j = self.i
+        return len(ash)
+
+    def delspace(self, direction=False): # only called when i = j
+        j = self.j
+        if direction:
+            k = self.i + next(i for i, e in enumerate(self.text[self.i + 1:]) if type(e) in deletion) + 1
         else:
-            # delete every PAIRED paragraph block
-            ptags = [ e for e in self.text[start:end] if e == '</p>' or type(e) is Paragraph ]
-            del self.text[start:end]
-
-            outside = outside_tag(ptags)
-            
-            if outside:
-                if (outside[0], type(outside[1])) == ('</p>', Paragraph):
-                    style = next(c.P for c in self.text[start::-1] if type(c) is Paragraph)
-                    if style == outside[1].P:
-                        del outside[0:2]
-                        
-                self.text[start:start] = outside
-
-            offset = start - end + len(outside)
+            k = self.i - next(i for i, e in enumerate(reversed(self.text[:self.i])) if type(e) in deletion) - 1
+        
+        start, end = sorted((k , j))
+        offset = start - end + self._burn(start, end)
         
         # fix spelling lines
         self.FTX.misspellings = [pair if pair[1] < start else (pair[0] + offset, pair[1] + offset, pair[2]) if pair[0] > end else (0, 0, None) for pair in self.FTX.misspellings]
-
         self._recalculate()
-        self.i += da
-        self.j = self.i
 
     def insert(self, segment):
         if self.take_selection():
-            self.delete(self.i, self.j)
-        
+            self._burn(self.i, self.j)
+            d = True
+        else:
+            d = False
+
+        if segment:
+            if type(self.text[self.i]) in B_OPEN: # outside
+                # crop off chars
+                try:
+                    l = next(i for i, e in enumerate(segment) if type(e) in B_OPEN)
+                    r = len(segment) - next(i for i, e in enumerate(reversed(segment)) if type(e) in serialize_modules or e == '</p>')
+                    if r > l:
+                        segment = segment[l:r]
+                    else:
+                        segment = []
+                except StopIteration:
+                    segment = []
+            else: # inside
+                if type(segment[0]) in B_OPEN:
+                    segment.insert(0, '</p>')
+                if segment[-1] == '</p>' or type(segment[-1]) in serialize_modules:
+                    P = next(c.P for c in self.text[self.i::-1] if type(c) is Paragraph)
+                    segment.append(Paragraph(P))
+
         s = len(segment)
-        self.text[self.i:self.j] = segment
-        self._recalculate()
-        self.i += s
-        self.j = self.i
-        
-        # fix spelling lines
-        self.FTX.misspellings = [pair if pair[1] < self.i else (pair[0] + s, pair[1] + s, pair[2]) if pair[0] > self.i else (pair[0], pair[1] + s, pair[2]) for pair in self.FTX.misspellings]
+        if s or d:
+            self.text[self.i:self.j] = segment
+            self._recalculate()
+            self.i += s
+            self.j = self.i
+            
+            # fix spelling lines
+            self.FTX.misspellings = [pair if pair[1] < self.i else (pair[0] + s, pair[1] + s, pair[2]) if pair[0] > self.i else (pair[0], pair[1] + s, pair[2]) for pair in self.FTX.misspellings]
 
     def expand_cursors(self):
         # order

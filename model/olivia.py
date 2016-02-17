@@ -134,7 +134,7 @@ class Atomic_text(object):
             self.word_count = words(self.text)
 
     def I(self, x, y):
-        return self._SLUGS[self._target_row(y, self._c)]
+        return self._SLUGS[self._target_row(y, self._c)].I(x, y)
     
     def target_select(self, x, y, page, i):
         lineobject = self._SLUGS[self._target_row(y, self._c)]
@@ -198,10 +198,9 @@ class Chained_text(Atomic_text):
             
             while 1:
                 O = O.I(x, y)
-                TO = type(O)
-                if TO is int:
+                if type(O) is int:
                     break
-                elif TO is not Glyphs_line:
+                else:
                     ftx = O
         else:
             O = si

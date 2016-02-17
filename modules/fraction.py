@@ -1,25 +1,25 @@
 from model.cat import cast_mono_line
 from IO.xml import print_attrs
 
+namespace = 'module:fraction'
+
 def _fracbound(glyphs, fontsize):
     if glyphs:
-        width = glyphs[-1][5]
         subfrac = [glyph[6].height for glyph in glyphs if glyph[0] == -89]
         if subfrac:
             height = max(subfrac)
         else:
             height = fontsize
     else:
-        width = 0
         height = fontsize
-    return width, height
+    return height
 
 class Fraction(object):
     def __init__(self, L):
         self._fraction = L
         
-        numerator = next(E for tag, E in L[1] if tag[0] == 'module:fraction:numerator')
-        denominator = next(E for tag, E in L[1] if tag[0] == 'module:fraction:denominator')
+        numerator = next(E for tag, E in L[1] if tag[0] == namespace + ':numerator')
+        denominator = next(E for tag, E in L[1] if tag[0] == namespace + ':denominator')
         
         self._INLINE = [numerator, denominator]
 
@@ -31,7 +31,7 @@ class Fraction(object):
             content[-1][1] += '</' + tag[0] + '>'
             
             lines.extend(content)
-        lines.append([indent, '</module:fraction>'])
+        lines.append([indent, '</' + namespace + '>'])
         return lines
 
     def _draw_vinculum(self, cr, x, y):
@@ -45,16 +45,22 @@ class Fraction(object):
         vy = y - fontsize/4
         numerator = cast_mono_line(self._INLINE[0], 13, PP, F)
         denominator = cast_mono_line(self._INLINE[1], 13, PP, F)
-        nwidth, nheight = _fracbound(numerator['GLYPHS'], fontsize)
-        dwidth, dheight = _fracbound(denominator['GLYPHS'], fontsize)
+        
+        nheight = _fracbound(numerator['GLYPHS'], fontsize)
+        nwidth = numerator['advance']
+        dheight = _fracbound(denominator['GLYPHS'], fontsize)
+        dwidth = denominator['advance']
+        
         fracwidth = max(nwidth, dwidth) + leading/2
         fracheight = nheight + dheight
+        
         numerator['x'] = x + (fracwidth - nwidth)/2
         numerator['y'] = vy - nheight/2
         numerator['hyphen'] = None
         denominator['x'] = x + (fracwidth - dwidth)/2
         denominator['y'] = vy + dheight
         denominator['hyphen'] = None
+        
         self._fracwidth = fracwidth
         self._vy = vy
         self._vx = x

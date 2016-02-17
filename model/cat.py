@@ -515,6 +515,11 @@ def cast_mono_line(letters, leading, PP, F):
     # cache x's
     LINE['_X_'] = [g[1] for g in GLYPHS]
     
+    if GLYPHS:
+        LINE['advance'] = GLYPHS[-1][5]
+    else:
+        LINE['advance'] = 0
+    
     try:
         LINE['F'] = GLYPHS[-1][4]
     except IndexError:

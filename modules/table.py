@@ -4,6 +4,10 @@ from itertools import chain
 from model.olivia import Atomic_text, Block
 from model.george import Swimming_pool
 from interface.base import accent
+from IO.xml import print_attrs
+
+namespace = 'table'
+tags = {'tr', 'td'}
 
 def _print_td(td):
         A = td[1]
@@ -97,7 +101,7 @@ class Table(object):
         self._MATRIX = _build_matrix(self.data)
     
     def represent(self, serialize, indent):
-        lines = [[indent, '<table>']]
+        lines = [[indent, print_attrs( * self._table[0])]]
         for tr, R in self._table[1]:
             lines.append([indent + 1, '<tr>'])
             for td, C in R:
@@ -105,7 +109,7 @@ class Table(object):
                 lines.extend(serialize(C, indent + 3))
                 lines.append([indent + 2, '</td>'])
             lines.append([indent + 1, '</tr>'])
-        lines.append([indent, '</table>'])
+        lines.append([indent, '</' + namespace + '>'])
         return lines
 
     def fill(self, bounds, c, y):

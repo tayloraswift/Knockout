@@ -9,16 +9,16 @@
 <section>
 <p>This typesetting editor is an application I have been developing for over half a year. The codebase was written from scratch in Python 3, and uses its own UI toolkit which I also wrote. Although still in alpha stages, the codebase can be synced from <<f class="link">https://github.com/kelvin13/shifty-octocat</f class="link">>, where it will work out of the box on any Linux installation.</p>
 
-<p>Vedit was designed to be both flexible and <module:fraction>
-    <module:fraction:numerator>abc + <module:fraction>
-            <module:fraction:numerator>e</module:fraction:numerator>
-            <module:fraction:denominator>n</module:fraction:denominator>
-        </module:fraction></module:fraction:numerator>
-    <module:fraction:denominator><em>x</em></module:fraction:denominator>
-</module:fraction> efficient.  The end goal of the project is to include all the tools and parameters handled by “serious” typesetters, and allow editing of them in the least verbose manner. Hence, Vedit offers granular control, with a strong emphasis on <strong>additive styling</strong>. <module:fraction>
-    <module:fraction:numerator>a</module:fraction:numerator>
-    <module:fraction:denominator><em>x</em></module:fraction:denominator>
-</module:fraction></p>
+<p>Vedit was designed to be both flexible and <mod:fraction>
+    <mod:fraction:numerator>abc + <mod:fraction>
+            <mod:fraction:numerator>e</mod:fraction:numerator>
+            <mod:fraction:denominator>n</mod:fraction:denominator>
+        </mod:fraction></mod:fraction:numerator>
+    <mod:fraction:denominator><em>x</em></mod:fraction:denominator>
+</mod:fraction> efficient.  The end goal of the project is to include all the tools and parameters handled by “serious” typesetters, and allow editing of them in the least verbose manner. Hence, Vedit offers granular control, with a strong emphasis on <strong>additive styling</strong>. <mod:fraction>
+    <mod:fraction:numerator>a</mod:fraction:numerator>
+    <mod:fraction:denominator><em>x</em></mod:fraction:denominator>
+</mod:fraction></p>
 
 <p style="{'margin_top': 6, 'margin_left': 20, 'fontclasses': (0, [('Italic', {})])}">—Kelvin Ma</p>
 
@@ -28,29 +28,29 @@
 
 <p style="{'align': 0}">Subtitle</p>
 
-<module:pie radius="60">
-    <module:pie:slice color="#ff3085" prop="13">
-        <p>A = <module:fraction>
-            <module:fraction:numerator>abc + <module:fraction>
-                    <module:fraction:numerator>e</module:fraction:numerator>
-                    <module:fraction:denominator>n</module:fraction:denominator>
-                </module:fraction></module:fraction:numerator>
-            <module:fraction:denominator><em>x</em></module:fraction:denominator>
-        </module:fraction> </p>
-    </module:pie:slice>
-    <module:pie:slice color="#ff50a0" prop="22">
+<mod:pie radius="60">
+    <mod:pie:slice color="#ff3085" prop="13">
+        <p>A = <mod:fraction>
+            <mod:fraction:numerator>abc + <mod:fraction>
+                    <mod:fraction:numerator>e</mod:fraction:numerator>
+                    <mod:fraction:denominator>n</mod:fraction:denominator>
+                </mod:fraction></mod:fraction:numerator>
+            <mod:fraction:denominator><em>x</em></mod:fraction:denominator>
+        </mod:fraction> </p>
+    </mod:pie:slice>
+    <mod:pie:slice color="#ff50a0" prop="22">
         <p>Section B</p>
-    </module:pie:slice>
-    <module:pie:slice color="#f020ff" prop="69">
+    </mod:pie:slice>
+    <mod:pie:slice color="#f020ff" prop="69">
         <p>Section C</p>
-    </module:pie:slice>
-    <module:pie:slice color="#b050ff" prop="89">
+    </mod:pie:slice>
+    <mod:pie:slice color="#b050ff" prop="89">
         <p>Section D</p>
-    </module:pie:slice>
-    <module:pie:slice color="#7080ff" prop="113">
+    </mod:pie:slice>
+    <mod:pie:slice color="#7080ff" prop="113">
         <p>Section E</p>
-    </module:pie:slice>
-</module:pie>
+    </mod:pie:slice>
+</mod:pie>
 
 <p>Additive styling is the idea that multiple “building block” text styles can be defined and combined to create the visual styles seen on the page. For example, an <<em>Italic</em>> class may be defined which simply declares an italic font file, while a <<sup>Superscript</sup>> class might define a reduced font size and raised position. The superscript and italic classes can then be stacked to infer a <<sup><em>Superscript-Italic</em></sup>> class with the attributes of both. </p>
 
@@ -74,14 +74,14 @@
 
 <p class="h2">SUPERSCRIPTS AND SUBSCRIPTS</p>
 
-<p>Integral test: <module:bounded align="0">
-    <module:bounded:symbol>∫</module:bounded:symbol>
-    <module:bounded:bottom>13</module:bounded:bottom>
-    <module:bounded:top>22 + <module:fraction>
-            <module:fraction:numerator>e</module:fraction:numerator>
-            <module:fraction:denominator>2</module:fraction:denominator>
-        </module:fraction></module:bounded:top>
-</module:bounded> <em>f</em> (<em>x</em>) d<em>x</em>.</p>
+<p>Integral test: <mod:bounded align="0">
+    <mod:bounded:symbol>∫</mod:bounded:symbol>
+    <mod:bounded:bottom>13</mod:bounded:bottom>
+    <mod:bounded:top>22 + <mod:fraction>
+            <mod:fraction:numerator>e</mod:fraction:numerator>
+            <mod:fraction:denominator>2</mod:fraction:denominator>
+        </mod:fraction></mod:bounded:top>
+</mod:bounded> <em>f</em> (<em>x</em>) d<em>x</em>.</p>
 
 <p class="h2">TEXT CHANNELS</p>
 
@@ -108,14 +108,14 @@
             <p>cell 4</p>
         </td>
         <td>
-            <module:pie radius="40">
-                <module:pie:slice color="#ff3085" prop="13">
+            <mod:pie radius="40">
+                <mod:pie:slice color="#ff3085" prop="13">
                     <p>Section A</p>
-                </module:pie:slice>
-                <module:pie:slice color="#ff50a0" prop="22">
+                </mod:pie:slice>
+                <mod:pie:slice color="#ff50a0" prop="22">
                     <p>Section B</p>
-                </module:pie:slice>
-            </module:pie>
+                </mod:pie:slice>
+            </mod:pie>
         </td>
         <td>
             <p>cell 6</p>

@@ -1,7 +1,8 @@
 from model.cat import cast_mono_line
 from IO.xml import print_attrs
 
-namespace = 'module:bounded'
+namespace = 'mod:bounded'
+tags = {namespace + ':' + T for T in ('symbol', 'bottom', 'top')}
 
 class Bounded(object):
     def __init__(self, L):

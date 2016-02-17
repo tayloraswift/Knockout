@@ -34,6 +34,9 @@ class Minion(parser.HTMLParser):
         self._trim()
         return self._O
 
+    def _breadcrumb_error(self):
+        raise RuntimeError
+        
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
         O = self._C[-1][1]
@@ -82,13 +85,13 @@ class Minion(parser.HTMLParser):
             if self._breadcrumbs[-1] == 'p':
                 self._breadcrumbs.pop()
             else:
-                raise RuntimeError
+                self._breadcrumb_error()
                 
         elif tag in moduletags:
             if self._breadcrumbs[-1] == tag:
                 self._breadcrumbs.pop()
             else:
-                raise RuntimeError
+                self._breadcrumb_error()
             
             L = self._C.pop()
             if tag in modules:
@@ -105,6 +108,13 @@ class Minion(parser.HTMLParser):
 class Kevin_from_TN(Minion): # to capture the first and last blobs
     def _trim(self):
         pass
+    
+    def _breadcrumb_error(self):
+        if self._first:
+            self._first = False
+        else:
+            raise RuntimeError
+    
     def handle_data(self, data):
         O = self._C[-1][1]
         container = self._breadcrumbs[-1]

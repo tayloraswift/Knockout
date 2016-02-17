@@ -9,14 +9,6 @@ from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image
 
 from IO import un
 
-def set_cursor(i):
-    cursor.fcursor.i = cursor.fcursor.skip(i)
-    
-def set_select(i):
-    cursor.fcursor.j = cursor.fcursor.skip(i)
-
-def match_cursors():
-    cursor.fcursor.j = cursor.fcursor.i
 
 class Keyboard(dict):
     def __init__(self):
@@ -34,36 +26,37 @@ class Keyboard(dict):
         # Non replacing
         if name == 'Left':
             un.history.undo_save(0)
-            cursor.fcursor.i = cursor.fcursor.skip(CURSOR, -1)
-            match_cursors()
+            cursor.fcursor.i -= 1
+            cursor.fcursor.j = cursor.fcursor.i
                 
         elif name == 'Right':
             un.history.undo_save(0)
             
-            cursor.fcursor.i = cursor.fcursor.skip(CURSOR, 1)
-            match_cursors()
+            cursor.fcursor.i += 1
+            cursor.fcursor.j = cursor.fcursor.i
             
         elif name == 'Up':
             un.history.undo_save(0)
             
             cursor.fcursor.hop(False)
-            match_cursors()
+            cursor.fcursor.j = cursor.fcursor.i
+            
         elif name == 'Down':
             un.history.undo_save(0)
             
             cursor.fcursor.hop(True)
-            match_cursors()
+            cursor.fcursor.j = cursor.fcursor.i
 
         elif name in ['Home', 'End']:
             un.history.undo_save(0)
 
             i, j = cursor.fcursor.front_and_back()
             if name == 'Home':
-                set_cursor(i)
-                match_cursors()
+                cursor.fcursor.i = i
+                cursor.fcursor.j = i
             else:
-                set_cursor(j)
-                match_cursors()
+                cursor.fcursor.i = j
+                cursor.fcursor.j = j
 
         elif name == 'All':
             un.history.undo_save(0)

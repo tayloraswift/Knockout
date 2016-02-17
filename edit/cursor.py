@@ -5,7 +5,7 @@ from model import meredith, olivia
 from IO.kevin import serialize_modules
 from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image
 B_OPEN = {Paragraph} | serialize_modules
-deletion = {str} | serialize_modules
+deletion = {str} | serialize_modules | {OpenFontpost, CloseFontpost, Image}
 
 class FCursor(object):
     def __init__(self, ctx):

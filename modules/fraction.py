@@ -19,7 +19,6 @@ class Fraction(object):
     def __init__(self, L):
         self._fraction = L
         
-        print(L[1])
         numerator = next(E for tag, E in L[1] if tag[0] == namespace + ':numerator')
         denominator = next(E for tag, E in L[1] if tag[0] == namespace + ':denominator')
         

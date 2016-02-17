@@ -1,4 +1,4 @@
-from html import parser, unescape
+from html import parser, unescape, escape
 from itertools import chain
 from ast import literal_eval
 
@@ -170,10 +170,10 @@ def ser(L, indent):
             if lines:
                 lines[-1][1] += LL.pop(0)[1]
             lines.extend(LL)
-            lines[-1][1] += ''.join(c if type(c) is str else repr(c) for c in C[1:])
+            lines[-1][1] += ''.join(repr(c) if type(c) is not str else escape(c) if len(c) == 1 else c for c in C[1:])
         else:
             lines.append([indent, ''])
-            lines.append([indent, ''.join(c if type(c) is str else repr(c) for c in C)])
+            lines.append([indent, ''.join(repr(c) if type(c) is not str else escape(c) if len(c) == 1 else c for c in C)])
             lead = 1
     return lines[lead:]
 

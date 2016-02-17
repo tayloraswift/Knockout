@@ -311,6 +311,7 @@ def daydream():
             'path': 'style/Ubuntu-R.ttf',
             'tracking': 0,
             'shift': 0,
+            'capitals': False,
             'color': (1, 0.15, 0.2, 1)})
     
     P_DNA.update({'hyphenate': False,

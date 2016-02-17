@@ -256,6 +256,7 @@ def cast_liquid_line(letters, startindex, width, leading, PP, F, hyphenate=False
     FSTYLE = styles.PARASTYLES.project_f(PP, F)
     x = 0
     y = -FSTYLE['shift']
+    caps = FSTYLE['capitals']
     glyphwidth = 0
 
     for letter in letters:
@@ -270,6 +271,7 @@ def cast_liquid_line(letters, startindex, width, leading, PP, F, hyphenate=False
             
             FSTYLE = styles.PARASTYLES.project_f(PP, F)
             y = -FSTYLE['shift']
+            caps = FSTYLE['capitals']
             GLYPHS.append((-4, x, y, FSTYLE, fstat, x))
             
         elif CT is CloseFontpost:
@@ -282,6 +284,7 @@ def cast_liquid_line(letters, startindex, width, leading, PP, F, hyphenate=False
             
             FSTYLE = styles.PARASTYLES.project_f(PP, F)
             y = -FSTYLE['shift']
+            caps = FSTYLE['capitals']
             GLYPHS.append((-5, x, y, FSTYLE, fstat, x))
             
         elif CT is Paragraph:
@@ -310,6 +313,8 @@ def cast_liquid_line(letters, startindex, width, leading, PP, F, hyphenate=False
 
         else:
             if CT is str:
+                if caps:
+                    letter = letter.upper()
                 glyphwidth = FSTYLE['fontmetrics'].advance_pixel_width(letter) * FSTYLE['fontsize']
                 GLYPHS.append((
                         FSTYLE['fontmetrics'].character_index(letter),  # 0
@@ -436,6 +441,7 @@ def cast_mono_line(letters, leading, PP, F):
     FSTYLE = styles.PARASTYLES.project_f(PP, F)
     x = 0
     y = -FSTYLE['shift']
+    caps = FSTYLE['capitals']
     glyphwidth = 0
 
     for letter in letters:
@@ -450,6 +456,7 @@ def cast_mono_line(letters, leading, PP, F):
             
             FSTYLE = styles.PARASTYLES.project_f(PP, F)
             y = -FSTYLE['shift']
+            caps = FSTYLE['capitals']
             GLYPHS.append((-4, x, y, FSTYLE, fstat, x))
             
         elif CT is CloseFontpost:
@@ -462,6 +469,7 @@ def cast_mono_line(letters, leading, PP, F):
             
             FSTYLE = styles.PARASTYLES.project_f(PP, F)
             y = -FSTYLE['shift']
+            caps = FSTYLE['capitals']
             GLYPHS.append((-5, x, y, FSTYLE, fstat, x))
             
         elif CT is Paragraph:
@@ -483,6 +491,8 @@ def cast_mono_line(letters, leading, PP, F):
 
         else:
             if CT is str:
+                if caps:
+                    letter = letter.upper()
                 glyphwidth = FSTYLE['fontmetrics'].advance_pixel_width(letter) * FSTYLE['fontsize']
                 GLYPHS.append((
                         FSTYLE['fontmetrics'].character_index(letter),  # 0

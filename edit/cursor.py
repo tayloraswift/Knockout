@@ -56,8 +56,8 @@ class FCursor(object):
                         # switch of tract context
                         self.assign_text(ftext_t)
                     self.TRACT = chained_tract
-                    self.i = self.skip(i_t)
-                    self.j = self.i
+                    self.i = i_t
+                    self.j = i_t
                     self.si = si_t
                     return
                     
@@ -71,8 +71,8 @@ class FCursor(object):
                 if ftext_p is not self.FTX:
                     # switch of tract context
                     self.assign_text(ftext_p)
-                self.i = self.skip(i_p)
-                self.j = self.i
+                self.i = i_p
+                self.j = i_p
                 self.si = si_p
                 self.PG = binned_page
                 return
@@ -86,8 +86,8 @@ class FCursor(object):
                         # switch of tract context
                         self.assign_text(ftext_pt)
                     self.TRACT = chained_tract
-                    self.i = self.skip(i_pt)
-                    self.j = self.i
+                    self.i = i_pt
+                    self.j = i_pt
                     self.si = si_pt
                     self.PG = binned_page
                     return
@@ -96,8 +96,8 @@ class FCursor(object):
         if ftext is not self.FTX:
             # switch of tract context
             self.assign_text(ftext)
-        self.i = self.skip(i_new)
-        self.j = self.i
+        self.i = i_new
+        self.j = i_new
         self.si = si
         return
 
@@ -114,29 +114,15 @@ class FCursor(object):
             imperfect_p, i_p = self.FTX.target_select(x, y, binned_page, i=None)
             if not imperfect_p:
                 # hit!
-                self.j = self.skip(i_p)
+                self.j = i_p
                 self.PG = binned_page
                 return
 
         # simple cursor assignment
-        self.j = self.skip(i_new)
+        self.j = i_new
         return
     
     #############
-
-    def skip(self, i, jump=0):
-        i += jump
-        # prevent overruns
-        i = min(len(self.text) - 1, max(1, i))
-        if type(self.text[i]) is Paragraph:
-            direction = 1
-            if jump < 0:
-                direction = -1
-            while True:
-                i += direction
-                if type(self.text[i]) is not Paragraph:
-                    break
-        return i
 
     def paint_current_selection(self):
         ftags = {OpenFontpost, CloseFontpost}
@@ -189,7 +175,7 @@ class FCursor(object):
         self.FTX.misspellings = [pair if pair[1] < start else (pair[0] + offset, pair[1] + offset, pair[2]) if pair[0] > end else (0, 0, None) for pair in self.FTX.misspellings]
 
         self._recalculate()
-        self.i = self.skip(self.i + da)
+        self.i += da
         self.j = self.i
 
     def insert(self, segment):
@@ -199,7 +185,7 @@ class FCursor(object):
         s = len(segment)
         self.text[self.i:self.j] = segment
         self._recalculate()
-        self.i = self.skip(self.i + s)
+        self.i += s
         self.j = self.i
         
         # fix spelling lines
@@ -372,7 +358,7 @@ class FCursor(object):
                 return False
 
     def hop(self, direction): #implemented exclusively for arrow-up/down events
-        self.i = self.skip(self.FTX.line_jump(self.i, direction))
+        self.i = self.FTX.line_jump(self.i, direction)
 
     def pp_at(self):
         return self.FTX.line_at(self.i)['PP']

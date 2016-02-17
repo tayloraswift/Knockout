@@ -7,14 +7,6 @@ from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image
 B_OPEN = {Paragraph} | serialize_modules
 deletion = {str} | serialize_modules
 
-def outside_tag(sequence):
-    for i in reversed(range(len(sequence) - 1)):
-
-        if (type(sequence[i]), sequence[i + 1]) == (Paragraph, '</p>'):
-            del sequence[i:i + 2]
-
-    return sequence
-
 class FCursor(object):
     def __init__(self, ctx):
         self.TRACT = meredith.mipsy[ctx['t']]

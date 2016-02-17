@@ -12,16 +12,16 @@ def _create_f_field(TYPE, x, y, width, attribute, after, name='', **kwargs):
     if TYPE == kookies.Checkbox:
         z_y = y
     else:
-        z_y = y + 7
+        z_y = y - 7
     V_A = lambda A: styles.PARASTYLES.active.layerable.active.F.attributes[A] if A in styles.PARASTYLES.active.layerable.active.F.attributes else contexts.Fontstyle.fontstyle[A]
-    ZI = kookies.Z_indicator(x, z_y, 10, height=24, 
+    ZI = kookies.Z_indicator(x, y, 10, height=24, 
             get_projection = lambda: contexts.Fontstyle.fontstyle, 
             get_attributes = lambda LIB: LIB.active.F.attributes, 
             A = attribute, 
             copy_value = lambda A: ops.f_set_attribute(V_A(A), A), 
             library=styles.PARASTYLES.active.layerable,
             before=un.history.save, after= lambda: (styles.PARASTYLES.update_f(), meredith.mipsy.recalculate_all(), contexts.Text.update_force()))
-    return [ZI, TYPE(x + 25, y, width - 25,
+    return [ZI, TYPE(x + 25, z_y, width - 25,
             callback= ops.f_set_attribute, 
             value_acquire = V_A,
             params = (attribute,), 
@@ -33,16 +33,16 @@ def _create_p_field(TYPE, x, y, width, attribute, after, name='', **kwargs):
     if TYPE == kookies.Checkbox:
         z_y = y
     else:
-        z_y = y + 7
+        z_y = y - 7
     V_A = lambda A: styles.PARASTYLES.active.attributes[A] if A in styles.PARASTYLES.active.attributes else contexts.Parastyle.parastyle[A]
-    ZI = kookies.Z_indicator(x, z_y, 10, height=24, 
+    ZI = kookies.Z_indicator(x, y, 10, height=24, 
             get_projection = lambda: contexts.Parastyle.parastyle, 
             get_attributes = lambda LIB: LIB.active.attributes, 
             A = attribute, 
             copy_value = lambda A: ops.p_set_attribute(V_A(A), A), 
             library=styles.PARASTYLES, 
             before=un.history.save, after= lambda: (styles.PARASTYLES.update_p(), meredith.mipsy.recalculate_all(), contexts.Text.update_force()))
-    return [ZI, TYPE(x + 25, y, width - 25,
+    return [ZI, TYPE(x + 25, z_y, width - 25,
             callback = ops.p_set_attribute, 
             value_acquire = V_A,
             params = (attribute,), 
@@ -254,6 +254,8 @@ class Properties(_Properties_panel):
                         y += 45
                         self._items += _columns(_create_f_field(kookies.Numeric_field, 15, y, 250, 'shift', after=self.synchronize, name='VERTICAL SHIFT'))
                         y += 45
+                        self._items += _columns(_create_f_field(kookies.Checkbox, 15, y, 250, 'capitals', after=self.synchronize, name='CAPITALS'))
+                        y += 45
                         self._items += _columns(_create_f_field(kookies.RGBA_field, 15, y, 250, 'color', after=self.synchronize, name='COLOR'))
             else:
                 self._items.append(kookies.Heading( 15, 90, 250, 30, '', upper=True))
@@ -291,7 +293,7 @@ class Properties(_Properties_panel):
 
                 self._items += _columns(_create_p_field(kookies.Numeric_field, 15, y, 120, 'margin_top', after=self.synchronize, name='SPACE BEFORE') +
                                 _create_p_field(kookies.Numeric_field, 150, y, 120, 'margin_bottom', after=self.synchronize, name='SPACE AFTER'))
-                y += 60
+                y += 45
 
                 self._items += _columns(_create_p_field(kookies.Checkbox, 15, y, 100, 'hyphenate', after=self.synchronize, name='HYPHENATE'))
                 y += 45

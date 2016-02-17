@@ -6,6 +6,9 @@ from model.olivia import Atomic_text, Block
 from edit.paperairplanes import interpret_rgba
 from IO.xml import print_attrs
 
+namespace = 'mod:pie'
+tags = {namespace + ':' + T for T in ('slice',)}
+
 class _Pie(object):
     def __init__(self, slices, radius, active=0):
         self.slices = slices
@@ -20,7 +23,7 @@ class PieChart(object):
         else:
             radius = 89
         self._chart = L
-        slices, labels = zip( * (( (int(tag[1]['prop']), interpret_rgba(tag[1]['color'])), E) for tag, E in L[1] if tag[0] == 'module:pie:slice'))
+        slices, labels = zip( * (( (int(tag[1]['prop']), interpret_rgba(tag[1]['color'])), E) for tag, E in L[1] if tag[0] == namespace + ':slice'))
         total = sum(P for P, C in slices)
                        # percentage | arc length | color
         self._pie = _Pie([(P/total, P/total*2*pi, C) for P, C in slices], radius)
@@ -32,7 +35,7 @@ class PieChart(object):
             lines.append([indent + 1, print_attrs( * tag)])
             lines.extend(serialize(E, indent + 2))
             lines.append([indent + 1, '</' + tag[0] + '>'])
-        lines.append([indent, '</module:pie>'])
+        lines.append([indent, '</' + namespace + '>'])
         return lines
 
     def fill(self, bounds, c, y):

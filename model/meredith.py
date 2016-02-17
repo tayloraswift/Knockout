@@ -5,6 +5,7 @@ from IO import kevin
 class Meredith(list):
     def __init__(self, KT, grid):
         list.__init__(self, (olivia.Chained_text(kevin.deserialize(T), george.Washington([george.Swimming_pool( * c ) for c in C])) for T, C in KT))
+
         self.page_grid = grid
     
     def recalculate_all(self):

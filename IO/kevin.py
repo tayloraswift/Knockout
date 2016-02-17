@@ -7,13 +7,21 @@ from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image
 from style import styles
 from modules import table, pie, fraction, bounded
 
-modules = {'table': (table.Table, {'tr', 'td'}), 'module:pie': (pie.PieChart, {'module:pie:slice'}), 'module:fraction': (fraction.Fraction, {'module:fraction:numerator', 'module:fraction:denominator'}), 'module:bounded': (bounded.Bounded, {'module:bounded:symbol', 'module:bounded:bottom', 'module:bounded:top'})}
-moduletags = set(modules) | set(chain.from_iterable(v[1] for v in modules.values()))
-inline = {'p', 'module:fraction:numerator', 'module:fraction:denominator', 'module:bounded:symbol', 'module:bounded:bottom', 'module:bounded:top'}
-closing = {table.Table}
+INLINE = (fraction, fraction.Fraction), (bounded, bounded.Bounded)
+BLOCK = (table, table.Table), (pie, pie.PieChart)
 
-serialize_modules = {table.Table, pie.PieChart}
-inline_serialize_modules = {fraction.Fraction, bounded.Bounded}
+def _load_module(mods):
+    M = {}
+    for mod, mobj in mods:
+        M[mod.namespace] = mobj, mod.tags
+    return M
+
+modules = _load_module(INLINE + BLOCK)
+moduletags = set(modules) | set(chain.from_iterable(v[1] for v in modules.values()))
+inline = {'p'}.union( * (I[0].tags for I in INLINE))
+
+serialize_modules = set(B[1] for B in BLOCK)
+inline_serialize_modules = set(I[1] for I in INLINE)
 structural_open = {Paragraph} | serialize_modules | inline_serialize_modules
 
 class Minion(parser.HTMLParser):

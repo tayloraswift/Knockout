@@ -1,7 +1,8 @@
 from model.cat import cast_mono_line
 from IO.xml import print_attrs
 
-namespace = 'module:fraction'
+namespace = 'mod:fraction'
+tags = {namespace + ':' + T for T in ('numerator', 'denominator')}
 
 def _fracbound(glyphs, fontsize):
     if glyphs:
@@ -18,6 +19,7 @@ class Fraction(object):
     def __init__(self, L):
         self._fraction = L
         
+        print(L[1])
         numerator = next(E for tag, E in L[1] if tag[0] == namespace + ':numerator')
         denominator = next(E for tag, E in L[1] if tag[0] == namespace + ':denominator')
         

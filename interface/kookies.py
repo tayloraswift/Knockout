@@ -317,6 +317,10 @@ class Blank_space(Base_kookie):
         elif name == 'End':
             self._i = len(self._LIST) - 1
             self._j = len(self._LIST) - 1
+
+        elif name == 'All':
+            self._i = 0
+            self._j = len(self._LIST) - 1
         
         elif name == 'Paste':
             # check to make sure string contains no dangerous entities
@@ -354,8 +358,7 @@ class Blank_space(Base_kookie):
                 del self._LIST[self._i : self._j]
                 changed = True
                 self._j = self._i
-            
-        
+
         elif char is not None:
             # delete selection
             if self._i != self._j:

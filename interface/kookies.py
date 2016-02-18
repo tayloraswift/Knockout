@@ -403,7 +403,7 @@ class Blank_space(Base_kookie):
         
         self._center_j()
 
-    def focus_drag(self, x):
+    def focus_drag(self, x, y):
         j = self._target(x)
         
         # force redraw if cursor moves

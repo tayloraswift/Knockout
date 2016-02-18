@@ -10,7 +10,7 @@ def xhover(self, x, y):
     return self._sdkeys[bisect.bisect(self._subdivisions, x)]
 
 class Base_kookie(object):
-    def __init__(self, x, y, width, height, font=None):
+    def __init__(self, x, y, width, height, font=()):
         self._x = x
         self._y = y
         self._width = width
@@ -20,9 +20,7 @@ class Base_kookie(object):
         
         self._texts = []
         
-        if font is None:
-            self.font = styles.ISTYLES[()]
-        else:
+        if font is not None:
             self.font = styles.ISTYLES[font]
         
         self._x_right = x + width
@@ -79,7 +77,7 @@ class Base_kookie(object):
 
     def focus(self, x, y):
         pass
-    def focus_drag(self, x):
+    def focus_drag(self, x, y):
         pass
     def release(self, action):
         pass

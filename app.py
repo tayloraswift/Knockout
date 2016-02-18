@@ -1,7 +1,7 @@
 from gi.repository import Gtk, Gdk, GObject
 
 from state import noticeboard, constants
-from IO import kevin, do
+from IO import do
 from state import errors
 from edit import cursor
 from typing import compose
@@ -219,7 +219,7 @@ class Display(Gtk.Window):
                 do.redo()
             
             elif name == 'v':
-                tree.take_event(0, 0, 'Paste', key=True, char = kevin.deserialize(self.clipboard.wait_for_text(), fragment=True) )
+                tree.take_event(0, 0, 'Paste', key=True, char = self.clipboard.wait_for_text())
 
             elif name in {'c', 'x'}:
                 if name == 'c':
@@ -227,8 +227,8 @@ class Display(Gtk.Window):
                 else:
                     cp = tree.take_event(0, 0, 'Cut', key=True)
                     
-                if cp is not None:
-                    self.clipboard.set_text(kevin.serialize(cp), -1)
+                if cp is not None: # must be preprocessed into string
+                    self.clipboard.set_text(cp, -1)
             
             elif name == 'a':
                 tree.take_event(0, 0, 'All', key=True)

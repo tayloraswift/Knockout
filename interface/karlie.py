@@ -6,7 +6,7 @@ from style import styles
 from interface import kookies, ui
 from edit import ops, caramel, cursor
 from model import meredith
-from IO import un
+from IO import un, kevin
 
 def _create_f_field(TYPE, x, y, width, attribute, after, name='', **kwargs):
     if TYPE == kookies.Checkbox:
@@ -353,6 +353,12 @@ class Properties(_Properties_panel):
                         name = 'HEIGHT' ))
             y += 45
         
+        elif self._tab == 'character':
+            self._items.append(kookies.Blank_space(15, y, width=250, 
+                    callback = lambda * args: None, 
+                    value_acquire = lambda: kevin.serialize([cursor.fcursor.text[cursor.fcursor.i]]), 
+                    before=un.history.save, after=self.synchronize, name='SOURCE CODE'))
+        
         self._stack(y)
 
     def _reconstruct_channel_properties(self):
@@ -382,7 +388,7 @@ class Properties(_Properties_panel):
         width = 160
 
         if to == 'text':
-            tabs = (('page', 'M'), ('tags', 'T'), ('paragraph', 'P'), ('font', 'F'), ('pegs', 'G'))
+            tabs = (('page', 'M'), ('tags', 'T'), ('paragraph', 'P'), ('font', 'F'), ('character', 'C'))
             default = 2
             self._tabstrip = kookies.Tabs( (constants.window.get_h() - constants.UI[self._partition] - width)//2 , 20, width, 30, default=default, callback=self._tab_switch, signals=tabs)
             self._tab = tabs[default][0]

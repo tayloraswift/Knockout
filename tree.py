@@ -13,7 +13,6 @@ def take_event(x, y, event, key=False, char=None, region=[  0,      0  ]):
 
     if key:
         return UI_CELLS[region[0]].key_input(event, char)
-
                 
     else:
         # Changing regions

@@ -7,7 +7,7 @@ from edit import cursor
 
 from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image
 
-from IO import un
+from IO import un, kevin
 
 class Keyboard(dict):
     def __init__(self):
@@ -19,7 +19,6 @@ class Keyboard(dict):
         dict.__init__(self, chain.from_iterable(((key1, styles.FTAGS[name]), (key2, styles.FTAGS[name])) for key1, key2, name in shortcuts))
         
     def type_document(self, name, char, lastpress=[0], direction=[0]):
-
         CURSOR = cursor.fcursor.i
         
         # Non replacing
@@ -106,13 +105,12 @@ class Keyboard(dict):
         elif name == 'Paste':
             if char:
                 un.history.undo_save(3)
-                # char is a LIST in this case
-                cursor.fcursor.insert(char)
+                cursor.fcursor.insert(kevin.deserialize(char, fragment=True))
         
         elif name == 'Copy':
             sel = cursor.fcursor.take_selection()
             if sel:
-                return sel
+                return kevin.serialize(sel)
         
         elif name == 'Cut':
             sel = cursor.fcursor.take_selection()
@@ -120,7 +118,7 @@ class Keyboard(dict):
                 un.history.undo_save(3)
                 cursor.fcursor.insert([])
             
-                return sel        
+                return kevin.serialize(sel)
 
         elif name in self._special_names:
             T = self[name]

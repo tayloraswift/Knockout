@@ -13,7 +13,7 @@ HINTS.set_hint_style(default_hint[0])
 
 filename = ''
 
-UI = [0, 900]
+UI = [0, 850]
 
 class Window(object):
     def __init__(self, h, k):
@@ -47,9 +47,11 @@ interface_fstyles = {'_interface:LABEL': {'fontsize': 11,
                                        'tracking': 0},
                 '_interface:STRONG': {'path': 'interface/FiraSans-Medium.otf',
                                       'tracking': 0.5},
-                '_interface:TITLE': {'fontsize': 18, 'tracking': 4}}
+                '_interface:TITLE': {'fontsize': 18, 'tracking': 4},
+                '_interface:CODE': {'path': 'interface/ShareTechMono-Regular.ttf', 'fontsize': 16}}
 
 interface_pstyle = [('_interface:REGULAR', ()),
                           ('_interface:LABEL', ('label',)),
                           ('_interface:STRONG', ('strong',)),
-                          ('_interface:TITLE', ('title',))]
+                          ('_interface:TITLE', ('title',)),
+                          ('_interface:CODE', ('mono',))]

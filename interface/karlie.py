@@ -119,6 +119,7 @@ class _Properties_panel(ui.Cell):
         self._reconstruct()
     
     def synchronize(self):
+        contexts.Text.update_force()
         for item in self._items:
             item._SYNCHRONIZE()
         

@@ -112,7 +112,6 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False):
         PP = INIT['PP']
         F = INIT['F'].copy()
         R = INIT['R'] + 1
-        K_x = None
         PSTYLE = styles.PARASTYLES.project_p(PP)
         gap = False
     
@@ -132,7 +131,6 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False):
                 
                 F = Counter()
                 R = 0
-                K_x = None
                 
                 if l != INIT['l'] + 1: # prevent accumulating y error
                     y += PSTYLE['margin_top']
@@ -171,25 +169,16 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False):
         x1, x2 = channel.bounds(y)
 
         # calculate indentation
-
         if R in PSTYLE['indent_range']:
             D, SIGN, K = PSTYLE['indent']
             if K:
-                if K_x is None:
-                    INDLINE = cast_liquid_line(
-                        LIQUID[_p_i_ : _p_i_ + K + 1], 
-                        0, 
-                        
-                        1989, 
-                        0,
-                        PP,
-                        F.copy(), 
-                        
-                        hyphenate = False
-                        )
-                    K_x = INDLINE['GLYPHS'][-1][5] * SIGN
-                
-                L_indent = PSTYLE['margin_left'] + D + K_x
+                INDLINE = cast_mono_line(
+                    LIQUID[i : i + K + (not bool(R))], 
+                    0,
+                    PP,
+                    F.copy()
+                    )
+                L_indent = PSTYLE['margin_left'] + D + INDLINE['advance'] * SIGN
             else:
                 L_indent = PSTYLE['margin_left'] + D
         else:
@@ -218,14 +207,12 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False):
         LINE['left'] = x1
         if PSTYLE['align'] > 0:
             LINE['x'] = x1
-        elif LINE['GLYPHS']:
-            rag = LINE['width'] - LINE['GLYPHS'][-1][5]
+        else:
+            rag = LINE['width'] - LINE['advance']
             if PSTYLE['align']:
                 LINE['x'] = x1 + rag
             else:
                 LINE['x'] = x1 + rag/2
-        else:
-            LINE['x'] = x1
         LINE['y'] = y
         LINE['l'] = l
         LINE['c'] = c
@@ -427,11 +414,12 @@ def cast_liquid_line(letters, startindex, width, leading, PP, F, hyphenate=False
     LINE['GLYPHS'] = GLYPHS
     # cache x's
     LINE['_X_'] = [g[1] for g in GLYPHS]
-    
+
     try:
         LINE['F'] = GLYPHS[-1][4]
+        LINE['advance'] = GLYPHS[-1][5]
     except IndexError:
-        pass
+        LINE['advance'] = 0
     
     return LINE
 
@@ -537,14 +525,10 @@ def cast_mono_line(letters, leading, PP, F):
     # cache x's
     LINE['_X_'] = [g[1] for g in GLYPHS]
     
-    if GLYPHS:
-        LINE['advance'] = GLYPHS[-1][5]
-    else:
-        LINE['advance'] = 0
-    
     try:
         LINE['F'] = GLYPHS[-1][4]
+        LINE['advance'] = GLYPHS[-1][5]
     except IndexError:
-        pass
+        LINE['advance'] = 0
     
     return LINE

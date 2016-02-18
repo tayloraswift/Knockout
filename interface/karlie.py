@@ -192,7 +192,8 @@ class _Properties_panel(ui.Cell):
             self._active_box_i = b
             
     def press_motion(self, x, y):
-        if self._active_box_i is not None and self._active_box_i.focus_drag(x):
+        y -= self._dy
+        if self._active_box_i is not None and self._active_box_i.focus_drag(x, y):
             noticeboard.redraw_klossy.push_change()
     
     def hover(self, x, y, hovered=[None]):
@@ -354,7 +355,7 @@ class Properties(_Properties_panel):
             y += 45
         
         elif self._tab == 'character':
-            self._items.append(source.Rose_garden(10, y, width=300, 
+            self._items.append(source.Rose_garden(10, y, width=310, 
                     callback = lambda * args: None, 
                     value_acquire = lambda: kevin.serialize([cursor.fcursor.text[cursor.fcursor.i]])))
             y = self._items[-1].bounding_box()[3]

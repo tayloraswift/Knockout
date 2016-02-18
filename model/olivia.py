@@ -92,7 +92,7 @@ class Atomic_text(object):
         v_x = self._text_index_x(v, v_l)
         
         first = self._SLUGS[u_l]
-        if not u_l - v_l:
+        if u_l == v_l:
                                # y, x1, x2
             select.append((first['y'], u_x, v_x, first['leading'], first['page']))
         

@@ -4,7 +4,7 @@ from bisect import bisect
 
 from model.olivia import Atomic_text, Block
 from edit.paperairplanes import interpret_rgba
-from IO.xml import print_attrs
+from IO.xml import print_attrs, print_styles
 
 namespace = 'mod:pie'
 tags = {namespace + ':' + T for T in ('slice',)}
@@ -18,11 +18,9 @@ class _Pie(object):
 
 class PieChart(object):
     def __init__(self, L):
-        if 'radius' in L[0][1]:
-            radius = int(L[0][1]['radius'])
-        else:
-            radius = 89
         self._chart = L
+        self.PP = L[0][2]
+        radius = int(L[0][1].get('radius', 89))
         slices, labels = zip( * (( (int(tag[1]['prop']), interpret_rgba(tag[1]['color'])), E) for tag, E in L[1] if tag[0] == namespace + ':slice'))
         total = sum(P for P, C in slices)
                        # percentage | arc length | color
@@ -30,7 +28,9 @@ class PieChart(object):
         self._FLOW = [Atomic_text(text) for text in labels]
 
     def represent(self, serialize, indent):
-        lines = [[indent, print_attrs( * self._chart[0])]]
+        name, attrs = self._chart[0][:2]
+        attrs.update(print_styles(self.PP))
+        lines = [[indent, print_attrs(name, attrs)]]
         for tag, E in self._chart[1]:
             lines.append([indent + 1, print_attrs( * tag)])
             lines.extend(serialize(E, indent + 2))
@@ -51,11 +51,11 @@ class PieChart(object):
         bottom = py + r + 22
         
         self._pie.center = px, py
-        return _MBlock(self._FLOW, (top, bottom, left, right), self._pie)
+        return _MBlock(self._FLOW, (top, bottom, left, right), self._pie, self.PP)
 
 class _MBlock(Block):
-    def __init__(self, FLOW, box, pie):
-        Block.__init__(self, FLOW, * box)
+    def __init__(self, FLOW, box, pie, PP):
+        Block.__init__(self, FLOW, * box, PP)
         self._slices = pie.slices
         self._slices_t = list(accumulate(s[1] for s in self._slices))
         self._pie = pie

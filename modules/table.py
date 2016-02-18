@@ -4,7 +4,7 @@ from itertools import chain
 from model.olivia import Atomic_text, Block
 from model.george import Swimming_pool
 from interface.base import accent
-from IO.xml import print_attrs
+from IO.xml import print_attrs, print_styles
 
 namespace = 'table'
 tags = {'tr', 'td'}
@@ -96,12 +96,15 @@ def _build_matrix(data):
 class Table(object):
     def __init__(self, L):
         self._table = L
+        self.PP = L[0][2]
         self.data = [[_Table_cell(C, int(td[1].get('rowspan', 1)), int(td[1].get('colspan', 1))) for td, C in R] for tr, R in L[1]]
         self._FLOW = [cell for row in self.data for cell in row]
         self._MATRIX = _build_matrix(self.data)
     
     def represent(self, serialize, indent):
-        lines = [[indent, print_attrs( * self._table[0])]]
+        name, attrs = self._table[0][:2]
+        attrs.update(print_styles(self.PP))
+        lines = [[indent, print_attrs(name, attrs)]]
         for tr, R in self._table[1]:
             lines.append([indent + 1, '<tr>'])
             for td, C in R:
@@ -124,12 +127,12 @@ class Table(object):
             y = _row_height(self.data, r, y)
             row_y.append(y)
         
-        return _MBlock(self._FLOW, self._MATRIX, bounds, top, y, row_y)
+        return _MBlock(self._FLOW, self._MATRIX, bounds, top, y, row_y, self.PP)
 
 class _MBlock(Block):
-    def __init__(self, FLOW, matrix, bounds, top, bottom, row_y):
+    def __init__(self, FLOW, matrix, bounds, top, bottom, row_y, PP):
         x1, x2 = bounds.bounds(top)
-        Block.__init__(self, FLOW, top, bottom, x1, x2)
+        Block.__init__(self, FLOW, top, bottom, x1, x2, PP)
         
         self._matrix = matrix
         self._row_y = row_y

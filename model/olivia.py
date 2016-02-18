@@ -1,14 +1,12 @@
 from bisect import bisect
 from itertools import groupby, chain
 
-from bulletholes.counter import TCounter as Counter
 from state import noticeboard
 from model.wonder import words
 from model.cat import typeset_chained, typeset_liquid, Glyphs_line
-from elements.elements import Paragraph
 
 class Block(dict):
-    def __init__(self, FLOW, top, bottom, left, right):
+    def __init__(self, FLOW, top, bottom, left, right, PP):
         self._FLOW = FLOW
         self['x'] = left
         self['left'] = left
@@ -17,7 +15,7 @@ class Block(dict):
         self['leading'] = bottom - top
         self['GLYPHS'] = [(-2, 0, bottom, None, None, right - left)]
         self['P_BREAK'] = True
-        self['PP'] = Paragraph(Counter())
+        self['PP'] = PP
         
     def collect_text(self):
         return list(chain.from_iterable(A.collect_text() for A in self._FLOW))

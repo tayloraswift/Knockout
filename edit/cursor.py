@@ -175,10 +175,12 @@ class FCursor(object):
 
     def insert(self, segment):
         if self.take_selection():
-            self._burn(self.i, self.j)
+            m = self.i - self.j
+            m += self._burn(self.i, self.j)
             d = True
         else:
             d = False
+            m = 0
 
         if segment:
             if type(self.text[self.i]) in B_OPEN: # outside
@@ -200,6 +202,7 @@ class FCursor(object):
                     segment.append(Paragraph(P))
 
         s = len(segment)
+        m += s
         if s or d:
             self.text[self.i:self.j] = segment
             self._recalculate()
@@ -207,7 +210,7 @@ class FCursor(object):
             self.j = self.i
             
             # fix spelling lines
-            self.FTX.misspellings = [pair if pair[1] < self.i else (pair[0] + s, pair[1] + s, pair[2]) if pair[0] > self.i else (pair[0], pair[1] + s, pair[2]) for pair in self.FTX.misspellings]
+            self.FTX.misspellings = [pair if pair[1] < self.i else (pair[0] + m, pair[1] + m, pair[2]) if pair[0] > self.i else (pair[0], pair[1] + m, pair[2]) for pair in self.FTX.misspellings]
 
     def expand_cursors(self):
         # order

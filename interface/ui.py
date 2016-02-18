@@ -3,32 +3,32 @@ class Cell(object):
         print(name)
     
     def hover(self, x, y=-1):
-        print((x, y))
+        pass
     
     def scroll(self, x, y=-1, char=''):
-        print((x, y, char))
+        pass
     
     
     def press(self, x, y=-1, char=''):
-        print((x, y))
+        pass
     
     def press_mid(self, x, y=-1):
-        print((x, y))
+        pass
     
     def press_right(self, x, y=-1):
-        print((x, y))
+        pass
     
     
     def dpress(self):
-        print('double click')
+        pass
     
     
     def press_motion(self, x, y=-1):
-        print((x, y))
+        pass
     
     def drag(self, x, y=-1):
-        print((x, y))
+        pass
     
     
     def release(self, x, y=-1):
-        print('release')
+        pass

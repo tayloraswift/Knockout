@@ -20,7 +20,7 @@
     <mod:fraction:denominator><em>x</em></mod:fraction:denominator>
 </mod:fraction></p>
 
-<p style="{'margin_top': 6, 'margin_left': 20, 'fontclasses': (0, [('Italic', {})])}">—Kelvin Ma</p>
+<p style="{'fontclasses': (0, [('Italic', {})]), 'margin_left': 20, 'margin_top': 6}">—Kelvin Ma</p>
 
 <p class="h2">What is additive styling?</p>
 
@@ -28,8 +28,8 @@
 
 <p style="{'align': 0}">Subtitle</p>
 
-<mod:pie class="h2" radius="60">
-    <mod:pie:slice color="#ff3085" prop="13">
+<mod:pie radius="60" class="h2">
+    <mod:pie:slice prop="13" color="#ff3085">
         <p>A = <mod:fraction>
             <mod:fraction:numerator>abc + <mod:fraction>
                     <mod:fraction:numerator>e</mod:fraction:numerator>
@@ -38,16 +38,16 @@
             <mod:fraction:denominator><em>x</em></mod:fraction:denominator>
         </mod:fraction> </p>
     </mod:pie:slice>
-    <mod:pie:slice color="#ff50a0" prop="22">
+    <mod:pie:slice prop="22" color="#ff50a0">
         <p>Section B</p>
     </mod:pie:slice>
-    <mod:pie:slice color="#f020ff" prop="69">
+    <mod:pie:slice prop="69" color="#f020ff">
         <p>Section C</p>
     </mod:pie:slice>
-    <mod:pie:slice color="#b050ff" prop="89">
+    <mod:pie:slice prop="89" color="#b050ff">
         <p>Section D</p>
     </mod:pie:slice>
-    <mod:pie:slice color="#7080ff" prop="113">
+    <mod:pie:slice prop="113" color="#7080ff">
         <p>Section E</p>
     </mod:pie:slice>
 </mod:pie>
@@ -109,10 +109,10 @@
         </td>
         <td>
             <mod:pie radius="40">
-                <mod:pie:slice color="#ff3085" prop="13">
+                <mod:pie:slice prop="13" color="#ff3085">
                     <p>Section A</p>
                 </mod:pie:slice>
-                <mod:pie:slice color="#ff50a0" prop="22">
+                <mod:pie:slice prop="22" color="#ff50a0">
                     <p>Section B</p>
                 </mod:pie:slice>
             </mod:pie>
@@ -202,8 +202,8 @@
                 'Superitalic': {'path': 'fonts/Courgette-Regular.ttf'},
                 'Superscript': {'shift': 7},
                 'h3': {'capitals': True, 'fontsize': 16, 'path': 'fonts/FiraSans-Book.otf', 'tracking': 1}},
- 'FTAGLIST': [('big', []), ('link', []), ('caption', []), ('emphasis', []), ('strong', []), ('sup', ['small']), ('sub', ['small'])],
- 'PARASTYLES': (None,
+ 'FTAGLIST': [('link', []), ('strong', []), ('sup', ['small']), ('caption', []), ('emphasis', []), ('sub', ['small']), ('big', [])],
+ 'PARASTYLES': (1,
                 [({'fontclasses': (2, [('Black', {}), ('Subscript', {'sub': 1}), ('Superscript', {'sup': 1})])}, {}),
                  ({'fontclasses': (0,
                                    [('Regular', {}),
@@ -223,8 +223,8 @@
                  ({'fontclasses': (0, [('Subheading', {})]), 'leading': 24, 'margin_bottom': 10}, {'h2': 1}),
                  ({'align': 0, 'fontclasses': (0, [('h3', {})])}, {'h3': 1}),
                  ({'fontclasses': (0, [('Gray', {})])}, {'gray': 1})]),
- 'PTAGLIST': [('h3', []), ('gray', []), ('h2', []), ('body', []), ('h1', [])],
- 'contexts': {'channels': {'c': 7, 'p': 7, 't': 1}, 'text': {'i': 812, 'j': 812, 'p': 1, 't': 1}},
+ 'PTAGLIST': [('h2', []), ('h1', []), ('body', []), ('h3', []), ('gray', [])],
+ 'contexts': {'channels': {'c': 7, 'p': 7, 't': 1}, 'text': {'i': 816, 'j': 816, 'p': 1, 't': 1}},
  'grid': [[120, 480], [120, 480]],
  'outlines': ([(([[120, 120, False], [120, 200, False]], [[480, 120, False], [480, 200, False]]), 0)],
               [(([[120, 210, False], [120, 480, False]], [[480, 210, False], [480, 480, False]]), 0),

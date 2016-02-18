@@ -85,7 +85,8 @@ class _Properties_panel(ui.Cell):
     def __init__(self, tabs = (), default=0, partition=1 ):
         
         self._partition = partition
-
+        
+        self._dy = 0
         width = 140
         self._tabstrip = kookies.Tabs( (constants.window.get_h() - constants.UI[partition] - width)//2 , 20, width, 30, default=default, callback=self._tab_switch, signals=tabs)
         self._tab = tabs[default][0]
@@ -97,8 +98,9 @@ class _Properties_panel(ui.Cell):
             self._tab = name
             self._reconstruct()
         
-    def _stack(self):
+    def _stack(self, y):
         self._rows = [item.y for item in self._items]
+        self._total_height = y
 
     def _stack_bisect(self, x, y):
         i = bisect.bisect(self._rows, y)
@@ -121,9 +123,10 @@ class _Properties_panel(ui.Cell):
             item._SYNCHRONIZE()
         
     def render(self, cr, h, k):
+        width = h - constants.UI[self._partition]
         # DRAW BACKGROUND
         cr.rectangle(0, 0, 
-                h - constants.UI[self._partition], 
+                width, 
                 k)
         cr.set_source_rgb(1, 1, 1)
         cr.fill()
@@ -136,11 +139,23 @@ class _Properties_panel(ui.Cell):
             else:
                 self._reconstruct()
         
+        cr.save()
+        cr.translate(0, self._dy)
         for i, entry in enumerate(self._items):
             if i == self._hover_box_ij[0]:
                 entry.draw(cr, hover=self._hover_box_ij)
             else:
                 entry.draw(cr)
+        
+        cr.restore()
+        
+        # scrollbar
+        if self._total_height > k:
+            factor = k / self._total_height * (k - 20)
+            top = -self._dy / self._total_height * (k - 20)
+            cr.rectangle(width - 10, top + 10, 3, factor)
+            cr.set_source_rgba(0, 0, 0, 0.1)
+            cr.fill()
         
         # DRAW SEPARATOR
         cr.rectangle(0, 0, 
@@ -148,6 +163,8 @@ class _Properties_panel(ui.Cell):
                 k)
         cr.set_source_rgb(0.9, 0.9, 0.9)
         cr.fill()
+        
+        self._K = k
     
     def key_input(self, name, char):
         if self._active_box_i is not None:
@@ -158,7 +175,8 @@ class _Properties_panel(ui.Cell):
                 return self._items[self._active_box_i].type_box(name, char)
     
     def press(self, x, y, char):
-
+        y -= self._dy
+        
         b = None
         bb = self._stack_bisect(x, y)
 
@@ -177,7 +195,8 @@ class _Properties_panel(ui.Cell):
             noticeboard.redraw_klossy.push_change()
     
     def hover(self, x, y, hovered=[None]):
-    
+        y -= self._dy
+        
         self._hover_box_ij = (None, None)
         
         bb = self._stack_bisect(x, y)
@@ -187,6 +206,15 @@ class _Properties_panel(ui.Cell):
 
         if hovered[0] != self._hover_box_ij:
             hovered[0] = self._hover_box_ij
+            noticeboard.redraw_klossy.push_change()
+
+    def scroll(self, x, y, char):
+        if y > 0:
+            if self._dy >= -self._total_height + self._K:
+                self._dy -= 22
+                noticeboard.redraw_klossy.push_change()
+        elif self._dy <= -22:
+            self._dy += 22
             noticeboard.redraw_klossy.push_change()
 
 def _print_counter(counter):
@@ -257,6 +285,7 @@ class Properties(_Properties_panel):
                         self._items += _columns(_create_f_field(kookies.Checkbox, 15, y, 250, 'capitals', after=self.synchronize, name='CAPITALS'))
                         y += 45
                         self._items += _columns(_create_f_field(kookies.RGBA_field, 15, y, 250, 'color', after=self.synchronize, name='COLOR'))
+                        y += 45
             else:
                 self._items.append(kookies.Heading( 15, 90, 250, 30, '', upper=True))
         
@@ -339,8 +368,9 @@ class Properties(_Properties_panel):
                         callback = meredith.page.set_height,
                         value_acquire = lambda: meredith.page.HEIGHT,
                         name = 'HEIGHT' ))
+            y += 45
         
-        self._stack()
+        self._stack(y)
 
     def _reconstruct_channel_properties(self):
         # ALWAYS REQUIRES CALL TO _stack()
@@ -363,7 +393,7 @@ class Properties(_Properties_panel):
                         name = 'PAGE' ))
                 y += 30
             
-        self._stack()
+        self._stack(y)
         
     def _swap_reconstruct(self, to):
         width = 160

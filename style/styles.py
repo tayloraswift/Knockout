@@ -271,7 +271,7 @@ def _create_interface():
     font_projections = {}
     FD = TREES(DB_Fontstyle, constants.interface_fstyles)
     P = [_F_container(FD[F], Counter(tags)) for F, tags in constants.interface_pstyle]
-    ui_styles = ((), ('title',), ('strong',), ('label',))
+    ui_styles = ((), ('title',), ('strong',), ('label',), ('mono',))
     for U in ui_styles:
         F = Counter(U)
         # iterate through stack

@@ -29,7 +29,7 @@
 <p style="{'align': 0}">Subtitle</p>
 
 <mod:pie class="h2" radius="60">
-    <mod:pie:slice prop="13" color="#ff3085">
+    <mod:pie:slice color="#ff3085" prop="13">
         <p>A = <mod:fraction>
             <mod:fraction:numerator>abc + <mod:fraction>
                     <mod:fraction:numerator>e</mod:fraction:numerator>
@@ -38,16 +38,16 @@
             <mod:fraction:denominator><em>x</em></mod:fraction:denominator>
         </mod:fraction> </p>
     </mod:pie:slice>
-    <mod:pie:slice prop="22" color="#ff50a0">
+    <mod:pie:slice color="#ff50a0" prop="22">
         <p>Section B</p>
     </mod:pie:slice>
-    <mod:pie:slice prop="69" color="#f020ff">
+    <mod:pie:slice color="#f020ff" prop="69">
         <p>Section C</p>
     </mod:pie:slice>
-    <mod:pie:slice prop="89" color="#b050ff">
+    <mod:pie:slice color="#b050ff" prop="89">
         <p>Section D</p>
     </mod:pie:slice>
-    <mod:pie:slice prop="113" color="#7080ff">
+    <mod:pie:slice color="#7080ff" prop="113">
         <p>Section E</p>
     </mod:pie:slice>
 </mod:pie>
@@ -109,10 +109,10 @@
         </td>
         <td>
             <mod:pie radius="40">
-                <mod:pie:slice prop="13" color="#ff3085">
+                <mod:pie:slice color="#ff3085" prop="13">
                     <p>Section A</p>
                 </mod:pie:slice>
-                <mod:pie:slice prop="22" color="#ff50a0">
+                <mod:pie:slice color="#ff50a0" prop="22">
                     <p>Section B</p>
                 </mod:pie:slice>
             </mod:pie>
@@ -144,7 +144,7 @@
             <p>At this moment, the table cell structure itself is not editable through the UI.</p>
         </td>
         <td colspan="3">
-            <p class="h2" style="{'fontclasses': (0, [('Lowercase', {})])}">Who doesn’t love Meredith Grey?</p>
+            <p style="{'fontclasses': (0, [('Lowercase', {})])}" class="h2">Who doesn’t love Meredith Grey?</p>
             
             <p style="{'fontclasses': (0, [('Italic', {}), ('Regular', {'emphasis': 1})]), 'leading': 200, 'align': 0}"><image src="meredith.png" width=200 />ab<em>c</em>d</p>
             
@@ -202,8 +202,8 @@
                 'Superitalic': {'path': 'fonts/Courgette-Regular.ttf'},
                 'Superscript': {'shift': 7},
                 'h3': {'capitals': True, 'fontsize': 16, 'path': 'fonts/FiraSans-Book.otf', 'tracking': 1}},
- 'FTAGLIST': [('sup', ['small']), ('emphasis', []), ('strong', []), ('link', []), ('sub', ['small']), ('big', []), ('caption', [])],
- 'PARASTYLES': (1,
+ 'FTAGLIST': [('big', []), ('link', []), ('caption', []), ('emphasis', []), ('strong', []), ('sup', ['small']), ('sub', ['small'])],
+ 'PARASTYLES': (None,
                 [({'fontclasses': (2, [('Black', {}), ('Subscript', {'sub': 1}), ('Superscript', {'sup': 1})])}, {}),
                  ({'fontclasses': (0,
                                    [('Regular', {}),
@@ -223,8 +223,8 @@
                  ({'fontclasses': (0, [('Subheading', {})]), 'leading': 24, 'margin_bottom': 10}, {'h2': 1}),
                  ({'align': 0, 'fontclasses': (0, [('h3', {})])}, {'h3': 1}),
                  ({'fontclasses': (0, [('Gray', {})])}, {'gray': 1})]),
- 'PTAGLIST': [('gray', []), ('h2', []), ('h3', []), ('body', []), ('h1', [])],
- 'contexts': {'channels': {'c': 7, 'p': 7, 't': 1}, 'text': {'i': 3433, 'j': 3433, 'p': 4, 't': 1}},
+ 'PTAGLIST': [('h3', []), ('gray', []), ('h2', []), ('body', []), ('h1', [])],
+ 'contexts': {'channels': {'c': 7, 'p': 7, 't': 1}, 'text': {'i': 812, 'j': 812, 'p': 1, 't': 1}},
  'grid': [[120, 480], [120, 480]],
  'outlines': ([(([[120, 120, False], [120, 200, False]], [[480, 120, False], [480, 200, False]]), 0)],
               [(([[120, 210, False], [120, 480, False]], [[480, 210, False], [480, 480, False]]), 0),
@@ -236,5 +236,5 @@
                ([[[360, 120, False], [160, 310, False], [360, 480, False]], [[410, 120, False], [590, 300, False], [410, 480, False]]], 5),
                ([[[120, 120, True], [120, 540, False]], [[480, 120, True], [480, 540, False]]], 6)]),
  'page': {'dimensions': (600, 600), 'dual': True},
- 'view': {'H': -269, 'Hc': 345.04669189453125, 'K': -1311, 'Kc': 316.83709716796875, 'Zoom': 11, 'mode': 'text'}}
+ 'view': {'H': 173, 'Hc': 345.04669189453125, 'K': -657, 'Kc': 316.83709716796875, 'Zoom': 11, 'mode': 'text'}}
 ############# -->

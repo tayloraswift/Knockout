@@ -20,7 +20,7 @@
     <mod:fraction:denominator><em>x</em></mod:fraction:denominator>
 </mod:fraction></p>
 
-<p style="{'fontclasses': (0, [('Italic', {})]), 'margin_left': 20, 'margin_top': 6}">—Kelvin Ma</p>
+<p style="{'fontclasses': (0, [('Italic', {})]), 'margin_top': 6, 'margin_left': 20}">—Kelvin Ma</p>
 
 <p class="h2">What is additive styling?</p>
 
@@ -28,7 +28,7 @@
 
 <p style="{'align': 0}">Subtitle</p>
 
-<mod:pie radius="60" class="h2">
+<mod:pie class="h2" radius="60">
     <mod:pie:slice prop="13" color="#ff3085">
         <p>A = <mod:fraction>
             <mod:fraction:numerator>abc + <mod:fraction>
@@ -144,9 +144,9 @@
             <p>At this moment, the table cell structure itself is not editable through the UI.</p>
         </td>
         <td colspan="3">
-            <p style="{'fontclasses': (0, [('Lowercase', {})])}" class="h2">Who doesn’t love Meredith Grey?</p>
+            <p class="h2" style="{'fontclasses': (0, [('Lowercase', {})])}">Who doesn’t love Meredith Grey?</p>
             
-            <p style="{'fontclasses': (0, [('Italic', {}), ('Regular', {'emphasis': 1})]), 'leading': 200, 'align': 0}"><image src="meredith.png" width=200 />ab<em>c</em>d</p>
+            <p style="{'leading': 200, 'align': 0, 'fontclasses': (0, [('Italic', {}), ('Regular', {'emphasis': 1})])}"><image src="meredith.png" width=200 />ab<em>c</em>d</p>
             
             <p class="gray&body">(Taylor, evidently.)</p>
             
@@ -185,16 +185,16 @@
 </body>
 
 <!-- #############
-{'FONTSTYLES': {'Big': {'fontsize': 18, 'path': '/home/kelvin/.fonts/LinLibertine_R.otf'},
+{'FONTSTYLES': {'Big': {'fontsize': 18, 'path': 'fonts/Merriweather-Light.ttf'},
                 'Black': {'color': (0, 0, 0, 1)},
-                'Bold': {'path': '/home/kelvin/.fonts/Proforma-Bold.otf'},
-                'Bold Italic': {'path': '/home/kelvin/.fonts/Proforma-BoldItalic.otf'},
+                'Bold': {'path': 'fonts/Merriweather-Bold.ttf'},
+                'Bold Italic': {'path': 'fonts/Merriweather-BoldItalic.ttf'},
                 'Gray': {'color': (0, 0, 0, 0.4)},
-                'Heading': {'fontsize': 36, 'path': '/home/kelvin/.fonts/Kabel.otf'},
-                'Italic': {'path': '/home/kelvin/.fonts/Proforma-MediumItalic.otf'},
-                'Link': {'color': (1, 0.2, 0.4, 1), 'path': '/home/kelvin/.fonts/Proforma-SemiboldItalic.otf'},
+                'Heading': {'capitals': True, 'fontsize': 36, 'path': 'fonts/FiraSans-ExtraLight.otf'},
+                'Italic': {'path': 'fonts/Merriweather-Italic.ttf'},
+                'Link': {'color': (1, 0.2, 0.4, 1), 'path': 'fonts/Merriweather-BoldItalic.ttf'},
                 'Lowercase': {'capitals': False},
-                'Regular': {'path': '/home/kelvin/.fonts/Proforma-Medium.otf'},
+                'Regular': {'path': 'fonts/FjordOne-Regular.ttf'},
                 'Small': {'fontsize': 10},
                 'Subheading': {'capitals': True, 'fontsize': 20, 'path': 'fonts/FiraSans-Light.otf', 'tracking': 1},
                 'Subscript': {'shift': -5},
@@ -202,10 +202,10 @@
                 'Superitalic': {'path': 'fonts/Courgette-Regular.ttf'},
                 'Superscript': {'shift': 7},
                 'h3': {'capitals': True, 'fontsize': 16, 'path': 'fonts/FiraSans-Book.otf', 'tracking': 1}},
- 'FTAGLIST': [('link', []), ('strong', []), ('sup', ['small']), ('caption', []), ('emphasis', []), ('sub', ['small']), ('big', [])],
- 'PARASTYLES': (1,
+ 'FTAGLIST': [('link', []), ('sup', ['small']), ('caption', []), ('emphasis', []), ('big', []), ('strong', []), ('sub', ['small'])],
+ 'PARASTYLES': (4,
                 [({'fontclasses': (2, [('Black', {}), ('Subscript', {'sub': 1}), ('Superscript', {'sup': 1})])}, {}),
-                 ({'fontclasses': (0,
+                 ({'fontclasses': (8,
                                    [('Regular', {}),
                                     ('Italic', {'emphasis': 1}),
                                     ('Bold', {'strong': 1}),
@@ -223,8 +223,8 @@
                  ({'fontclasses': (0, [('Subheading', {})]), 'leading': 24, 'margin_bottom': 10}, {'h2': 1}),
                  ({'align': 0, 'fontclasses': (0, [('h3', {})])}, {'h3': 1}),
                  ({'fontclasses': (0, [('Gray', {})])}, {'gray': 1})]),
- 'PTAGLIST': [('h2', []), ('h1', []), ('body', []), ('h3', []), ('gray', [])],
- 'contexts': {'channels': {'c': 7, 'p': 7, 't': 1}, 'text': {'i': 816, 'j': 816, 'p': 1, 't': 1}},
+ 'PTAGLIST': [('h1', []), ('body', []), ('gray', []), ('h3', []), ('h2', [])],
+ 'contexts': {'channels': {'c': 7, 'p': 7, 't': 1}, 'text': {'i': 155, 'j': 155, 'p': 0, 't': 1}},
  'grid': [[120, 480], [120, 480]],
  'outlines': ([(([[120, 120, False], [120, 200, False]], [[480, 120, False], [480, 200, False]]), 0)],
               [(([[120, 210, False], [120, 480, False]], [[480, 210, False], [480, 480, False]]), 0),
@@ -236,5 +236,5 @@
                ([[[360, 120, False], [160, 310, False], [360, 480, False]], [[410, 120, False], [590, 300, False], [410, 480, False]]], 5),
                ([[[120, 120, True], [120, 540, False]], [[480, 120, True], [480, 540, False]]], 6)]),
  'page': {'dimensions': (600, 600), 'dual': True},
- 'view': {'H': 173, 'Hc': 345.04669189453125, 'K': -657, 'Kc': 316.83709716796875, 'Zoom': 11, 'mode': 'text'}}
+ 'view': {'H': -418, 'Hc': 646.5279541015625, 'K': -96, 'Kc': 377.90667724609375, 'Zoom': 10, 'mode': 'text'}}
 ############# -->

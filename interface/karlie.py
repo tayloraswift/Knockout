@@ -73,15 +73,9 @@ def _columns(columns):
 
 # do not instantiate directly, requires a _reconstruct
 class _Properties_panel(ui.Cell):
-    def __init__(self, tabs = (), default=0, partition=1 ):
+    def __init__(self, mode, partition=1 ):
         self._partition = partition
-        
-        self._dy = 0
-        width = 140
-        self._tabstrip = kookies.Tabs( (constants.window.get_h() - constants.UI[partition] - width)//2 , 20, width, 30, default=default, callback=self._tab_switch, signals=tabs)
-        self._tab = tabs[default][0]
-        
-        self._reconstruct()
+        self._swap_reconstruct(mode)
 
     def _tab_switch(self, name):
         if self._tab != name:
@@ -234,10 +228,6 @@ def _print_counter(counter):
         return '{none}'
 
 class Properties(_Properties_panel):
-    def __init__(self, tabs = (), default=0, partition=1 ):
-        self._reconstruct = self._reconstruct_text_properties
-        _Properties_panel.__init__(self, tabs = tabs, default=default, partition=partition) 
-
     def _reconstruct_text_properties(self):
         # ALWAYS REQUIRES CALL TO _stack()
         print('reconstruct')
@@ -369,7 +359,7 @@ class Properties(_Properties_panel):
         # ALWAYS REQUIRES CALL TO _stack()
         c = caramel.delight.C()
         
-        self._items = [self._tabstrip]
+        self._items = []
         self._active_box_i = None
         self._hover_box_ij = (None, None)
         
@@ -405,4 +395,5 @@ class Properties(_Properties_panel):
             self._tab = tabs[default][0]
             self._reconstruct = self._reconstruct_channel_properties
         
+        self._dy = 0
         self._reconstruct()

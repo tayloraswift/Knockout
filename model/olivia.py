@@ -1,14 +1,12 @@
 from bisect import bisect
 from itertools import groupby, chain
 
-from bulletholes.counter import TCounter as Counter
 from state import noticeboard
 from model.wonder import words
 from model.cat import typeset_chained, typeset_liquid, Glyphs_line
-from elements.elements import Paragraph
 
 class Block(dict):
-    def __init__(self, FLOW, top, bottom, left, right):
+    def __init__(self, FLOW, top, bottom, left, right, PP):
         self._FLOW = FLOW
         self['x'] = left
         self['left'] = left
@@ -17,7 +15,7 @@ class Block(dict):
         self['leading'] = bottom - top
         self['GLYPHS'] = [(-2, 0, bottom, None, None, right - left)]
         self['P_BREAK'] = True
-        self['PP'] = Paragraph(Counter())
+        self['PP'] = PP
         
     def collect_text(self):
         return list(chain.from_iterable(A.collect_text() for A in self._FLOW))
@@ -30,10 +28,10 @@ def _deposit_misspellings(underscores, tract):
     for pair in tract.misspellings:
         u, v = pair[:2]
 
-        u_l = tract.index_to_line(u)
-        v_l = tract.index_to_line(v)
-        u_x = tract.text_index_x(u, u_l)
-        v_x = tract.text_index_x(v, v_l)
+        u_l = tract._index_to_line(u)
+        v_l = tract._index_to_line(v)
+        u_x = tract._text_index_x(u, u_l)
+        v_x = tract._text_index_x(v, v_l)
         
         first = tract._SLUGS[u_l]
         if not u_l - v_l:
@@ -62,6 +60,10 @@ class Atomic_text(object):
     def cast(self, bounds, c, y):
         self._c = c
         self._SLUGS[:] = typeset_liquid(bounds, self.text, {'j': 0, 'l': -1, 'P_BREAK': True}, 0, y, c, False)
+        if self._SLUGS:
+            self.y = self._SLUGS[-1]['y']
+        else:
+            self.y = y
         self._precompute_search()
                 
     def _target_row(self, y, c):
@@ -81,14 +83,13 @@ class Atomic_text(object):
 
     def paint_select(self, u, v):
         select = []
-        u_l = self.index_to_line(u)
-        v_l = self.index_to_line(v)
-        page = self._SLUGS[v_l]['page']
+        u_l = self._index_to_line(u)
+        v_l = self._index_to_line(v)
         
         u_l, v_l = sorted((u_l, v_l))
         u, v = sorted((u, v))
-        u_x = self.text_index_x(u, u_l)
-        v_x = self.text_index_x(v, v_l)
+        u_x = self._text_index_x(u, u_l)
+        v_x = self._text_index_x(v, v_l)
         
         first = self._SLUGS[u_l]
         if not u_l - v_l:
@@ -104,11 +105,11 @@ class Atomic_text(object):
         return select
 
     # get line number given character index
-    def index_to_line(self, index):
+    def _index_to_line(self, index):
         return bisect(self._line_startindices, index) - 1
     
     # get x position of specific glyph
-    def text_index_x(self, i, l):
+    def _text_index_x(self, i, l):
         line = self._SLUGS[l]
         try:
             glyph = line['GLYPHS'][i - line['i']]
@@ -117,8 +118,12 @@ class Atomic_text(object):
 
         return glyph[1] + line['x']
 
-    def line_indices(self, l):
-        return self._SLUGS[l]['i'], self._SLUGS[l]['j'] - 1
+    def line_indices(self, i):
+        lineobject = self._SLUGS[self._index_to_line(i)]
+        return lineobject['i'], lineobject['j'] - 1
+
+    def line_at(self, i):
+        return self._SLUGS[self._index_to_line(i)]
 
     def stats(self, spell=False):
         if spell:
@@ -127,7 +132,7 @@ class Atomic_text(object):
             self.word_count = words(self.text)
 
     def I(self, x, y):
-        return self._SLUGS[self._target_row(y, self._c)]
+        return self._SLUGS[self._target_row(y, self._c)].I(x, y)
     
     def target_select(self, x, y, page, i):
         lineobject = self._SLUGS[self._target_row(y, self._c)]
@@ -136,6 +141,21 @@ class Atomic_text(object):
             O = lineobject['i']
         
         return False, O
+
+    def line_jump(self, i, direction):
+        l = self._index_to_line(i)
+        x = self._text_index_x(i, l)
+        try:
+            if direction: #down
+                lineobject = next(S for S in self._SLUGS[l + 1:] if S['GLYPHS'])
+            else:
+                lineobject = next(S for S in reversed(self._SLUGS[:l]) if S['GLYPHS'])
+        except StopIteration:
+            return i
+        O = lineobject.I(x, lineobject['y'] - lineobject['leading'])
+        if type(O) is not int:
+            O = lineobject['i']
+        return O
 
     def collect_text(self):
         mods = list(chain.from_iterable(map(lambda Q: Q.collect_text(), filter(lambda S: type(S) is not Glyphs_line, self._SLUGS))))
@@ -156,7 +176,7 @@ class Chained_text(Atomic_text):
         c = self.channels.target_channel(x, y, page, 20)
         if c is None:
             if i is not None:
-                c = self._SLUGS[self.index_to_line(i)]['c']
+                c = self._SLUGS[self._index_to_line(i)]['c']
                 imperfect = True
             else:
                 return True, None, None, None
@@ -176,10 +196,9 @@ class Chained_text(Atomic_text):
             
             while 1:
                 O = O.I(x, y)
-                TO = type(O)
-                if TO is int:
+                if type(O) is int:
                     break
-                elif TO is not Glyphs_line:
+                else:
                     ftx = O
         else:
             O = si
@@ -191,7 +210,7 @@ class Chained_text(Atomic_text):
         c = self.channels.target_channel(x, y, page, 20)
         if c is None:
             if i is not None:
-                c = self._SLUGS[self.index_to_line(i)]['c']
+                c = self._SLUGS[self._index_to_line(i)]['c']
                 imperfect = True
             else:
                 return True, None
@@ -206,16 +225,10 @@ class Chained_text(Atomic_text):
 
         return imperfect, O
     
-    def _dbuff(self, i):
-        l = self.index_to_line(i)
+    def partial_recalculate(self, i):
+        l = max(self._index_to_line(i) - 1, 0)
         # avoid recalculating lines that weren't affected
         del self._SLUGS[l + 1:]
-
-        if type(self._SLUGS[l]) is Glyphs_line:
-            l -= 1
-            l = max(0, l)
-            if type(self._SLUGS[l]) is Glyphs_line:
-                del self._SLUGS[l + 1:]
 
         trace = self._SLUGS.pop()
         c = trace['c']

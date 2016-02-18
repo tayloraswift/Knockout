@@ -132,7 +132,6 @@ class Display(Gtk.Window):
 
         if e.type == Gdk.EventType._2BUTTON_PRESS:
             if e.button == MouseButtons.LEFT_BUTTON:
-                print('double')
                 tree.take_event(e.x, e.y, 'press2' )
         
         elif e.type == Gdk.EventType.BUTTON_PRESS:
@@ -266,6 +265,5 @@ class Display(Gtk.Window):
         Gtk.main_quit()
         
 def main():
-    
     app = Display()
     Gtk.main()

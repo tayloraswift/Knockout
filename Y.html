@@ -7,39 +7,54 @@
 </section>
 
 <section>
-<p>This typesetting editor is an application I have been developing for over half a year. The codebase was written from scratch in Python 3, and uses its own UI toolkit which I also wrote. Although still in alpha stages, the codebase can be synced from <<f class="link">https://github.com/kelvin13/shifty-octocat</f class="link">>, where it will work out of the box on any Linux installation.</p>
+<p>This typesetting editor is an application I have been developing for over half a year. The codebase was written from scratch in Python 3, and uses its own UI toolkit which I also wrote. Although still in alpha stages, the codebase can be synced from &lt;<f class="link">https://github.com/kelvin13/shifty-octocat</f class="link">&gt;, where it will work out of the box on any Linux installation.</p>
 
-<p>Vedit was designed to be both flexible and efficient. The end goal of the project is to include all the tools and parameters handled by “serious” typesetters, and allow editing of them in the least verbose manner. Hence, Vedit offers granular control, with a strong emphasis on <strong>additive styling</strong>.</p>
+<p>Vedit was designed to be both flexible and <mod:fraction>
+    <mod:fraction:numerator>abc + <mod:fraction>
+            <mod:fraction:numerator>e</mod:fraction:numerator>
+            <mod:fraction:denominator>n</mod:fraction:denominator>
+        </mod:fraction></mod:fraction:numerator>
+    <mod:fraction:denominator><em>x</em></mod:fraction:denominator>
+</mod:fraction> efficient.  The end goal of the project is to include all the tools and parameters handled by “serious” typesetters, and allow editing of them in the least verbose manner. Hence, Vedit offers granular control, with a strong emphasis on <strong>additive styling</strong>. <mod:fraction>
+    <mod:fraction:numerator>a</mod:fraction:numerator>
+    <mod:fraction:denominator><em>x</em></mod:fraction:denominator>
+</mod:fraction></p>
 
-<p style="{'margin_left': 20, 'fontclasses': (0, [('Italic', {})]), 'margin_top': 6}">—Kelvin Ma</p>
+<p style="{'fontclasses': (0, [('Italic', {})]), 'margin_top': 6, 'margin_left': 20}">—Kelvin Ma</p>
 
-<p class="h2">WHAT IS ADDITIVE STYLING?</p>
+<p class="h2">What is additive styling?</p>
 
-<p class="h3">PIE CHART EXAMPLE</p>
+<p class="h3">Pie chart example</p>
 
 <p style="{'align': 0}">Subtitle</p>
 
-<module:pie radius="60">
-    <module:pie:slice color="#ff3085" prop="13">
-        <p>Section A</p>
-    </module:pie:slice>
-    <module:pie:slice color="#ff50a0" prop="22">
+<mod:pie class="h2" radius="60">
+    <mod:pie:slice prop="13" color="#ff3085">
+        <p>A = <mod:fraction>
+            <mod:fraction:numerator>abc + <mod:fraction>
+                    <mod:fraction:numerator>e</mod:fraction:numerator>
+                    <mod:fraction:denominator>n</mod:fraction:denominator>
+                </mod:fraction></mod:fraction:numerator>
+            <mod:fraction:denominator><em>x</em></mod:fraction:denominator>
+        </mod:fraction> </p>
+    </mod:pie:slice>
+    <mod:pie:slice prop="22" color="#ff50a0">
         <p>Section B</p>
-    </module:pie:slice>
-    <module:pie:slice color="#f020ff" prop="69">
+    </mod:pie:slice>
+    <mod:pie:slice prop="69" color="#f020ff">
         <p>Section C</p>
-    </module:pie:slice>
-    <module:pie:slice color="#b050ff" prop="89">
+    </mod:pie:slice>
+    <mod:pie:slice prop="89" color="#b050ff">
         <p>Section D</p>
-    </module:pie:slice>
-    <module:pie:slice color="#7080ff" prop="113">
+    </mod:pie:slice>
+    <mod:pie:slice prop="113" color="#7080ff">
         <p>Section E</p>
-    </module:pie:slice>
-</module:pie>
+    </mod:pie:slice>
+</mod:pie>
 
-<p>Additive styling is the idea that multiple “building block” text styles can be defined and combined to create the visual styles seen on the page. For example, an <<em>Italic</em>> class may be defined which simply declares an italic font file, while a <<sup>Superscript</sup>> class might define a reduced font size (the raised position is the result of <strong>keypegging</strong>, which we’ll get to later). The superscript and italic classes can then be stacked to infer a <<sup><em>Superscript-Italic</em></sup>> class. </p>
+<p>Additive styling is the idea that multiple “building block” text styles can be defined and combined to create the visual styles seen on the page. For example, an &lt;<em>Italic</em>&gt; class may be defined which simply declares an italic font file, while a &lt;<sup>Superscript</sup>&gt; class might define a reduced font size and raised position. The superscript and italic classes can then be stacked to infer a &lt;<sup><em>Superscript-Italic</em></sup>&gt; class with the attributes of both. </p>
 
-<p>Of course, in real typesetting, superscripts require a slightly heavier fontweight, which is where <strong>explicit styling</strong> is needed. An italic and a bold class both define a font file, so a <<strong><em>Bold-Italic</em></strong>> class must be defined with the specialized bold-italic font. </p>
+<p>Of course, in real typesetting, superscripts require a slightly heavier fontweight, which is where <strong>explicit styling</strong> is needed. An italic and a bold class both define a font file, so a &lt;<strong><em>Bold-Italic</em></strong>&gt; class must be defined with the specialized bold-italic font. </p>
 
 <p>Additive styling is nevertheless very powerful. <em>Classes can overlap each other on the page, allowing <strong>mixing</em> effects, such as in this sentence where a pair of italic tags mixes with a pair of bold tags over the word “interesting”.</strong> Additive styling even allows the use of negative styles, and multistyles. <em>This lets us do things such as <em>superitalics</em> o<strong></em>r <strong>superbolds</strong> in our text.</strong> Negative styles are work too, though there is little practical use for them.</p>
 
@@ -47,23 +62,28 @@
 
 <p>Paragraphs too, have additive styling, which functions in the same way as text styling, except with attributes like leading, hyphenation, margins, and indentation.</p>
 
-<p class="h2">PARAGRAPH CONTROL</p>
+<p class="h2">Paragraph control</p>
 
 <p>Instead of “single” or “double” spacing, Vedit lets the writer specify the literal point size of the <strong>leading</strong>, or line height. This helps you predict the amount of space that text will take up, and helps you avoid text alignment headaches, since the spacing is always constant and measurable. </p>
 
-<p style="{'indent_range': {0, 1}, 'indent': (30, 1, 0)}"><strong>Indentation</strong> is powerful in Vedit. The lines over which it takes effect can be explicitly enumerated (in a relative count from the start of the paragraph), and it can be set in terms of the character positions of the first line. </p>
+<p style="{'indent': (30, 1, 0), 'indent_range': {0, 1}}"><strong>Indentation</strong> is powerful in Vedit. The lines over which it takes effect can be explicitly enumerated (in a relative count from the start of the paragraph), and it can be set in terms of the character positions of the first line. </p>
 
-<p style="{'indent': (0, -1, 4)}">—>  This is very useful for creating <strong>hanging indents</strong>.</p>
+<p style="{'indent': (0, -1, 4)}">—&gt;  This is very useful for creating <strong>hanging indents</strong>.</p>
 
 <p class="gray&body">Paragraph styles even add their <strong>constituent text styles</strong>, which allows for <em>very interesting</em> constructs, such as this gray filter, which is made up of a paragraph class containing a single text class which defines just a gray color, all overlayed over our standard body text style.</p>
 
-<p class="h2">SUPERSCRIPTS AND SUBSCRIPTS</p>
+<p class="h2">Superscripts and subscripts</p>
 
-<p>Superscripts and subscripts are handled by Vedit’s keypegging system. This defines the positioning of text styles when they occur after certain other text styles. For example, <sup>This superscript is pegged above the baseline<sup>and this</sup> is a superscript pegged onto the first one.</sup>This allows for some interesting script nesting combinations, and additive styling means you can have multistyles that make the nested superscripts smaller than the regular superscripts. Keypegging also means super and sub are not the <em>only</em> script possibilities, for keypegging also works in the <em>x</em> direction.</p>
+<p>Integral test: <mod:bounded align="0">
+    <mod:bounded:symbol>∫</mod:bounded:symbol>
+    <mod:bounded:bottom>13</mod:bounded:bottom>
+    <mod:bounded:top>22 + <mod:fraction>
+            <mod:fraction:numerator>e</mod:fraction:numerator>
+            <mod:fraction:denominator>2</mod:fraction:denominator>
+        </mod:fraction></mod:bounded:top>
+</mod:bounded> <em>f</em> (<em>x</em>) d<em>x</em>.</p>
 
-<p>Certain styles may collapse upon themselves, making it possible to set dual scripts such as <f class="big">∫</f class="big"><sub>13</sub><sup>22</sup> <em>f</em> (<em>x</em>) d<em>x</em>.</p>
-
-<p class="h2">TEXT CHANNELS</p>
+<p class="h2">Text channels</p>
 
 <p>One last thing I might want to mention. Text columns are completely flexible, and they can be bent to make any text wrapping you would ever need. Even <em>negative</em> text wrapping works. </p>
 
@@ -88,14 +108,14 @@
             <p>cell 4</p>
         </td>
         <td>
-            <module:pie radius="40">
-                <module:pie:slice color="#ff3085" prop="13">
+            <mod:pie radius="40">
+                <mod:pie:slice prop="13" color="#ff3085">
                     <p>Section A</p>
-                </module:pie:slice>
-                <module:pie:slice color="#ff50a0" prop="22">
+                </mod:pie:slice>
+                <mod:pie:slice prop="22" color="#ff50a0">
                     <p>Section B</p>
-                </module:pie:slice>
-            </module:pie>
+                </mod:pie:slice>
+            </mod:pie>
         </td>
         <td>
             <p>cell 6</p>
@@ -124,7 +144,7 @@
             <p>At this moment, the table cell structure itself is not editable through the UI.</p>
         </td>
         <td colspan="3">
-            <p class="h2">Who doesn’t love Meredith Grey?</p>
+            <p class="h2" style="{'fontclasses': (0, [('Lowercase', {})])}">Who doesn’t love Meredith Grey?</p>
             
             <p style="{'leading': 200, 'align': 0, 'fontclasses': (0, [('Italic', {}), ('Regular', {'emphasis': 1})])}"><image src="meredith.png" width=200 />ab<em>c</em>d</p>
             
@@ -166,23 +186,26 @@
 
 <!-- #############
 {'FONTSTYLES': {'Big': {'fontsize': 18, 'path': 'fonts/Merriweather-Light.ttf'},
-                'Black': {'color': (0, 0, 0, 1), 'pegs': 'Standard pegs'},
+                'Black': {'color': (0, 0, 0, 1)},
                 'Bold': {'path': 'fonts/Merriweather-Bold.ttf'},
                 'Bold Italic': {'path': 'fonts/Merriweather-BoldItalic.ttf'},
                 'Gray': {'color': (0, 0, 0, 0.4)},
-                'Heading': {'fontsize': 36, 'path': 'fonts/FiraSans-ExtraLight.otf'},
+                'Heading': {'capitals': True, 'fontsize': 36, 'path': 'fonts/FiraSans-ExtraLight.otf'},
                 'Italic': {'path': 'fonts/Merriweather-Italic.ttf'},
                 'Link': {'color': (1, 0.2, 0.4, 1), 'path': 'fonts/Merriweather-BoldItalic.ttf'},
+                'Lowercase': {'capitals': False},
                 'Regular': {'path': 'fonts/FjordOne-Regular.ttf'},
                 'Small': {'fontsize': 10},
-                'Subheading': {'fontsize': 20, 'path': 'fonts/FiraSans-Light.otf', 'tracking': 1},
+                'Subheading': {'capitals': True, 'fontsize': 20, 'path': 'fonts/FiraSans-Light.otf', 'tracking': 1},
+                'Subscript': {'shift': -5},
                 'Superbold': {'path': 'fonts/Merriweather-Black.ttf'},
                 'Superitalic': {'path': 'fonts/Courgette-Regular.ttf'},
-                'h3': {'fontsize': 16, 'path': 'fonts/FiraSans-Book.otf', 'tracking': 1}},
- 'FTAGLIST': [('sub', ['small']), ('sup', ['small']), ('emphasis', []), ('link', []), ('big', []), ('strong', []), ('caption', [])],
+                'Superscript': {'shift': 7},
+                'h3': {'capitals': True, 'fontsize': 16, 'path': 'fonts/FiraSans-Book.otf', 'tracking': 1}},
+ 'FTAGLIST': [('link', []), ('sup', ['small']), ('caption', []), ('emphasis', []), ('big', []), ('strong', []), ('sub', ['small'])],
  'PARASTYLES': (4,
-                [({'fontclasses': (0, [('Black', {})])}, {}),
-                 ({'fontclasses': (5,
+                [({'fontclasses': (2, [('Black', {}), ('Subscript', {'sub': 1}), ('Superscript', {'sup': 1})])}, {}),
+                 ({'fontclasses': (8,
                                    [('Regular', {}),
                                     ('Italic', {'emphasis': 1}),
                                     ('Bold', {'strong': 1}),
@@ -200,11 +223,10 @@
                  ({'fontclasses': (0, [('Subheading', {})]), 'leading': 24, 'margin_bottom': 10}, {'h2': 1}),
                  ({'align': 0, 'fontclasses': (0, [('h3', {})])}, {'h3': 1}),
                  ({'fontclasses': (0, [('Gray', {})])}, {'gray': 1})]),
- 'PEGS': {'Standard pegs': ('', {'sub': [0, -0.2], 'sup': [0, 0.3]})},
- 'PTAGLIST': [('gray', []), ('h2', []), ('h3', []), ('body', []), ('h1', [])],
- 'contexts': {'channels': {'c': 7, 'p': 6, 't': 0}, 'text': {'i': 689, 'j': 689, 'p': 1, 't': 1}},
+ 'PTAGLIST': [('h1', []), ('body', []), ('gray', []), ('h3', []), ('h2', [])],
+ 'contexts': {'channels': {'c': 7, 'p': 7, 't': 1}, 'text': {'i': 155, 'j': 155, 'p': 0, 't': 1}},
  'grid': [[120, 480], [120, 480]],
- 'outlines': ([(([[120, 120, False], [120, 200, True]], [[480, 120, False], [480, 200, True]]), 0)],
+ 'outlines': ([(([[120, 120, False], [120, 200, False]], [[480, 120, False], [480, 200, False]]), 0)],
               [(([[120, 210, False], [120, 480, False]], [[480, 210, False], [480, 480, False]]), 0),
                ([[[120, 120, False], [120, 480, False]], [[480, 120, False], [480, 480, False]]], 1),
                ([[[120, 120, False], [120, 460, False]], [[480, 120, False], [480, 460, False]]], 2),
@@ -212,8 +234,7 @@
                ([[[120, 120, False], [120, 480, False]], [[480, 120, False], [480, 480, False]]], 4),
                ([[[120, 120, False], [120, 480, False]], [[300, 120, False], [70, 310, False], [290, 480, False]]], 5),
                ([[[360, 120, False], [160, 310, False], [360, 480, False]], [[410, 120, False], [590, 300, False], [410, 480, False]]], 5),
-               ([[[120, 120, False], [120, 480, False]], [[280, 120, False], [490, 300, True], [280, 480, False]]], 6),
-               ([[[120, 120, False], [120, 540, False]], [[480, 120, False], [480, 540, False]]], 7)]),
+               ([[[120, 120, True], [120, 540, False]], [[480, 120, True], [480, 540, False]]], 6)]),
  'page': {'dimensions': (600, 600), 'dual': True},
- 'view': {'H': 253, 'Hc': 485.326904296875, 'K': -676, 'Kc': 374.34197998046875, 'Zoom': 9, 'mode': 'text'}}
+ 'view': {'H': -418, 'Hc': 646.5279541015625, 'K': -96, 'Kc': 377.90667724609375, 'Zoom': 10, 'mode': 'text'}}
 ############# -->

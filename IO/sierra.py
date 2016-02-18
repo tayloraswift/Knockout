@@ -29,13 +29,12 @@ def save():
     PPP = styles.PARASTYLES.polaroid()
     FFF = {N: F.polaroid() for N, F in styles.FONTSTYLES.items()}
     
-    GGG = {N: G.polaroid() for N, G in styles.PEGS.items()}
     PTT = [T.polaroid() for T in styles.PTAGS.values() if not T.is_group]
     FTT = [T.polaroid() for T in styles.FTAGS.values() if not T.is_group]
 
     from interface import taylor
     
-    DATA = {'outlines': channels, 'grid': grid, 'contexts': {'text': textcontexts, 'channels': channelcontexts}, 'PARASTYLES': PPP, 'FONTSTYLES': FFF, 'PTAGLIST': PTT, 'FTAGLIST': FTT, 'PEGS': GGG, 'view': taylor.becky.read_display_state(), 'page': page}
+    DATA = {'outlines': channels, 'grid': grid, 'contexts': {'text': textcontexts, 'channels': channelcontexts}, 'PARASTYLES': PPP, 'FONTSTYLES': FFF, 'PTAGLIST': PTT, 'FTAGLIST': FTT, 'view': taylor.becky.read_display_state(), 'page': page}
     
     with open(constants.filename, 'w') as fi:
         fi.write(HEADER)
@@ -80,6 +79,6 @@ def load(name):
     un.history = un.UN() 
 
     taylor.becky = taylor.Document_view(save, DATA['view'])
-    karlie.klossy = karlie.Properties(tabs = (('page', 'M'), ('tags', 'T'), ('paragraph', 'P'), ('font', 'F'), ('pegs', 'G')), default=2, partition=1 )
+    karlie.klossy = karlie.Properties(tabs = (('page', 'M'), ('tags', 'T'), ('paragraph', 'P'), ('font', 'F')), default=2, partition=1 )
 
     un.history.save()

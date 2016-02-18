@@ -4,6 +4,10 @@ from itertools import chain
 from model.olivia import Atomic_text, Block
 from model.george import Swimming_pool
 from interface.base import accent
+from IO.xml import print_attrs, print_styles
+
+namespace = 'table'
+tags = {'tr', 'td'}
 
 def _print_td(td):
         A = td[1]
@@ -29,14 +33,15 @@ class _Table_cell(Atomic_text):
         self.row = i
 
 class TCell_container(Swimming_pool):
-    def __init__(self, SP, i, j):
-        Swimming_pool.__init__(self, SP.railings, SP.page)
+    def __init__(self, bounds, i, j):
+        Swimming_pool.__init__(self, bounds.railings, bounds.page)
+        self._main_bounds = bounds.bounds
         self.i = i
         self.j = j
     
     def bounds(self, y):
-        x1 = self.edge(0, y)[0]
-        advance = self.edge(1, y)[0] - x1
+        x1, x2 = self._main_bounds(y)
+        advance = x2 - x1
         return x1 + advance*self.i, x1 + advance*self.j
 
 class Matrix(list):
@@ -56,7 +61,7 @@ class Matrix(list):
 
 def _row_height(data, r, y):
     cells = (cell for cell in chain.from_iterable(row for row in data) if cell.row + cell.rs - 1 == r)
-    return max(cell._SLUGS[-1]['y'] for cell in cells)
+    return max(cell.y for cell in cells)
 
 def _build_matrix(data):
     MATRIX = Matrix()
@@ -92,20 +97,23 @@ def _build_matrix(data):
 class Table(object):
     def __init__(self, L):
         self._table = L
+        self.PP = L[0][2]
         self.data = [[_Table_cell(C, int(td[1].get('rowspan', 1)), int(td[1].get('colspan', 1))) for td, C in R] for tr, R in L[1]]
         self._FLOW = [cell for row in self.data for cell in row]
         self._MATRIX = _build_matrix(self.data)
     
     def represent(self, serialize, indent):
-        lines = [(indent, '<table>')]
+        name, attrs = self._table[0][:2]
+        attrs.update(print_styles(self.PP))
+        lines = [[indent, print_attrs(name, attrs)]]
         for tr, R in self._table[1]:
-            lines.append((indent + 1, '<tr>'))
+            lines.append([indent + 1, '<tr>'])
             for td, C in R:
-                lines.append((indent + 2, _print_td(td)))
+                lines.append([indent + 2, _print_td(td)])
                 lines.extend(serialize(C, indent + 3))
-                lines.append((indent + 2, '</td>'))
-            lines.append((indent + 1, '</tr>'))
-        lines.append((indent, '</table>'))
+                lines.append([indent + 2, '</td>'])
+            lines.append([indent + 1, '</tr>'])
+        lines.append([indent, '</' + namespace + '>'])
         return lines
 
     def fill(self, bounds, c, y):
@@ -120,12 +128,12 @@ class Table(object):
             y = _row_height(self.data, r, y)
             row_y.append(y)
         
-        return _MBlock(self._FLOW, self._MATRIX, bounds, top, y, row_y)
+        return _MBlock(self._FLOW, self._MATRIX, bounds, top, y, row_y, self.PP)
 
 class _MBlock(Block):
-    def __init__(self, FLOW, matrix, bounds, top, bottom, row_y):
+    def __init__(self, FLOW, matrix, bounds, top, bottom, row_y, PP):
         x1, x2 = bounds.bounds(top)
-        Block.__init__(self, FLOW, top, bottom, x1, x2)
+        Block.__init__(self, FLOW, top, bottom, x1, x2, PP)
         
         self._matrix = matrix
         self._row_y = row_y
@@ -151,7 +159,7 @@ class _MBlock(Block):
             return self._matrix[r][c]
         except IndexError:
             print('Empty cell selected')
-            return self['j']
+            return self['i']
 
     def deposit(self, repository):
         for A in self._FLOW:

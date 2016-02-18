@@ -18,11 +18,23 @@ def _load_module(mods):
 
 modules = _load_module(INLINE + BLOCK)
 moduletags = set(modules) | set(chain.from_iterable(v[1] for v in modules.values()))
-inline = {'p'}.union( * (I[0].tags for I in INLINE))
+inlinetags = {'p'}.union( * (I[0].tags for I in INLINE))
+blocknames = set(B[0].namespace for B in BLOCK)
 
-serialize_modules = set(B[1] for B in BLOCK)
-inline_serialize_modules = set(I[1] for I in INLINE)
-structural_open = {Paragraph} | serialize_modules | inline_serialize_modules
+blocktypes = set(B[1] for B in BLOCK)
+inlinetypes = set(I[1] for I in INLINE)
+newline_on = {Paragraph} | blocktypes | inlinetypes
+
+def _create_paragraph(attrs):
+    if 'class' in attrs:
+        ptags = Counter(styles.PTAGS[T.strip()] for T in attrs['class'].split('&'))
+    else:
+        ptags = Counter({styles.PTAGS['body']: 1})
+    if 'style' in attrs:
+        EP = styles.cast_parastyle(literal_eval(attrs['style']), ())
+    else:
+        EP = styles.DB_Parastyle()
+    return Paragraph(ptags, EP)
 
 class Minion(parser.HTMLParser):
     def _trim(self):
@@ -50,15 +62,7 @@ class Minion(parser.HTMLParser):
         O = self._C[-1][1]
         self._first = False
         if tag == 'p':
-            if 'class' in attrs:
-                ptags = Counter(styles.PTAGS[T.strip()] for T in attrs['class'].split('&'))
-            else:
-                ptags = Counter({styles.PTAGS['body']: 1})
-            if 'style' in attrs:
-                EP = styles.cast_parastyle(literal_eval(attrs['style']), ())
-            else:
-                EP = styles.DB_Parastyle()
-            O.append(Paragraph(ptags, EP))
+            O.append(_create_paragraph(attrs))
             
             self._breadcrumbs.append('p')
         
@@ -72,7 +76,10 @@ class Minion(parser.HTMLParser):
         
         elif tag in moduletags:
             self._breadcrumbs.append(tag)
-            M = ((tag, attrs), [])
+            if tag in blocknames:
+                M = ((tag, attrs, _create_paragraph(attrs)), [])
+            else:
+                M = ((tag, attrs), [])
             O.append(M)
             self._C.append(M)
 
@@ -110,7 +117,7 @@ class Minion(parser.HTMLParser):
         # this should be disabled on the last blob, unless we are sure the container is 'p'
         O = self._C[-1][1]
         container = self._breadcrumbs[-1]
-        if container in inline:
+        if container in inlinetags:
             O.extend(list(data))
 
 class Kevin_from_TN(Minion): # to capture the first and last blobs
@@ -126,7 +133,7 @@ class Kevin_from_TN(Minion): # to capture the first and last blobs
     def handle_data(self, data):
         O = self._C[-1][1]
         container = self._breadcrumbs[-1]
-        if container in inline:
+        if container in inlinetags:
             O.extend(list(data))
         elif self._first: # register the first blob
             self._first = False
@@ -158,14 +165,14 @@ def deserialize(text, fragment=False):
 
 def ser(L, indent):
     lines = []
-    gaps = [0] + [i for i, v in enumerate(L) if type(v) in structural_open]
+    gaps = [0] + [i for i, v in enumerate(L) if type(v) in newline_on]
     lead = 0
     for C in (L[i:j] for i, j in zip(gaps, gaps[1:] + [len(L)]) if j != i): # to catch last blob
-        if type(C[0]) in serialize_modules:
+        if type(C[0]) in blocktypes:
             lines.append([indent, ''])
             lines.extend(C[0].represent(ser, indent))
             lead = 1
-        elif type(C[0]) in inline_serialize_modules:
+        elif type(C[0]) in inlinetypes:
             LL = C[0].represent(ser, indent)
             if lines:
                 lines[-1][1] += LL.pop(0)[1]

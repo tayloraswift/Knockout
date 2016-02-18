@@ -1,6 +1,6 @@
-from itertools import chain
 from cairo import ImageSurface
 from style.styles import DB_Parastyle
+from IO.xml import print_attrs, print_styles
 
 textstyles = {'emphasis': 'em', 'strong': 'strong', 'sup': 'sup', 'sub': 'sub'}
 
@@ -16,17 +16,8 @@ class Paragraph(object):
         return '<p>'
     
     def __repr__(self):
-        ptags = '&'.join(chain.from_iterable((P.name for i in range(V)) for P, V in self.P.items()))
-        if not self.EP:
-            if ptags == 'body':
-                return '<p>'
-            else:
-                return '<p class="' + ptags + '">'
-        else:
-            if ptags == 'body':
-                return '<p style="' + repr(self.EP.polaroid()[0]) + '">'
-            else:
-                return '<p class="' + ptags + '" style="' + repr(self.EP.polaroid()[0]) + '">'
+        attrs = print_styles(self)
+        return print_attrs('p', attrs)
 
     def __len__(self):
         return 3

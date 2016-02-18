@@ -66,19 +66,28 @@ class Glyphs_line(dict):
                 except KeyError:
                     repository[N] = (glyph[3], [K])
 
-class LContainer(Swimming_pool):
+class _LContainer(Swimming_pool):
     def __init__(self, SP):
         Swimming_pool.__init__(self, SP.railings, SP.page)
     
     def bounds(self, y):
         return self.edge(0, y)[0], self.edge(1, y)[0]
 
+class _Margined_LContainer(Swimming_pool):
+    def __init__(self, SP, left, right):
+        Swimming_pool.__init__(self, SP.railings, SP.page)
+        self._left = left
+        self._right = right
+    
+    def bounds(self, y):
+        return self.edge(0, y)[0] + self._left, self.edge(1, y)[0] - self._right
+
 def typeset_chained(channels, LIQUID, c=0, y=None, LASTLINE = Glyphs_line({'j': 0, 'l': -1, 'P_BREAK': True})):
     SLUGS = []
     rchannels = channels[c:]
     rlen = len(rchannels) - 1
     c_leak = False
-    for c_number, channel in enumerate(LContainer(rc) for rc in rchannels):
+    for c_number, channel in enumerate(_LContainer(rc) for rc in rchannels):
         i = LASTLINE['j']
         if i >= len(LIQUID):
             break
@@ -132,8 +141,10 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False):
                 gap = False
 
             else:
+                PSTYLE = styles.PARASTYLES.project_p(container.PP)
+                y += PSTYLE['margin_top']
                 try:
-                    MOD = container.fill(channel, c, y)
+                    MOD = container.fill(_Margined_LContainer(channel, PSTYLE['margin_left'], PSTYLE['margin_right']), c, y)
                 except RuntimeError:
                     break
                 MOD['i'] = i
@@ -146,6 +157,7 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False):
                 SLUGS.append(MOD)
                 l += 1
                 i += 1
+                y += PSTYLE['margin_bottom']
                 continue
         else:
             y += PSTYLE['leading']

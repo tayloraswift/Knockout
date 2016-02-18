@@ -323,22 +323,18 @@ class Blank_space(Base_kookie):
             self._j = len(self._LIST) - 1
         
         elif name == 'Paste':
-            # check to make sure string contains no dangerous entities
-            if all(isinstance(e, str) for e in char):
-                # delete selection
-                if self._i != self._j:
-                    # sort
-                    if self._i > self._j:
-                        self._i, self._j = self._j, self._i
-                    del self._LIST[self._i : self._j]
-                    self._j = self._i
-                # take note that char is a LIST now
-                self._LIST[self._i:self._i] = char
-                changed = True
-                self._i += len(char)
+            # delete selection
+            if self._i != self._j:
+                # sort
+                if self._i > self._j:
+                    self._i, self._j = self._j, self._i
+                del self._LIST[self._i : self._j]
                 self._j = self._i
-            else:
-                print('selection contains characters that cannot be pasted into text box')
+            # take note that char is a LIST now
+            self._LIST[self._i:self._i] = char
+            changed = True
+            self._i += len(char)
+            self._j = self._i
         
         elif name == 'Copy':
             if self._i != self._j:
@@ -346,7 +342,7 @@ class Blank_space(Base_kookie):
                 if self._i > self._j:
                     self._i, self._j = self._j, self._i
                 
-                output = self._LIST[self._i : self._j]
+                output = ''.join(self._LIST[self._i : self._j])
         
         elif name == 'Cut':
             # delete selection
@@ -354,7 +350,7 @@ class Blank_space(Base_kookie):
                 # sort
                 if self._i > self._j:
                     self._i, self._j = self._j, self._i
-                output = self._LIST[self._i : self._j]
+                output = ''.join(self._LIST[self._i : self._j])
                 del self._LIST[self._i : self._j]
                 changed = True
                 self._j = self._i

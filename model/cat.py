@@ -37,9 +37,9 @@ class Glyphs_line(dict):
     # glyphline is root, index
         return i + self['i']
 
-    def deposit(self, repository):
-        x = self['x']
-        y = self['y']
+    def deposit(self, repository, x=0, y=0):
+        x += self['x']
+        y += self['y']
         PP = self['PP']
         hyphen = self['hyphen']
 
@@ -54,6 +54,8 @@ class Glyphs_line(dict):
                     repository['_annot'].append( (glyph[0], x, y + self['leading'], PP, glyph[3]))
                 elif glyph[0] == -13:
                     repository['_images'].append( (glyph[6], glyph[1] + x, glyph[2] + y) )
+                elif glyph[0] == -89:
+                    glyph[6].deposit_glyphs(repository, x, y)
                 else:
                     repository['_annot'].append((glyph[0], glyph[1] + x, glyph[2] + y) + (PP, glyph[3]))
             else:
@@ -64,19 +66,28 @@ class Glyphs_line(dict):
                 except KeyError:
                     repository[N] = (glyph[3], [K])
 
-class LContainer(Swimming_pool):
+class _LContainer(Swimming_pool):
     def __init__(self, SP):
         Swimming_pool.__init__(self, SP.railings, SP.page)
     
     def bounds(self, y):
         return self.edge(0, y)[0], self.edge(1, y)[0]
 
+class _Margined_LContainer(Swimming_pool):
+    def __init__(self, SP, left, right):
+        Swimming_pool.__init__(self, SP.railings, SP.page)
+        self._left = left
+        self._right = right
+    
+    def bounds(self, y):
+        return self.edge(0, y)[0] + self._left, self.edge(1, y)[0] - self._right
+
 def typeset_chained(channels, LIQUID, c=0, y=None, LASTLINE = Glyphs_line({'j': 0, 'l': -1, 'P_BREAK': True})):
     SLUGS = []
     rchannels = channels[c:]
     rlen = len(rchannels) - 1
     c_leak = False
-    for c_number, channel in enumerate(LContainer(rc) for rc in rchannels):
+    for c_number, channel in enumerate(_LContainer(rc) for rc in rchannels):
         i = LASTLINE['j']
         if i >= len(LIQUID):
             break
@@ -101,7 +112,6 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False):
         PP = INIT['PP']
         F = INIT['F'].copy()
         R = INIT['R'] + 1
-        K_x = None
         PSTYLE = styles.PARASTYLES.project_p(PP)
         gap = False
     
@@ -121,7 +131,6 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False):
                 
                 F = Counter()
                 R = 0
-                K_x = None
                 
                 if l != INIT['l'] + 1: # prevent accumulating y error
                     y += PSTYLE['margin_top']
@@ -130,8 +139,10 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False):
                 gap = False
 
             else:
+                PSTYLE = styles.PARASTYLES.project_p(container.PP)
+                y += PSTYLE['margin_top']
                 try:
-                    MOD = container.fill(channel, c, y)
+                    MOD = container.fill(_Margined_LContainer(channel, PSTYLE['margin_left'], PSTYLE['margin_right']), c, y)
                 except RuntimeError:
                     break
                 MOD['i'] = i
@@ -144,6 +155,7 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False):
                 SLUGS.append(MOD)
                 l += 1
                 i += 1
+                y += PSTYLE['margin_bottom']
                 continue
         else:
             y += PSTYLE['leading']
@@ -157,25 +169,16 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False):
         x1, x2 = channel.bounds(y)
 
         # calculate indentation
-
         if R in PSTYLE['indent_range']:
             D, SIGN, K = PSTYLE['indent']
             if K:
-                if K_x is None:
-                    INDLINE = cast_liquid_line(
-                        LIQUID[_p_i_ : _p_i_ + K + 1], 
-                        0, 
-                        
-                        1989, 
-                        0,
-                        PP,
-                        F.copy(), 
-                        
-                        hyphenate = False
-                        )
-                    K_x = INDLINE['GLYPHS'][-1][5] * SIGN
-                
-                L_indent = PSTYLE['margin_left'] + D + K_x
+                INDLINE = cast_mono_line(
+                    LIQUID[i : i + K + (not bool(R))], 
+                    0,
+                    PP,
+                    F.copy()
+                    )
+                L_indent = PSTYLE['margin_left'] + D + INDLINE['advance'] * SIGN
             else:
                 L_indent = PSTYLE['margin_left'] + D
         else:
@@ -204,14 +207,12 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False):
         LINE['left'] = x1
         if PSTYLE['align'] > 0:
             LINE['x'] = x1
-        elif LINE['GLYPHS']:
-            rag = LINE['width'] - LINE['GLYPHS'][-1][5]
+        else:
+            rag = LINE['width'] - LINE['advance']
             if PSTYLE['align']:
                 LINE['x'] = x1 + rag
             else:
                 LINE['x'] = x1 + rag/2
-        else:
-            LINE['x'] = x1
         LINE['y'] = y
         LINE['l'] = l
         LINE['c'] = c
@@ -248,30 +249,14 @@ def cast_liquid_line(letters, startindex, width, leading, PP, F, hyphenate=False
     
     # list that contains glyphs
     GLYPHS = []
-    x = 0
-    y = 0
 
     # retrieve font style
     fstat = F.copy()
     FSTYLE = styles.PARASTYLES.project_f(PP, F)
-
-    # blank pegs
+    x = 0
+    y = -FSTYLE['shift']
+    caps = FSTYLE['capitals']
     glyphwidth = 0
-    gx = 0
-    gy = 0
-    effective_peg = None
-    
-    # style brackets
-    brackets = {}
-    for f, count in F.items():
-        for V in [f.name] + f.groups:
-            if V not in brackets:
-                brackets[V] = [[0, False] for c in range(count)]
-            else:
-                brackets[V] += [[0, False] for c in range(count)]
-
-    root_for = set()
-    front = x
 
     for letter in letters:
         CT = type(letter)
@@ -283,34 +268,9 @@ def cast_liquid_line(letters, startindex, width, leading, PP, F, hyphenate=False
             F[T] += 1
             fstat = F.copy()
             
-            # calculate pegging
-            G = FSTYLE['pegs'].elements
-            if T in G:                
-                gx, gy = G[T]
-                gx = gx * glyphwidth
-                gy = gy * leading
-                effective_peg = T
-                
-                y -= gy
-                x += gx
-            
-            elif effective_peg not in G:
-                effective_peg = None
-            
-            if root_for:
-                for group in T.groups:
-                    if group in root_for:
-                        x = brackets[group][-1][0]
-                        root_for = set()
-            
-            # collapsibility
-            for V in [TAG] + T.groups:
-                if V not in brackets:
-                    brackets[V] = [[x, False]]
-                else:
-                    brackets[V].append([x, False])
-            
             FSTYLE = styles.PARASTYLES.project_f(PP, F)
+            y = -FSTYLE['shift']
+            caps = FSTYLE['capitals']
             GLYPHS.append((-4, x, y, FSTYLE, fstat, x))
             
         elif CT is CloseFontpost:
@@ -320,29 +280,10 @@ def cast_liquid_line(letters, startindex, width, leading, PP, F, hyphenate=False
             # increment tag count
             F[T] -= 1
             fstat = F.copy()
-
-            # depeg
-            if T is effective_peg:
-                y += gy
-
-            for V in [TAG] + T.groups:
-                try:
-                    if brackets[V][-1][1]:
-                        del brackets[V][-1]
-                    brackets[V][-1][1] = True
-                except (IndexError, KeyError):
-                    print('line begins with close tag character')
-            root_for.update(set(T.groups))
-            
-            # calculate pegging
-            G = FSTYLE['pegs'].elements
-            if TAG in G:
-                if front > x:
-                    x = front
-                else:
-                    front = x
             
             FSTYLE = styles.PARASTYLES.project_f(PP, F)
+            y = -FSTYLE['shift']
+            caps = FSTYLE['capitals']
             GLYPHS.append((-5, x, y, FSTYLE, fstat, x))
             
         elif CT is Paragraph:
@@ -352,12 +293,12 @@ def cast_liquid_line(letters, startindex, width, leading, PP, F, hyphenate=False
                 # we don’t load the style because the outer function takes care of that
                 GLYPHS.append((
                         -2,                      # 0
-                        x - FSTYLE['fontsize'],  # 1
+                        x - leading,             # 1
                         y,                       # 2
                         
                         FSTYLE,                  # 3
                         fstat,                   # 4
-                        x - FSTYLE['fontsize']   # 5
+                        x - leading              # 5
                         ))
         
         elif letter == '</p>':
@@ -366,18 +307,13 @@ def cast_liquid_line(letters, startindex, width, leading, PP, F, hyphenate=False
             break
         
         elif letter == '<br/>':
-            root_for = set()
             GLYPHS.append((-6, x, y, FSTYLE, fstat, x))
             break
 
         else:
-            root_for = set()
-            if CT == Image:
-                glyphwidth = letter.width
-                                                              # additional fields:  image object | scale ratio
-                GLYPHS.append((-13, x, y - leading, FSTYLE, fstat, x + glyphwidth, (letter.image_surface, letter.factor)))
-
-            else:
+            if CT is str:
+                if caps:
+                    letter = letter.upper()
                 glyphwidth = FSTYLE['fontmetrics'].advance_pixel_width(letter) * FSTYLE['fontsize']
                 GLYPHS.append((
                         FSTYLE['fontmetrics'].character_index(letter),  # 0
@@ -388,6 +324,20 @@ def cast_liquid_line(letters, startindex, width, leading, PP, F, hyphenate=False
                         fstat,                                          # 4
                         x + glyphwidth                                  # 5
                         ))
+            
+            elif CT is Image:
+                glyphwidth = letter.width
+                                                              # additional fields:  image object | scale ratio
+                GLYPHS.append((-13, x, y - leading, FSTYLE, fstat, x + glyphwidth, (letter.image_surface, letter.factor)))
+
+            else:
+                try:
+                    inline = letter.cast_inline(x, y, leading, PP, F, FSTYLE)
+                    glyphwidth = inline.width                               #6. object
+                    GLYPHS.append((-89, x, y, FSTYLE, fstat, x + glyphwidth, inline))
+                except AttributeError:
+                    glyphwidth = leading
+                    GLYPHS.append((-23, x, y, FSTYLE, fstat, x + leading))
             
             x += glyphwidth
 
@@ -464,10 +414,121 @@ def cast_liquid_line(letters, startindex, width, leading, PP, F, hyphenate=False
     LINE['GLYPHS'] = GLYPHS
     # cache x's
     LINE['_X_'] = [g[1] for g in GLYPHS]
+
+    try:
+        LINE['F'] = GLYPHS[-1][4]
+        LINE['advance'] = GLYPHS[-1][5]
+    except IndexError:
+        LINE['advance'] = 0
+    
+    return LINE
+
+def cast_mono_line(letters, leading, PP, F):
+    LINE = Glyphs_line({
+            'i': 0,
+      
+            'leading': leading,
+            
+            'F': F,
+            'PP': PP
+            })
+    
+    # list that contains glyphs
+    GLYPHS = []
+
+    # retrieve font style
+    fstat = F.copy()
+    FSTYLE = styles.PARASTYLES.project_f(PP, F)
+    x = 0
+    y = -FSTYLE['shift']
+    caps = FSTYLE['capitals']
+    glyphwidth = 0
+
+    for letter in letters:
+        CT = type(letter)
+        if CT is OpenFontpost:
+            T = letter.F
+            TAG = T.name
+            
+            # increment tag count
+            F[T] += 1
+            fstat = F.copy()
+            
+            FSTYLE = styles.PARASTYLES.project_f(PP, F)
+            y = -FSTYLE['shift']
+            caps = FSTYLE['capitals']
+            GLYPHS.append((-4, x, y, FSTYLE, fstat, x))
+            
+        elif CT is CloseFontpost:
+            T = letter.F
+            TAG = T.name
+            
+            # increment tag count
+            F[T] -= 1
+            fstat = F.copy()
+            
+            FSTYLE = styles.PARASTYLES.project_f(PP, F)
+            y = -FSTYLE['shift']
+            caps = FSTYLE['capitals']
+            GLYPHS.append((-5, x, y, FSTYLE, fstat, x))
+            
+        elif CT is Paragraph:
+            GLYPHS.append((
+                    -2,                      # 0
+                    x - leading,             # 1
+                    y,                       # 2
+                    
+                    FSTYLE,                  # 3
+                    fstat,                   # 4
+                    x - leading              # 5
+                    ))
+        
+        elif letter == '</p>':
+            GLYPHS.append((-3, x, y, FSTYLE, fstat, x))
+        
+        elif letter == '<br/>':
+            GLYPHS.append((-6, x, y, FSTYLE, fstat, x))
+
+        else:
+            if CT is str:
+                if caps:
+                    letter = letter.upper()
+                glyphwidth = FSTYLE['fontmetrics'].advance_pixel_width(letter) * FSTYLE['fontsize']
+                GLYPHS.append((
+                        FSTYLE['fontmetrics'].character_index(letter),  # 0
+                        x,                                              # 1
+                        y,                                              # 2
+                        
+                        FSTYLE,                                         # 3
+                        fstat,                                          # 4
+                        x + glyphwidth                                  # 5
+                        ))
+            
+            elif CT is Image:
+                glyphwidth = letter.width
+                                                              # additional fields:  image object | scale ratio
+                GLYPHS.append((-13, x, y - leading, FSTYLE, fstat, x + glyphwidth, (letter.image_surface, letter.factor)))
+
+            else:
+                try:
+                    inline = letter.cast_inline(x, y, leading, PP, F, FSTYLE)
+                    glyphwidth = inline.width                               #6. object
+                    GLYPHS.append((-89, x, y, FSTYLE, fstat, x + glyphwidth, inline))
+                except AttributeError:
+                    glyphwidth = leading
+                    GLYPHS.append((-23, x, y, FSTYLE, fstat, x + leading))
+            
+            x += glyphwidth + FSTYLE['tracking']
+
+    LINE['j'] = len(GLYPHS)
+    LINE['GLYPHS'] = GLYPHS
+    # cache x's
+    LINE['_X_'] = [g[1] for g in GLYPHS]
     
     try:
         LINE['F'] = GLYPHS[-1][4]
+        LINE['advance'] = GLYPHS[-1][5]
     except IndexError:
-        pass
+        LINE['advance'] = 0
     
     return LINE

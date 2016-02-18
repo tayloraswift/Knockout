@@ -1,18 +1,40 @@
-from html import parser, unescape
+from html import parser, unescape, escape
 from itertools import chain
 from ast import literal_eval
 
 from bulletholes.counter import TCounter as Counter
 from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image
 from style import styles
-from modules import table, pie
+from modules import table, pie, fraction, bounded
 
-modules = {'table': (table.Table, {'tr', 'td'}), 'module:pie': (pie.PieChart, {'module:pie:title', 'module:pie:slice'})}
+INLINE = (fraction, fraction.Fraction), (bounded, bounded.Bounded)
+BLOCK = (table, table.Table), (pie, pie.PieChart)
+
+def _load_module(mods):
+    M = {}
+    for mod, mobj in mods:
+        M[mod.namespace] = mobj, mod.tags
+    return M
+
+modules = _load_module(INLINE + BLOCK)
 moduletags = set(modules) | set(chain.from_iterable(v[1] for v in modules.values()))
-closing = {table.Table}
+inlinetags = {'p'}.union( * (I[0].tags for I in INLINE))
+blocknames = set(B[0].namespace for B in BLOCK)
 
-serialize_modules = {table.Table, pie.PieChart}
-structural_open = {Paragraph} | serialize_modules
+blocktypes = set(B[1] for B in BLOCK)
+inlinetypes = set(I[1] for I in INLINE)
+newline_on = {Paragraph} | blocktypes | inlinetypes
+
+def _create_paragraph(attrs):
+    if 'class' in attrs:
+        ptags = Counter(styles.PTAGS[T.strip()] for T in attrs['class'].split('&'))
+    else:
+        ptags = Counter({styles.PTAGS['body']: 1})
+    if 'style' in attrs:
+        EP = styles.cast_parastyle(literal_eval(attrs['style']), ())
+    else:
+        EP = styles.DB_Parastyle()
+    return Paragraph(ptags, EP)
 
 class Minion(parser.HTMLParser):
     def _trim(self):
@@ -32,19 +54,15 @@ class Minion(parser.HTMLParser):
         self._trim()
         return self._O
 
+    def _breadcrumb_error(self):
+        raise RuntimeError
+        
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
         O = self._C[-1][1]
+        self._first = False
         if tag == 'p':
-            if 'class' in attrs:
-                ptags = Counter(styles.PTAGS[T.strip()] for T in attrs['class'].split('&'))
-            else:
-                ptags = Counter({styles.PTAGS['body']: 1})
-            if 'style' in attrs:
-                EP = styles.cast_parastyle(literal_eval(attrs['style']), ())
-            else:
-                EP = styles.DB_Parastyle()
-            O.append(Paragraph(ptags, EP))
+            O.append(_create_paragraph(attrs))
             
             self._breadcrumbs.append('p')
         
@@ -58,10 +76,12 @@ class Minion(parser.HTMLParser):
         
         elif tag in moduletags:
             self._breadcrumbs.append(tag)
-            M = ((tag, attrs), [])
+            if tag in blocknames:
+                M = ((tag, attrs, _create_paragraph(attrs)), [])
+            else:
+                M = ((tag, attrs), [])
             O.append(M)
             self._C.append(M)
-            
 
     def handle_startendtag(self, tag, attrs):
         attrs = dict(attrs)
@@ -80,13 +100,13 @@ class Minion(parser.HTMLParser):
             if self._breadcrumbs[-1] == 'p':
                 self._breadcrumbs.pop()
             else:
-                raise RuntimeError
+                self._breadcrumb_error()
                 
         elif tag in moduletags:
             if self._breadcrumbs[-1] == tag:
                 self._breadcrumbs.pop()
             else:
-                raise RuntimeError
+                self._breadcrumb_error()
             
             L = self._C.pop()
             if tag in modules:
@@ -97,16 +117,23 @@ class Minion(parser.HTMLParser):
         # this should be disabled on the last blob, unless we are sure the container is 'p'
         O = self._C[-1][1]
         container = self._breadcrumbs[-1]
-        if container == 'p':
+        if container in inlinetags:
             O.extend(list(data))
 
 class Kevin_from_TN(Minion): # to capture the first and last blobs
     def _trim(self):
         pass
+    
+    def _breadcrumb_error(self):
+        if self._first:
+            self._first = False
+        else:
+            raise RuntimeError
+    
     def handle_data(self, data):
         O = self._C[-1][1]
         container = self._breadcrumbs[-1]
-        if container == 'p':
+        if container in inlinetags:
             O.extend(list(data))
         elif self._first: # register the first blob
             self._first = False
@@ -124,6 +151,7 @@ def deserialize(text, fragment=False):
     if fragment:
         parse = R
     else:
+        text.replace('\n', '')
         parse = Q
     text = text.replace('<em>', '<f class="emphasis">')
     text = text.replace('</em>', '</f class="emphasis">')
@@ -136,20 +164,25 @@ def deserialize(text, fragment=False):
     return parse.feed(text.replace('</f', '<ff'))
 
 def ser(L, indent):
-    lserialize_modules = serialize_modules
-    
     lines = []
-    gaps = [0] + [i for i, v in enumerate(L) if type(v) in structural_open]
-
+    gaps = [0] + [i for i, v in enumerate(L) if type(v) in newline_on]
+    lead = 0
     for C in (L[i:j] for i, j in zip(gaps, gaps[1:] + [len(L)]) if j != i): # to catch last blob
-        if type(C[0]) in lserialize_modules:
+        if type(C[0]) in blocktypes:
+            lines.append([indent, ''])
             lines.extend(C[0].represent(ser, indent))
-            lines.append((indent, ''))
+            lead = 1
+        elif type(C[0]) in inlinetypes:
+            LL = C[0].represent(ser, indent)
+            if lines:
+                lines[-1][1] += LL.pop(0)[1]
+            lines.extend(LL)
+            lines[-1][1] += ''.join(repr(c) if type(c) is not str else escape(c) if len(c) == 1 else c for c in C[1:])
         else:
-            lines.append((indent, ''.join(c if type(c) is str else repr(c) for c in C)))
-            lines.append((indent, ''))
-    
-    return lines[:-1]
+            lines.append([indent, ''])
+            lines.append([indent, ''.join(repr(c) if type(c) is not str else escape(c) if len(c) == 1 else c for c in C)])
+            lead = 1
+    return lines[lead:]
 
 def serialize(L):
     return '\n'.join('    ' * indent + line for indent, line in ser(L, 0))

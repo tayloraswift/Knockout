@@ -9,15 +9,6 @@ from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image
 
 from IO import un
 
-def set_cursor(i):
-    cursor.fcursor.i = cursor.fcursor.skip(i)
-    
-def set_select(i):
-    cursor.fcursor.j = cursor.fcursor.skip(i)
-
-def match_cursors():
-    cursor.fcursor.j = cursor.fcursor.i
-
 class Keyboard(dict):
     def __init__(self):
         shortcuts = constants.shortcuts
@@ -34,36 +25,37 @@ class Keyboard(dict):
         # Non replacing
         if name == 'Left':
             un.history.undo_save(0)
-            cursor.fcursor.i = cursor.fcursor.skip(CURSOR, -1)
-            match_cursors()
+            cursor.fcursor.i -= 1
+            cursor.fcursor.j = cursor.fcursor.i
                 
         elif name == 'Right':
             un.history.undo_save(0)
             
-            cursor.fcursor.i = cursor.fcursor.skip(CURSOR, 1)
-            match_cursors()
+            cursor.fcursor.i += 1
+            cursor.fcursor.j = cursor.fcursor.i
             
         elif name == 'Up':
             un.history.undo_save(0)
             
-            cursor.fcursor.hop(-1)
-            match_cursors()
+            cursor.fcursor.hop(False)
+            cursor.fcursor.j = cursor.fcursor.i
+            
         elif name == 'Down':
             un.history.undo_save(0)
             
-            cursor.fcursor.hop(1)
-            match_cursors()
+            cursor.fcursor.hop(True)
+            cursor.fcursor.j = cursor.fcursor.i
 
         elif name in ['Home', 'End']:
             un.history.undo_save(0)
 
             i, j = cursor.fcursor.front_and_back()
             if name == 'Home':
-                set_cursor(i)
-                match_cursors()
+                cursor.fcursor.i = i
+                cursor.fcursor.j = i
             else:
-                set_cursor(j)
-                match_cursors()
+                cursor.fcursor.i = j
+                cursor.fcursor.j = j
 
         elif name == 'All':
             un.history.undo_save(0)
@@ -72,41 +64,29 @@ class Keyboard(dict):
         
         # replacing
         elif name in ['BackSpace', 'Delete']:
-            
             if cursor.fcursor.take_selection():
                 un.history.undo_save(3)
-                cursor.fcursor.delete()
+                cursor.fcursor.insert([])
             elif name == 'BackSpace':            
                 # for deleting paragraphs
-                prec = cursor.fcursor.text[CURSOR - 1]
-                if type(prec) is Paragraph:
-                    # make sure that (1) we’re not trying to delete the first paragraph, 
-                    # and that (2) we’re not sliding the cursor
-                    if CURSOR > 1 and time.time() - lastpress[0] > 0.2:
+                if type(cursor.fcursor.text[CURSOR - 1]) is Paragraph:
+                    # make sure that we’re not sliding the cursor
+                    if time.time() - lastpress[0] > 0.13:
                         un.history.undo_save(-2)
-                        # for table objects
-                        if cursor.fcursor.text[CURSOR - 2] != '</p>':
-                            del cursor.fcursor.text[CURSOR - 2]
-                            cursor.fcursor.delete(da = 0)
-                        else:
-                            cursor.fcursor.delete(da = -2)
-
-                elif prec != '</p>':
+                        cursor.fcursor.delspace(False)
+                else:
                     un.history.undo_save(-1)
-                    cursor.fcursor.delete(da = -1)
+                    cursor.fcursor.delspace(False)
+
             else:
                 # for deleting paragraphs (forward delete)
                 if cursor.fcursor.text[CURSOR] == '</p>':
-                    if time.time() - lastpress[0] > 0.2:
+                    if time.time() - lastpress[0] > 0.13:
                         un.history.undo_save(-2)
-                        if type(cursor.fcursor.text[CURSOR + 1]) is not Paragraph:
-                            del cursor.fcursor.text[CURSOR + 1]
-                            cursor.fcursor.delete(db = 0)
-                        else:
-                            cursor.fcursor.delete(db = 2)
+                        cursor.fcursor.delspace(True)
                 else:
                     un.history.undo_save(-1)
-                    cursor.fcursor.delete(db = 1)
+                    cursor.fcursor.delspace(True)
                     
             # record time
             lastpress[0] = time.time()
@@ -126,8 +106,6 @@ class Keyboard(dict):
         elif name == 'Paste':
             if char:
                 un.history.undo_save(3)
-                if cursor.fcursor.take_selection():
-                    cursor.fcursor.delete()
                 # char is a LIST in this case
                 cursor.fcursor.insert(char)
         
@@ -140,7 +118,7 @@ class Keyboard(dict):
             sel = cursor.fcursor.take_selection()
             if sel:
                 un.history.undo_save(3)
-                cursor.fcursor.delete()
+                cursor.fcursor.insert([])
             
                 return sel        
 

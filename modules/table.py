@@ -33,14 +33,15 @@ class _Table_cell(Atomic_text):
         self.row = i
 
 class TCell_container(Swimming_pool):
-    def __init__(self, SP, i, j):
-        Swimming_pool.__init__(self, SP.railings, SP.page)
+    def __init__(self, bounds, i, j):
+        Swimming_pool.__init__(self, bounds.railings, bounds.page)
+        self._main_bounds = bounds.bounds
         self.i = i
         self.j = j
     
     def bounds(self, y):
-        x1 = self.edge(0, y)[0]
-        advance = self.edge(1, y)[0] - x1
+        x1, x2 = self._main_bounds(y)
+        advance = x2 - x1
         return x1 + advance*self.i, x1 + advance*self.j
 
 class Matrix(list):

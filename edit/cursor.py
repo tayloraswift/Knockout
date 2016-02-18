@@ -185,7 +185,7 @@ class FCursor(object):
                 # crop off chars
                 try:
                     l = next(i for i, e in enumerate(segment) if type(e) in B_OPEN)
-                    r = len(segment) - next(i for i, e in enumerate(reversed(segment)) if type(e) in serialize_modules or e == '</p>')
+                    r = len(segment) - next(i for i, e in enumerate(reversed(segment)) if type(e) in blocktypes or e == '</p>')
                     if r > l:
                         segment = segment[l:r]
                     else:
@@ -195,7 +195,7 @@ class FCursor(object):
             else: # inside
                 if type(segment[0]) in B_OPEN:
                     segment.insert(0, '</p>')
-                if segment[-1] == '</p>' or type(segment[-1]) in serialize_modules:
+                if segment[-1] == '</p>' or type(segment[-1]) in blocktypes:
                     P = next(c.P for c in self.text[self.i::-1] if type(c) is Paragraph)
                     segment.append(Paragraph(P))
 

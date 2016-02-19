@@ -91,7 +91,7 @@ class Mode_switcher(object):
     def is_over(self, x, y):
         return self._switcher.is_over(x - self._dx, y - self._dy)
 
-    def resize(self, h, k):
+    def resize(self, k):
         # center
         self._dx = (constants.UI[1] - 100)/2 + 100 
         self._dy = k
@@ -533,8 +533,8 @@ class Document_view(ui.Cell):
         elif self._region_hover == 'switcher':
             self._mode_switcher.hover(x)
 
-    def resize(self, h, k):
-        self._mode_switcher.resize(h, k)
+    def resize(self, k):
+        self._mode_switcher.resize(k)
 
     def change_mode(self, mode):
         self._mode = mode

@@ -58,6 +58,7 @@ class Display(Gtk.Window):
         self._REGIONS = [taylor.becky, karlie.klossy]
         self._active = self._REGIONS[0]
         self._active_hover = self._REGIONS[0]
+        self._active_pane = None
         self._R = 0
         
         overlay = Gtk.Overlay()
@@ -136,7 +137,30 @@ class Display(Gtk.Window):
         constants.UI[1] += self._h - h_old
         
         constants.window.resize(self._h, self._k)
-        taylor.becky.resize(self._h, self._k)
+        taylor.becky.resize(self._k)
+    
+    def _internal_resize(self):
+        taylor.becky.resize(self._k)
+        karlie.klossy.resize()
+        self.KLOSSY.set_size_request(karlie.klossy.width, 0)
+        self.BECKY.queue_draw()
+        self.KLOSSY.queue_draw()
+
+    def _pane(self, x):
+        # check for borders
+        R = self._R
+        UI = constants.UI
+        if not R:
+            B = ((R + 1, UI[R + 1]),)
+        elif R < len(UI) - 1:
+            B = ((R, UI[R]), (R + 1, UI[R + 1]))
+        else:
+            B = ((R, UI[R]),)
+        for r, border in B:
+            if -10 < x - border < 10:
+                self._active_pane = r
+                return True
+        return False
 
     def _set_active_hover_region(self, x, y):
         r = bisect(constants.UI, x) - 1
@@ -166,6 +190,8 @@ class Display(Gtk.Window):
     def _press_sort(self, w, e):
         if strike_menu(0, e):
             menu.menu.destroy()
+            if self._pane(e.x):
+                return
             x, y = self._set_active_region(e.x, e.y)
             
             if e.type == Gdk.EventType._2BUTTON_PRESS:
@@ -193,7 +219,11 @@ class Display(Gtk.Window):
     def _motion_sort(self, w, e):
         if strike_menu(1, e):
             if e.state & Gdk.ModifierType.BUTTON1_MASK:
-                self._active.press_motion( * self._convert(e.x, e.y))
+                if self._active_pane is None:
+                    self._active.press_motion( * self._convert(e.x, e.y))
+                else:
+                    constants.UI[self._active_pane] = int(e.x)
+                    self._internal_resize()
 
             elif e.state & Gdk.ModifierType.BUTTON2_MASK:
                 self._active.drag( * self._convert(e.x, e.y))
@@ -209,6 +239,7 @@ class Display(Gtk.Window):
             self.BECKY.queue_draw()
         
     def _release_sort(self, w, e):
+        self._active_pane = None
         if e.button == 1:
             x, y = self._convert(e.x, e.y)
             self._active.release(x, y)

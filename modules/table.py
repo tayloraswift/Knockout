@@ -5,6 +5,7 @@ from model.olivia import Atomic_text, Block
 from model.george import Swimming_pool
 from interface.base import accent
 from IO.xml import print_attrs, print_styles
+from elements.elements import Mod_element
 
 namespace = 'table'
 tags = {'tr', 'td'}
@@ -94,23 +95,23 @@ def _build_matrix(data):
                         MATRIX[i + rs][s + cs] = cell
     return MATRIX
 
-class Table(object):
-    def __init__(self, L):
-        self._table = L
+class Table(Mod_element):
+    def _load(self, L):
+        self._tree = L
         self.PP = L[0][2]
         self.data = [[_Table_cell(C, int(td[1].get('rowspan', 1)), int(td[1].get('colspan', 1))) for td, C in R] for tr, R in L[1]]
         self._FLOW = [cell for row in self.data for cell in row]
         self._MATRIX = _build_matrix(self.data)
-    
-    def represent(self, serialize, indent):
-        name, attrs = self._table[0][:2]
+        
+    def represent(self, indent):
+        name, attrs = self._tree[0][:2]
         attrs.update(print_styles(self.PP))
         lines = [[indent, print_attrs(name, attrs)]]
-        for tr, R in self._table[1]:
+        for tr, R in self._tree[1]:
             lines.append([indent + 1, '<tr>'])
             for td, C in R:
                 lines.append([indent + 2, _print_td(td)])
-                lines.extend(serialize(C, indent + 3))
+                lines.extend(self._SER(C, indent + 3))
                 lines.append([indent + 2, '</td>'])
             lines.append([indent + 1, '</tr>'])
         lines.append([indent, '</' + namespace + '>'])

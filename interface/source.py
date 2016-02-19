@@ -3,6 +3,9 @@ from bisect import bisect
 
 from interface.base import Base_kookie, accent
 from style.styles import ISTYLES
+from IO.kevin import serialize, blocktypes, inlinetypes
+
+_modtypes = blocktypes | inlinetypes
 
 def _chunks(L, n):
     br = [i + 1 for i, v in enumerate(L) if v == '\n']
@@ -26,13 +29,12 @@ def _paint_select(cl, sl, cx, sx, left, right):
         select.extend(((l, left, right) for l in range(cl + 1, sl)))
         select.append((sl, left, sx))
     return select
-            
+
 class Rose_garden(Base_kookie):
-    def __init__(self, x, y, width, callback, value_acquire, before=lambda: None, after=lambda: None):
+    def __init__(self, x, y, width, e_acquire, before=lambda: None, after=lambda: None):
         self._BEFORE = before
         self._AFTER = after
-        self._callback = callback
-        self._value_acquire = value_acquire
+        self._e_acquire = e_acquire
 
         self.font = ISTYLES[('mono',)]
         fontsize = self.font['fontsize']
@@ -53,11 +55,14 @@ class Rose_garden(Base_kookie):
         self._j = 0
         
         self._active = False
+        self._invalid = False
 
     def _ACQUIRE_REPRESENT(self):
-        self._VALUE = self._value_acquire()
-        self._CHARS = list(self._VALUE) + [None]
+        self._element = self._e_acquire()
+        self._VALUE = serialize([self._element])
+        self._CHARS = list(self._VALUE) + ['\n']
         self._grid_glyphs(self._CHARS)
+        self._invalid = False
 
     def _SYNCHRONIZE(self):
         self._ACQUIRE_REPRESENT()
@@ -212,6 +217,15 @@ class Rose_garden(Base_kookie):
             return True
         else:
             return False
+
+    def _commit(self, B):
+        if type(self._element) in _modtypes:
+            success = self._element.transfer(B)
+            if success:
+                self._SYNCHRONIZE()
+                self._AFTER()
+            else:
+                self._invalid = True
     
     def defocus(self):
         self._active = False
@@ -219,9 +233,8 @@ class Rose_garden(Base_kookie):
         self._VALUE = self._entry()
         if self._VALUE != self._PREV_VALUE:
             self._BEFORE()
-            self._callback(self._VALUE)
-            self._SYNCHRONIZE()
-            self._AFTER()
+            self._commit(self._VALUE)
+            self._PREV_VALUE = self._VALUE
         else:
             return False
         return True
@@ -253,9 +266,15 @@ class Rose_garden(Base_kookie):
             cr.fill()
 
         # text
-            cr.set_source_rgb(0.2, 0.2, 0.2)
+            if self._invalid:
+                cr.set_source_rgb(1, 0.2, 0.2)
+            else:
+                cr.set_source_rgb(0.2, 0.2, 0.2)
         else:
-            cr.set_source_rgb(0.5, 0.5, 0.5)
+            if self._invalid:
+                cr.set_source_rgb(1, 0.4, 0.4)
+            else:
+                cr.set_source_rgb(0.5, 0.5, 0.5)
         cr.show_glyphs(chain.from_iterable(self._LL))
         cr.fill()
 

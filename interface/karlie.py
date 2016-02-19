@@ -357,8 +357,8 @@ class Properties(_Properties_panel):
         
         elif self._tab == 'character':
             self._items.append(source.Rose_garden(10, y, width=310, 
-                    callback = lambda * args: None, 
-                    value_acquire = lambda: kevin.serialize([cursor.fcursor.text[cursor.fcursor.i]])))
+                    e_acquire = lambda: cursor.fcursor.text[cursor.fcursor.i],
+                    before = un.history.save, after = meredith.mipsy.recalculate_all))
             y = self._items[-1].bounding_box()[3]
         self._stack(y)
 

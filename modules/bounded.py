@@ -1,12 +1,13 @@
 from model.cat import cast_mono_line
 from IO.xml import print_attrs
+from elements.elements import Mod_element
 
 namespace = 'mod:bounded'
 tags = {namespace + ':' + T for T in ('symbol', 'bottom', 'top')}
 
-class Bounded(object):
-    def __init__(self, L):
-        self._bounded = L
+class Bounded(Mod_element):
+    def _load(self, L):
+        self._tree = L
         symbol = next(E for tag, E in L[1] if tag[0] == namespace + ':symbol')
         a = next(E for tag, E in L[1] if tag[0] == namespace + ':bottom')
         b = next(E for tag, E in L[1] if tag[0] == namespace + ':top')
@@ -18,11 +19,11 @@ class Bounded(object):
             self.cast_inline = self._cast_inline_display
         
         self._INLINE = [symbol, a, b]
-
-    def represent(self, serialize, indent):
-        lines = [[indent, print_attrs( * self._bounded[0])]]
-        for tag, E in self._bounded[1]:
-            content = serialize(E, indent + 2)
+    
+    def represent(self, indent):
+        lines = [[indent, print_attrs( * self._tree[0])]]
+        for tag, E in self._tree[1]:
+            content = self._SER(E, indent + 2)
             content[0] = [indent + 1, print_attrs( * tag) + content[0][1]]
             content[-1][1] += '</' + tag[0] + '>'
             

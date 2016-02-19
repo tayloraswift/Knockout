@@ -134,7 +134,7 @@ class Display(Gtk.Window):
     def on_resize(self, w):
         h_old = self._h
         self._h, self._k = self.get_size()
-        constants.UI[1] += self._h - h_old
+        constants.UI[-1] +=  self._h - h_old
         
         constants.window.resize(self._h, self._k)
         taylor.becky.resize(self._k)
@@ -222,7 +222,9 @@ class Display(Gtk.Window):
                 if self._active_pane is None:
                     self._active.press_motion( * self._convert(e.x, e.y))
                 else:
-                    constants.UI[self._active_pane] = int(e.x)
+                    limits = constants.UI + [self._h]
+                    ap = self._active_pane
+                    constants.UI[ap] = min(limits[ap + 1] - 175, max(limits[ap - 1] + 175, int(e.x)))
                     self._internal_resize()
 
             elif e.state & Gdk.ModifierType.BUTTON2_MASK:

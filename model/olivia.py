@@ -5,6 +5,13 @@ from state import noticeboard
 from model.wonder import words
 from model.cat import typeset_chained, typeset_liquid, Glyphs_line
 
+class _Empty_F(object):
+    def __init__(self):
+        self.members = set()
+    
+    def __getitem__(self, i):
+        return None
+
 class Block(dict):
     def __init__(self, FLOW, top, bottom, left, right, PP):
         self._FLOW = FLOW
@@ -13,7 +20,7 @@ class Block(dict):
         self['width'] = right - left
         self['y'] = bottom
         self['leading'] = bottom - top
-        self['GLYPHS'] = [(-2, 0, bottom, None, None, right - left)]
+        self['GLYPHS'] = [(-2, 0, bottom, _Empty_F(), None, right - left)]
         self['P_BREAK'] = True
         self['PP'] = PP
         

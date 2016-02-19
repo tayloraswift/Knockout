@@ -50,13 +50,14 @@ def _create_p_field(TYPE, x, y, width, attribute, after, name='', **kwargs):
             after=after,
             name=name, **kwargs)]
 
-def _stack_row(i, row, y, gap, factory, after):
-    divisions = [r[0] * 310 for r in row]
-    divisions = zip(divisions, divisions[1:] + [310], row)
+def _stack_row(i, row, y, gap, width, factory, after):
+    width += 10
+    divisions = [r[0] * width for r in row]
+    divisions = zip(divisions, divisions[1:] + [width], row)
     return _columns(chain.from_iterable(factory(TYPE, 15 + a, y + i*gap, b - a - 10, A, after=after, name=name, **dict(kwargs)) for a, b, (factor, TYPE, A, name, * kwargs) in divisions))
 
-def _stack_properties(factory, after, y, gap, L):
-    return chain.from_iterable(_stack_row(i, row, y, gap, factory, after) for i, row in enumerate(L))
+def _stack_properties(factory, after, y, gap, width, L):
+    return chain.from_iterable(_stack_row(i, row, y, gap, width, factory, after) for i, row in enumerate(L))
 
 class _MULTI_COLUMN(object):
     def __init__(self, * args):
@@ -75,7 +76,12 @@ def _columns(columns):
 class _Properties_panel(ui.Cell):
     def __init__(self, mode, partition=1 ):
         self._partition = partition
+        self.hresize()
         self._swap_reconstruct(mode)
+    
+    def hresize(self):
+        self._width = constants.window.get_h() - constants.UI[self._partition]
+        self._KW = self._width - 50
 
     def _tab_switch(self, name):
         if self._tab != name:
@@ -110,7 +116,7 @@ class _Properties_panel(ui.Cell):
             item._SYNCHRONIZE()
         
     def render(self, cr, h, k):
-        width = h - constants.UI[self._partition]
+        width = self._width
         # DRAW BACKGROUND
         cr.rectangle(0, 0, width, k)
         cr.set_source_rgb(1, 1, 1)
@@ -239,19 +245,21 @@ class Properties(_Properties_panel):
         self._hover_box_ij = (None, None)
         
         y = 110
+        KW = self._KW
+        tile = int(KW / (KW // 125))
 
         if self._tab == 'font':
             if styles.PARASTYLES.active is not None:
                 
-                self._items.append(kookies.Heading( 15, 70, 300, 30, ', '.join(T.name for T in styles.PARASTYLES.active.tags), upper=True))
-                self._items.append(kookies.Ordered(15, y, 300, 300,
+                self._items.append(kookies.Heading( 15, 70, KW, 30, ', '.join(T.name for T in styles.PARASTYLES.active.tags), upper=True))
+                self._items.append(kookies.Ordered(15, y, KW, 300,
                             library = styles.PARASTYLES.active.layerable, 
                             display = _print_counter,
                             before = un.history.save, after = lambda: (styles.PARASTYLES.update_f(), meredith.mipsy.recalculate_all(), self._reconstruct()), refresh = self._reconstruct))
                 y += 300
                 
                 if styles.PARASTYLES.active.layerable.active is not None:
-                    self._items.append(kookies.Counter_editor(15, y, 300, 150, (150, 28),
+                    self._items.append(kookies.Counter_editor(15, y, KW, 150, (tile, 28),
                                 get_counter = lambda: styles.PARASTYLES.active.layerable.active.tags,
                                 superset = styles.FTAGS,
                                 before = un.history.save, after = lambda: (styles.PARASTYLES.update_f(), meredith.mipsy.recalculate_all(), self.synchronize())))
@@ -259,13 +267,13 @@ class Properties(_Properties_panel):
 
                     _after_ = lambda: (styles.PARASTYLES.update_f(), meredith.mipsy.recalculate_all(), contexts.Fontstyle.update(cursor.fcursor.styling_at()[1]), self._reconstruct())
                     if styles.PARASTYLES.active.layerable.active.F is None:
-                        self._items.append(kookies.New_object_menu(15, y, 300,
+                        self._items.append(kookies.New_object_menu(15, y, KW,
                                     value_push = ops.link_fontstyle, 
                                     library = styles.FONTSTYLES,
                                     TYPE = styles.DB_Fontstyle,
                                     before = un.history.save, after = _after_, name='FONTSTYLE', source=self._partition))
                     else:
-                        self._items.append(kookies.Object_menu(15, y, 300,
+                        self._items.append(kookies.Object_menu(15, y, KW,
                                     value_acquire = lambda: styles.PARASTYLES.active.layerable.active.F, 
                                     value_push = ops.link_fontstyle, 
                                     library = styles.FONTSTYLES, 
@@ -279,16 +287,16 @@ class Properties(_Properties_panel):
                                 [(0, kookies.Checkbox, 'capitals', 'CAPITALS')],
                                 [(0, kookies.RGBA_field, 'color', 'COLOR')]
                                 ]
-                        self._items.extend(_stack_properties(_create_f_field, self.synchronize, y, 45, props))
+                        self._items.extend(_stack_properties(_create_f_field, self.synchronize, y, 45, KW, props))
                         y += 45*len(props)
 
             else:
-                self._items.append(kookies.Heading( 15, 90, 300, 30, '', upper=True))
+                self._items.append(kookies.Heading( 15, 90, KW, 30, '', upper=True))
         
         elif self._tab == 'paragraph':
-            self._items.append(kookies.Heading( 15, 70, 300, 30, ', '.join(T.name if V == 1 else T.name + ' (' + str(V) + ')' for T, V in contexts.Text.paragraph.P.items() if V), upper=True))
+            self._items.append(kookies.Heading( 15, 70, KW, 30, ', '.join(T.name if V == 1 else T.name + ' (' + str(V) + ')' for T, V in contexts.Text.paragraph.P.items() if V), upper=True))
 
-            self._items.append(kookies.Para_control_panel(15, y, 300, 280, 
+            self._items.append(kookies.Para_control_panel(15, y, KW, 280, 
                     paragraph = contexts.Text.paragraph, 
                     display = _print_counter,
                     library = styles.PARASTYLES,
@@ -296,7 +304,7 @@ class Properties(_Properties_panel):
             y += 280
             
             if styles.PARASTYLES.active is not None:
-                self._items.append(kookies.Counter_editor(15, y, 300, 150, (150, 28),
+                self._items.append(kookies.Counter_editor(15, y, KW, 150, (tile, 28),
                             get_counter = lambda: styles.PARASTYLES.active.tags,
                             superset = styles.PTAGS,
                             before = un.history.save, after = lambda: (styles.PARASTYLES.update_p(), meredith.mipsy.recalculate_all(), self.synchronize())))
@@ -309,54 +317,54 @@ class Properties(_Properties_panel):
                         [(0, kookies.Numeric_field, 'margin_top', 'SPACE BEFORE'), (0.5, kookies.Numeric_field, 'margin_bottom', 'SPACE AFTER')],
                         [(0, kookies.Checkbox, 'hyphenate', 'HYPHENATE')]
                         ]
-                self._items.extend(_stack_properties(_create_p_field, self.synchronize, y, 45, props))
+                self._items.extend(_stack_properties(_create_p_field, self.synchronize, y, 45, KW, props))
                 y += 45*len(props)
                 
         
         elif self._tab == 'tags':
-            self._items.append(kookies.Heading( 15, 70, 300, 30, '', upper=True))
+            self._items.append(kookies.Heading( 15, 70, KW, 30, '', upper=True))
             
-            self._items.append(kookies.Unordered( 15, y, 250, 200,
+            self._items.append(kookies.Unordered( 15, y, KW - 50, 200,
                         library = styles.PTAGS, 
                         display = lambda l: l.name,
                         before = un.history.save, after = lambda: (meredith.mipsy.recalculate_all(), self._reconstruct()), refresh = self._reconstruct))
             
             y += 200
             if styles.PTAGS.active is not None:
-                self._items.append(kookies.Blank_space(15, y, width=300, 
+                self._items.append(kookies.Blank_space(15, y, width=KW, 
                         callback = lambda * args: styles.PTAGS.active.rename( * args), 
                         value_acquire = lambda: styles.PTAGS.active.name, 
                         before=un.history.save, after=self.synchronize, name='TAG NAME'))
             y += 60
             
-            self._items.append(kookies.Unordered( 15, y, 250, 200,
+            self._items.append(kookies.Unordered( 15, y, KW - 50, 200,
                         library = styles.FTAGS, 
                         display = lambda l: l.name,
                         before = un.history.save, after = lambda: (meredith.mipsy.recalculate_all(), self._reconstruct()), refresh = self._reconstruct))
             
             y += 200
             if styles.FTAGS.active is not None:
-                self._items.append(kookies.Blank_space(15, y, width=300, 
+                self._items.append(kookies.Blank_space(15, y, width=KW, 
                         callback = lambda * args: styles.FTAGS.active.rename( * args), 
                         value_acquire = lambda: styles.FTAGS.active.name, 
                         before=un.history.save, after=self.synchronize, name='TAG NAME'))
             
         elif self._tab == 'page':
-            self._items.append(kookies.Heading( 15, 70, 300, 30, '', upper=True))
+            self._items.append(kookies.Heading( 15, 70, KW, 30, '', upper=True))
             self._items.append(kookies.Integer_field( 15, y, 300, 
                         callback = meredith.page.set_width,
                         value_acquire = lambda: meredith.page.WIDTH,
                         name = 'WIDTH' ))
             
             y += 45
-            self._items.append(kookies.Integer_field( 15, y, 300,
+            self._items.append(kookies.Integer_field( 15, y, KW,
                         callback = meredith.page.set_height,
                         value_acquire = lambda: meredith.page.HEIGHT,
                         name = 'HEIGHT' ))
             y += 45
         
         elif self._tab == 'character':
-            self._items.append(source.Rose_garden(10, y, width=310, 
+            self._items.append(source.Rose_garden(10, y, width=KW + 10, 
                     e_acquire = lambda: cursor.fcursor.text[cursor.fcursor.i],
                     before = un.history.save, after = meredith.mipsy.recalculate_all))
             y = self._items[-1].bounding_box()[3]
@@ -371,12 +379,13 @@ class Properties(_Properties_panel):
         self._hover_box_ij = (None, None)
         
         y = 110
+        KW = self._KW
         
-        self._items.append(kookies.Heading( 15, 70, 300, 30, 'Channel ' + str(c), upper=True))
+        self._items.append(kookies.Heading( 15, 70, KW, 30, 'Channel ' + str(c), upper=True))
         
         if self._tab == 'channels':
             if c is not None:
-                self._items.append(kookies.Integer_field( 15, y, 300, 
+                self._items.append(kookies.Integer_field( 15, y, KW, 
                         callback = lambda page, C: (caramel.delight.TRACT.channels.channels[C].set_page(page), caramel.delight.TRACT.deep_recalculate()), 
                         params = (c,),
                         value_acquire = lambda C: str(caramel.delight.TRACT.channels.channels[C].page),

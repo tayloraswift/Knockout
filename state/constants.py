@@ -13,7 +13,7 @@ HINTS.set_hint_style(default_hint[0])
 
 filename = ''
 
-UI = [0, 850]
+UI = [0, 950]
 
 class Window(object):
     def __init__(self, h, k):
@@ -29,7 +29,7 @@ class Window(object):
         self.h = h
         self.k = k
 
-window = Window(1200, 800)
+window = Window(1300, 800)
 
 shortcuts = [
         ('Ctrl equal', 'Ctrl plus', 'sup'),

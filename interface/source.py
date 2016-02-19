@@ -100,7 +100,7 @@ class Rose_garden(Base_kookie):
         return g
     
     def is_over(self, x, y):
-        return self._y <= y <= self._y_bottom
+        return self._y <= y <= self._y_bottom and self._x <= x <= self._x_right + 10
 
     def _entry(self):
         return ''.join(self._CHARS[:-1])
@@ -221,7 +221,7 @@ class Rose_garden(Base_kookie):
                 self._i += 4
                 self._j += dj
         
-        elif name == 'ISO_Left_Tab':
+        elif name in {'Ctrl Tab', 'ISO_Left_Tab'}:
             self._i, self._j = sorted((self._j, self._i))
             cl = self._index_to_line(self._i)
             sl = self._index_to_line(self._j)

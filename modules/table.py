@@ -5,7 +5,7 @@ from model.olivia import Atomic_text, Block
 from model.george import Swimming_pool
 from interface.base import accent
 from IO.xml import print_attrs, print_styles
-from elements.elements import Mod_element
+from elements.elements import Block_element
 from edit.paperairplanes import interpret_int
 
 namespace = 'table'
@@ -96,7 +96,7 @@ def _build_matrix(data):
                         MATRIX[i + rs][s + cs] = cell
     return MATRIX
 
-class Table(Mod_element):
+class Table(Block_element):
     def _load(self, L):
         self._tree = L
         self.PP = L[0][2]

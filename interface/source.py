@@ -3,9 +3,9 @@ from bisect import bisect
 
 from interface.base import Base_kookie, accent
 from style.styles import ISTYLES
-from IO.kevin import serialize, blocktypes, inlinetypes
-
-_modtypes = blocktypes | inlinetypes
+from IO.kevin import serialize, deserialize
+from elements.elements import Mod_element
+from edit import cursor
 
 def _chunks(L, n):
     br = [i + 1 for i, v in enumerate(L) if v == '\n']
@@ -109,7 +109,7 @@ class Rose_garden(Base_kookie):
     def type_box(self, name, char):
         changed = False
         output = None
-        
+        print(name, char)
         if name in ['BackSpace', 'Delete']:
             # delete selection
             if self._i != self._j:
@@ -198,6 +198,54 @@ class Rose_garden(Base_kookie):
                 del self._CHARS[self._i : self._j]
                 changed = True
                 self._j = self._i
+        
+        elif name == 'Tab':
+            self._i, self._j = sorted((self._j, self._i))
+            cl = self._index_to_line(self._i)
+            sl = self._index_to_line(self._j)
+            if cl == sl:
+                a = self._IJ[cl]
+                self.type_box('Paste', ' ' * (4 - (self._i - a) % 4))
+            else:
+                IJ = self._IJ
+                CHARS = self._CHARS
+                di = 0
+                dj = 0
+                for l in range(sl, cl - 1, -1):
+                    a = IJ[l]
+                    if CHARS[a - 1] == '\n':
+                        CHARS[a : a] = ' ' * 4
+                        dj += 4
+
+                changed = True
+                self._i += 4
+                self._j += dj
+        
+        elif name == 'ISO_Left_Tab':
+            self._i, self._j = sorted((self._j, self._i))
+            cl = self._index_to_line(self._i)
+            sl = self._index_to_line(self._j)
+            IJ = self._IJ
+            CHARS = self._CHARS
+            ifloor = None
+            di = 0
+            dj = 0
+            for l in range(sl, cl - 1, -1):
+                a = IJ[l]
+                if CHARS[a - 1] == '\n':
+                    b = IJ[l + 1] - 1
+                    if b - a >= 4:
+                        try:
+                            d = next(i for i, v in enumerate(CHARS[a : a + 4]) if v != ' ')
+                        except StopIteration:
+                            d = 4
+                        dj -= d
+                        di = -d
+                        ifloor = a
+                        del CHARS[a : a + d]
+            changed = True
+            self._i = max(ifloor, self._i + di)
+            self._j += dj
 
         elif char is not None:
             # delete selection
@@ -234,14 +282,17 @@ class Rose_garden(Base_kookie):
             return False
 
     def _commit(self, B):
-        if type(self._element) in _modtypes:
+        if isinstance(self._element, Mod_element):
             success = self._element.transfer(B)
-            if success:
-                self._SYNCHRONIZE()
-                self._AFTER()
-            else:
+            if not success:
                 self._invalid = True
-    
+                return
+        else:
+            i = cursor.fcursor.i
+            cursor.fcursor.FTX.text[i:i + 1] = deserialize(B, fragment=True)
+        self._SYNCHRONIZE()
+        self._AFTER()
+        
     def defocus(self):
         self._active = False
         # dump entry

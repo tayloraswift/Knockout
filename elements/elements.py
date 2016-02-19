@@ -82,8 +82,14 @@ class Mod_element(object):
 
     def transfer(self, B):
         try:
-            E = self._DESR(B, fragment=True)
+            E = self._DESR(B)
         except IO_Error:
             return False
         self._load(E[0]._tree) #yes, we are building an entirely new object and taking its image
         return True
+
+class Block_element(Mod_element):
+    pass
+
+class Inline_element(Mod_element):
+    pass

@@ -5,7 +5,7 @@ from libraries.pyphen import pyphen
 from bulletholes.counter import TCounter as Counter
 from model.george import Swimming_pool
 from style import styles
-from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image
+from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image, Block_element
 
 pyphen.language_fallback('en_US')
 hy = pyphen.Pyphen(lang='en_US')
@@ -120,7 +120,7 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False):
     while True:
         if gap:
             try:
-                i, container = next((a + i, v) for a, v in enumerate(LIQUID[i:]) if type(v) not in {str, OpenFontpost, CloseFontpost, Image})
+                i, container = next((a + i, v) for a, v in enumerate(LIQUID[i:]) if isinstance(v, (Paragraph, Block_element)))
             except StopIteration:
                 # end of file
                 break

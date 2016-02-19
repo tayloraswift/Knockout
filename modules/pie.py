@@ -5,7 +5,7 @@ from bisect import bisect
 from model.olivia import Atomic_text, Block
 from edit.paperairplanes import interpret_rgba, interpret_float
 from IO.xml import print_attrs, print_styles
-from elements.elements import Mod_element
+from elements.elements import Block_element
 
 namespace = 'mod:pie'
 tags = {namespace + ':' + T for T in ('slice',)}
@@ -17,7 +17,7 @@ class _Pie(object):
         self.r = radius
         self.center = (0, 0)
 
-class PieChart(Mod_element):
+class PieChart(Block_element):
     def _load(self, L):
         self._tree = L
         self.PP = L[0][2]

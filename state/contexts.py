@@ -43,7 +43,7 @@ class Paragraph_context(object):
 
 class Font_context(object):
     def __init__(self):
-        pass
+        self.fontstyle = None
     
     def update(self, FSTYLE):
         self.fontstyle = FSTYLE

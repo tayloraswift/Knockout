@@ -1,5 +1,6 @@
 from model.cat import cast_mono_line
 from IO.xml import print_attrs
+from elements.elements import Mod_element
 
 namespace = 'mod:fraction'
 tags = {namespace + ':' + T for T in ('numerator', 'denominator')}
@@ -15,19 +16,19 @@ def _fracbound(glyphs, fontsize):
         height = fontsize
     return height
 
-class Fraction(object):
-    def __init__(self, L):
-        self._fraction = L
+class Fraction(Mod_element):
+    def _load(self, L):
+        self._tree = L
         
         numerator = next(E for tag, E in L[1] if tag[0] == namespace + ':numerator')
         denominator = next(E for tag, E in L[1] if tag[0] == namespace + ':denominator')
         
         self._INLINE = [numerator, denominator]
-
-    def represent(self, serialize, indent):
-        lines = [[indent, print_attrs( * self._fraction[0])]]
-        for tag, E in self._fraction[1]:
-            content = serialize(E, indent + 2)
+    
+    def represent(self, indent):
+        lines = [[indent, print_attrs( * self._tree[0])]]
+        for tag, E in self._tree[1]:
+            content = self._SER(E, indent + 2)
             content[0] = [indent + 1, print_attrs( * tag) + content[0][1]]
             content[-1][1] += '</' + tag[0] + '>'
             

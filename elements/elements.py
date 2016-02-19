@@ -1,6 +1,7 @@
 from cairo import ImageSurface
 from style.styles import DB_Parastyle
 from IO.xml import print_attrs, print_styles
+from state.exceptions import IO_Error
 
 textstyles = {'emphasis': 'em', 'strong': 'strong', 'sup': 'sup', 'sub': 'sub'}
 
@@ -72,3 +73,17 @@ class Image(object):
 
     def __len__(self):
         return 7
+
+class Mod_element(object):
+    def __init__(self, L, deserialize, ser):
+        self._DESR = deserialize
+        self._SER = ser
+        self._load(L)
+
+    def transfer(self, B):
+        try:
+            E = self._DESR(B, fragment=True)
+        except IO_Error:
+            return False
+        self._load(E[0]._tree) #yes, we are building an entirely new object and taking its image
+        return True

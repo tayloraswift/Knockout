@@ -424,6 +424,7 @@ def cast_liquid_line(letters, startindex, width, leading, PP, F, hyphenate=False
     return LINE
 
 def cast_mono_line(letters, leading, PP, F):
+    F = F.copy()
     LINE = Glyphs_line({
             'i': 0,
       

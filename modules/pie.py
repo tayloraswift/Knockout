@@ -3,7 +3,7 @@ from itertools import chain, accumulate
 from bisect import bisect
 
 from model.olivia import Atomic_text, Block
-from edit.paperairplanes import interpret_rgba
+from edit.paperairplanes import interpret_rgba, interpret_float
 from IO.xml import print_attrs, print_styles
 from elements.elements import Mod_element
 
@@ -21,8 +21,8 @@ class PieChart(Mod_element):
     def _load(self, L):
         self._tree = L
         self.PP = L[0][2]
-        radius = int(L[0][1].get('radius', 89))
-        slices, labels = zip( * (( (int(tag[1]['prop']), interpret_rgba(tag[1]['color'])), E) for tag, E in L[1] if tag[0] == namespace + ':slice'))
+        radius = interpret_float(L[0][1].get('radius', 89))
+        slices, labels = zip( * (( (interpret_float(tag[1]['prop']), interpret_rgba(tag[1]['color'])), E) for tag, E in L[1] if tag[0] == namespace + ':slice'))
         total = sum(P for P, C in slices)
                        # percentage | arc length | color
         self._pie = _Pie([(P/total, P/total*2*pi, C) for P, C in slices], radius)

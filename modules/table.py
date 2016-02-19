@@ -6,6 +6,7 @@ from model.george import Swimming_pool
 from interface.base import accent
 from IO.xml import print_attrs, print_styles
 from elements.elements import Mod_element
+from edit.paperairplanes import interpret_int
 
 namespace = 'table'
 tags = {'tr', 'td'}
@@ -99,7 +100,7 @@ class Table(Mod_element):
     def _load(self, L):
         self._tree = L
         self.PP = L[0][2]
-        self.data = [[_Table_cell(C, int(td[1].get('rowspan', 1)), int(td[1].get('colspan', 1))) for td, C in R] for tr, R in L[1]]
+        self.data = [[_Table_cell(C, interpret_int(td[1].get('rowspan', 1)), interpret_int(td[1].get('colspan', 1))) for td, C in R] for tr, R in L[1]]
         self._FLOW = [cell for row in self.data for cell in row]
         self._MATRIX = _build_matrix(self.data)
         

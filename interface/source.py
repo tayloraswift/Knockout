@@ -114,8 +114,7 @@ class Rose_garden(Base_kookie):
             # delete selection
             if self._i != self._j:
                 # sort
-                if self._i > self._j:
-                    self._i, self._j = self._j, self._i
+                self._i, self._j = sorted((self._j, self._i))
                 del self._CHARS[self._i : self._j]
                 changed = True
                 self._j = self._i
@@ -139,12 +138,33 @@ class Rose_garden(Base_kookie):
             if self._i < len(self._CHARS) - 1:
                 self._i += 1
                 self._j = self._i
+        elif name == 'Up':
+            l = self._index_to_line(self._i)
+            u = max(0, l - 1)
+            z = self._IJ[l]
+            a = self._IJ[u]
+            b = self._IJ[u + 1]
+            self._i = min(a + self._i - z, b)
+            self._j = self._i
+        elif name == 'Down':
+            l = self._index_to_line(self._i)
+            u = min(len(self._LL) - 1, l + 1)
+            z = self._IJ[l]
+            a = self._IJ[u]
+            b = self._IJ[u + 1]
+            self._i = min(a + self._i - z, b, len(self._CHARS) - 1)
+            self._j = self._i
+            
         elif name == 'Home':
-            self._i = 0
-            self._j = 0
+            l = self._index_to_line(self._i)
+            z = self._IJ[l]
+            self._i = z
+            self._j = z
         elif name == 'End':
-            self._i = len(self._CHARS) - 1
-            self._j = len(self._CHARS) - 1
+            l = self._index_to_line(self._i)
+            z = self._IJ[l + 1] - 1
+            self._i = z
+            self._j = z
 
         elif name == 'All':
             self._i = 0
@@ -154,8 +174,7 @@ class Rose_garden(Base_kookie):
             # delete selection
             if self._i != self._j:
                 # sort
-                if self._i > self._j:
-                    self._i, self._j = self._j, self._i
+                self._i, self._j = sorted((self._j, self._i))
                 del self._CHARS[self._i : self._j]
                 self._j = self._i
             # take note that char is a LIST now
@@ -167,17 +186,14 @@ class Rose_garden(Base_kookie):
         elif name == 'Copy':
             if self._i != self._j:
                 # sort
-                if self._i > self._j:
-                    self._i, self._j = self._j, self._i
-                
+                self._i, self._j = sorted((self._j, self._i))
                 output = ''.join(self._CHARS[self._i : self._j])
         
         elif name == 'Cut':
             # delete selection
             if self._i != self._j:
                 # sort
-                if self._i > self._j:
-                    self._i, self._j = self._j, self._i
+                self._i, self._j = sorted((self._j, self._i))
                 output = ''.join(self._CHARS[self._i : self._j])
                 del self._CHARS[self._i : self._j]
                 changed = True
@@ -187,8 +203,7 @@ class Rose_garden(Base_kookie):
             # delete selection
             if self._i != self._j:
                 # sort
-                if self._i > self._j:
-                    self._i, self._j = self._j, self._i
+                self._i, self._j = sorted((self._j, self._i))
                 del self._CHARS[self._i : self._j]
                 self._j = self._i
             if char == '\r':
@@ -242,8 +257,11 @@ class Rose_garden(Base_kookie):
     def hover(self, x, y):
         return 1
     
+    def _index_to_line(self, i):
+        return bisect(self._IJ, i) - 1
+    
     def _cursor_location(self, i):
-        l = bisect(self._IJ, i) - 1
+        l = self._index_to_line(i)
         gx = (i - self._IJ[l]) * self._K
         return l, int(self._x + 30 + gx), self._y + self._leading * l
 

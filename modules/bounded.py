@@ -1,6 +1,7 @@
 from model.cat import cast_mono_line
 from IO.xml import print_attrs
 from elements.elements import Mod_element
+from edit.paperairplanes import interpret_int
 
 namespace = 'mod:bounded'
 tags = {namespace + ':' + T for T in ('symbol', 'bottom', 'top')}
@@ -12,7 +13,7 @@ class Bounded(Mod_element):
         a = next(E for tag, E in L[1] if tag[0] == namespace + ':bottom')
         b = next(E for tag, E in L[1] if tag[0] == namespace + ':top')
         
-        align = int(L[0][1].get('align', 1))
+        align = interpret_int(L[0][1].get('align', 1))
         if align:
             self.cast_inline = self._cast_inline_inline
         else:

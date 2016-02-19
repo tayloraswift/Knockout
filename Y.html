@@ -20,7 +20,7 @@
     <mod:fraction:denominator><em>x</em></mod:fraction:denominator>
 </mod:fraction></p>
 
-<p style="{'fontclasses': (0, [('Italic', {})]), 'margin_left': 20, 'margin_top': 6}">—Kelvin Ma</p>
+<p style="{'margin_left': 20, 'fontclasses': (0, [('Italic', {})]), 'margin_top': 6}">—Kelvin Ma</p>
 
 <p class="h2">What is additive styling?</p>
 
@@ -29,7 +29,7 @@
 <p style="{'align': 0}">Subtitle</p>
 
 <mod:pie class="h2" radius="60">
-    <mod:pie:slice prop="13" color="#ff3085">
+    <mod:pie:slice color="#ff3085" prop="13">
         <p>A = <mod:fraction>
             <mod:fraction:numerator>abc + <mod:fraction>
                     <mod:fraction:numerator>e</mod:fraction:numerator>
@@ -38,16 +38,16 @@
             <mod:fraction:denominator><em>x</em></mod:fraction:denominator>
         </mod:fraction> </p>
     </mod:pie:slice>
-    <mod:pie:slice prop="22" color="#ff50a0">
+    <mod:pie:slice color="#ff50a0" prop="22">
         <p>Section B</p>
     </mod:pie:slice>
-    <mod:pie:slice prop="69" color="#f020ff">
+    <mod:pie:slice color="#f020ff" prop="69">
         <p>Section C</p>
     </mod:pie:slice>
-    <mod:pie:slice prop="89" color="#b050ff">
+    <mod:pie:slice color="#b050ff" prop="89">
         <p>Section D</p>
     </mod:pie:slice>
-    <mod:pie:slice prop="113" color="#7080ff">
+    <mod:pie:slice color="#7080ff" prop="113">
         <p>Section E</p>
     </mod:pie:slice>
 </mod:pie>
@@ -66,16 +66,16 @@
 
 <p>Instead of “single” or “double” spacing, Vedit lets the writer specify the literal point size of the <strong>leading</strong>, or line height. This helps you predict the amount of space that text will take up, and helps you avoid text alignment headaches, since the spacing is always constant and measurable. </p>
 
-<p style="{'indent': (30, 1, 0), 'indent_range': {0, 1}}"><strong>Indentation</strong> is powerful in Vedit. The lines over which it takes effect can be explicitly enumerated (in a relative count from the start of the paragraph), and it can be set in terms of the character positions of the first line. </p>
+<p style="{'indent_range': {0, 1}, 'indent': (30, 1, 0)}"><strong>Indentation</strong> is powerful in Vedit. The lines over which it takes effect can be explicitly enumerated (in a relative count from the start of the paragraph), and it can be set in terms of the character positions of the first line. </p>
 
 <p style="{'indent': (0, -1, 4)}">—&gt;  This is very useful for creating <strong>hanging indents</strong>.</p>
 
-<p class="body&gray">Paragraph styles even add their <strong>constituent text styles</strong>, which allows for <em>very interesting</em> constructs, such as this gray filter, which is made up of a paragraph class containing a single text class which defines just a gray color, all overlayed over our standard body text style.</p>
+<p class="gray&body">Paragraph styles even add their <strong>constituent text styles</strong>, which allows for <em>very interesting</em> constructs, such as this gray filter, which is made up of a paragraph class containing a single text class which defines just a gray color, all overlayed over our standard body text style.</p>
 
 <p class="h2">Superscripts and subscripts</p>
 
 <p>Integral test: <mod:bounded align="0">
-    <mod:bounded:symbol>∫</mod:bounded:symbol>
+    <mod:bounded:symbol><f class="big">∫</f class="big"></mod:bounded:symbol>
     <mod:bounded:bottom>13</mod:bounded:bottom>
     <mod:bounded:top>22 + <mod:fraction>
             <mod:fraction:numerator>e</mod:fraction:numerator>
@@ -109,10 +109,10 @@
         </td>
         <td>
             <mod:pie radius="40">
-                <mod:pie:slice prop="13" color="#ff3085">
+                <mod:pie:slice color="#ff3085" prop="13">
                     <p>Section A</p>
                 </mod:pie:slice>
-                <mod:pie:slice prop="22" color="#ff50a0">
+                <mod:pie:slice color="#ff50a0" prop="22">
                     <p>Section B</p>
                 </mod:pie:slice>
             </mod:pie>
@@ -146,11 +146,11 @@
         <td colspan="3">
             <p class="h2" style="{'fontclasses': (0, [('Lowercase', {})])}">Who doesn’t love Meredith Grey?</p>
             
-            <p style="{'fontclasses': (0, [('Italic', {}), ('Regular', {'emphasis': 1})]), 'align': 0, 'leading': 200}"><image src="meredith.png" width=200 />ab<em>c</em>d</p>
+            <p style="{'align': 0, 'leading': 200, 'fontclasses': (0, [('Italic', {}), ('Regular', {'emphasis': 1})])}"><image src="meredith.png" width=200 />ab<em>c</em>d</p>
             
-            <p class="body&gray">(Taylor, evidently.)</p>
+            <p class="gray&body">(Taylor, evidently.)</p>
             
-            <p class="body&gray">Also, hopefully you can see that these tablecells  arrange themselves according to the W3 HTML table specification.</p>
+            <p class="gray&body">Also, hopefully you can see that these tablecells  arrange themselves according to the W3 HTML table specification.</p>
         </td>
     </tr>
     <tr>
@@ -202,7 +202,7 @@
                 'Superitalic': {'path': 'fonts/Courgette-Regular.ttf'},
                 'Superscript': {'shift': 7},
                 'h3': {'capitals': True, 'fontsize': 16, 'path': 'fonts/FiraSans-Book.otf', 'tracking': 1}},
- 'FTAGLIST': [('strong', []), ('sup', ['small']), ('caption', []), ('sub', ['small']), ('emphasis', []), ('link', []), ('big', [])],
+ 'FTAGLIST': [('caption', []), ('link', []), ('emphasis', []), ('sub', ['small']), ('strong', []), ('sup', ['small']), ('big', [])],
  'PARASTYLES': (1,
                 [({'fontclasses': (2, [('Black', {}), ('Subscript', {'sub': 1}), ('Superscript', {'sup': 1})])}, {}),
                  ({'fontclasses': (0,
@@ -223,8 +223,8 @@
                  ({'fontclasses': (0, [('Subheading', {})]), 'leading': 24, 'margin_bottom': 10}, {'h2': 1}),
                  ({'align': 0, 'fontclasses': (0, [('h3', {})])}, {'h3': 1}),
                  ({'fontclasses': (0, [('Gray', {})])}, {'gray': 1})]),
- 'PTAGLIST': [('body', []), ('h2', []), ('h1', []), ('gray', []), ('h3', [])],
- 'contexts': {'channels': {'c': 7, 'p': 7, 't': 1}, 'text': {'i': 732, 'j': 732, 'p': 1, 't': 1}},
+ 'PTAGLIST': [('h2', []), ('h3', []), ('gray', []), ('body', []), ('h1', [])],
+ 'contexts': {'channels': {'c': 7, 'p': 7, 't': 1}, 'text': {'i': 3551, 'j': 3551, 'p': 4, 't': 1}},
  'grid': [[120, 480], [120, 480]],
  'outlines': ([(([[120, 120, False], [120, 200, False]], [[480, 120, False], [480, 200, False]]), 0)],
               [(([[120, 210, False], [120, 480, False]], [[480, 210, False], [480, 480, False]]), 0),
@@ -236,5 +236,5 @@
                ([[[360, 120, False], [160, 310, False], [360, 480, False]], [[410, 120, False], [590, 300, False], [410, 480, False]]], 5),
                ([[[120, 120, True], [120, 540, False]], [[480, 120, True], [480, 540, False]]], 6)]),
  'page': {'dimensions': (600, 600), 'dual': True},
- 'view': {'H': 173, 'Hc': 345.04669189453125, 'K': -657, 'Kc': 316.83709716796875, 'Zoom': 11, 'mode': 'text'}}
+ 'view': {'H': -422, 'Hc': 459.16961669921875, 'K': -1201, 'Kc': 467.965087890625, 'Zoom': 16, 'mode': 'text'}}
 ############# -->

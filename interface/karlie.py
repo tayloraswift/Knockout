@@ -75,13 +75,16 @@ def _columns(columns):
 # do not instantiate directly, requires a _reconstruct
 class _Properties_panel(ui.Cell):
     def __init__(self, mode, partition=1 ):
+        self._width = None
         self._partition = partition
         self.hresize()
         self._swap_reconstruct(mode)
     
     def hresize(self):
-        self._width = constants.window.get_h() - constants.UI[self._partition]
-        self._KW = self._width - 50
+        W = constants.window.get_h() - constants.UI[self._partition]
+        if W != self._width:
+            self._width = W
+            self._KW = W - 50
 
     def _tab_switch(self, name):
         if self._tab != name:
@@ -116,6 +119,7 @@ class _Properties_panel(ui.Cell):
             item._SYNCHRONIZE()
         
     def render(self, cr, h, k):
+        self.hresize()
         width = self._width
         # DRAW BACKGROUND
         cr.rectangle(0, 0, width, k)
@@ -149,10 +153,14 @@ class _Properties_panel(ui.Cell):
         cr.rectangle(0, 60, width, 2)
         cr.set_source_rgb(0.9, 0.9, 0.9)
         cr.fill()
+        
+        cr.save()
+        cr.translate((width - 160) // 2, 0)
         if hover_box is self._tabstrip:
             self._tabstrip.draw(cr, hover=self._hover_box_ij)
         else:
             self._tabstrip.draw(cr)
+        cr.restore()
         
         # scrollbar
         if self._total_height > k:
@@ -184,6 +192,7 @@ class _Properties_panel(ui.Cell):
         b = None
         if y < 60:
             box = self._tabstrip
+            x -= (self._width - 160) // 2
         else:
             y -= self._dy
             box = self._stack_bisect(x, y)
@@ -206,6 +215,7 @@ class _Properties_panel(ui.Cell):
     def hover(self, x, y, hovered=[None]):
         if y < 60:
             box = self._tabstrip
+            x -= (self._width - 160) // 2
         else:
             y -= self._dy
             box = self._stack_bisect(x, y)
@@ -400,14 +410,14 @@ class Properties(_Properties_panel):
         if to == 'text':
             tabs = (('page', 'M'), ('tags', 'T'), ('paragraph', 'P'), ('font', 'F'), ('character', 'C'))
             default = 2
-            self._tabstrip = kookies.Tabs( (constants.window.get_h() - constants.UI[self._partition] - width)//2 , 20, width, 30, default=default, callback=self._tab_switch, signals=tabs)
+            self._tabstrip = kookies.Tabs(0, 20, width, 30, default=default, callback=self._tab_switch, signals=tabs)
             self._tab = tabs[default][0]
             self._reconstruct = self._reconstruct_text_properties
 
         elif to == 'channels':
             tabs = (('channels', 'C'), ('', '?'))
             default = 0
-            self._tabstrip = kookies.Tabs( (constants.window.get_h() - constants.UI[self._partition] - width)//2 , 20, width, 30, default=default, callback=self._tab_switch, signals=tabs)
+            self._tabstrip = kookies.Tabs(0, 20, width, 30, default=default, callback=self._tab_switch, signals=tabs)
             self._tab = tabs[default][0]
             self._reconstruct = self._reconstruct_channel_properties
         

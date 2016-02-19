@@ -261,7 +261,7 @@ def _replace_misspelled(word):
         with open(wonder.additional_words_file, 'a') as A:
             A.write(word + '\n')
     else:
-        typing.keyboard.type_document('Paste', list(word))
+        typing.keyboard.type_document('Paste', word)
     cursor.fcursor.FTX.stats(spell=True)
 
 class Document_view(ui.Cell):

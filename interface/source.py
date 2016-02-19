@@ -6,9 +6,14 @@ from style.styles import ISTYLES
 
 def _chunks(L, n):
     br = [i + 1 for i, v in enumerate(L) if v == '\n']
-    for line in (L[i : j - 1] for i, j in zip([0] + br, br + [len(L)])):
-        for i in range(0, len(line), n):
-            yield line[i : i + n], not bool(i)
+    for line in (L[i : j] for i, j in zip([0] + br, br + [len(L)])):
+        linelen = len(line)
+        for i in range(0, linelen, n):
+            if i + n < linelen and line[i + n] == '\n':
+                yield line[i:], not bool(i)
+                break
+            else:
+                yield line[i : i + n], not bool(i)
 
 def _paint_select(cl, sl, cx, sx, left, right):
     select = []
@@ -23,7 +28,9 @@ def _paint_select(cl, sl, cx, sx, left, right):
     return select
             
 class Rose_garden(Base_kookie):
-    def __init__(self, x, y, width, callback, value_acquire):        
+    def __init__(self, x, y, width, callback, value_acquire, before=lambda: None, after=lambda: None):
+        self._BEFORE = before
+        self._AFTER = after
         self._callback = callback
         self._value_acquire = value_acquire
 
@@ -32,8 +39,8 @@ class Rose_garden(Base_kookie):
         self._K = self.font['fontmetrics'].advance_pixel_width(' ') * fontsize
         self._leading = int(fontsize * 1.3)
         
-        self._chars = int((width - 30) // self._K)
-        width = int(self._chars * self._K + 30)
+        self._charlength = int((width - 30) // self._K)
+        width = int(self._charlength * self._K + 30)
 
         Base_kookie.__init__(self, x, y, width, 0, font=None)
         
@@ -45,12 +52,12 @@ class Rose_garden(Base_kookie):
         self._i = 0
         self._j = 0
         
-        self._scroll = 0
+        self._active = False
 
     def _ACQUIRE_REPRESENT(self):
         self._VALUE = self._value_acquire()
-        self._GLYPHS = list(self._VALUE) + [None]
-        self._grid_glyphs(self._GLYPHS)
+        self._CHARS = list(self._VALUE) + [None]
+        self._grid_glyphs(self._CHARS)
 
     def _SYNCHRONIZE(self):
         self._ACQUIRE_REPRESENT()
@@ -64,13 +71,13 @@ class Rose_garden(Base_kookie):
         leading = self._leading
         FMX = self.font['fontmetrics'].character_index
         
-        lines = list(_chunks(self._GLYPHS, self._chars))
-        self._IJ = [0] + list(accumulate(len(l) + 1 for l, br in lines))
+        lines = list(_chunks(self._CHARS, self._charlength))
+        self._IJ = [0] + list(accumulate(len(l) for l, br in lines))
         self._y_bottom = y + leading * len(lines)
         
         y += leading
         xd = x + 30
-        self._LL = [[(FMX(character), xd + i*K, y + l*leading) for i, character in enumerate(line)] for l, (line, br) in enumerate(lines)]
+        self._LL = [[(FMX(character), xd + i*K, y + l*leading) for i, character in enumerate(line) if character != '\n'] for l, (line, br) in enumerate(lines)]
         N = zip(accumulate(br for line, br in lines), enumerate(lines))
         self._numbers = [[(FMX(character), x + i*K, y + l*leading) for i, character in enumerate(str(int(N)))] for N, (l, (line, br)) in N if br]
     
@@ -82,22 +89,119 @@ class Rose_garden(Base_kookie):
         di = int(round(x / self._K))
         i = self._IJ[l]
         j = self._IJ[l + 1]
+        if x > self._width - 20:
+            j += 1
         g = min(max(di + i, i), j - 1)
         return g
     
     def is_over(self, x, y):
-        return self._y <= y <= self._y_bottom and self._x - 10 <= x <= self._x_right + 10
+        return self._y <= y <= self._y_bottom
 
     def _entry(self):
-        return ''.join(self._GLYPHS[:-1])
+        return ''.join(self._CHARS[:-1])
     
     # typing
     def type_box(self, name, char):
-        pass
+        changed = False
+        output = None
+        
+        if name in ['BackSpace', 'Delete']:
+            # delete selection
+            if self._i != self._j:
+                # sort
+                if self._i > self._j:
+                    self._i, self._j = self._j, self._i
+                del self._CHARS[self._i : self._j]
+                changed = True
+                self._j = self._i
+                
+            elif name == 'BackSpace':
+                if self._i > 0:
+                    del self._CHARS[self._i - 1]
+                    changed = True
+                    self._i -= 1
+                    self._j -= 1
+            else:
+                if self._i < len(self._CHARS) - 2:
+                    del self._CHARS[self._i]
+                    changed = True
+
+        elif name == 'Left':
+            if self._i > 0:
+                self._i -= 1
+                self._j = self._i
+        elif name == 'Right':
+            if self._i < len(self._CHARS) - 1:
+                self._i += 1
+                self._j = self._i
+        elif name == 'Home':
+            self._i = 0
+            self._j = 0
+        elif name == 'End':
+            self._i = len(self._CHARS) - 1
+            self._j = len(self._CHARS) - 1
+
+        elif name == 'All':
+            self._i = 0
+            self._j = len(self._CHARS) - 1
+        
+        elif name == 'Paste':
+            # delete selection
+            if self._i != self._j:
+                # sort
+                if self._i > self._j:
+                    self._i, self._j = self._j, self._i
+                del self._CHARS[self._i : self._j]
+                self._j = self._i
+            # take note that char is a LIST now
+            self._CHARS[self._i:self._i] = char
+            changed = True
+            self._i += len(char)
+            self._j = self._i
+        
+        elif name == 'Copy':
+            if self._i != self._j:
+                # sort
+                if self._i > self._j:
+                    self._i, self._j = self._j, self._i
+                
+                output = ''.join(self._CHARS[self._i : self._j])
+        
+        elif name == 'Cut':
+            # delete selection
+            if self._i != self._j:
+                # sort
+                if self._i > self._j:
+                    self._i, self._j = self._j, self._i
+                output = ''.join(self._CHARS[self._i : self._j])
+                del self._CHARS[self._i : self._j]
+                changed = True
+                self._j = self._i
+
+        elif char is not None:
+            # delete selection
+            if self._i != self._j:
+                # sort
+                if self._i > self._j:
+                    self._i, self._j = self._j, self._i
+                del self._CHARS[self._i : self._j]
+                self._j = self._i
+            if char == '\r':
+                char = '\n'
+            self._CHARS[self._i:self._i] = [char]
+            changed = True
+            self._i += 1
+            self._j += 1
+        
+        if changed:
+            self._grid_glyphs(self._CHARS)
+        
+        return output
 
     def focus(self, x, y):
         self._i = self._target(x, y)
         self._j = self._i
+        self._active = True
 
     def focus_drag(self, x, y):
         j = self._target(x, y)
@@ -110,14 +214,12 @@ class Rose_garden(Base_kookie):
             return False
     
     def defocus(self):
-        self._active = None
-        self._dropdown_active = False
-        self._scroll = 0
+        self._active = False
         # dump entry
         self._VALUE = self._entry()
         if self._VALUE != self._PREV_VALUE:
             self._BEFORE()
-            self._callback(self._domain(self._VALUE), * self._params)
+            self._callback(self._VALUE)
             self._SYNCHRONIZE()
             self._AFTER()
         else:
@@ -140,22 +242,26 @@ class Rose_garden(Base_kookie):
         cr.fill()
         
         # highlight
-        cr.set_source_rgba(0, 0, 0, 0.1)
-        leading = self._leading
-        cl, cx, cy = self._cursor_location(self._i)
-        sl, sx, sy = self._cursor_location(self._j)
+        if self._active:
+            cr.set_source_rgba(0, 0, 0, 0.1)
+            leading = self._leading
+            cl, cx, cy = self._cursor_location(self._i)
+            sl, sx, sy = self._cursor_location(self._j)
 
-        for l, x1, x2 in _paint_select(cl, sl, cx, sx, self._x + 30, self._x_right):
-            cr.rectangle(x1, self._y + l*leading, x2 - x1, leading)
-        cr.fill()
+            for l, x1, x2 in _paint_select(cl, sl, cx, sx, self._x + 30, self._x_right):
+                cr.rectangle(x1, self._y + l*leading, x2 - x1, leading)
+            cr.fill()
 
         # text
-        cr.set_source_rgb(0, 0, 0)
+            cr.set_source_rgb(0.2, 0.2, 0.2)
+        else:
+            cr.set_source_rgb(0.5, 0.5, 0.5)
         cr.show_glyphs(chain.from_iterable(self._LL))
         cr.fill()
 
         # cursor
-        cr.set_source_rgb( * accent)
-        cr.rectangle(cx - 1, cy, 2, leading)
-        cr.rectangle(sx - 1, sy, 2, leading)
-        cr.fill()
+        if self._active:
+            cr.set_source_rgb( * accent)
+            cr.rectangle(cx - 1, cy, 2, leading)
+            cr.rectangle(sx - 1, sy, 2, leading)
+            cr.fill()

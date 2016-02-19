@@ -75,16 +75,17 @@ def _columns(columns):
 # do not instantiate directly, requires a _reconstruct
 class _Properties_panel(ui.Cell):
     def __init__(self, mode, partition=1 ):
-        self._width = None
+        self.width = None
         self._partition = partition
-        self.hresize()
         self._swap_reconstruct(mode)
+        self.resize()
     
-    def hresize(self):
+    def resize(self):
         W = constants.window.get_h() - constants.UI[self._partition]
-        if W != self._width:
-            self._width = W
+        if W != self.width:
+            self.width = W
             self._KW = W - 50
+            self._reconstruct()
 
     def _tab_switch(self, name):
         if self._tab != name:
@@ -119,8 +120,8 @@ class _Properties_panel(ui.Cell):
             item._SYNCHRONIZE()
         
     def render(self, cr, h, k):
-        self.hresize()
-        width = self._width
+        self.resize()
+        width = self.width
         # DRAW BACKGROUND
         cr.rectangle(0, 0, width, k)
         cr.set_source_rgb(1, 1, 1)
@@ -131,8 +132,7 @@ class _Properties_panel(ui.Cell):
             mode = noticeboard.refresh_properties_type.should_refresh()
             if mode[0]:
                 self._swap_reconstruct(mode[1])
-            else:
-                self._reconstruct()
+            self._reconstruct()
         
         hover_box = self._hover_box_ij[0]
 
@@ -192,7 +192,7 @@ class _Properties_panel(ui.Cell):
         b = None
         if y < 60:
             box = self._tabstrip
-            x -= (self._width - 160) // 2
+            x -= (self.width - 160) // 2
         else:
             y -= self._dy
             box = self._stack_bisect(x, y)
@@ -215,7 +215,7 @@ class _Properties_panel(ui.Cell):
     def hover(self, x, y, hovered=[None]):
         if y < 60:
             box = self._tabstrip
-            x -= (self._width - 160) // 2
+            x -= (self.width - 160) // 2
         else:
             y -= self._dy
             box = self._stack_bisect(x, y)
@@ -422,4 +422,3 @@ class Properties(_Properties_panel):
             self._reconstruct = self._reconstruct_channel_properties
         
         self._dy = 0
-        self._reconstruct()

@@ -166,12 +166,13 @@ class _Properties_panel(ui.Cell):
         self._K = k
     
     def key_input(self, name, char):
-        if self._active_box_i is not None:
-            if name == 'Return':
-                self._active_box_i.defocus()
+        box = self._active_box_i
+        if box is not None:
+            if name == 'Return' and type(box) is not source.Rose_garden:
+                box.defocus()
                 self._active_box_i = None
             else:
-                return self._active_box_i.type_box(name, char)
+                return box.type_box(name, char)
     
     def press(self, x, y, char):
         b = None

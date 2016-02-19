@@ -1,12 +1,12 @@
 from model.cat import cast_mono_line
 from IO.xml import print_attrs
-from elements.elements import Mod_element
+from elements.elements import Inline_element
 from edit.paperairplanes import interpret_int
 
 namespace = 'mod:bounded'
 tags = {namespace + ':' + T for T in ('symbol', 'bottom', 'top')}
 
-class Bounded(Mod_element):
+class Bounded(Inline_element):
     def _load(self, L):
         self._tree = L
         symbol = next(E for tag, E in L[1] if tag[0] == namespace + ':symbol')

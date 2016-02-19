@@ -1,30 +1,11 @@
 from html import parser, unescape, escape
-from itertools import chain
 from ast import literal_eval
 
 from bulletholes.counter import TCounter as Counter
-from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image
+from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image, Inline_element, Block_element
 from style import styles
-from modules import table, pie, fraction, bounded
+from modules import modules, moduletags, inlinetags, blocktags
 from state.exceptions import IO_Error
-
-INLINE = (fraction, fraction.Fraction), (bounded, bounded.Bounded)
-BLOCK = (table, table.Table), (pie, pie.PieChart)
-
-def _load_module(mods):
-    M = {}
-    for mod, mobj in mods:
-        M[mod.namespace] = mobj, mod.tags
-    return M
-
-modules = _load_module(INLINE + BLOCK)
-moduletags = set(modules) | set(chain.from_iterable(v[1] for v in modules.values()))
-inlinetags = {'p'}.union( * (I[0].tags for I in INLINE))
-blocknames = set(B[0].namespace for B in BLOCK)
-
-blocktypes = set(B[1] for B in BLOCK)
-inlinetypes = set(I[1] for I in INLINE)
-newline_on = {Paragraph} | blocktypes | inlinetypes
 
 def _create_paragraph(attrs):
     if 'class' in attrs:
@@ -78,7 +59,7 @@ class Minion(parser.HTMLParser):
         
         elif tag in moduletags:
             self._breadcrumbs.append(tag)
-            if tag in blocknames:
+            if tag in blocktags:
                 M = ((tag, attrs, _create_paragraph(attrs)), [])
             else:
                 M = ((tag, attrs), [])
@@ -167,14 +148,14 @@ def deserialize(text, fragment=False):
 
 def ser(L, indent):
     lines = []
-    gaps = [0] + [i for i, v in enumerate(L) if type(v) in newline_on]
+    gaps = [0] + [i for i, v in enumerate(L) if isinstance(v, (Paragraph, Block_element, Inline_element))]
     lead = 0
     for C in (L[i:j] for i, j in zip(gaps, gaps[1:] + [len(L)]) if j != i): # to catch last blob
-        if type(C[0]) in blocktypes:
+        if isinstance(C[0], Block_element):
             lines.append([indent, ''])
             lines.extend(C[0].represent(indent))
             lead = 1
-        elif type(C[0]) in inlinetypes:
+        elif isinstance(C[0], Inline_element):
             LL = C[0].represent(indent)
             if lines:
                 lines[-1][1] += LL.pop(0)[1]

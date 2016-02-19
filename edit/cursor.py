@@ -1,11 +1,7 @@
 import bisect
 from model.wonder import words, _breaking_chars
 from model import meredith, olivia
-
-from IO.kevin import blocktypes
-from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image
-B_OPEN = {Paragraph} | blocktypes
-deletion = {str} | blocktypes | {OpenFontpost, CloseFontpost, Image}
+from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image, Block_element
 
 class FCursor(object):
     def __init__(self, ctx):
@@ -162,9 +158,9 @@ class FCursor(object):
     def delspace(self, direction=False): # only called when i = j
         j = self.j
         if direction:
-            k = self.i + next(i for i, e in enumerate(self.text[self.i + 1:]) if type(e) in deletion) + 1
+            k = self.i + next(i for i, e in enumerate(self.text[self.i + 1:]) if type(e) is not Paragraph) + 1
         else:
-            k = self.i - next(i for i, e in enumerate(reversed(self.text[:self.i])) if type(e) in deletion) - 1
+            k = self.i - next(i for i, e in enumerate(reversed(self.text[:self.i])) if type(e) is not Paragraph) - 1
         
         start, end = sorted((k , j))
         offset = start - end + self._burn(start, end)
@@ -183,11 +179,11 @@ class FCursor(object):
             m = 0
 
         if segment:
-            if type(self.text[self.i]) in B_OPEN: # outside
+            if isinstance(self.text[self.i], (Paragraph, Block_element)): # outside
                 # crop off chars
                 try:
-                    l = next(i for i, e in enumerate(segment) if type(e) in B_OPEN)
-                    r = len(segment) - next(i for i, e in enumerate(reversed(segment)) if type(e) in blocktypes or e == '</p>')
+                    l = next(i for i, e in enumerate(segment) if isinstance(e, (Paragraph, Block_element)))
+                    r = len(segment) - next(i for i, e in enumerate(reversed(segment)) if isinstance(e, (Paragraph, Block_element)) or e == '</p>')
                     if r > l:
                         segment = segment[l:r]
                     else:
@@ -195,9 +191,9 @@ class FCursor(object):
                 except StopIteration:
                     segment = []
             else: # inside
-                if type(segment[0]) in B_OPEN:
+                if isinstance(segment[0], (Paragraph, Block_element)):
                     segment.insert(0, '</p>')
-                if segment[-1] == '</p>' or type(segment[-1]) in blocktypes:
+                if segment[-1] == '</p>' or isinstance(segment[-1], Block_element):
                     P = next(c.P for c in self.text[self.i::-1] if type(c) is Paragraph)
                     segment.append(Paragraph(P))
 

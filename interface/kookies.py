@@ -1,5 +1,5 @@
 import bisect
-from math import pi
+from math import pi, ceil
 from itertools import chain
 
 from style.styles import ISTYLES
@@ -794,7 +794,7 @@ class Object_menu(Blank_space):
         cr.stroke()
 
 class _Enumerated(Base_kookie):
-    def __init__(self, x, y, width, height, itemheight, library, before, after, refresh, lcap = 0):
+    def __init__(self, x, y, width, itemheight, library, before, after, refresh, lcap = 0):
         self._itemheight = itemheight
         self._BEFORE = before
         self._AFTER = after
@@ -802,7 +802,7 @@ class _Enumerated(Base_kookie):
         
         self._LIBRARY = library
         self._LMAX = len(library) + lcap
-        Base_kookie.__init__(self, x, y, width, height, font=('strong',))
+        Base_kookie.__init__(self, x, y, width, itemheight * (self._LMAX + 1), font=('strong',))
 
     def hover(self, x, y):
         y -= self._y
@@ -814,9 +814,9 @@ class _Enumerated(Base_kookie):
         return i, j
 
 class Subset_table(_Enumerated):
-    def __init__(self, x, y, width, height, datablock, superset, before=lambda: None, after=lambda: None, refresh=lambda: None):
+    def __init__(self, x, y, width, datablock, superset, before=lambda: None, after=lambda: None, refresh=lambda: None):
 
-        _Enumerated.__init__(self, x, y, width, height, itemheight=26, library=superset, before=before, after=after, refresh=refresh, lcap = -1)
+        _Enumerated.__init__(self, x, y, width, itemheight=26, library=superset, before=before, after=after, refresh=refresh, lcap = -1)
 
         self._DB = datablock
 
@@ -920,10 +920,10 @@ class Subset_table(_Enumerated):
             y1 += self._itemheight
 
 class Unordered(_Enumerated):
-    def __init__(self, x, y, width, height, library, display=lambda: None, before=lambda: None, after=lambda: None, refresh=lambda: None):
+    def __init__(self, x, y, width, library, display=lambda: None, before=lambda: None, after=lambda: None, refresh=lambda: None):
         self._display = display
 
-        _Enumerated.__init__(self, x, y, width, height, itemheight=26, library=library, before=before, after=after, refresh=refresh)
+        _Enumerated.__init__(self, x, y, width, itemheight=26, library=library, before=before, after=after, refresh=refresh)
 
         # set hover function equal to press function
         self.is_over_hover = self.is_over
@@ -1014,9 +1014,9 @@ class Unordered(_Enumerated):
         cr.fill()
 
 class Ordered(_Enumerated):
-    def __init__(self, x, y, width, height, library, display=lambda: None, before=lambda: None, after=lambda: None, refresh=lambda: None):
+    def __init__(self, x, y, width, library, display=lambda: None, before=lambda: None, after=lambda: None, refresh=lambda: None):
         self._display = display
-        _Enumerated.__init__(self, x, y, width, height, itemheight=26, library=library, before=before, after=after, refresh=refresh)
+        _Enumerated.__init__(self, x, y, width, itemheight=26, library=library, before=before, after=after, refresh=refresh)
 
         # set hover function equal to press function
         self.is_over_hover = self.is_over
@@ -1154,9 +1154,9 @@ class Ordered(_Enumerated):
         cr.fill()
 
 class Para_control_panel(Ordered):
-    def __init__(self, x, y, width, height, paragraph, library, display=lambda: None, before=lambda: None, after=lambda: None, refresh=lambda: None):
+    def __init__(self, x, y, width, paragraph, library, display=lambda: None, before=lambda: None, after=lambda: None, refresh=lambda: None):
         self._display = display
-        _Enumerated.__init__(self, x, y, width, height, itemheight=26, library=library, before=before, after=after, refresh=refresh, lcap=1)
+        _Enumerated.__init__(self, x, y, width, itemheight=26, library=library, before=before, after=after, refresh=refresh, lcap=1)
 
         self._paragraph = paragraph
 
@@ -1413,11 +1413,13 @@ class Z_indicator(Base_kookie):
             cr.fill()
 
 class _Table(Base_kookie):
-    def __init__(self, x, y, width, height, cellsize):
-        self._cellwidth, self._cellheight = cellsize
+    def __init__(self, x, y, width, cellsize, n):
+        min_cellwidth, self._cellheight = cellsize
+        self._cellwidth = int(width / (width // min_cellwidth))
         self._cellratio = self._cellwidth / self._cellheight
+        self._per_row = int(width // self._cellwidth)
+        height = ceil(n / self._per_row) * self._cellheight
         Base_kookie.__init__(self, x, y, width, height, font=('strong',))
-        self._per_row = ( self._width // self._cellwidth )
         # set hover function equal to press function
         self.is_over_hover = self.is_over
 
@@ -1438,13 +1440,13 @@ class _Table(Base_kookie):
             x += self._cellwidth
     
 class Counter_editor(_Table):
-    def __init__(self, x, y, width, height, cellsize, get_counter, superset, before=lambda: None, after=lambda: None):
+    def __init__(self, x, y, width, cellsize, get_counter, superset, before=lambda: None, after=lambda: None):
         self._BEFORE = before
         self._AFTER = after
         self._get_counter = get_counter
         self._SUPERSET = superset
 
-        _Table.__init__(self, x, y, width, height, cellsize)
+        _Table.__init__(self, x, y, width, cellsize, len(superset))
 
         self._SYNCHRONIZE = self._ACQUIRE_REPRESENT
         self._SYNCHRONIZE()

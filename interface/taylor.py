@@ -130,14 +130,14 @@ def PDF():
         becky.print_page(cr, p, classes)
         cr.show_page()
 
-def _place_tags(tag):
+def _place_tags(key):
     un.history.undo_save(3)
-    if not cursor.fcursor.bridge(tag, sign=True):
+    if not cursor.fcursor.bridge(typing.keyboard[key], sign=True):
         un.history.pop()
 
-def _punch_tags(tag):
+def _punch_tags(key):
     un.history.undo_save(3)
-    if not cursor.fcursor.bridge(tag, sign=False):
+    if not cursor.fcursor.bridge(typing.keyboard[key], sign=False):
         un.history.pop()
 
 def _add_channel():
@@ -172,14 +172,14 @@ class Document_toolbar(object):
         self._items.append(kookies.Button(5, y, 90, 30, callback=meredith.mipsy.add_tract, string='Add tract'))
 
         y += 50
-        self._items.append(kookies.Button(5, y, 90, 30, callback=_place_tags, string='Emphasis', params=(typing.keyboard['Ctrl i'],) ))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=_place_tags, string='Emphasis', params=('Ctrl i',) ))
         y += 30
-        self._items.append(kookies.Button(5, y, 90, 30, callback=_punch_tags, string='x Emphasis', params=(typing.keyboard['Ctrl I'],) ))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=_punch_tags, string='x Emphasis', params=('Ctrl I',) ))
 
         y += 40
-        self._items.append(kookies.Button(5, y, 90, 30, callback=_place_tags, string='Strong', params=(typing.keyboard['Ctrl b'],) ))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=_place_tags, string='Strong', params=('Ctrl b',) ))
         y += 30
-        self._items.append(kookies.Button(5, y, 90, 30, callback=_punch_tags, string='x Strong', params=(typing.keyboard['Ctrl B'],) ))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=_punch_tags, string='x Strong', params=('Ctrl B',) ))
 
         y += 50
         self._items.append(kookies.Checkbox(15, y, 80, callback=meredith.page.toggle_dual, value_acquire=lambda: meredith.page.dual, name='Dual'.upper()))

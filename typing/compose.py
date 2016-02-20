@@ -1,7 +1,9 @@
 from state import noticeboard
 
 sequences = {}
-with open('/usr/share/X11/locale/en_US.UTF-8/Compose', 'rb') as compose_file:
+
+def _read_xcompose(compose_file):
+    S = {}
     for entry in compose_file:
         entry = entry.decode("utf-8")
         if entry[0] == '<':
@@ -15,13 +17,18 @@ with open('/usr/share/X11/locale/en_US.UTF-8/Compose', 'rb') as compose_file:
             except IndexError:
                 name = ''
 
-            sequences[tuple( [trim[1:-1] for trim in entry[:colon].split()] )] = (name, entry[i:j])
+            S[tuple( [trim[1:-1] for trim in entry[:colon].split()] )] = (name, entry[i:j])
+    return S
 
-#print(sequences)
+with open('libraries/XCompose/Compose.txt', 'rb') as F:
+    sequences.update(_read_xcompose(F))
+with open('libraries/XCompose/add.txt', 'rb') as F:
+    sequences.update(_read_xcompose(F))
+
 class Composition(object):
     def __init__(self, compose):
         self._sequence = [compose]
-        self._char_sequence = ['C: ']
+        self._char_sequence = ['X composition: ']
         noticeboard.composition_sequence = self._char_sequence[:]
     
     def key_input(self, name, char):

@@ -53,7 +53,12 @@ def pack_binomial(value):
     return C, SIGN, K
 
 def interpret_int(n):
-    if '.' in n:
+    if type(n) is int:
+        return n
+    elif type(n) is float:
+        return int(n)
+    
+    elif '.' in n:
         v = int(round(interpret_float(n)))
     else:
         i = '0123456789'
@@ -74,6 +79,9 @@ def interpret_int(n):
     return v
     
 def interpret_float(f):
+    if type(f) in {int, float}:
+        return f
+
     i = '0123456789'
     si = i + '+-'
     if '.' not in f:

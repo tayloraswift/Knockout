@@ -1,7 +1,7 @@
 from math import pi
 from itertools import chain
 
-from state import noticeboard
+from state import noticeboard, contexts
 
 from interface.poptarts import accent
 
@@ -77,7 +77,7 @@ class Channels_controls(object):
         self._selected_point = [c, r, i]
         if c is not None:
             if c != old_c:
-                noticeboard.refresh_properties_stack.push_change()
+                contexts.Text.update_channels(c)
             if r is None:
                 self._selected_portal = self._CHANNELS.channels[c].target_portal(xn, yn, radius=5)
             else:
@@ -91,7 +91,7 @@ class Channels_controls(object):
         c, r, i = self._CHANNELS.target_point(xn, yn, binned_page, 20)
         if c is not None:
             if c != old_c:
-                noticeboard.refresh_properties_stack.push_change()
+                contexts.Text.update_channels(c)
             self.PG = binned_page
             self._selected_point = [c, r, i]
             if r is None:
@@ -102,7 +102,7 @@ class Channels_controls(object):
         for tract in meredith.mipsy:
             c, r, i = tract.channels.target_point(xn, yn, binned_page, 20)
             if c is not None:
-                noticeboard.refresh_properties_stack.push_change()
+                contexts.Text.update_channels(c)
                 self.PG = binned_page
                 self._selected_point = [c, r, i]
                 self.TRACT = tract

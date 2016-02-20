@@ -79,6 +79,6 @@ def load(name):
     un.history = un.UN() 
 
     taylor.becky = taylor.Document_view(save, DATA['view'])
-    karlie.klossy = karlie.Properties(tabs = (('page', 'M'), ('tags', 'T'), ('paragraph', 'P'), ('font', 'F')), default=2, partition=1 )
+    karlie.klossy = karlie.Properties(DATA['view']['mode'], partition=1 )
 
     un.history.save()

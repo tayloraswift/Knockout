@@ -1,25 +1,35 @@
+from bisect import bisect
 from gi.repository import Gtk, Gdk, GObject
 
 from state import noticeboard, constants
-from IO import kevin, do
+from IO import do
 from state import errors
 from edit import cursor
 from typing import compose
 from interface import karlie, taylor, menu
 
-import tree
-
 _dead_keys = set(('dead_tilde', 'dead_acute', 'dead_grave', 'dead_circumflex', 'dead_abovering', 'dead_macron', 'dead_breve', 'dead_abovedot', 'dead_diaeresis', 'dead_doubleacute', 'dead_caron', 'dead_cedilla', 'dead_ogonek', 'dead_iota', 'Multi_key'))
 _special_keys = set(('Shift_L', 'Shift_R', 'Control_L', 'Control_R', 'Caps_Lock', 'Escape', 'Alt_L', 'Alt_R', 'Super_L')) | _dead_keys
 
-class MouseButtons:
-    
-    LEFT_BUTTON = 1
-    MIDDLE_BUTTON = 2
-    RIGHT_BUTTON = 3
-    
-class Display(Gtk.Window):
+def strike_menu(event, e):
+    if menu.menu.menu():
+        if event == 2: # scroll
+            if menu.menu.in_bounds(e.x, abs(e.y)):
+                menu.menu.scroll(e.y)
+                menu.menu.test_change()
+                return False
+            
+        elif menu.menu.in_bounds(e.x, e.y):
+            if event == 1: # motion
+                menu.menu.hover(e.y)
+                menu.menu.test_change()
+            
+            elif event == 0: # press
+                menu.menu.press(e.y)
+            return False
+    return True
 
+class Display(Gtk.Window):
     def __init__(self):
         super(Display, self).__init__()
         
@@ -45,20 +55,25 @@ class Display(Gtk.Window):
         box.pack_start(self.BECKY, True, True, 0)
         box.pack_start(self.KLOSSY, False, False, 0)    
         
+        self._REGIONS = [taylor.becky, karlie.klossy]
+        self._active = self._REGIONS[0]
+        self._active_hover = self._REGIONS[0]
+        self._active_pane = None
+        self._R = 0
+        
         overlay = Gtk.Overlay()
         overlay.add_overlay(box)
         overlay.add_overlay(self.SCREEN)
-
         self.add(overlay)
 
         self.errorpanel = None
         
         self._compose = False
         
-        self.SCREEN.connect("button-press-event", self.on_button_press)
-        self.SCREEN.connect("button-release-event", self.on_button_release)
-        self.SCREEN.connect("scroll-event", self.on_scroll)
-        self.SCREEN.connect("motion_notify_event", self.motion_notify_event)
+        self.SCREEN.connect("button-press-event", self._press_sort)
+        self.SCREEN.connect("button-release-event", self._release_sort)
+        self.SCREEN.connect("scroll-event", self._scroll_sort)
+        self.SCREEN.connect("motion_notify_event", self._motion_sort)
         self.connect("key-press-event", self.on_key_press)
         self.connect("check-resize", self.on_resize)
         
@@ -71,7 +86,6 @@ class Display(Gtk.Window):
         self.show_all()
         
         self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
-
         self._HINTS = constants.HINTS
         
         self._periodic = GObject.timeout_add(2000, self._on_periodic)
@@ -94,7 +108,6 @@ class Display(Gtk.Window):
 
     def DRAW_KLOSSY(self, w, cr):
         cr.set_font_options(self._HINTS)
-        
         karlie.klossy.render(cr, self._h, self._k)
         
     def on_draw(self, wid, cr):
@@ -111,7 +124,6 @@ class Display(Gtk.Window):
                 self.errorpanel = None
     
     def transition_errorpanel(self):
-
         self.BECKY.queue_draw()
 
         self.errorpanel.increment()
@@ -122,79 +134,141 @@ class Display(Gtk.Window):
     def on_resize(self, w):
         h_old = self._h
         self._h, self._k = self.get_size()
-        constants.UI[1] += self._h - h_old
+        constants.UI[-1] +=  self._h - h_old
         
         constants.window.resize(self._h, self._k)
+        taylor.becky.resize(self._k)
     
-        taylor.becky.resize(self._h, self._k)
-        
-    def on_button_press(self, w, e):
+    def _internal_resize(self):
+        taylor.becky.resize(self._k)
+        karlie.klossy.resize()
+        self.KLOSSY.set_size_request(karlie.klossy.width, 0)
+        self.BECKY.queue_draw()
+        self.KLOSSY.queue_draw()
 
-        if e.type == Gdk.EventType._2BUTTON_PRESS:
-            if e.button == MouseButtons.LEFT_BUTTON:
-                tree.take_event(e.x, e.y, 'press2' )
+    def _pane(self, x):
+        # check for borders
+        R = self._R
+        UI = constants.UI
+        if not R:
+            B = ((R + 1, UI[R + 1]),)
+        elif R < len(UI) - 1:
+            B = ((R, UI[R]), (R + 1, UI[R + 1]))
+        else:
+            B = ((R, UI[R]),)
+        for r, border in B:
+            if -10 < x - border < 10:
+                self._active_pane = r
+                return True
+        return False
+
+    def _set_active_hover_region(self, x, y):
+        r = bisect(constants.UI, x) - 1
+        O = self._REGIONS[r]
+        if self._active_hover is not O:
+            self._active_hover.hover(-1, -1)
+            self._active_hover = O
+            self._R = r
+        return x - constants.UI[r], y
+
+    def _set_active_region(self, x, y):
+        r = bisect(constants.UI, x) - 1
+        O = self._REGIONS[r]
+        if self._active is not O:
+            if isinstance(O, karlie._Properties_panel):
+                O.press(-1, -1, None)
+            self._active = O
+        if self._active_hover is not O:
+            self._active_hover.hover(-1, -1)
+            self._active_hover = O
+        self._R = r
+        return x - constants.UI[r], y
+    
+    def _convert(self, x, y):
+        return x - constants.UI[self._R], y
         
-        elif e.type == Gdk.EventType.BUTTON_PRESS:
-            if e.button == MouseButtons.LEFT_BUTTON:
-                if e.state & Gdk.ModifierType.CONTROL_MASK:
-                    mod = 'ctrl'
-                else:
-                    mod = None
-                tree.take_event(e.x, e.y, 'press', char=mod )
+    def _press_sort(self, w, e):
+        if strike_menu(0, e):
+            menu.menu.destroy()
+            if self._pane(e.x):
+                return
+            x, y = self._set_active_region(e.x, e.y)
             
-            elif e.button == MouseButtons.MIDDLE_BUTTON:
-                tree.take_event(e.x, e.y, 'press_mid' )
+            if e.type == Gdk.EventType._2BUTTON_PRESS:
+                if e.button == 1:
+                    self._active.dpress()
             
-            elif e.button == MouseButtons.RIGHT_BUTTON:
-                tree.take_event(e.x, e.y, 'press_right' )
-            
+            elif e.type == Gdk.EventType.BUTTON_PRESS:
+                if e.button == 1:
+                    if e.state & Gdk.ModifierType.CONTROL_MASK:
+                        char = 'ctrl'
+                    else:
+                        char = None
+                    self._active.press(x, y, char)
+                
+                elif e.button == 2:
+                    self._active.press_mid(x, y)
+                
+                elif e.button == 3:
+                    self._active.press_right(x, y)
+        
         self.BECKY.queue_draw()
         self.KLOSSY.queue_draw()
         self.SCREEN.queue_draw()
-            
-    def on_button_release(self, w, e):
-        if e.button == MouseButtons.LEFT_BUTTON:
-
-            tree.take_event(e.x, e.y, 'release' )
         
-        elif e.button == MouseButtons.MIDDLE_BUTTON:
-            tree.take_event(-1, -1, 'drag' )
+    def _motion_sort(self, w, e):
+        if strike_menu(1, e):
+            if e.state & Gdk.ModifierType.BUTTON1_MASK:
+                if self._active_pane is None:
+                    self._active.press_motion( * self._convert(e.x, e.y))
+                else:
+                    limits = constants.UI + [self._h]
+                    ap = self._active_pane
+                    constants.UI[ap] = min(limits[ap + 1] - 175, max(limits[ap - 1] + 175, int(e.x)))
+                    self._internal_resize()
+
+            elif e.state & Gdk.ModifierType.BUTTON2_MASK:
+                self._active.drag( * self._convert(e.x, e.y))
+                
+            else:
+                self._active_hover.hover( * self._set_active_hover_region(e.x, e.y))
+
+        if noticeboard.redraw_overlay.should_refresh():
+            self.SCREEN.queue_draw()
+        if noticeboard.redraw_klossy.should_refresh():
+            self.KLOSSY.queue_draw()
+        if noticeboard.redraw_becky.should_refresh():
+            self.BECKY.queue_draw()
+        
+    def _release_sort(self, w, e):
+        self._active_pane = None
+        if e.button == 1:
+            x, y = self._convert(e.x, e.y)
+            self._active.release(x, y)
+        
+        elif e.button == 2:
+            self._active.drag(-1, -1)
             
         self.BECKY.queue_draw()
         self.KLOSSY.queue_draw()
         self.SCREEN.queue_draw()
         
         self._draw_errors()
-
-    def motion_notify_event(self, widget, event):
-
-        if event.state & Gdk.ModifierType.BUTTON1_MASK:
-            tree.take_event(event.x, event.y, 'press_motion' )
-
-        elif event.state & Gdk.ModifierType.BUTTON2_MASK:
-            tree.take_event(event.x, event.y, 'drag' )
+        
+    def _scroll_sort(self, w, e):
+        if strike_menu(2, e):
+            x, y = self._convert(e.x, e.y)
             
-        else:
-            tree.take_event(event.x, event.y, 'motion' )
+            if e.state & Gdk.ModifierType.CONTROL_MASK:
+                char = 'ctrl'
+            else:
+                char = None
 
-        if noticeboard.redraw_overlay.should_refresh():
-            self.SCREEN.queue_draw()
-        if noticeboard.redraw_klossy.should_refresh():
-            self.KLOSSY.queue_draw()
-        if noticeboard.redraw_becky.should_refresh():
-            self.BECKY.queue_draw()
-            
-    def on_scroll(self, w, e):
-        if e.state & Gdk.ModifierType.CONTROL_MASK:
-            mod = 'ctrl'
-        else:
-            mod = None
-
-        # direction of scrolling stored as sign
-        if e.direction == 1:
-            tree.take_event(e.x, e.y, 'scroll', char=mod )
-        elif e.direction == 0:
-            tree.take_event(e.x, -e.y, 'scroll', char=mod )
+            # direction of scrolling stored as sign
+            if e.direction == 1:
+                self._active_hover.scroll(x, y, char)
+            elif e.direction == 0:
+                self._active_hover.scroll(x, -y, char)
         
         if noticeboard.redraw_overlay.should_refresh():
             self.SCREEN.queue_draw()
@@ -203,13 +277,12 @@ class Display(Gtk.Window):
         if noticeboard.redraw_becky.should_refresh():
             self.BECKY.queue_draw()
 
-        
     def on_key_press(self, w, e):
 
         name = Gdk.keyval_name(e.keyval)
         
         if e.state & Gdk.ModifierType.SHIFT_MASK and name == 'Return':
-            tree.take_event(0, 0, 'paragraph', key=True)
+            self._active.key_input('paragraph', None)
                 
         elif e.state & Gdk.ModifierType.CONTROL_MASK:
             
@@ -219,22 +292,22 @@ class Display(Gtk.Window):
                 do.redo()
             
             elif name == 'v':
-                tree.take_event(0, 0, 'Paste', key=True, char = kevin.deserialize(self.clipboard.wait_for_text(), fragment=True) )
+                self._active.key_input('Paste', self.clipboard.wait_for_text())
 
             elif name in {'c', 'x'}:
                 if name == 'c':
-                    cp = tree.take_event(0, 0, 'Copy', key=True)
+                    cp = self._active.key_input('Copy', None)
                 else:
-                    cp = tree.take_event(0, 0, 'Cut', key=True)
+                    cp = self._active.key_input('Cut', None)
                     
-                if cp is not None:
-                    self.clipboard.set_text(kevin.serialize(cp), -1)
+                if cp is not None: # must be preprocessed into string
+                    self.clipboard.set_text(cp, -1)
             
             elif name == 'a':
-                tree.take_event(0, 0, 'All', key=True)
+                self._active.key_input('All', None)
 
             elif name not in {'Shift_L', 'Shift_R'}:
-                tree.take_event(0, 0, 'Ctrl ' + name, char = chr(Gdk.keyval_to_unicode(e.keyval)), key=True)
+                self._active.key_input('Ctrl ' + name, chr(Gdk.keyval_to_unicode(e.keyval)))
         
         elif name in _special_keys:
 
@@ -249,10 +322,10 @@ class Display(Gtk.Window):
                 # destroy compositor
                 del self._compositor
                 self._compose = False
-                tree.take_event(0, 0, composite[0], key=True, char = composite[1])
+                self._active.key_input(composite[0], composite[1])
                 
         else:
-            tree.take_event(0, 0, name, key=True, char = chr(Gdk.keyval_to_unicode(e.keyval)) )
+            self._active.key_input(name, chr(Gdk.keyval_to_unicode(e.keyval)))
         
         self.BECKY.queue_draw()
         self.KLOSSY.queue_draw()

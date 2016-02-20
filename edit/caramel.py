@@ -49,8 +49,8 @@ class Channels_controls(object):
         self.TRACT = meredith.mipsy[ctx['t']]
         self._CHANNELS = self.TRACT.channels
 
-    def C(self):
-        return self._selected_point[0]
+    def at(self):
+        return self.TRACT, self._selected_point[0]
 
     def target_select(self, x, y):
         xn, yn = meredith.page.normalize_XY(x, y, self.HPG)
@@ -76,8 +76,6 @@ class Channels_controls(object):
         c, r, i = self._CHANNELS.target_point(xn, yn, self.PG, 20)
         self._selected_point = [c, r, i]
         if c is not None:
-            if c != old_c:
-                contexts.Text.update_channels(c)
             if r is None:
                 self._selected_portal = self._CHANNELS.channels[c].target_portal(xn, yn, radius=5)
             else:
@@ -90,8 +88,6 @@ class Channels_controls(object):
         
         c, r, i = self._CHANNELS.target_point(xn, yn, binned_page, 20)
         if c is not None:
-            if c != old_c:
-                contexts.Text.update_channels(c)
             self.PG = binned_page
             self._selected_point = [c, r, i]
             if r is None:
@@ -102,7 +98,6 @@ class Channels_controls(object):
         for tract in meredith.mipsy:
             c, r, i = tract.channels.target_point(xn, yn, binned_page, 20)
             if c is not None:
-                contexts.Text.update_channels(c)
                 self.PG = binned_page
                 self._selected_point = [c, r, i]
                 self.TRACT = tract

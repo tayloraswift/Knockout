@@ -20,18 +20,17 @@ class Tabs_round(kookies.Tabs):
         kookies.Tabs.__init__(self, x, y, width, height, default=default, callback=callback, signals=signals)
         
         self._longstrings = longstrings
-        self._add_static_text(self._x + self._width//2, self._y_bottom + 20, self._longstrings[default], align=0)
+        self._add_static_text(self._x, self._y_bottom + 20, self._longstrings[default], align=0)
     
     def focus(self, x):
         self._active = self._target(x)
         self._callback(self._signals[self._active])
         
         del self._texts[-1]
-        self._add_static_text(self._x + self._width//2, self._y_bottom + 20, self._longstrings[self._active], align=0)
+        self._add_static_text(self._x, self._y_bottom + 20, self._longstrings[self._active], align=0)
         
     def draw(self, cr, hover=(None, None)):
-        cr.set_font_size(self.font['fontsize'])
-        cr.set_font_face(self.font['font'])
+        self._render_fonts(cr)
         
         for i, button in enumerate(self._x_left):
 
@@ -86,7 +85,7 @@ class Mode_switcher(object):
     def __init__(self, callback, default):
         self._hover_j = None
         self._hover_memory = None
-        self._switcher = Tabs_round(-40, -70, 80, 30, default=default, callback=callback, signals=[('text', 'T'), ('channels', 'C')], longstrings=['Edit text', 'Edit channels'])
+        self._switcher = Tabs_round(0, -70, 40, 30, default=default, callback=callback, signals=[('text', 'T'), ('channels', 'C')], longstrings=['Edit text', 'Edit channels'])
 
     def is_over(self, x, y):
         return self._switcher.is_over(x - self._dx, y - self._dy)
@@ -379,6 +378,7 @@ class Document_view(ui.Cell):
             # CHANNEL EDITING MODE
             elif self._mode == 'channels':
                 caramel.delight.press(x, y, name=name)
+                CText.update_channels()
 
         elif self._region_active == 'toolbar':
             self._toolbar.press(x, y)

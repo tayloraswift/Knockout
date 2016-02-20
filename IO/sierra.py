@@ -2,7 +2,7 @@ from pprint import pformat
 from ast import literal_eval
 
 from style import fonts, styles
-from state import constants
+from state import constants, noticeboard
 from state.contexts import Text
 from model import meredith, page
 from edit import cursor, caramel
@@ -79,6 +79,7 @@ def load(name):
     un.history = un.UN() 
 
     taylor.becky = taylor.Document_view(save, DATA['view'])
+    noticeboard.refresh_properties_type.push_change(DATA['view']['mode'])
     karlie.klossy = karlie.Properties(DATA['view']['mode'], partition=1 )
 
     un.history.save()

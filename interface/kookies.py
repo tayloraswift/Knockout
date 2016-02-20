@@ -36,6 +36,13 @@ def cross(cr, x, y):
     cr.rel_move_to(0, -8)
     cr.rel_line_to(-8, 8)
 
+class Null(object):
+    def is_over_hover(a, b):
+        return False
+    
+    def is_over(a, b):
+        return False
+
 class Button(Base_kookie):
     def __init__(self, x, y, width, height, callback=None, string='', params=() ):
         Base_kookie.__init__(self, x, y, width, height, font=('strong',))
@@ -134,8 +141,8 @@ class Checkbox(Base_kookie):
 
 
 class Tabs(Base_kookie):
-    def __init__(self, x, y, width, height, default=0, callback=None, signals=() ):
-        Base_kookie.__init__(self, x, y, width, height, font=('strong',))
+    def __init__(self, x, y, cellwidth, height, default=0, callback=None, signals=() ):
+        Base_kookie.__init__(self, x, y, cellwidth * len(signals), height, font=('strong',))
         self._signals, self._strings = zip( * signals )
         
         self._callback = callback
@@ -146,11 +153,14 @@ class Tabs(Base_kookie):
         self._active = default
         
         self._construct()
+
+    def is_over(self, x, y):
+        return self._y <= y <= self._y_bottom and abs(x - self._x) <= self._width
     
     def _construct(self):
         self._button_width = self._width/len(self._strings)
         self._x_left = []
-        xo = self._x
+        xo = self._x - self._width // 2
         for string in self._strings:
             self._add_static_text(xo + self._button_width/2, self._y_bottom - self._height/2 + 5, string, align=0)
             self._x_left.append(int(round(xo)))

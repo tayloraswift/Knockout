@@ -7,8 +7,7 @@ from edit.paperairplanes import interpret_rgba, interpret_float
 from IO.xml import print_attrs, print_styles
 from elements.elements import Block_element
 
-namespace = 'mod:pie'
-tags = {namespace + ':' + T for T in ('slice',)}
+_namespace = 'mod:pie'
 
 class _Pie(object):
     def __init__(self, slices, radius, active=0):
@@ -18,11 +17,15 @@ class _Pie(object):
         self.center = (0, 0)
 
 class PieChart(Block_element):
+    namespace = _namespace
+    tags = {_namespace + ':' + T for T in ('slice',)}
+    DNA = {'slice': {}}
+            
     def _load(self, L):
         self._tree = L
         self.PP = L[0][2]
         radius = interpret_float(L[0][1].get('radius', 89))
-        slices, labels = zip( * (( (interpret_float(tag[1]['prop']), interpret_rgba(tag[1]['color'])), E) for tag, E in L[1] if tag[0] == namespace + ':slice'))
+        slices, labels = zip( * (( (interpret_float(tag[1]['prop']), interpret_rgba(tag[1]['color'])), E) for tag, E in L[1] if tag[0] == self.namespace + ':slice'))
         total = sum(P for P, C in slices)
                        # percentage | arc length | color
         self._pie = _Pie([(P/total, P/total*2*pi, C) for P, C in slices], radius)
@@ -36,7 +39,7 @@ class PieChart(Block_element):
             lines.append([indent + 1, print_attrs( * tag)])
             lines.extend(self._SER(E, indent + 2))
             lines.append([indent + 1, '</' + tag[0] + '>'])
-        lines.append([indent, '</' + namespace + '>'])
+        lines.append([indent, '</' + self.namespace + '>'])
         return lines
 
     def fill(self, bounds, c, y):

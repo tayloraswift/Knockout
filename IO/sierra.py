@@ -9,6 +9,7 @@ from edit import cursor, caramel
 from IO import kevin, un
 from typing import typing
 from interface import karlie, taylor, poptarts
+from modules import modulestyles, INLINE, BLOCK
 
 def save():
     HEADER = '<head><meta charset="UTF-8"></head>\n<title>' + constants.filename + '</title>\n\n'
@@ -21,8 +22,10 @@ def save():
     
     grid = meredith.mipsy.page_grid
     textcontexts = cursor.fcursor.polaroid()
-    channelcontexts = {'t': meredith.mipsy.index(caramel.delight.TRACT),
-                    'c': caramel.delight.C(), 
+    
+    ct, c = caramel.delight.at()
+    channelcontexts = {'t': meredith.mipsy.index(ct),
+                    'c': c, 
                     'p': caramel.delight.PG
                     }
     
@@ -60,8 +63,10 @@ def load(name):
     else:
         raise FileNotFoundError
 
+    # unpack styles
     styles.daydream()
     styles.faith(DATA)
+    modulestyles.MSL = modulestyles.MS_Library(INLINE + BLOCK)
     
     # set up page, tract model, page grid objects
     meredith.page = page.Page(DATA['page'])

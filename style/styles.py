@@ -107,7 +107,7 @@ class P_Library(_Active_list):
             return self._font_projections[H]
         except KeyError:
             # add tag groups
-            F = F.concat(Counter(chain.from_iterable((FTAGS[G] for G in T.groups) for T, n in F.items() if n)))
+            F = F + Counter(chain.from_iterable((FTAGS[G] for G in T.groups) for T, n in F.items() if n))
             # iterate through stack
             projection = Layer(F_DNA)
             effective = (b for b in self if b.tags <= P)

@@ -75,6 +75,9 @@ class Image(object):
         return 7
 
 class Mod_element(object):
+    namespace = '_undef'
+    tags = {}
+
     def __init__(self, L, deserialize, ser):
         self._DESR = deserialize
         self._SER = ser
@@ -89,7 +92,7 @@ class Mod_element(object):
         return True
 
 class Block_element(Mod_element):
-    pass
+    namespace = '_undef_block'
 
 class Inline_element(Mod_element):
-    pass
+    namespace = '_undef_inline'

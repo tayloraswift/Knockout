@@ -19,7 +19,7 @@ def _new_name(name, namelist):
             name = name[:-3] + str(serialnumber).zfill(3)
     return name
 
-class Layer(dict):
+class _Layer(dict):
     def __init__(self, DNA):
         dict.__init__(self, DNA)
         self.Z = {A: None for A in DNA}
@@ -29,6 +29,11 @@ class Layer(dict):
         for A, V in D.items():
             self[A] = V
             self.Z[A] = B
+
+class _FLayer(_Layer):
+    def vmetrics(self):
+        ascent, descent = self['fontmetrics'].vmetrics
+        return ascent * self['fontsize'] + self['shift'], descent * self['fontsize'] + self['shift']
 
 class _Active_list(list):
     def __init__(self, active, * args, ** kwargs):
@@ -85,7 +90,7 @@ class P_Library(_Active_list):
             return self._projections[H]
         except KeyError:
             # iterate through stack
-            projection = Layer(P_DNA)
+            projection = _Layer(P_DNA)
             effective = (b for b in self if b.tags <= P)
             if EP:
                 effective = chain(effective, [EP])
@@ -109,7 +114,7 @@ class P_Library(_Active_list):
             # add tag groups
             F = F + Counter(chain.from_iterable((FTAGS[G] for G in T.groups) for T, n in F.items() if n))
             # iterate through stack
-            projection = Layer(F_DNA)
+            projection = _FLayer(F_DNA)
             effective = (b for b in self if b.tags <= P)
             if EP:
                 effective = chain(effective, [EP])

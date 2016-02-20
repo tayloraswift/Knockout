@@ -8,8 +8,7 @@ from IO.xml import print_attrs, print_styles
 from elements.elements import Block_element
 from edit.paperairplanes import interpret_int
 
-namespace = 'table'
-tags = {'tr', 'td'}
+_namespace = 'table'
 
 def _print_td(td):
         A = td[1]
@@ -97,6 +96,12 @@ def _build_matrix(data):
     return MATRIX
 
 class Table(Block_element):
+    namespace = _namespace
+    tags = {'tr', 'td'}
+    DNA = {'table': {},
+            'thead': {},
+            'tbody': {}}
+
     def _load(self, L):
         self._tree = L
         self.PP = L[0][2]
@@ -115,7 +120,7 @@ class Table(Block_element):
                 lines.extend(self._SER(C, indent + 3))
                 lines.append([indent + 2, '</td>'])
             lines.append([indent + 1, '</tr>'])
-        lines.append([indent, '</' + namespace + '>'])
+        lines.append([indent, '</' + self.namespace + '>'])
         return lines
 
     def fill(self, bounds, c, y):

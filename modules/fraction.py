@@ -1,27 +1,22 @@
-from model.cat import cast_mono_line
+from model.cat import cast_mono_line, calculate_vmetrics
 from IO.xml import print_attrs
 from elements.elements import Inline_element
 
-namespace = 'mod:fraction'
-tags = {namespace + ':' + T for T in ('numerator', 'denominator')}
+from modules import modulestyles
 
-def _fracbound(glyphs, fontsize):
-    if glyphs:
-        subfrac = [glyph[6].height for glyph in glyphs if glyph[0] == -89]
-        if subfrac:
-            height = max(subfrac)
-        else:
-            height = fontsize
-    else:
-        height = fontsize
-    return height
+_namespace = 'mod:fraction'
 
 class Fraction(Inline_element):
+    namespace = _namespace
+    tags = {_namespace + ':' + T for T in ('numerator', 'denominator')}
+    DNA = {'numerator': {},
+            'denominator': {}}
+    
     def _load(self, L):
         self._tree = L
         
-        numerator = next(E for tag, E in L[1] if tag[0] == namespace + ':numerator')
-        denominator = next(E for tag, E in L[1] if tag[0] == namespace + ':denominator')
+        numerator = next(E for tag, E in L[1] if tag[0] == self.namespace + ':numerator')
+        denominator = next(E for tag, E in L[1] if tag[0] == self.namespace + ':denominator')
         
         self._INLINE = [numerator, denominator]
     
@@ -33,50 +28,59 @@ class Fraction(Inline_element):
             content[-1][1] += '</' + tag[0] + '>'
             
             lines.extend(content)
-        lines.append([indent, '</' + namespace + '>'])
+        lines.append([indent, '</' + self.namespace + '>'])
         return lines
 
     def _draw_vinculum(self, cr, x, y):
         cr.set_source_rgba( * self._color)
-        cr.rectangle(x + self._vx, int(y + self._vy), self._fracwidth, 0.5)
+        cr.rectangle(x + self._vx, y + self._vinc_y, self._fracwidth, 0.5)
         cr.fill()
-    
+
+    def _modstyles(self, F):
+        modstyles = modulestyles.MSL[self.__class__]
+        return F + modstyles['numerator'], F + modstyles['denominator']
+        
     def cast_inline(self, x, y, leading, PP, F, FSTYLE):
         self._color = FSTYLE['color']
-        fontsize = FSTYLE['fontsize']
-        vy = y - fontsize/4
-        numerator = cast_mono_line(self._INLINE[0], 13, PP, F)
-        denominator = cast_mono_line(self._INLINE[1], 13, PP, F)
+        F_numerator, F_denominator = self._modstyles(F)
         
-        nheight = _fracbound(numerator['GLYPHS'], fontsize)
+        ascent, descent = FSTYLE.vmetrics()
+        vy = FSTYLE['fontsize'] * 0.25
+        
+        numerator = cast_mono_line(self._INLINE[0], 13, PP, F_numerator)
+        denominator = cast_mono_line(self._INLINE[1], 13, PP, F_denominator)
+        
+        nascent, ndescent = calculate_vmetrics(numerator)
         nwidth = numerator['advance']
-        dheight = _fracbound(denominator['GLYPHS'], fontsize)
+        dascent, ddescent = calculate_vmetrics(denominator)
         dwidth = denominator['advance']
         
         fracwidth = max(nwidth, dwidth) + leading/2
-        fracheight = nheight + dheight
         
         numerator['x'] = x + (fracwidth - nwidth)/2
-        numerator['y'] = vy - nheight/2
+        numerator['y'] = y - vy + ndescent
         numerator['hyphen'] = None
         denominator['x'] = x + (fracwidth - dwidth)/2
-        denominator['y'] = vy + dheight
+        denominator['y'] = y - vy + dascent
         denominator['hyphen'] = None
         
+        fascent = vy + nascent - ndescent
+        fdescent = vy - dascent + ddescent
         self._fracwidth = fracwidth
-        self._vy = vy
+        self._vinc_y = y - vy
         self._vx = x
-        return _MInline([numerator, denominator], self._draw_vinculum, fracwidth, fracheight)
+        return _MInline([numerator, denominator], self._draw_vinculum, fracwidth, fascent, fdescent)
 
     def __len__(self):
         return 11
 
 class _MInline(object):
-    def __init__(self, lines, vinculum, width, height):
+    def __init__(self, lines, vinculum, width, A, D):
         self._LINES = lines
         self._draw_vinculum = vinculum
         self.width = width
-        self.height = height
+        self.ascent = A
+        self.descent = D
     
     def deposit_glyphs(self, repository, x, y):
         for line in self._LINES:

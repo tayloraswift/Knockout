@@ -75,7 +75,7 @@ def load(name):
     # aim editor objects
     cursor.fcursor = cursor.FCursor(DATA['contexts']['text'])
     caramel.delight = caramel.Channels_controls(DATA['contexts']['channels'], poptarts.Sprinkles())
-    typing.keyboard = typing.Keyboard()
+    typing.keyboard = typing.Keyboard(constants.shortcuts)
     
     meredith.mipsy.recalculate_all()
     Text.update()

@@ -16,7 +16,7 @@ from interface.base import accent
 accent_light = caramel.accent
 
 class Tabs_round(kookies.Tabs):
-    def __init__(self, x, y, width, height, default=0, callback=None, signals=(), longstrings=None):
+    def __init__(self, x, y, width, height, default, callback=None, signals=(), longstrings=None):
         kookies.Tabs.__init__(self, x, y, width, height, default=default, callback=callback, signals=signals)
         
         self._longstrings = longstrings
@@ -83,15 +83,15 @@ class Tabs_round(kookies.Tabs):
         cr.show_glyphs(self._texts[-1])
 
 class Mode_switcher(object):
-    def __init__(self, callback):
+    def __init__(self, callback, default):
         self._hover_j = None
         self._hover_memory = None
-        self._switcher = Tabs_round( -40, -70, 80, 30, callback=callback, signals=[('text', 'T'), ('channels', 'C')], longstrings=['Edit text', 'Edit channels'])
+        self._switcher = Tabs_round(-40, -70, 80, 30, default=default, callback=callback, signals=[('text', 'T'), ('channels', 'C')], longstrings=['Edit text', 'Edit channels'])
 
     def is_over(self, x, y):
         return self._switcher.is_over(x - self._dx, y - self._dy)
 
-    def resize(self, h, k):
+    def resize(self, k):
         # center
         self._dx = (constants.UI[1] - 100)/2 + 100 
         self._dy = k
@@ -261,7 +261,7 @@ def _replace_misspelled(word):
         with open(wonder.additional_words_file, 'a') as A:
             A.write(word + '\n')
     else:
-        typing.keyboard.type_document('Paste', list(word))
+        typing.keyboard.type_document('Paste', word)
     cursor.fcursor.FTX.stats(spell=True)
 
 class Document_view(ui.Cell):
@@ -269,7 +269,7 @@ class Document_view(ui.Cell):
         self._mode = state['mode']
         self._region_active, self._region_hover = 'view', 'view'
         self._toolbar = Document_toolbar(save)
-        self._mode_switcher = Mode_switcher(self.change_mode)
+        self._mode_switcher = Mode_switcher(self.change_mode, default= self._mode == 'channels')
         self.keyboard = typing.keyboard
         self.fcursor = cursor.fcursor
         
@@ -533,13 +533,12 @@ class Document_view(ui.Cell):
         elif self._region_hover == 'switcher':
             self._mode_switcher.hover(x)
 
-    def resize(self, h, k):
-        self._mode_switcher.resize(h, k)
+    def resize(self, k):
+        self._mode_switcher.resize(k)
 
     def change_mode(self, mode):
         self._mode = mode
         CText.update()
-        noticeboard.refresh_properties_stack.push_change()
         noticeboard.refresh_properties_type.push_change(mode)
     
     def _print_sorted(self, cr, classed_glyphs):

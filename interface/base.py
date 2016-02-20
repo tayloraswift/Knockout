@@ -66,10 +66,7 @@ class Base_kookie(object):
         self._texts.append(self._build_line(x, y, text, font, fontsize=fontsize, align=align))
     
     def is_over(self, x, y):
-        if self._y <= y <= self._y_bottom and self._x <= x <= self._x_right:
-            return True
-        else:
-            return False
+        return self._y <= y <= self._y_bottom and self._x <= x <= self._x_right
     
     def is_over_hover(self, x, y):
         return False

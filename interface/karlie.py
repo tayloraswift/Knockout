@@ -103,7 +103,10 @@ class _Properties_panel(ui.Cell):
             item = self._items[i]
         except IndexError:
             i -= 1
-            item = self._items[i]
+            try:
+                item = self._items[i]
+            except IndexError:
+                return kookies.Null
         
         if isinstance(item, _MULTI_COLUMN):
             return self._items[i + bisect.bisect(item.partitions, x) + 1]
@@ -148,26 +151,24 @@ class _Properties_panel(ui.Cell):
         cr.restore()
 
         # tabstrip
-        cr.rectangle(0, 0, width, 60)
+        cr.rectangle(0, 0, width, 90)
         cr.set_source_rgb(1, 1, 1)
         cr.fill()
-        cr.rectangle(0, 60, width, 2)
-        cr.set_source_rgb(0.9, 0.9, 0.9)
-        cr.fill()
-        
+
         cr.save()
-        cr.translate((width - 160) // 2, 0)
+        cr.translate(width // 2, 0)
         if hover_box is self._tabstrip:
             self._tabstrip.draw(cr, hover=self._hover_box_ij)
         else:
             self._tabstrip.draw(cr)
         cr.restore()
+        self._HI.draw(cr)
         
         # scrollbar
         if self._total_height > k:
-            factor = k / self._total_height * (k - 80)
-            top = -self._dy / self._total_height * (k - 80)
-            cr.rectangle(width - 10, top + 70, 3, factor)
+            factor = k / self._total_height * (k - 100)
+            top = -self._dy / self._total_height * (k - 100)
+            cr.rectangle(width - 10, top + 90, 3, factor)
             cr.set_source_rgba(0, 0, 0, 0.1)
             cr.fill()
         
@@ -193,7 +194,7 @@ class _Properties_panel(ui.Cell):
         b = None
         if y < 60:
             box = self._tabstrip
-            x -= (self.width - 160) // 2
+            x -= self.width // 2
         else:
             y -= self._dy
             box = self._stack_bisect(x, y)
@@ -216,7 +217,7 @@ class _Properties_panel(ui.Cell):
     def hover(self, x, y, hovered=[None]):
         if y < 60:
             box = self._tabstrip
-            x -= (self.width - 160) // 2
+            x -= self.width // 2
         else:
             y -= self._dy
             box = self._stack_bisect(x, y)
@@ -239,6 +240,16 @@ class _Properties_panel(ui.Cell):
             self._dy += 22
             noticeboard.redraw_klossy.push_change()
 
+    def _reconstruct(self):
+        contexts.Text.done(self._tab)
+        self._heading = ''
+        self._items = []
+        self._active_box_i = None
+        self._hover_box_ij = (None, None)
+        
+        self._stack(self._panel(y=110, KW=self._KW))
+        self._HI = kookies.Heading(15, 60, self._KW, 30, self._heading, font=('title',), fontsize=18, upper=True)
+
 def _print_counter(counter):
     items = [k.name if v == 1 else k.name + ' (' + str(v) + ')' for k, v in counter.tags.items() if v]
     if items:
@@ -247,23 +258,13 @@ def _print_counter(counter):
         return '{none}'
 
 class Properties(_Properties_panel):
-    def _reconstruct_text_properties(self):
-        # ALWAYS REQUIRES CALL TO _stack()
-        print('reconstruct')
-        contexts.Text.done(self._tab)
-        
-        self._items = []
-        self._active_box_i = None
-        self._hover_box_ij = (None, None)
-        
-        y = 110
-        KW = self._KW
+    def _text_panel(self, y, KW):        
         tile = int(KW / (KW // 125))
 
         if self._tab == 'font':
             if styles.PARASTYLES.active is not None:
+                self._heading = ', '.join(T.name for T in styles.PARASTYLES.active.tags)
                 
-                self._items.append(kookies.Heading( 15, 70, KW, 30, ', '.join(T.name for T in styles.PARASTYLES.active.tags), upper=True))
                 self._items.append(kookies.Ordered(15, y, KW, 300,
                             library = styles.PARASTYLES.active.layerable, 
                             display = _print_counter,
@@ -301,12 +302,9 @@ class Properties(_Properties_panel):
                                 ]
                         self._items.extend(_stack_properties(_create_f_field, self.synchronize, y, 45, KW, props))
                         y += 45*len(props)
-
-            else:
-                self._items.append(kookies.Heading(15, 90, KW, 30, '', upper=True))
         
         elif self._tab == 'paragraph':
-            self._items.append(kookies.Heading( 15, 70, KW, 30, ', '.join(T.name if V == 1 else T.name + ' (' + str(V) + ')' for T, V in contexts.Text.pp.P.items() if V), upper=True))
+            self._heading = ', '.join(T.name if V == 1 else T.name + ' (' + str(V) + ')' for T, V in contexts.Text.pp.P.items() if V)
 
             self._items.append(kookies.Para_control_panel(15, y, KW, 280, 
                     paragraph = contexts.Text.pp, 
@@ -334,7 +332,7 @@ class Properties(_Properties_panel):
                 
         
         elif self._tab == 'tags':
-            self._items.append(kookies.Heading( 15, 70, KW, 30, '', upper=True))
+            self._heading = 'Document tags'
             
             self._items.append(kookies.Unordered( 15, y, KW - 50, 200,
                         library = styles.PTAGS, 
@@ -362,7 +360,8 @@ class Properties(_Properties_panel):
                         before=un.history.save, after=self.synchronize, name='TAG NAME'))
             
         elif self._tab == 'page':
-            self._items.append(kookies.Heading( 15, 70, KW, 30, '', upper=True))
+            self._heading = 'Document pages'
+            
             self._items.append(kookies.Integer_field( 15, y, KW, 
                         callback = meredith.page.set_width,
                         value_acquire = lambda: meredith.page.WIDTH,
@@ -376,27 +375,20 @@ class Properties(_Properties_panel):
             y += 45
         
         elif self._tab == 'character':
+            self._heading = 'Character source'
+            
             self._items.append(source.Rose_garden(10, y, width=KW + 10, 
                     e_acquire = lambda: contexts.Text.char,
                     before = un.history.save, after = meredith.mipsy.recalculate_all))
             y = self._items[-1].bounding_box()[3]
-        self._stack(y)
+        return y
 
-    def _reconstruct_channel_properties(self):
-        contexts.Text.done(self._tab)
-        # ALWAYS REQUIRES CALL TO _stack()
+    def _channels_panel(self, y, KW):
         c = contexts.Text.c
-        
-        self._items = []
-        self._active_box_i = None
-        self._hover_box_ij = (None, None)
-        
-        y = 110
-        KW = self._KW
-        
-        self._items.append(kookies.Heading( 15, 70, KW, 30, 'Channel ' + str(c), upper=True))
+        ct = contexts.Text.ct
         
         if self._tab == 'channels':
+            self._heading = 'Channel ' + str(c)
             if c is not None:
                 self._items.append(kookies.Integer_field( 15, y, KW, 
                         callback = lambda page, C: (caramel.delight.TRACT.channels.channels[C].set_page(page), caramel.delight.TRACT.deep_recalculate()), 
@@ -405,23 +397,19 @@ class Properties(_Properties_panel):
                         name = 'PAGE' ))
                 y += 30
             
-        self._stack(y)
+        return y
         
     def _swap_reconstruct(self, to):
-        width = 160
-
         if to == 'text':
             tabs = (('page', 'M'), ('tags', 'T'), ('paragraph', 'P'), ('font', 'F'), ('character', 'C'))
             default = 2
-            self._tabstrip = kookies.Tabs(0, 20, width, 30, default=default, callback=self._tab_switch, signals=tabs)
-            self._tab = tabs[default][0]
-            self._reconstruct = self._reconstruct_text_properties
+            self._panel = self._text_panel
 
         elif to == 'channels':
-            tabs = (('channels', 'C'), ('', '?'))
+            tabs = (('channels', 'C'),)
             default = 0
-            self._tabstrip = kookies.Tabs(0, 20, width, 30, default=default, callback=self._tab_switch, signals=tabs)
-            self._tab = tabs[default][0]
-            self._reconstruct = self._reconstruct_channel_properties
+            self._panel = self._channels_panel
         
+        self._tabstrip = kookies.Tabs(0, 20, 32, 30, default=default, callback=self._tab_switch, signals=tabs)
+        self._tab = tabs[default][0]
         self._dy = 0

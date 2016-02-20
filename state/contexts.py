@@ -1,53 +1,57 @@
 from style import styles
-from edit import cursor
+from edit import cursor, caramel
 from state import noticeboard
 
 class Text_context(object):
     def __init__(self):
-        self._previous_p = None
-        self.paragraph = None
-        self._FSTYLE = None
+        self.pp = None
+        self.p = None
+        self.f = None
+        self.char = None
+        
+        self.c = None
+        
+        self.changed = set()
+
+    def done(self, U):
+        if U in self.changed:
+            self.changed.remove(U)
 
     def update(self):
         PP, FSTYLE = cursor.fcursor.styling_at()
-        P = (PP.P, PP.EP)
-        if PP is not self.paragraph:
-            print('update paragraph context')
-            self.paragraph =  PP
-            
-            if P != self._previous_p:
-                print('update parastyle context')
-                self._previous_p = P
-                Parastyle.update(PP)
-            noticeboard.refresh_properties_stack.push_change()
+        C = cursor.fcursor.FTX.text[cursor.fcursor.i]
+        
+        if PP is not self.pp:
+            self.changed.update({'paragraph'})
+            self.pp = PP
+            self.p = styles.PARASTYLES.project_p(PP)
+        
+        if FSTYLE != self.f:
+            self.changed.update({'font'})
+            self.f = FSTYLE
+        
+        if C is not self.char:
+            self.changed.update({'character'})
+            self.char = C
 
-        if self._FSTYLE != FSTYLE:
-            print('update font context')
-            self._FSTYLE = FSTYLE
-            Fontstyle.update(FSTYLE)
-            noticeboard.refresh_properties_stack.push_change()
+    def update_channels(self, c):
+        self.changed.update({'channels'})
+        self.c = c
 
     def update_force(self):
-        PP, self._FSTYLE = cursor.fcursor.styling_at()
-        self.paragraph =  PP
-        self._previous_p = None
-        Parastyle.update(PP)
-        Fontstyle.update(self._FSTYLE)
-        noticeboard.refresh_properties_stack.push_change()
-
-class Paragraph_context(object):
-    def __init__(self):
-        pass
-    def update(self, PP):
-        self.parastyle = styles.PARASTYLES.project_p(PP)
-
-class Font_context(object):
-    def __init__(self):
-        self.fontstyle = None
+        PP, FSTYLE = cursor.fcursor.styling_at()
+        C = cursor.fcursor.FTX.text[cursor.fcursor.i]
+        
+        self.changed.update({'paragraph'})
+        self.pp = PP
+        self.p = styles.PARASTYLES.project_p(PP)
     
-    def update(self, FSTYLE):
-        self.fontstyle = FSTYLE
+        self.changed.update({'font'})
+        self.f = FSTYLE
+    
+        self.changed.update({'character'})
+        self.char = C
+        
+        self.c = caramel.delight.C()
 
-Fontstyle = Font_context()
-Parastyle = Paragraph_context()
 Text = Text_context()

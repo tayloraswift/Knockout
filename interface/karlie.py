@@ -4,7 +4,7 @@ from itertools import chain
 from state import constants, contexts, noticeboard
 from style import styles
 from interface import kookies, ui, source
-from edit import ops, caramel, cursor
+from edit import ops, caramel
 from model import meredith
 from IO import un, kevin
 
@@ -13,9 +13,9 @@ def _create_f_field(TYPE, x, y, width, attribute, after, name='', **kwargs):
         z_y = y
     else:
         z_y = y - 7
-    V_A = lambda A: styles.PARASTYLES.active.layerable.active.F.attributes[A] if A in styles.PARASTYLES.active.layerable.active.F.attributes else contexts.Fontstyle.fontstyle[A]
+    V_A = lambda A: styles.PARASTYLES.active.layerable.active.F.attributes[A] if A in styles.PARASTYLES.active.layerable.active.F.attributes else contexts.Text.f[A]
     ZI = kookies.Z_indicator(x, y, 10, height=24, 
-            get_projection = lambda: contexts.Fontstyle.fontstyle, 
+            get_projection = lambda: contexts.Text.f, 
             get_attributes = lambda LIB: LIB.active.F.attributes, 
             A = attribute, 
             copy_value = lambda A: ops.f_set_attribute(V_A(A), A), 
@@ -34,9 +34,9 @@ def _create_p_field(TYPE, x, y, width, attribute, after, name='', **kwargs):
         z_y = y
     else:
         z_y = y - 7
-    V_A = lambda A: styles.PARASTYLES.active.attributes[A] if A in styles.PARASTYLES.active.attributes else contexts.Parastyle.parastyle[A]
+    V_A = lambda A: styles.PARASTYLES.active.attributes[A] if A in styles.PARASTYLES.active.attributes else contexts.Text.p[A]
     ZI = kookies.Z_indicator(x, y, 10, height=24, 
-            get_projection = lambda: contexts.Parastyle.parastyle, 
+            get_projection = lambda: contexts.Text.p, 
             get_attributes = lambda LIB: LIB.active.attributes, 
             A = attribute, 
             copy_value = lambda A: ops.p_set_attribute(V_A(A), A), 
@@ -115,7 +115,7 @@ class _Properties_panel(ui.Cell):
         self._reconstruct()
     
     def synchronize(self):
-        contexts.Text.update_force()
+        contexts.Text.update()
         for item in self._items:
             item._SYNCHRONIZE()
         
@@ -128,10 +128,11 @@ class _Properties_panel(ui.Cell):
         cr.fill()
         
         # check if entries need restacking
-        if noticeboard.refresh_properties_stack.should_refresh():
-            mode = noticeboard.refresh_properties_type.should_refresh()
-            if mode[0]:
-                self._swap_reconstruct(mode[1])
+        ref, mode = noticeboard.refresh_properties_type.should_refresh()
+        if ref:
+            self._swap_reconstruct(mode)
+            self._reconstruct()
+        elif self._tab in contexts.Text.changed:
             self._reconstruct()
         
         hover_box = self._hover_box_ij[0]
@@ -249,6 +250,7 @@ class Properties(_Properties_panel):
     def _reconstruct_text_properties(self):
         # ALWAYS REQUIRES CALL TO _stack()
         print('reconstruct')
+        contexts.Text.done(self._tab)
         
         self._items = []
         self._active_box_i = None
@@ -275,7 +277,7 @@ class Properties(_Properties_panel):
                                 before = un.history.save, after = lambda: (styles.PARASTYLES.update_f(), meredith.mipsy.recalculate_all(), self.synchronize())))
                     y += 150
 
-                    _after_ = lambda: (styles.PARASTYLES.update_f(), meredith.mipsy.recalculate_all(), contexts.Fontstyle.update(cursor.fcursor.styling_at()[1]), self._reconstruct())
+                    _after_ = lambda: (styles.PARASTYLES.update_f(), meredith.mipsy.recalculate_all(), contexts.Text.update(), self._reconstruct())
                     if styles.PARASTYLES.active.layerable.active.F is None:
                         self._items.append(kookies.New_object_menu(15, y, KW,
                                     value_push = ops.link_fontstyle, 
@@ -301,13 +303,13 @@ class Properties(_Properties_panel):
                         y += 45*len(props)
 
             else:
-                self._items.append(kookies.Heading( 15, 90, KW, 30, '', upper=True))
+                self._items.append(kookies.Heading(15, 90, KW, 30, '', upper=True))
         
         elif self._tab == 'paragraph':
-            self._items.append(kookies.Heading( 15, 70, KW, 30, ', '.join(T.name if V == 1 else T.name + ' (' + str(V) + ')' for T, V in contexts.Text.paragraph.P.items() if V), upper=True))
+            self._items.append(kookies.Heading( 15, 70, KW, 30, ', '.join(T.name if V == 1 else T.name + ' (' + str(V) + ')' for T, V in contexts.Text.pp.P.items() if V), upper=True))
 
             self._items.append(kookies.Para_control_panel(15, y, KW, 280, 
-                    paragraph = contexts.Text.paragraph, 
+                    paragraph = contexts.Text.pp, 
                     display = _print_counter,
                     library = styles.PARASTYLES,
                     before = un.history.save, after = lambda: (styles.PARASTYLES.update_p(), meredith.mipsy.recalculate_all(), self._reconstruct()), refresh = self._reconstruct))
@@ -361,7 +363,7 @@ class Properties(_Properties_panel):
             
         elif self._tab == 'page':
             self._items.append(kookies.Heading( 15, 70, KW, 30, '', upper=True))
-            self._items.append(kookies.Integer_field( 15, y, 300, 
+            self._items.append(kookies.Integer_field( 15, y, KW, 
                         callback = meredith.page.set_width,
                         value_acquire = lambda: meredith.page.WIDTH,
                         name = 'WIDTH' ))
@@ -375,14 +377,15 @@ class Properties(_Properties_panel):
         
         elif self._tab == 'character':
             self._items.append(source.Rose_garden(10, y, width=KW + 10, 
-                    e_acquire = lambda: cursor.fcursor.text[cursor.fcursor.i],
+                    e_acquire = lambda: contexts.Text.char,
                     before = un.history.save, after = meredith.mipsy.recalculate_all))
             y = self._items[-1].bounding_box()[3]
         self._stack(y)
 
     def _reconstruct_channel_properties(self):
+        contexts.Text.done(self._tab)
         # ALWAYS REQUIRES CALL TO _stack()
-        c = caramel.delight.C()
+        c = contexts.Text.c
         
         self._items = []
         self._active_box_i = None

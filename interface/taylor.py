@@ -539,7 +539,6 @@ class Document_view(ui.Cell):
     def change_mode(self, mode):
         self._mode = mode
         CText.update()
-        noticeboard.refresh_properties_stack.push_change()
         noticeboard.refresh_properties_type.push_change(mode)
     
     def _print_sorted(self, cr, classed_glyphs):

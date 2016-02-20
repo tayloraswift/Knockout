@@ -109,7 +109,6 @@ class Rose_garden(Base_kookie):
     def type_box(self, name, char):
         changed = False
         output = None
-        print(name, char)
         if name in ['BackSpace', 'Delete']:
             # delete selection
             if self._i != self._j:

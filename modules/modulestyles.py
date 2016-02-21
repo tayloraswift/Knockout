@@ -14,10 +14,11 @@ class MS_Library(dict):
     
     def turnover(self):
         D = {}
+        FTAGS = styles.FTAGS
         for module in self._modules:
             ns = module.namespace
             E = module.DNA.copy()
             if ns in S:
                 E.update(S[ns])
-            D[module] = {T: Counter({styles.FTAGS[N]: C for N, C in V.items()}) for T, V in E.items()}
+            D[module] = {T: Counter(dict((FTAGS[N], C) for N, C in V.items() if N in FTAGS)) for T, V in E.items()}
         dict.__init__(self, D)

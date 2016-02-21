@@ -10,6 +10,7 @@ from IO import kevin, un
 from typing import typing
 from interface import karlie, taylor, poptarts
 from modules import modulestyles, INLINE, BLOCK
+from elements.elements import Mod_element
 
 def save():
     HEADER = '<head><meta charset="UTF-8"></head>\n<title>' + constants.filename + '</title>\n\n'
@@ -66,7 +67,7 @@ def load(name):
     # unpack styles
     styles.daydream()
     styles.faith(DATA)
-    modulestyles.MSL = modulestyles.MS_Library(INLINE + BLOCK)
+    Mod_element.MSL = modulestyles.MS_Library(INLINE, BLOCK)
     
     # set up page, tract model, page grid objects
     meredith.page = page.Page(DATA['page'])

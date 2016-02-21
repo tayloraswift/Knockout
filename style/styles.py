@@ -80,7 +80,10 @@ class P_Library(_Active_list):
         _Active_list.__init__(self, active_i, (cast_parastyle(P.copy(), {PTAGS[T]: V for T, V in count.items()}) for P, count in D))
     
     def project_p(self, PP):
-        P = PP.P
+        if PP.I_ is None:
+            P = PP.P
+        else:
+            P = PP.P + PP.I_
         EP = PP.EP
         H = hash(frozenset(P.items()))
         if EP:
@@ -102,7 +105,10 @@ class P_Library(_Active_list):
             return projection
     
     def project_f(self, PP, F):
-        P = PP.P
+        if PP.I_ is None:
+            P = PP.P
+        else:
+            P = PP.P + PP.I_
         EP = PP.EP
         H = 22 * hash(frozenset(P.items())) + hash(frozenset(F.items())) # we must give paragraph a different factor if a style has the same name as a fontstyle
         if EP:

@@ -12,6 +12,7 @@ class Paragraph(object):
             self.EP = DB_Parastyle()
         else:
             self.EP = element
+        self.I_ = None
     
     def __str__(self):
         return '<p>'
@@ -82,7 +83,7 @@ class Mod_element(object):
         self._DESR = deserialize
         self._SER = ser
         self._load(L)
-
+    
     def transfer(self, B):
         try:
             E = self._DESR(B)
@@ -90,6 +91,11 @@ class Mod_element(object):
             return False
         self._load(E[0]._tree) #yes, we are building an entirely new object and taking its image
         return True
+
+    def _modstyles(self, X, * tags):
+        modstyles = self.MSL[self.__class__]
+        
+        return (X + modstyles[tag] for tag in tags)
 
 class Block_element(Mod_element):
     namespace = '_undef_block'

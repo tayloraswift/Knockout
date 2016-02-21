@@ -2,8 +2,6 @@ from model.cat import cast_mono_line, calculate_vmetrics
 from IO.xml import print_attrs
 from elements.elements import Inline_element
 
-from modules import modulestyles
-
 _namespace = 'mod:fraction'
 
 class Fraction(Inline_element):
@@ -35,14 +33,10 @@ class Fraction(Inline_element):
         cr.set_source_rgba( * self._color)
         cr.rectangle(x + self._vx, y + self._vinc_y, self._fracwidth, 0.5)
         cr.fill()
-
-    def _modstyles(self, F):
-        modstyles = modulestyles.MSL[self.__class__]
-        return F + modstyles['numerator'], F + modstyles['denominator']
         
     def cast_inline(self, x, y, leading, PP, F, FSTYLE):
         self._color = FSTYLE['color']
-        F_numerator, F_denominator = self._modstyles(F)
+        F_numerator, F_denominator = self._modstyles(F, 'numerator', 'denominator')
         
         ascent, descent = FSTYLE.vmetrics()
         vy = FSTYLE['fontsize'] * 0.25

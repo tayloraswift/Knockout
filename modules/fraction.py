@@ -1,6 +1,7 @@
 from model.cat import cast_mono_line, calculate_vmetrics
 from IO.xml import print_attrs
 from elements.elements import Inline_element
+from model.olivia import Inline
 
 _namespace = 'mod:fraction'
 
@@ -17,17 +18,6 @@ class Fraction(Inline_element):
         denominator = next(E for tag, E in L[1] if tag[0] == self.namespace + ':denominator')
         
         self._INLINE = [numerator, denominator]
-    
-    def represent(self, indent):
-        lines = [[indent, print_attrs( * self._tree[0])]]
-        for tag, E in self._tree[1]:
-            content = self._SER(E, indent + 2)
-            content[0] = [indent + 1, print_attrs( * tag) + content[0][1]]
-            content[-1][1] += '</' + tag[0] + '>'
-            
-            lines.extend(content)
-        lines.append([indent, '</' + self.namespace + '>'])
-        return lines
 
     def _draw_vinculum(self, cr, x, y):
         cr.set_source_rgba( * self._color)
@@ -68,13 +58,10 @@ class Fraction(Inline_element):
     def __len__(self):
         return 11
 
-class _MInline(object):
+class _MInline(Inline):
     def __init__(self, lines, vinculum, width, A, D):
-        self._LINES = lines
+        Inline.__init__(self, lines, width, A, D)
         self._draw_vinculum = vinculum
-        self.width = width
-        self.ascent = A
-        self.descent = D
     
     def deposit_glyphs(self, repository, x, y):
         for line in self._LINES:

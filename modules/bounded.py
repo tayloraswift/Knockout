@@ -2,6 +2,7 @@ from model.cat import cast_mono_line, calculate_vmetrics
 from IO.xml import print_attrs
 from elements.elements import Inline_element
 from edit.paperairplanes import interpret_int
+from model.olivia import Inline
 
 _namespace = 'mod:bounded'
 
@@ -25,18 +26,7 @@ class Bounded(Inline_element):
             self.cast_inline = self._cast_inline_display
         
         self._INLINE = [symbol, a, b]
-    
-    def represent(self, indent):
-        lines = [[indent, print_attrs( * self._tree[0])]]
-        for tag, E in self._tree[1]:
-            content = self._SER(E, indent + 2)
-            content[0] = [indent + 1, print_attrs( * tag) + content[0][1]]
-            content[-1][1] += '</' + tag[0] + '>'
-            
-            lines.extend(content)
-        lines.append([indent, '</' + self.namespace + '>'])
-        return lines
-        
+
     def _cast_inline_inline(self, x, y, leading, PP, F, FSTYLE):
         F_symbol, F_bottom, F_top = self._modstyles(F, 'symbol', 'bottom', 'top')
 
@@ -66,7 +56,7 @@ class Bounded(Inline_element):
         ascent = y - b['y'] + b_asc
         descent = y - a['y'] + a_desc
         
-        return _MInline([symbol, a, b], width, ascent, descent)
+        return Inline([symbol, a, b], width, ascent, descent)
 
     def _cast_inline_display(self, x, y, leading, PP, F, FSTYLE):
         F_symbol, F_bottom, F_top = self._modstyles(F, 'symbol', 'bottom', 'top')
@@ -96,18 +86,7 @@ class Bounded(Inline_element):
         ascent = symbol_asc - b_desc + b_asc
         descent = symbol_desc + a_desc - a_asc
         
-        return _MInline([symbol, a, b], width, ascent, descent)
+        return Inline([symbol, a, b], width, ascent, descent)
         
     def __len__(self):
         return 9
-
-class _MInline(object):
-    def __init__(self, lines, width, A, D):
-        self._LINES = lines
-        self.width = width
-        self.ascent = A
-        self.descent = D
-    
-    def deposit_glyphs(self, repository, x, y):
-        for line in self._LINES:
-            line.deposit(repository, x, y)

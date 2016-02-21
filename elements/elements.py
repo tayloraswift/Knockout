@@ -105,3 +105,14 @@ class Block_element(Mod_element):
 
 class Inline_element(Mod_element):
     namespace = '_undef_inline'
+
+    def represent(self, indent):
+        lines = [[indent, print_attrs( * self._tree[0])]]
+        for tag, E in self._tree[1]:
+            content = self._SER(E, indent + 2)
+            content[0] = [indent + 1, print_attrs( * tag) + content[0][1]]
+            content[-1][1] += '</' + tag[0] + '>'
+            
+            lines.extend(content)
+        lines.append([indent, '</' + self.namespace + '>'])
+        return lines

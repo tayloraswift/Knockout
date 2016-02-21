@@ -12,6 +12,17 @@ class _Empty_F(object):
     def __getitem__(self, i):
         return None
 
+class Inline(object):
+    def __init__(self, lines, width, A, D):
+        self._LINES = lines
+        self.width = width
+        self.ascent = A
+        self.descent = D
+    
+    def deposit_glyphs(self, repository, x, y):
+        for line in self._LINES:
+            line.deposit(repository, x, y)
+
 class Block(dict):
     def __init__(self, FLOW, top, bottom, left, right, PP):
         self._FLOW = FLOW

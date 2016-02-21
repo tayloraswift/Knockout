@@ -206,14 +206,11 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False, overlay=N
         # stamp line data
         LINE['R'] = R # line number (within paragraph)
         LINE['left'] = x1
-        if PSTYLE['align'] > 0:
+        if not PSTYLE['align']:
             LINE['x'] = x1
         else:
             rag = LINE['width'] - LINE['advance']
-            if PSTYLE['align']:
-                LINE['x'] = x1 + rag
-            else:
-                LINE['x'] = x1 + rag/2
+            LINE['x'] = x1 + rag * PSTYLE['align']
         LINE['y'] = y
         LINE['l'] = l
         LINE['c'] = c

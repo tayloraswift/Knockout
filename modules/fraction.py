@@ -1,5 +1,4 @@
 from model.cat import cast_mono_line, calculate_vmetrics
-from IO.xml import print_attrs
 from elements.elements import Inline_element
 from model.olivia import Inline
 
@@ -43,10 +42,9 @@ class Fraction(Inline_element):
         
         numerator['x'] = x + (fracwidth - nwidth)/2
         numerator['y'] = y - vy + ndescent
-        numerator['hyphen'] = None
+        
         denominator['x'] = x + (fracwidth - dwidth)/2
         denominator['y'] = y - vy + dascent
-        denominator['hyphen'] = None
         
         fascent = vy + nascent - ndescent
         fdescent = vy - dascent + ddescent

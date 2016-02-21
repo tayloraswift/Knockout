@@ -7,7 +7,49 @@
 </section>
 
 <section>
-<p>This typesetting editor is an application I have been developing for over half a year. The codebase was written from scratch in Python 3, and uses its own UI toolkit which I also wrote. Although still in alpha stages, the codebase can be synced from &lt;<f class="link">https://github.com/kelvin13/shifty-octocat</f class="link">&gt;, where it will work out of the box on any Linux installation.</p>
+<p>This typesetting editor is an application I have been developing for over half a year. The codebase was written from scratch in Python 3</p>
+
+<p style="{'leading': 30, 'margin_bottom': 25}">own √ <mod:root>
+    <mod:root:index>3</mod:root:index>
+    <mod:root:radicand>U</mod:root:radicand>
+</mod:root> + <mod:root>
+    <mod:root:index>3</mod:root:index>
+    <mod:root:radicand><mod:fraction>
+            <mod:fraction:numerator><em>x</em></mod:fraction:numerator>
+            <mod:fraction:denominator><em>n</em></mod:fraction:denominator>
+        </mod:fraction></mod:root:radicand>
+</mod:root> + <mod:root>
+    <mod:root:index>3</mod:root:index>
+    <mod:root:radicand><mod:fraction>
+            <mod:fraction:numerator><mod:bounded align="1">
+                    <mod:bounded:symbol>∫</mod:bounded:symbol>
+                    <mod:bounded:bottom>13</mod:bounded:bottom>
+                    <mod:bounded:top>22 + <mod:fraction>
+                            <mod:fraction:numerator><em>e</em></mod:fraction:numerator>
+                            <mod:fraction:denominator>2</mod:fraction:denominator>
+                        </mod:fraction></mod:bounded:top>
+                </mod:bounded></mod:fraction:numerator>
+            <mod:fraction:denominator><em>n</em></mod:fraction:denominator>
+        </mod:fraction></mod:root:radicand>
+</mod:root>+ <mod:root>
+    <mod:root:index>3</mod:root:index>
+    <mod:root:radicand><mod:fraction>
+            <mod:fraction:numerator><em>abc</em> + <mod:fraction>
+                    <mod:fraction:numerator><em>e</em></mod:fraction:numerator>
+                    <mod:fraction:denominator><em>n</em></mod:fraction:denominator>
+                </mod:fraction></mod:fraction:numerator>
+            <mod:fraction:denominator><mod:bounded align="1">
+                    <mod:bounded:symbol>∫</mod:bounded:symbol>
+                    <mod:bounded:bottom>13</mod:bounded:bottom>
+                    <mod:bounded:top>22 + <mod:fraction>
+                            <mod:fraction:numerator><em>e</em></mod:fraction:numerator>
+                            <mod:fraction:denominator>2</mod:fraction:denominator>
+                        </mod:fraction></mod:bounded:top>
+                </mod:bounded></mod:fraction:denominator>
+        </mod:fraction></mod:root:radicand>
+</mod:root>from</p>
+
+<p>&lt;<f class="link">https://github.com/kelvin13/shifty-octocat</f class="link">&gt;, where it will work out of the box on any Linux installation.</p>
 
 <p style="{'leading': 40, 'margin_bottom': 60}"><mod:bounded align="1">
     <mod:bounded:symbol>∫</mod:bounded:symbol>
@@ -71,7 +113,7 @@
     <mod:fraction:denominator><em>x</em></mod:fraction:denominator>
 </mod:fraction></p>
 
-<p style="{'margin_left': 20, 'fontclasses': (0, [('Italic', {})]), 'margin_top': 6}">—Kelvin Ma</p>
+<p style="{'margin_left': 20, 'margin_top': 6, 'fontclasses': (0, [('Italic', {})])}">—Kelvin Ma</p>
 
 <p class="h2">What is additive styling?</p>
 
@@ -105,7 +147,7 @@
 
 <p>Additive styling is the idea that multiple “building block” text styles can be defined and combined to create the visual styles seen on the page. For exam</p>
 
-<table hrules="1" celltop="0" rulewidth="1" distr="2, 3, 3" rulemargin="2" cellbottom="7">
+<table distr="2, 3, 3" hrules="1" celltop="0" cellbottom="7" rulemargin="2" rulewidth="1">
     <tr>
         <td>
             <p>Country</p>
@@ -320,8 +362,8 @@
                 'Table': {'path': 'fonts/FiraSans-Book.otf', 'tracking': 0.5},
                 'Table bold': {'path': 'fonts/FiraSans-SemiBold.otf'},
                 'h3': {'capitals': True, 'fontsize': 16, 'path': 'fonts/FiraSans-Book.otf', 'tracking': 1}},
- 'FTAGLIST': [('sub', ['small']), ('sup', ['small']), ('caption', []), ('emphasis', []), ('strong', []), ('link', []), ('big', [])],
- 'PARASTYLES': (8,
+ 'FTAGLIST': [('link', []), ('emphasis', []), ('big', []), ('caption', []), ('sup', ['small']), ('sub', ['small']), ('strong', [])],
+ 'PARASTYLES': (1,
                 [({'fontclasses': (2, [('Black', {}), ('Subscript', {'sub': 1}), ('Superscript', {'sup': 1})])}, {}),
                  ({'fontclasses': (9,
                                    [('Regular', {}),
@@ -346,8 +388,8 @@
                  ({'align': 0.8, 'fontclasses': (0, [('Table bold', {})])}, {'tableleft': 1}),
                  ({'align': 0.5, 'align_to': '', 'fontclasses': (None, [('Table bold', {}), ('Capitals', {})]), 'margin_bottom': 0}, {'tablehead': 1}),
                  ({'fontclasses': (1, [('Small', {}), ('Table bold', {})]), 'leading': 16}, {'tablehead units': 1})]),
- 'PTAGLIST': [('tableleft', []), ('tablehead', []), ('h2', []), ('body', []), ('tablecell', []), ('gray', []), ('tablehead units', []), ('h3', []), ('h1', [])],
- 'contexts': {'channels': {'c': 2, 'p': 2, 't': 1}, 'text': {'i': 848, 'j': 848, 'p': 2, 't': 1}},
+ 'PTAGLIST': [('tablehead units', []), ('h1', []), ('tablehead', []), ('tableleft', []), ('body', []), ('h3', []), ('h2', []), ('tablecell', []), ('gray', [])],
+ 'contexts': {'channels': {'c': 2, 'p': 2, 't': 1}, 'text': {'i': 141, 'j': 141, 'p': 0, 't': 1}},
  'grid': [[120, 480], [120, 480]],
  'outlines': ([(([[120, 120, False], [120, 200, False]], [[480, 120, False], [480, 200, False]]), 0)],
               [(([[120, 210, False], [120, 480, False]], [[480, 210, False], [480, 480, False]]), 0),
@@ -360,5 +402,5 @@
                ([[[120, 120, False], [120, 480, False]], [[480, 120, False], [480, 480, False]]], 6),
                ([[[120, 120, False], [120, 560, False]], [[480, 120, False], [480, 560, False]]], 7)]),
  'page': {'dimensions': (600, 600), 'dual': True},
- 'view': {'H': -125, 'Hc': 829.116943359375, 'K': -334, 'Kc': 497.55340576171875, 'Zoom': 11, 'mode': 'text'}}
+ 'view': {'H': -461, 'Hc': 391.25091552734375, 'K': -22, 'Kc': 246.23248291015625, 'Zoom': 15, 'mode': 'text'}}
 ############# -->

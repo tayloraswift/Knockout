@@ -4,6 +4,7 @@ from style import styles
 S= {'mod:bounded': {'symbol': {'big': 1},
                 'bottom': {'small': 1},
                 'top': {'small': 1}},
+    'mod:root': {'index': {'small': 1}},
     'table': {'table': {'tablecell': 1},
                 'thead': {'tablehead': 1},
                 'tleft': {'tableleft': 1}},

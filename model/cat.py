@@ -446,7 +446,9 @@ def cast_mono_line(letters, leading, PP, F):
             'leading': leading,
             
             'F': F,
-            'PP': PP
+            'PP': PP,
+            
+            'hyphen': None
             })
     
     # list that contains glyphs

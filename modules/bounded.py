@@ -1,5 +1,4 @@
 from model.cat import cast_mono_line, calculate_vmetrics
-from IO.xml import print_attrs
 from elements.elements import Inline_element
 from edit.paperairplanes import interpret_int
 from model.olivia import Inline
@@ -36,7 +35,6 @@ class Bounded(Inline_element):
         
         symbol['x'] = x
         symbol['y'] = y
-        symbol['hyphen'] = None
         
         symbol_asc, symbol_desc = calculate_vmetrics(symbol)
         symbol_fontsize = symbol['fstyle']['fontsize']
@@ -46,11 +44,10 @@ class Bounded(Inline_element):
         
         a['x'] = x + symbol['advance']
         a['y'] = y - symbol_desc
-        a['hyphen'] = None
+        
         b['x'] = x + symbol['advance'] + symbol_fontsize*0.1
         b['y'] = y - symbol_asc - b['fstyle']['fontsize']*0.1 + b['fstyle'].vmetrics()[0] #only align to unexpanded metrics
-        b['hyphen'] = None
-        
+               
         width = max(a['advance'] + a['x'], b['advance'] + b['x']) - symbol['x']
         
         ascent = y - b['y'] + b_asc
@@ -69,7 +66,6 @@ class Bounded(Inline_element):
 
         symbol['x'] = x + (width - symbol['advance']) / 2
         symbol['y'] = y
-        symbol['hyphen'] = None
 
         symbol_asc, symbol_desc = calculate_vmetrics(symbol)
         symbol_asc -= symbol['fstyle']['fontsize'] * 0.1
@@ -78,10 +74,9 @@ class Bounded(Inline_element):
         
         a['x'] = x + (width - a['advance']) / 2
         a['y'] = y - symbol_desc + a_asc
-        a['hyphen'] = None
+        
         b['x'] = x + (width - b['advance']) / 2
         b['y'] = y - symbol_asc + b_desc
-        b['hyphen'] = None
         
         ascent = symbol_asc - b_desc + b_asc
         descent = symbol_desc + a_desc - a_asc

@@ -140,6 +140,8 @@ class _Properties_panel(ui.Cell):
             self._reconstruct()
         elif self._tab in contexts.Text.changed:
             self._reconstruct()
+            if self._tab == 'character':
+                self._dy = 0
         
         hover_box = self._hover_box_ij[0]
 

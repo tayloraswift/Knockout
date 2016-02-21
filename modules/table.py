@@ -175,9 +175,13 @@ class _MBlock(Block):
         r = bisect.bisect(self._row_y, y)
         c = max(0, int((x - x1) // ((x2 - x1) / len(self._matrix[r]))))
         try:
-            return self._matrix[r][c]
+            O = self._matrix[r][c]
+            if O is None or not O.text:
+                print('Empty cell selected')
+                return self['i']
+            else:
+                return O
         except IndexError:
-            print('Empty cell selected')
             return self['i']
 
     def deposit(self, repository):

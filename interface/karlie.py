@@ -359,7 +359,7 @@ class Properties(_Properties_panel):
                 y = self._y_incr() + 20
 
                 props = [[(0, kookies.Numeric_field, 'leading', 'LEADING')],
-                        [(0, kookies.Numeric_field, 'align', 'ALIGN')],
+                        [(0, kookies.Numeric_field, 'align', 'ALIGN') , (0.6, kookies.Blank_space, 'align_to', 'ALIGN ON')],
                         [(0, kookies.Binomial_field, 'indent', 'INDENT', ('letter', 'K')) , (0.6, kookies.Enumerate_field, 'indent_range', 'FOR LINES')],
                         [(0, kookies.Numeric_field, 'margin_left', 'SPACE LEFT'), (0.5, kookies.Numeric_field, 'margin_right', 'SPACE RIGHT')],
                         [(0, kookies.Numeric_field, 'margin_top', 'SPACE BEFORE'), (0.5, kookies.Numeric_field, 'margin_bottom', 'SPACE AFTER')],

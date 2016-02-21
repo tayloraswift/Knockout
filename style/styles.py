@@ -333,6 +333,7 @@ def daydream():
             'margin_left': 0,
             'margin_right': 0,
             'margin_top': 0,
-            'align': 0})
+            'align': 0,
+            'align_to': ''})
 
     ISTYLES.update(_create_interface())

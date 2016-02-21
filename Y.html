@@ -79,7 +79,7 @@
 
 <p style="{'align': 0}">Subtitle</p>
 
-<mod:pie radius="60" class="h2">
+<mod:pie class="h2" radius="60">
     <mod:pie:slice color="#ff3085" prop="13">
         <p>A = <mod:fraction>
             <mod:fraction:numerator>abc + <mod:fraction>
@@ -113,12 +113,23 @@
         <td>
             <p>GDP</p>
             
-            <p class="body&tablehead units">(USD)</p>
+            <p class="body&tablehead units">Trillions USD</p>
         </td>
         <td>
             <p>Population</p>
             
-            <p class="body&tablehead units">(millions)</p>
+            <p class="body&tablehead units">millions</p>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <p>United States</p>
+        </td>
+        <td>
+            <p style="{'align': 0.4}">17.914</p>
+        </td>
+        <td>
+            <p>80.62</p>
         </td>
     </tr>
     <tr>
@@ -126,7 +137,7 @@
             <p>Britain</p>
         </td>
         <td>
-            <p>41,787.47</p>
+            <p style="{'align': 0.4}">2.678</p>
         </td>
         <td>
             <p>64.1</p>
@@ -137,7 +148,7 @@
             <p>France</p>
         </td>
         <td>
-            <p>42,503.30</p>
+            <p style="{'align': 0.4}">2.806</p>
         </td>
         <td>
             <p>66.03</p>
@@ -148,7 +159,7 @@
             <p>Germany</p>
         </td>
         <td>
-            <p>46,268.64</p>
+            <p style="{'align': 0.4}">3.73</p>
         </td>
         <td>
             <p>80.62</p>
@@ -170,7 +181,7 @@
 
 <p>Instead of “single” or “double” spacing, Vedit lets the writer specify the literal point size of the <strong>leading</strong>, or line height. This helps you predict the amount of space that text will take up, and helps you avoid text alignment headaches, since the spacing is always constant and measurable. </p>
 
-<p style="{'indent_range': {0, 1}, 'indent': (30, 1, 0)}"><strong>Indentation</strong> is powerful in Vedit. The lines over which it takes effect can be explicitly enumerated (in a relative count from the start of the paragraph), and it can be set in terms of the character positions of the first line. </p>
+<p style="{'indent': (30, 1, 0), 'indent_range': {0, 1}}"><strong>Indentation</strong> is powerful in Vedit. The lines over which it takes effect can be explicitly enumerated (in a relative count from the start of the paragraph), and it can be set in terms of the character positions of the first line. </p>
 
 <p style="{'indent': (0, -1, 4)}">—&gt;  This is very useful for creating <strong>hanging indents</strong>.</p>
 
@@ -250,7 +261,7 @@
         <td colspan="3">
             <p class="h2">Who doesn’t love Meredith Grey?</p>
             
-            <p style="{'leading': 200, 'fontclasses': (0, [('Italic', {}), ('Regular', {'emphasis': 1})]), 'align': 0}"><image src="meredith.png" width=200 />ab<em>c</em>d</p>
+            <p style="{'fontclasses': (0, [('Italic', {}), ('Regular', {'emphasis': 1})]), 'align': 0, 'leading': 200}"><image src="meredith.png" width=200 />ab<em>c</em>d</p>
             
             <p class="body&gray">(Taylor, evidently.)</p>
             
@@ -309,8 +320,8 @@
                 'Table': {'path': 'fonts/FiraSans-Book.otf', 'tracking': 0.5},
                 'Table bold': {'path': 'fonts/FiraSans-SemiBold.otf'},
                 'h3': {'capitals': True, 'fontsize': 16, 'path': 'fonts/FiraSans-Book.otf', 'tracking': 1}},
- 'FTAGLIST': [('link', []), ('sub', ['small']), ('big', []), ('emphasis', []), ('strong', []), ('caption', []), ('sup', ['small'])],
- 'PARASTYLES': (0,
+ 'FTAGLIST': [('strong', []), ('emphasis', []), ('link', []), ('caption', []), ('sup', ['small']), ('sub', ['small']), ('big', [])],
+ 'PARASTYLES': (8,
                 [({'fontclasses': (2, [('Black', {}), ('Subscript', {'sub': 1}), ('Superscript', {'sup': 1})])}, {}),
                  ({'fontclasses': (9,
                                    [('Regular', {}),
@@ -331,12 +342,12 @@
                  ({'fontclasses': (0, [('Subheading', {})]), 'leading': 24, 'margin_bottom': 10}, {'h2': 1}),
                  ({'align': 0.5, 'fontclasses': (0, [('h3', {})])}, {'h3': 1}),
                  ({'fontclasses': (0, [('Gray', {})])}, {'gray': 1}),
-                 ({'align': 0.5, 'fontclasses': (0, [('Table', {})]), 'margin_left': 10, 'margin_right': 10}, {'tablecell': 1}),
-                 ({'fontclasses': (0, [('Table bold', {})])}, {'tableleft': 1}),
-                 ({'fontclasses': (1, [('Table bold', {}), ('Capitals', {})]), 'margin_bottom': 0}, {'tablehead': 1}),
+                 ({'align': 0.5, 'align_to': '.', 'fontclasses': (0, [('Table', {})]), 'margin_left': 10, 'margin_right': 10}, {'tablecell': 1}),
+                 ({'align': 0.8, 'fontclasses': (0, [('Table bold', {})])}, {'tableleft': 1}),
+                 ({'align': 0.5, 'align_to': '', 'fontclasses': (None, [('Table bold', {}), ('Capitals', {})]), 'margin_bottom': 0}, {'tablehead': 1}),
                  ({'fontclasses': (1, [('Small', {}), ('Table bold', {})]), 'leading': 16}, {'tablehead units': 1})]),
- 'PTAGLIST': [('h3', []), ('body', []), ('gray', []), ('tablehead units', []), ('h1', []), ('tableleft', []), ('h2', []), ('tablehead', []), ('tablecell', [])],
- 'contexts': {'channels': {'c': 8, 'p': 7, 't': 1}, 'text': {'i': 971, 'j': 971, 'p': 2, 't': 1}},
+ 'PTAGLIST': [('tablehead units', []), ('tablecell', []), ('tableleft', []), ('body', []), ('h1', []), ('h2', []), ('tablehead', []), ('h3', []), ('gray', [])],
+ 'contexts': {'channels': {'c': 2, 'p': 2, 't': 1}, 'text': {'i': 873, 'j': 873, 'p': 2, 't': 1}},
  'grid': [[120, 480], [120, 480]],
  'outlines': ([(([[120, 120, False], [120, 200, False]], [[480, 120, False], [480, 200, False]]), 0)],
               [(([[120, 210, False], [120, 480, False]], [[480, 210, False], [480, 480, False]]), 0),
@@ -347,7 +358,7 @@
                ([[[120, 120, False], [120, 480, False]], [[300, 120, False], [70, 310, False], [290, 480, False]]], 5),
                ([[[360, 120, False], [160, 310, False], [360, 480, False]], [[410, 120, False], [590, 300, False], [410, 480, False]]], 5),
                ([[[120, 120, False], [120, 480, False]], [[480, 120, False], [480, 480, False]]], 6),
-               ([[[120, 120, True], [120, 560, False]], [[480, 120, True], [480, 560, False]]], 7)]),
+               ([[[120, 120, False], [120, 560, False]], [[480, 120, False], [480, 560, False]]], 7)]),
  'page': {'dimensions': (600, 600), 'dual': True},
- 'view': {'H': 225, 'Hc': 1376.85205078125, 'K': -381, 'Kc': 610.1928100585938, 'Zoom': 11, 'mode': 'text'}}
+ 'view': {'H': -417, 'Hc': 593.2384643554688, 'K': -537, 'Kc': 409.263916015625, 'Zoom': 14, 'mode': 'text'}}
 ############# -->

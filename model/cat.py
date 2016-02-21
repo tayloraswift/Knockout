@@ -206,11 +206,25 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False, overlay=N
         # stamp line data
         LINE['R'] = R # line number (within paragraph)
         LINE['left'] = x1
-        if not PSTYLE['align']:
-            LINE['x'] = x1
+        # alignment
+        if PSTYLE['align_to'] and LINE['GLYPHS']:
+            searchtext = LIQUID[i : i + len(LINE['GLYPHS'])]
+            ai = -1
+            for aligner in PSTYLE['align_to']:
+                try:
+                    ai = searchtext.index(aligner)
+                    break
+                except ValueError:
+                    continue
+            anchor = x1 + (x2 - x1) * PSTYLE['align']
+            LINE['x'] = anchor - LINE['_X_'][ai]
         else:
-            rag = LINE['width'] - LINE['advance']
-            LINE['x'] = x1 + rag * PSTYLE['align']
+            if not PSTYLE['align']:
+                LINE['x'] = x1
+            else:
+                rag = LINE['width'] - LINE['advance']
+                LINE['x'] = x1 + rag * PSTYLE['align']
+            
         LINE['y'] = y
         LINE['l'] = l
         LINE['c'] = c

@@ -448,6 +448,11 @@ class Properties(_Properties_panel):
             default = 0
             self._panel = self._channels_panel
         
+        else:
+            tabs = (('render', 'R'),)
+            default = 0
+            self._panel = lambda y, KW: 13
+        
         self._tabstrip = kookies.Tabs(0, 20, 32, 30, default=default, callback=self._tab_switch, signals=tabs)
         self._tab = tabs[default][0]
         self._dy = 0

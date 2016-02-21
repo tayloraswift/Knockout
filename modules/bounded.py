@@ -3,8 +3,6 @@ from IO.xml import print_attrs
 from elements.elements import Inline_element
 from edit.paperairplanes import interpret_int
 
-from modules import modulestyles
-
 _namespace = 'mod:bounded'
 
 class Bounded(Inline_element):
@@ -38,13 +36,9 @@ class Bounded(Inline_element):
             lines.extend(content)
         lines.append([indent, '</' + self.namespace + '>'])
         return lines
-    
-    def _modstyles(self, F):
-        modstyles = modulestyles.MSL[self.__class__]
-        return F + modstyles['symbol'], F + modstyles['bottom'], F + modstyles['top']
         
     def _cast_inline_inline(self, x, y, leading, PP, F, FSTYLE):
-        F_symbol, F_bottom, F_top = self._modstyles(F)
+        F_symbol, F_bottom, F_top = self._modstyles(F, 'symbol', 'bottom', 'top')
 
         symbol = cast_mono_line(self._INLINE[0], 13, PP, F_symbol)
         a = cast_mono_line(self._INLINE[1], 13, PP, F_bottom)
@@ -75,7 +69,7 @@ class Bounded(Inline_element):
         return _MInline([symbol, a, b], width, ascent, descent)
 
     def _cast_inline_display(self, x, y, leading, PP, F, FSTYLE):
-        F_symbol, F_bottom, F_top = self._modstyles(F)
+        F_symbol, F_bottom, F_top = self._modstyles(F, 'symbol', 'bottom', 'top')
 
         symbol = cast_mono_line(self._INLINE[0], 13, PP, F_symbol)
         a = cast_mono_line(self._INLINE[1], 13, PP, F_bottom)

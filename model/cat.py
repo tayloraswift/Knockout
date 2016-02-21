@@ -103,13 +103,14 @@ def typeset_chained(channels, LIQUID, c=0, y=None, LASTLINE = Glyphs_line({'j': 
 
     return SLUGS
 
-def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False):
+def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False, overlay=None):
     SLUGS = []
     l = INIT['l'] + 1
     if INIT['P_BREAK']:
         gap = True
     else:
         PP = INIT['PP']
+        PP.I_ = overlay
         F = INIT['F'].copy()
         R = INIT['R'] + 1
         PSTYLE = styles.PARASTYLES.project_p(PP)
@@ -126,7 +127,7 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False):
                 break
             if type(container) is Paragraph:
                 PP = container
-                _p_i_ = i
+                PP.I_ = overlay
                 PSTYLE = styles.PARASTYLES.project_p(PP)
                 
                 F = Counter()

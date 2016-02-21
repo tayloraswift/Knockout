@@ -1,6 +1,7 @@
 import bisect
 from itertools import chain
 
+from bulletholes.counter import TCounter as Counter
 from model.olivia import Atomic_text, Block
 from model.george import Swimming_pool
 from interface.base import accent
@@ -124,6 +125,7 @@ class Table(Block_element):
         return lines
 
     def fill(self, bounds, c, y):
+        P_table, = self._modstyles(Counter(), 'table')
         top = y
         row_y = []
         for r, row in enumerate(self.data):
@@ -131,7 +133,7 @@ class Table(Block_element):
             for cell in row:
                 # calculate percentages
                 cellbounds = TCell_container(bounds, cell.col/cellcount, (cell.col + cell.cs)/cellcount)
-                cell.cast(cellbounds, c, y)
+                cell.cast(cellbounds, c, y, P_table)
             y = _row_height(self.data, r, y)
             row_y.append(y)
         

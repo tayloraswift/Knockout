@@ -75,9 +75,9 @@ class Atomic_text(object):
         self._line_startindices = [line['i'] for line in self._SLUGS]
         self._line_yl = { cc: list(h[:2] for h in list(g)) for cc, g in groupby( ((LINE['y'], LINE['l'], LINE['c']) for LINE in self._SLUGS if LINE['GLYPHS']), key=lambda k: k[2]) }
 
-    def cast(self, bounds, c, y):
+    def cast(self, bounds, c, y, overlay=None):
         self._c = c
-        self._SLUGS[:] = typeset_liquid(bounds, self.text, {'j': 0, 'l': -1, 'P_BREAK': True}, 0, y, c, False)
+        self._SLUGS[:] = typeset_liquid(bounds, self.text, {'j': 0, 'l': -1, 'P_BREAK': True}, 0, y, c, False, overlay=overlay)
         if self._SLUGS:
             self.y = self._SLUGS[-1]['y']
         else:

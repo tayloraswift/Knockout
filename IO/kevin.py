@@ -94,7 +94,7 @@ class Minion(parser.HTMLParser):
             L = self._C.pop()
             if tag in modules:
                 O = self._C[-1][1]
-                O[-1] = modules[tag][0](L, deserialize, ser)
+                O[-1] = modules[tag](L, deserialize, ser)
 
     def handle_data(self, data):
         # this should be disabled on the last blob, unless we are sure the container is 'p'

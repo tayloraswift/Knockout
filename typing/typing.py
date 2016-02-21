@@ -1,7 +1,6 @@
 from itertools import chain
 import time
 
-from state import constants
 from style import styles
 from edit import cursor
 
@@ -10,8 +9,12 @@ from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image
 from IO import un, kevin
 
 class Keyboard(dict):
-    def __init__(self):
-        shortcuts = constants.shortcuts
+    def __init__(self, shortcuts):
+        self._shortcuts = shortcuts
+        self.turnover()
+
+    def turnover(self):
+        shortcuts = self._shortcuts
         _OPEN = set(k[0] for k in shortcuts)
         self._CLOSE = set(k[1] for k in shortcuts)
         self._special_names = set(_OPEN) | set(self._CLOSE)

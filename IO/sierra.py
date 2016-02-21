@@ -2,13 +2,14 @@ from pprint import pformat
 from ast import literal_eval
 
 from style import fonts, styles
-from state import constants
+from state import constants, noticeboard
 from state.contexts import Text
 from model import meredith, page
 from edit import cursor, caramel
 from IO import kevin, un
 from typing import typing
 from interface import karlie, taylor, poptarts
+from modules import modulestyles, INLINE, BLOCK
 
 def save():
     HEADER = '<head><meta charset="UTF-8"></head>\n<title>' + constants.filename + '</title>\n\n'
@@ -21,8 +22,10 @@ def save():
     
     grid = meredith.mipsy.page_grid
     textcontexts = cursor.fcursor.polaroid()
-    channelcontexts = {'t': meredith.mipsy.index(caramel.delight.TRACT),
-                    'c': caramel.delight.C(), 
+    
+    ct, c = caramel.delight.at()
+    channelcontexts = {'t': meredith.mipsy.index(ct),
+                    'c': c, 
                     'p': caramel.delight.PG
                     }
     
@@ -60,8 +63,10 @@ def load(name):
     else:
         raise FileNotFoundError
 
+    # unpack styles
     styles.daydream()
     styles.faith(DATA)
+    modulestyles.MSL = modulestyles.MS_Library(INLINE + BLOCK)
     
     # set up page, tract model, page grid objects
     meredith.page = page.Page(DATA['page'])
@@ -70,7 +75,7 @@ def load(name):
     # aim editor objects
     cursor.fcursor = cursor.FCursor(DATA['contexts']['text'])
     caramel.delight = caramel.Channels_controls(DATA['contexts']['channels'], poptarts.Sprinkles())
-    typing.keyboard = typing.Keyboard()
+    typing.keyboard = typing.Keyboard(constants.shortcuts)
     
     meredith.mipsy.recalculate_all()
     Text.update()
@@ -79,6 +84,7 @@ def load(name):
     un.history = un.UN() 
 
     taylor.becky = taylor.Document_view(save, DATA['view'])
+    noticeboard.refresh_properties_type.push_change(DATA['view']['mode'])
     karlie.klossy = karlie.Properties(DATA['view']['mode'], partition=1 )
 
     un.history.save()

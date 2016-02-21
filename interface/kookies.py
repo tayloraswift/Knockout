@@ -1,5 +1,5 @@
 import bisect
-from math import pi
+from math import pi, ceil
 from itertools import chain
 
 from style.styles import ISTYLES
@@ -35,6 +35,13 @@ def cross(cr, x, y):
     cr.rel_line_to(8, 8)
     cr.rel_move_to(0, -8)
     cr.rel_line_to(-8, 8)
+
+class Null(object):
+    def is_over_hover(a, b):
+        return False
+    
+    def is_over(a, b):
+        return False
 
 class Button(Base_kookie):
     def __init__(self, x, y, width, height, callback=None, string='', params=() ):
@@ -134,8 +141,8 @@ class Checkbox(Base_kookie):
 
 
 class Tabs(Base_kookie):
-    def __init__(self, x, y, width, height, default=0, callback=None, signals=() ):
-        Base_kookie.__init__(self, x, y, width, height, font=('strong',))
+    def __init__(self, x, y, cellwidth, height, default=0, callback=None, signals=() ):
+        Base_kookie.__init__(self, x, y, cellwidth * len(signals), height, font=('strong',))
         self._signals, self._strings = zip( * signals )
         
         self._callback = callback
@@ -146,11 +153,14 @@ class Tabs(Base_kookie):
         self._active = default
         
         self._construct()
+
+    def is_over(self, x, y):
+        return self._y <= y <= self._y_bottom and abs(x - self._x) <= self._width
     
     def _construct(self):
         self._button_width = self._width/len(self._strings)
         self._x_left = []
-        xo = self._x
+        xo = self._x - self._width // 2
         for string in self._strings:
             self._add_static_text(xo + self._button_width/2, self._y_bottom - self._height/2 + 5, string, align=0)
             self._x_left.append(int(round(xo)))
@@ -784,7 +794,7 @@ class Object_menu(Blank_space):
         cr.stroke()
 
 class _Enumerated(Base_kookie):
-    def __init__(self, x, y, width, height, itemheight, library, before, after, refresh, lcap = 0):
+    def __init__(self, x, y, width, itemheight, library, before, after, refresh, lcap = 0):
         self._itemheight = itemheight
         self._BEFORE = before
         self._AFTER = after
@@ -792,7 +802,7 @@ class _Enumerated(Base_kookie):
         
         self._LIBRARY = library
         self._LMAX = len(library) + lcap
-        Base_kookie.__init__(self, x, y, width, height, font=('strong',))
+        Base_kookie.__init__(self, x, y, width, itemheight * (self._LMAX + 1), font=('strong',))
 
     def hover(self, x, y):
         y -= self._y
@@ -803,117 +813,11 @@ class _Enumerated(Base_kookie):
         j = self._sdkeys[bisect.bisect(self._subdivisions, x)]
         return i, j
 
-class Subset_table(_Enumerated):
-    def __init__(self, x, y, width, height, datablock, superset, before=lambda: None, after=lambda: None, refresh=lambda: None):
-
-        _Enumerated.__init__(self, x, y, width, height, itemheight=26, library=superset, before=before, after=after, refresh=refresh, lcap = -1)
-
-        self._DB = datablock
-
-        # set hover function equal to press function
-        self.is_over_hover = self.is_over
-
-        self._SYNCHRONIZE = self._ACQUIRE_REPRESENT
-        self._SYNCHRONIZE()
-        
-        self._make_sd([(x + width - 25, 1)], 4)
-
-    def _ACQUIRE_REPRESENT(self):
-        self._map = list(self._LIBRARY.values())
-        
-        self._texts = []
-        if self._map:
-            self._map.sort(key=lambda k: k.name)
-            for i, l in enumerate(self._map):
-                self._add_static_text(self._x + 10, self._y + self._itemheight*i + 17, l.name, align=1)
-    
-    def focus(self, x, y):
-        F, C = self.hover(x, y)
-
-        key = self._map[F]
-        if C == 1 and key in self._DB.elements:
-            self._DB.active = self._DB.elements[key]
-            self._AFTER()
-
-        elif C == 4:
-            self._BEFORE()
-            if key in self._DB.elements:
-                self._DB.delete_slot(key)
-            else:
-                self._DB.add_slot(key)
-            self._SYNCHRONIZE()
-            self._AFTER()
-    
-    def draw(self, cr, hover=(None, None)):
-        self._render_fonts(cr)
-        cr.set_line_width(1.5)
-        y1 = self._y
-        
-        for i, l in enumerate(self._texts):
-            key = self._map[i]
-            if key in self._DB.elements:
-                if self._DB.elements[key] is self._DB.active:
-                    cr.set_source_rgb( * accent)
-
-                    radius = 5
-
-                    y2 = y1 + self._itemheight
-                    cr.arc(self._x + radius, y1 + radius, radius, 2*(pi/2), 3*(pi/2))
-                    cr.arc(self._x_right - radius, y1 + radius, radius, 3*(pi/2), 4*(pi/2))
-                    cr.arc(self._x_right - radius, y2 - radius, radius, 0*(pi/2), 1*(pi/2))
-                    cr.arc(self._x + radius, y2 - radius, radius, 1*(pi/2), 2*(pi/2))
-                    cr.close_path()
-
-                    cr.fill()
-
-                    if hover[1] == (i, 4):
-                        cr.set_source_rgba(1, 1, 1, 0.9)
-                    else:
-                        cr.set_source_rgb(1, 1, 1)
-                    cr.arc(self._x_right - 15, y1 + 13, 6, 0, 2*pi)
-                    cr.fill()
-
-                    cr.set_source_rgb(1, 1, 1)
-                    
-                elif hover[1] is not None and hover[1][0] == i:
-                    if hover[1][1] == 4:
-                        cr.set_source_rgb( * accent)
-                    else:
-                        cr.set_source_rgba(0, 0, 0, 0.7)
-
-                    cr.arc(self._x_right - 15, y1 + 13, 6, 0, 2*pi)
-                    cr.fill()
-                    cr.set_source_rgb( * accent)
-
-                else:
-                    cr.set_source_rgba(0, 0, 0, 0.7)
-                    cr.arc(self._x_right - 15, y1 + 13, 6, 0, 2*pi)
-                    cr.fill()
-            else:
-                if hover[1] is not None and hover[1][0] == i:
-                    if hover[1][1] == 4:
-                        cr.set_source_rgb( * accent)
-                    else:
-                        cr.set_source_rgba(0, 0, 0, 0.7)
-
-                    cr.arc(self._x_right - 15, y1 + 13, 5.5, 0, 2*pi)
-                    cr.stroke()
-                    cr.set_source_rgba(0, 0, 0, 0.4)
-
-                else:
-                    cr.set_source_rgba(0, 0, 0, 0.7)
-                    cr.arc(self._x_right - 15, y1 + 13, 5.5, 0, 2*pi)
-                    cr.stroke()
-                    cr.set_source_rgba(0, 0, 0, 0.4)
-                
-            cr.show_glyphs(l)
-            y1 += self._itemheight
-
 class Unordered(_Enumerated):
-    def __init__(self, x, y, width, height, library, display=lambda: None, before=lambda: None, after=lambda: None, refresh=lambda: None):
+    def __init__(self, x, y, width, library, display=lambda: None, before=lambda: None, after=lambda: None, refresh=lambda: None):
         self._display = display
 
-        _Enumerated.__init__(self, x, y, width, height, itemheight=26, library=library, before=before, after=after, refresh=refresh)
+        _Enumerated.__init__(self, x, y, width, itemheight=26, library=library, before=before, after=after, refresh=refresh)
 
         # set hover function equal to press function
         self.is_over_hover = self.is_over
@@ -1004,9 +908,9 @@ class Unordered(_Enumerated):
         cr.fill()
 
 class Ordered(_Enumerated):
-    def __init__(self, x, y, width, height, library, display=lambda: None, before=lambda: None, after=lambda: None, refresh=lambda: None):
+    def __init__(self, x, y, width, library, display=lambda: None, before=lambda: None, after=lambda: None, refresh=lambda: None):
         self._display = display
-        _Enumerated.__init__(self, x, y, width, height, itemheight=26, library=library, before=before, after=after, refresh=refresh)
+        _Enumerated.__init__(self, x, y, width, itemheight=26, library=library, before=before, after=after, refresh=refresh)
 
         # set hover function equal to press function
         self.is_over_hover = self.is_over
@@ -1144,9 +1048,9 @@ class Ordered(_Enumerated):
         cr.fill()
 
 class Para_control_panel(Ordered):
-    def __init__(self, x, y, width, height, paragraph, library, display=lambda: None, before=lambda: None, after=lambda: None, refresh=lambda: None):
+    def __init__(self, x, y, width, paragraph, library, display=lambda: None, before=lambda: None, after=lambda: None, refresh=lambda: None):
         self._display = display
-        _Enumerated.__init__(self, x, y, width, height, itemheight=26, library=library, before=before, after=after, refresh=refresh, lcap=1)
+        _Enumerated.__init__(self, x, y, width, itemheight=26, library=library, before=before, after=after, refresh=refresh, lcap=1)
 
         self._paragraph = paragraph
 
@@ -1403,11 +1307,13 @@ class Z_indicator(Base_kookie):
             cr.fill()
 
 class _Table(Base_kookie):
-    def __init__(self, x, y, width, height, cellsize):
-        self._cellwidth, self._cellheight = cellsize
+    def __init__(self, x, y, width, cellsize, n):
+        min_cellwidth, self._cellheight = cellsize
+        self._cellwidth = int(width / (width // min_cellwidth))
         self._cellratio = self._cellwidth / self._cellheight
+        self._per_row = int(width // self._cellwidth)
+        height = ceil(n / self._per_row) * self._cellheight
         Base_kookie.__init__(self, x, y, width, height, font=('strong',))
-        self._per_row = ( self._width // self._cellwidth )
         # set hover function equal to press function
         self.is_over_hover = self.is_over
 
@@ -1428,13 +1334,13 @@ class _Table(Base_kookie):
             x += self._cellwidth
     
 class Counter_editor(_Table):
-    def __init__(self, x, y, width, height, cellsize, get_counter, superset, before=lambda: None, after=lambda: None):
+    def __init__(self, x, y, width, cellsize, get_counter, superset, before=lambda: None, after=lambda: None):
         self._BEFORE = before
         self._AFTER = after
         self._get_counter = get_counter
         self._SUPERSET = superset
 
-        _Table.__init__(self, x, y, width, height, cellsize)
+        _Table.__init__(self, x, y, width, cellsize, len(superset))
 
         self._SYNCHRONIZE = self._ACQUIRE_REPRESENT
         self._SYNCHRONIZE()

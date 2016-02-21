@@ -1,6 +1,6 @@
 from collections import Counter
 
-# modified counter object for tags
+# modified & stripped down counter object for tags
 
 class TCounter(Counter):
     def __le__(self, other):
@@ -10,7 +10,7 @@ class TCounter(Counter):
                 return False
         return True
     
-    def concat(self, other):
+    def __add__(self, other):
         result = Counter()
         for elem, count in self.items():
             result[elem] = count + other[elem]
@@ -18,3 +18,4 @@ class TCounter(Counter):
             if elem not in self:
                 result[elem] = count
         return result
+

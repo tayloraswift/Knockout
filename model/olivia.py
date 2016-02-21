@@ -17,12 +17,23 @@ class Block(dict):
         self._FLOW = FLOW
         self['x'] = left
         self['left'] = left
+        self['right'] = right
         self['width'] = right - left
         self['y'] = bottom
         self['leading'] = bottom - top
         self['GLYPHS'] = [(-2, 0, bottom, _Empty_F(), None, right - left)]
         self['P_BREAK'] = True
         self['PP'] = PP
+
+    def _handle(self, cr):
+        ym = self['y'] - self['leading']/2
+        r = self['right']
+        cr.move_to(r + 6, ym + 20)
+        cr.rel_line_to(6, -20)
+        cr.rel_line_to(-6, -20)
+        cr.rectangle(r, ym - 20, 2, 40)
+        cr.rectangle(r + 4, ym - 20, 2, 40)
+        cr.close_path()
         
     def collect_text(self):
         return list(chain.from_iterable(A.collect_text() for A in self._FLOW))

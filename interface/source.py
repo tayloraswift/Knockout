@@ -78,7 +78,7 @@ class Rose_garden(Base_kookie):
         
         lines = list(_chunks(self._CHARS, self._charlength))
         self._IJ = [0] + list(accumulate(len(l) for l, br in lines))
-        self._y_bottom = y + leading * len(lines)
+        self.y_bottom = y + leading * len(lines)
         
         y += leading
         xd = x + 30
@@ -100,7 +100,7 @@ class Rose_garden(Base_kookie):
         return g
     
     def is_over(self, x, y):
-        return self._y <= y <= self._y_bottom and self._x <= x <= self._x_right + 10
+        return self._y <= y <= self.y_bottom and self._x <= x <= self._x_right + 10
 
     def _entry(self):
         return ''.join(self._CHARS[:-1])

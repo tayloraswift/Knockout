@@ -20,14 +20,14 @@ class Tabs_round(kookies.Tabs):
         kookies.Tabs.__init__(self, x, y, width, height, default=default, callback=callback, signals=signals)
         
         self._longstrings = longstrings
-        self._add_static_text(self._x, self._y_bottom + 20, self._longstrings[default], align=0)
+        self._add_static_text(self._x, self.y_bottom + 20, self._longstrings[default], align=0)
     
     def focus(self, x):
         self._active = self._target(x)
         self._callback(self._signals[self._active])
         
         del self._texts[-1]
-        self._add_static_text(self._x, self._y_bottom + 20, self._longstrings[self._active], align=0)
+        self._add_static_text(self._x, self.y_bottom + 20, self._longstrings[self._active], align=0)
         
     def draw(self, cr, hover=(None, None)):
         self._render_fonts(cr)
@@ -41,7 +41,7 @@ class Tabs_round(kookies.Tabs):
                 cr.set_source_rgb(0,0,0)
 
             radius = self._height/2
-            x, y = button + int(round(self._button_width/2)), (self._y + self._y_bottom)//2
+            x, y = button + int(round(self._button_width/2)), (self._y + self.y_bottom)//2
             cr.arc(x, y, radius, 0, 2*pi)
             cr.close_path()
             cr.fill()
@@ -53,7 +53,7 @@ class Tabs_round(kookies.Tabs):
                 cr.set_source_rgb(1,1,1)
                 
                 radius = self._height/2 - 1.5
-                x, y = button + int(round(self._button_width/2)), (self._y + self._y_bottom)//2
+                x, y = button + int(round(self._button_width/2)), (self._y + self.y_bottom)//2
                 cr.arc(x, y, radius, 0, 2*pi)
                 cr.close_path()
                 cr.fill()
@@ -69,7 +69,7 @@ class Tabs_round(kookies.Tabs):
         cr.set_source_rgb(1,1,1)
         radius = 10
         width = self._texts[-1][-1][1] - self._texts[-1][0][1] + 20
-        y1, y2, x1, x2 = self._y_bottom + 5, self._y_bottom + 25, self._x + (self._width - width)//2, self._x + (self._width + width)//2
+        y1, y2, x1, x2 = self.y_bottom + 5, self.y_bottom + 25, self._x + (self._width - width)//2, self._x + (self._width + width)//2
         cr.arc(x1 + radius, y1 + radius, radius, 2*(pi/2), 3*(pi/2))
         cr.arc(x2 - radius, y1 + radius, radius, 3*(pi/2), 4*(pi/2))
         cr.arc(x2 - radius, y2 - radius, radius, 0*(pi/2), 1*(pi/2))
@@ -188,6 +188,8 @@ class Document_toolbar(object):
         y += 30
         self._items.append(kookies.Selection_menu(5, y, 90, 30, menu_callback=constants.HINTS.set_antialias, options_acquire=constants.default_antialias, value_acquire=constants.HINTS.get_antialias, source=0))
         
+        self._rows = [item.y_bottom for item in self._items]
+        
     def render(self, cr):
         for i, entry in enumerate(self._items):
             if i == self._hover_box_ij[0]:
@@ -198,7 +200,7 @@ class Document_toolbar(object):
     def press(self, x, y):
         b = None
 
-        inspect_i = bisect.bisect([item.y for item in self._items], y)
+        inspect_i = bisect.bisect(self._rows, y)
 
         try:
             if self._items[inspect_i].is_over(x, y):
@@ -216,7 +218,7 @@ class Document_toolbar(object):
             self._active_box_i = b
 
     def release(self, x, y):
-        inspect_i = bisect.bisect([item.y for item in self._items], y)
+        inspect_i = bisect.bisect(self._rows, y)
 
         bl = False
         try:
@@ -234,7 +236,7 @@ class Document_toolbar(object):
     
         self._hover_box_ij = (None, None)
 
-        inspect_i = bisect.bisect([item.y for item in self._items], y)
+        inspect_i = bisect.bisect(self._rows, y)
         try:
             if self._items[inspect_i].is_over_hover(x, y):
                 self._hover_box_ij = (inspect_i, self._items[inspect_i].hover(x, y))

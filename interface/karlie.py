@@ -63,7 +63,7 @@ class _MULTI_COLUMN(object):
     def __init__(self, * args):
         BB = [W.bounding_box() for W in args]
         self.partitions = [(BB[i][1] + BB[i + 1][0]) // 2 for i in range(len(BB) - 1)]
-        self.y = max((B[3] for B in BB))
+        self.y_bottom = max((B[3] for B in BB))
         
         self.draw = lambda cr: None
         self._SYNCHRONIZE = lambda: None
@@ -94,9 +94,12 @@ class _Properties_panel(ui.Cell):
             self._tab = name
             self._reconstruct()
         
-    def _stack(self, y):
-        self._rows = [item.y for item in self._items]
-        self._total_height = y
+    def _stack(self, padding=0):
+        self._rows = [item.y_bottom for item in self._items]
+        try:
+            self._total_height = self._items[-1].y_bottom + padding
+        except IndexError:
+            self._total_height = 100 + padding
 
     def _stack_bisect(self, x, y):
         i = bisect.bisect(self._rows, y)
@@ -115,7 +118,7 @@ class _Properties_panel(ui.Cell):
             return item
 
     def _y_incr(self):
-        return self._items[-1].bounding_box()[3]
+        return self._items[-1].y_bottom
 
     def refresh(self):
         meredith.mipsy.recalculate_all() # must come before because it rewrites all the paragraph styles
@@ -192,7 +195,7 @@ class _Properties_panel(ui.Cell):
         if box is not None:
             if type(box) is source.Rose_garden:
                 cp = box.type_box(name, char)
-                self._stack(self._y_incr() + 20)
+                self._stack(20)
                 return cp
             elif name == 'Return':
                 box.defocus()
@@ -278,7 +281,8 @@ class _Properties_panel(ui.Cell):
         self._active_box_i = None
         self._hover_box_ij = (None, None)
         
-        self._stack(self._panel(y=110, KW=self._KW))
+        self._panel(y=110, KW=self._KW)
+        self._stack(20)
         self._HI = kookies.Heading(15, 60, self._KW, 30, self._heading, font=('title',), fontsize=18, upper=True)
 
 def _print_counter(counter):
@@ -408,7 +412,7 @@ class Properties(_Properties_panel):
             
             self._items.append(source.Rose_garden(10, y, width=KW + 10, 
                     e_acquire = lambda: contexts.Text.char,
-                    before = un.history.save, after = lambda: (self._stack(self._y_incr() + 20), meredith.mipsy.recalculate_all())))
+                    before = un.history.save, after = lambda: (self._stack(20), meredith.mipsy.recalculate_all())))
             y = self._y_incr() + 20
         return y
 

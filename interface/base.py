@@ -24,9 +24,7 @@ class Base_kookie(object):
             self.font = styles.ISTYLES[font]
         
         self._x_right = x + width
-        self._y_bottom = y + height
-        
-        self.y = self._y_bottom
+        self.y_bottom = y + height
 
     def _SYNCHRONIZE(self):
         pass
@@ -66,7 +64,7 @@ class Base_kookie(object):
         self._texts.append(self._build_line(x, y, text, font, fontsize=fontsize, align=align))
     
     def is_over(self, x, y):
-        return self._y <= y <= self._y_bottom and self._x <= x <= self._x_right
+        return self._y <= y <= self.y_bottom and self._x <= x <= self._x_right
     
     def is_over_hover(self, x, y):
         return False
@@ -92,7 +90,7 @@ class Base_kookie(object):
         cr.set_font_face(self.font['font'])
     
     def bounding_box(self):
-        return self._x, self._x_right,self._y, self._y_bottom
+        return self._x, self._x_right, self._y, self.y_bottom
 
 
 class Menu(Base_kookie):

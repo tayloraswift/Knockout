@@ -85,7 +85,9 @@ class Mode_switcher(object):
     def __init__(self, callback, default):
         self._hover_j = None
         self._hover_memory = None
-        self._switcher = Tabs_round(0, -70, 40, 30, default=default, callback=callback, signals=[('text', 'T'), ('channels', 'C')], longstrings=['Edit text', 'Edit channels'])
+        signals = [('render', 'R'), ('text', 'T'), ('channels', 'C')]
+        default = next(i for i, k in enumerate(signals) if k[0] == default)
+        self._switcher = Tabs_round(0, -70, 40, 30, default=default, callback=callback, signals=signals, longstrings=['View render', 'Edit text', 'Edit channels'])
 
     def is_over(self, x, y):
         return self._switcher.is_over(x - self._dx, y - self._dy)
@@ -270,7 +272,7 @@ class Document_view(ui.Cell):
         self._mode = state['mode']
         self._region_active, self._region_hover = 'view', 'view'
         self._toolbar = Document_toolbar(save)
-        self._mode_switcher = Mode_switcher(self.change_mode, default= self._mode == 'channels')
+        self._mode_switcher = Mode_switcher(self.change_mode, default= self._mode)
         self.keyboard = typing.keyboard
         self.fcursor = cursor.fcursor
         
@@ -616,6 +618,9 @@ class Document_view(ui.Cell):
         
         elif self._mode == 'channels':
             page_highlight = caramel.delight.PG
+        
+        else:
+            page_highlight = None
 
         for pp in range(max_page + 1):
             
@@ -800,20 +805,21 @@ class Document_view(ui.Cell):
         # channels
         if self._mode == 'text':
             caramel.delight.render(cr, self._X_to_screen, self._Y_to_screen)
-        else:
+        elif self._mode == 'channels':
             caramel.delight.render(cr, self._X_to_screen, self._Y_to_screen, show_rails=True)
         
+        if self._mode != 'render':
+            # DRAW TOOLBAR BACKGROUND
+            cr.rectangle(0, 0, 100, k)
+            cr.set_source_rgb(1, 1, 1)
+            cr.fill()
+            self._toolbar.render(cr)
+            
+            cr.rectangle(100, 0, 2, k)
+            cr.set_source_rgb(0.9, 0.9, 0.9)
+            cr.fill()
+        
         self._mode_switcher.render(cr, h, k)
-        
-        # DRAW TOOLBAR BACKGROUND
-        cr.rectangle(0, 0, 100, k)
-        cr.set_source_rgb(1, 1, 1)
-        cr.fill()
-        self._toolbar.render(cr)
-        
-        cr.rectangle(100, 0, 2, k)
-        cr.set_source_rgb(0.9, 0.9, 0.9)
-        cr.fill()
         
         # draw stats
         cr.set_source_rgba(0, 0, 0, 0.8)

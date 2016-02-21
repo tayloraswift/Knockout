@@ -1,4 +1,7 @@
 import itertools
+from edit.arithmetic import NumericStringParser, ParseException
+
+nsp = NumericStringParser()
 
 def read_binomial(C, SIGN, K):
     if K:
@@ -57,45 +60,21 @@ def interpret_int(n):
         return n
     elif type(n) is float:
         return int(n)
-    
-    elif '.' in n:
-        v = int(round(interpret_float(n)))
     else:
-        i = '0123456789'
-        si = i + '+-'
-        signed_integer = ''.join(c for c in n if c in si)
-        if signed_integer:
-            if all(s in {'-', '+'} for s in signed_integer):
-                sign = not sum(s == '-' for s in signed_integer) % 2 
-                if sign:
-                    v = 1
-                else:
-                    v = -1
-            else:
-                lastdigit = len(signed_integer) - next(k for k, d in enumerate(reversed(signed_integer)) if d in i)
-                v = eval(signed_integer[:lastdigit])
-        else:
-            v = 0
-    return v
+        try:
+            return int(nsp.eval(n))
+        except ParseException:
+            return 0
     
 def interpret_float(f):
     if type(f) in {int, float}:
         return f
 
-    i = '0123456789'
-    si = i + '+-'
-    if '.' not in f:
-        v = interpret_int(f)
     else:
-        point = f.find('.')
-        integer = ''.join(c for c in f[:point] if c in si)
-        integer = str(interpret_int(integer))
-        sawtooth = ''.join(c for c in f[point:] if c in i)
-        if integer or sawtooth:
-            v = float(integer + '.' + sawtooth)
-        else:
-            v = 0
-    return v
+        try:
+            return nsp.eval(f)
+        except ParseException:
+            return 0
     
 def interpret_rgba(C):
     hx = '0123456789abcdef'

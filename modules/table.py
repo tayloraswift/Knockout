@@ -6,7 +6,7 @@ from model.george import Swimming_pool
 from interface.base import accent
 from IO.xml import print_attrs, print_styles
 from elements.elements import Block_element
-from edit.paperairplanes import interpret_int, interpret_float_tuple
+from edit.paperairplanes import interpret_int, interpret_float, interpret_float_tuple, interpret_enumeration
 
 _namespace = 'table'
 
@@ -109,11 +109,25 @@ class Table(Block_element):
         self._FLOW = [cell for row in self.data for cell in row]
         self._MATRIX = _build_matrix(self.data)
         
+        attrs = L[0][1]
+        # columns
         cl = len(self._MATRIX[0])
-        distr = [0] + [d if d else 1 for d in interpret_float_tuple(L[0][1].get('distr', ''))]
+        distr = [0] + [d if d else 1 for d in interpret_float_tuple(attrs.get('distr', ''))]
         distr.extend([1] * (cl - len(distr) + 1))
         total = sum(distr)
         self._MATRIX.partitions = tuple(accumulate(d/total for d in distr))
+        
+        # rules
+        rulemargin = interpret_int(attrs.get('rulemargin', 0))
+        rulewidth = interpret_float(attrs.get('rulewidth', 1))
+        hrules = [i for i in interpret_enumeration(attrs.get('hrules', '')) if 0 <= i <= len(self._MATRIX)]
+        vrules = [i for i in interpret_enumeration(attrs.get('vrules', '')) if 0 <= i <= cl]
+
+        # margins
+        self._celltop = interpret_float(attrs.get('celltop', 0))
+        self._cellbottom = interpret_float(attrs.get('cellbottom', 0))
+                
+        self._table = {'rulemargin': rulemargin, 'rulewidth': rulewidth, 'hrules': hrules, 'vrules': vrules}
         
     def represent(self, indent):
         name, attrs = self._tree[0][:2]
@@ -134,10 +148,10 @@ class Table(Block_element):
         head = P_table + P_head
         left = P_table + P_left
         
-        top = y
-        row_y = []
+        row_y = [y]
         part = self._MATRIX.partitions
         for r, overlay, row in ((c, P_table, b) if c else (c, head, b) for c, b in enumerate(self.data)):
+            y += self._celltop
             for i, cell in enumerate(row):
                 # calculate percentages
                 cellbounds = TCell_container(bounds, part[cell.col], part[cell.col + cell.cs])
@@ -145,28 +159,31 @@ class Table(Block_element):
                     cell.cast(cellbounds, c, y, overlay + P_left)
                 else:
                     cell.cast(cellbounds, c, y, overlay)
-            y = _row_height(self.data, r, y)
+            y = _row_height(self.data, r, y) + self._cellbottom
             row_y.append(y)
-        
-        return _MBlock(self._FLOW, self._MATRIX, bounds, top, y, row_y, self.PP)
+            
+        self._table['row_y'] = row_y
+        return _MBlock(self._FLOW, self._MATRIX, bounds, self._table, self.PP)
 
 class _MBlock(Block):
-    def __init__(self, FLOW, matrix, bounds, top, bottom, row_y, PP):
-        x1, x2 = bounds.bounds(top)
-        Block.__init__(self, FLOW, top, bottom, x1, x2, PP)
+    def __init__(self, FLOW, matrix, bounds, table, PP):
+        self._table = table
+        row_y = table['row_y']
+        x1, x2 = bounds.bounds(row_y[0])
+        Block.__init__(self, FLOW, row_y[0], row_y[-1], x1, x2, PP)
         
         self._matrix = matrix
-        self._row_y = row_y
         self._bounds = bounds
 
         grid = []
         cl = len(matrix[0])
         part = matrix.partitions
-        for y in [self['y'] - self['leading']] + row_y:
+        for y in row_y:
             x1, x2 = bounds.bounds(y)
             width = x2 - x1
             grid.append([(x1 + width*factor, y) for factor in part])
         self._grid = grid
+        self._ortho = list(zip( * grid ))
 
     def _print_annot(self, cr, O):
         if O in self._FLOW:
@@ -177,9 +194,41 @@ class _MBlock(Block):
             self._handle(cr)
             cr.fill()
 
+    def _print_table(self, cr):
+        rulewidth = self._table['rulewidth']
+        e = (rulewidth % 2) / 2
+        p = self._table['rulemargin']
+        cr.set_line_width(rulewidth)
+        cr.set_source_rgb(0, 0, 0)
+        for hrule in self._table['hrules']:
+            if p:
+                for a, b in zip(self._grid[hrule], self._grid[hrule][1:]):
+                    cr.move_to(a[0] + p, a[1] + e)
+                    cr.line_to(b[0] - p, b[1] + e)
+                    cr.stroke()
+            else:
+                a = self._grid[hrule][0]
+                b = self._grid[hrule][-1]
+                cr.move_to(a[0], a[1] + e)
+                cr.line_to(b[0], b[1] + e)
+                cr.stroke()
+
+        for vrule in self._table['vrules']:
+            if p:
+                for a, b in zip(self._ortho[vrule], self._ortho[vrule][1:]):
+                    cr.move_to(a[0] + e, a[1] + p)
+                    cr.line_to(b[0] + e, b[1] - p)
+                    cr.stroke()
+            else:
+                a = self._ortho[vrule][0]
+                b = self._ortho[vrule][-1]
+                cr.move_to(a[0] + e, a[1])
+                cr.line_to(b[0] + e, b[1])
+                cr.stroke()
+
     def I(self, x, y):
         x1, x2 = self._bounds.bounds(y)
-        r = bisect(self._row_y, y)
+        r = bisect(self._table['row_y'], y) - 1
         c = max(0, bisect(self._matrix.partitions, (x - x1) / (x2 - x1)) - 1)
         try:
             O = self._matrix[r][c]
@@ -192,6 +241,7 @@ class _MBlock(Block):
             return self['i']
 
     def deposit(self, repository):
+        repository['_paint'].append(self._print_table)
         for A in self._FLOW:
             A.deposit(repository)
         repository['_paint_annot'].append(self._print_annot)

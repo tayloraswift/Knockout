@@ -79,6 +79,7 @@ class _Properties_panel(ui.Cell):
         self._partition = partition
         self._swap_reconstruct(mode)
         self.resize()
+        self._scroll_anchor = False
     
     def resize(self):
         W = constants.window.get_h() - constants.UI[self._partition]
@@ -171,10 +172,10 @@ class _Properties_panel(ui.Cell):
         
         # scrollbar
         if self._total_height > k:
-            factor = k / self._total_height * (k - 100)
+            scrollbarheight = k / self._total_height * (k - 100)
             top = -self._dy / self._total_height * (k - 100)
-            cr.rectangle(width - 10, top + 90, 3, factor)
-            cr.set_source_rgba(0, 0, 0, 0.1)
+            cr.rectangle(width - 10, top + 90, 3, scrollbarheight)
+            cr.set_source_rgba(0, 0, 0, 0.1 + 0.2*self._scroll_anchor)
             cr.fill()
         
         # DRAW SEPARATOR
@@ -200,6 +201,9 @@ class _Properties_panel(ui.Cell):
         if y < 90:
             box = self._tabstrip
             x -= self.width // 2
+        elif x > self.width - 15:
+            self._scroll_anchor = True
+            box = kookies.Null
         else:
             y -= self._dy
             box = self._stack_bisect(x, y)
@@ -215,10 +219,19 @@ class _Properties_panel(ui.Cell):
             self._active_box_i = b
             
     def press_motion(self, x, y):
-        y -= self._dy
-        if self._active_box_i is not None and self._active_box_i.focus_drag(x, y):
+        yn = y - self._dy
+        if self._scroll_anchor:
+            dy = -(y - 90 - self._K / self._total_height * (self._K - 100) * 0.5 ) * self._total_height / (self._K - 100)
+            dy = min(0, max(-self._total_height + self._K, dy))
+            if dy != self._dy:
+                self._dy = dy
+                noticeboard.redraw_klossy.push_change()
+        elif self._active_box_i is not None and self._active_box_i.focus_drag(x, yn):
             noticeboard.redraw_klossy.push_change()
     
+    def release(self, x, y):
+        self._scroll_anchor = False
+        
     def hover(self, x, y, hovered=[None]):
         if y < 90:
             box = self._tabstrip
@@ -382,8 +395,8 @@ class Properties(_Properties_panel):
             
             self._items.append(source.Rose_garden(10, y, width=KW + 10, 
                     e_acquire = lambda: contexts.Text.char,
-                    before = un.history.save, after = lambda: (self._stack(self._y_incr() + 20), meredith.mipsy.recalculate_all())))
-            y = self._y_incr() + 20
+                    before = un.history.save, after = lambda: (self._stack(self._y_incr() + 1989), meredith.mipsy.recalculate_all())))
+            y = self._y_incr() + 1989
         return y
 
     def _channels_panel(self, y, KW):

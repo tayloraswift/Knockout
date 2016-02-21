@@ -71,7 +71,7 @@
     <mod:fraction:denominator><em>x</em></mod:fraction:denominator>
 </mod:fraction></p>
 
-<p style="{'margin_top': 6, 'margin_left': 20, 'fontclasses': (0, [('Italic', {})])}">—Kelvin Ma</p>
+<p style="{'fontclasses': (0, [('Italic', {})]), 'margin_top': 6, 'margin_left': 20}">—Kelvin Ma</p>
 
 <p class="h2">What is additive styling?</p>
 
@@ -79,8 +79,8 @@
 
 <p style="{'align': 0}">Subtitle</p>
 
-<mod:pie radius="60" class="h2">
-    <mod:pie:slice prop="13" color="#ff3085">
+<mod:pie class="h2" radius="60">
+    <mod:pie:slice color="#ff3085" prop="13">
         <p>A = <mod:fraction>
             <mod:fraction:numerator>abc + <mod:fraction>
                     <mod:fraction:numerator>e</mod:fraction:numerator>
@@ -89,21 +89,61 @@
             <mod:fraction:denominator><em>x</em></mod:fraction:denominator>
         </mod:fraction> </p>
     </mod:pie:slice>
-    <mod:pie:slice prop="22" color="#ff50a0">
+    <mod:pie:slice color="#ff50a0" prop="22">
         <p>Section B</p>
     </mod:pie:slice>
-    <mod:pie:slice prop="69" color="#f020ff">
+    <mod:pie:slice color="#f020ff" prop="69">
         <p>Section C</p>
     </mod:pie:slice>
-    <mod:pie:slice prop="89" color="#b050ff">
+    <mod:pie:slice color="#b050ff" prop="89">
         <p>Section D</p>
     </mod:pie:slice>
-    <mod:pie:slice prop="113" color="#7080ff">
+    <mod:pie:slice color="#7080ff" prop="113">
         <p>Section E</p>
     </mod:pie:slice>
 </mod:pie>
 
-<p>Additive styling is the idea that multiple “building block” text styles can be defined and combined to create the visual styles seen on the page. For example, an &lt;<em>Italic</em>&gt; class may be defined which simply declares an italic font file, while a &lt;<sup>Superscript</sup>&gt; class might define a reduced font size and raised position. The superscript and italic classes can then be stacked to infer a &lt;<sup><em>Superscript-Italic</em></sup>&gt; class with the attributes of both. </p>
+<p>Additive styling is the idea that multiple “building block” text styles can be defined and combined to create the visual styles seen on the page. For exam</p>
+
+<table>
+    <tr>
+        <td>
+            <p>cell 1</p>
+        </td>
+        <td colspan="3">
+            <p>cell 2</p>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <p>cell 3</p>
+            
+            <p>cell 3 (row 2)</p>
+        </td>
+        <td>
+            <p>cell 4</p>
+        </td>
+        <td>
+            <p>cell 5</p>
+        </td>
+        <td>
+            <p>cell 6</p>
+        </td>
+    </tr>
+    <tr>
+        <td colspan="2">
+            <p>cell 7</p>
+        </td>
+        <td>
+            <p>cell 8</p>
+        </td>
+        <td>
+            <p>cell 9</p>
+        </td>
+    </tr>
+</table>
+
+<p>ple, an &lt;<em>Italic</em>&gt; class may be defined which simply declares an italic font file, while a &lt;<sup>Superscript</sup>&gt; class might define a reduced font size and raised position. The superscript and italic classes can then be stacked to infer a &lt;<sup><em>Superscript-Italic</em></sup>&gt; class with the attributes of both. </p>
 
 <p>Of course, in real typesetting, superscripts require a slightly heavier fontweight, which is where <strong>explicit styling</strong> is needed. An italic and a bold class both define a font file, so a &lt;<strong><em>Bold-Italic</em></strong>&gt; class must be defined with the specialized bold-italic font. </p>
 
@@ -160,10 +200,10 @@
         </td>
         <td>
             <mod:pie radius="40">
-                <mod:pie:slice prop="13" color="#ff3085">
+                <mod:pie:slice color="#ff3085" prop="13">
                     <p>Section A</p>
                 </mod:pie:slice>
-                <mod:pie:slice prop="22" color="#ff50a0">
+                <mod:pie:slice color="#ff50a0" prop="22">
                     <p>Section B</p>
                 </mod:pie:slice>
             </mod:pie>
@@ -197,7 +237,7 @@
         <td colspan="3">
             <p class="h2" style="{'fontclasses': (0, [('Lowercase', {})])}">Who doesn’t love Meredith Grey?</p>
             
-            <p style="{'leading': 200, 'fontclasses': (0, [('Italic', {}), ('Regular', {'emphasis': 1})]), 'align': 0}"><image src="meredith.png" width=200 />ab<em>c</em>d</p>
+            <p style="{'leading': 200, 'align': 0, 'fontclasses': (0, [('Italic', {}), ('Regular', {'emphasis': 1})])}"><image src="meredith.png" width=200 />ab<em>c</em>d</p>
             
             <p class="body&gray">(Taylor, evidently.)</p>
             
@@ -254,7 +294,7 @@
                 'Superitalic': {'path': 'fonts/Courgette-Regular.ttf'},
                 'Superscript': {'shift': 7},
                 'h3': {'capitals': True, 'fontsize': 16, 'path': 'fonts/FiraSans-Book.otf', 'tracking': 1}},
- 'FTAGLIST': [('emphasis', []), ('sup', ['small']), ('strong', []), ('sub', ['small']), ('link', []), ('big', []), ('caption', [])],
+ 'FTAGLIST': [('sub', ['small']), ('strong', []), ('big', []), ('caption', []), ('emphasis', []), ('sup', ['small']), ('link', [])],
  'PARASTYLES': (1,
                 [({'fontclasses': (2, [('Black', {}), ('Subscript', {'sub': 1}), ('Superscript', {'sup': 1})])}, {}),
                  ({'fontclasses': (9,
@@ -276,8 +316,8 @@
                  ({'fontclasses': (0, [('Subheading', {})]), 'leading': 24, 'margin_bottom': 10}, {'h2': 1}),
                  ({'align': 0, 'fontclasses': (0, [('h3', {})])}, {'h3': 1}),
                  ({'fontclasses': (0, [('Gray', {})])}, {'gray': 1})]),
- 'PTAGLIST': [('h1', []), ('body', []), ('gray', []), ('h3', []), ('h2', [])],
- 'contexts': {'channels': {'c': 7, 'p': 7, 't': 1}, 'text': {'i': 361, 'j': 361, 'p': 0, 't': 1}},
+ 'PTAGLIST': [('gray', []), ('h2', []), ('body', []), ('h1', []), ('h3', [])],
+ 'contexts': {'channels': {'c': 7, 'p': 7, 't': 1}, 'text': {'i': 936, 'j': 936, 'p': 2, 't': 1}},
  'grid': [[120, 480], [120, 480]],
  'outlines': ([(([[120, 120, False], [120, 200, False]], [[480, 120, False], [480, 200, False]]), 0)],
               [(([[120, 210, False], [120, 480, False]], [[480, 210, False], [480, 480, False]]), 0),
@@ -289,5 +329,5 @@
                ([[[360, 120, False], [160, 310, False], [360, 480, False]], [[410, 120, False], [590, 300, False], [410, 480, False]]], 5),
                ([[[120, 120, True], [120, 540, False]], [[480, 120, True], [480, 540, False]]], 6)]),
  'page': {'dimensions': (600, 600), 'dual': True},
- 'view': {'H': -563, 'Hc': 254.44390869140625, 'K': 31, 'Kc': 378.0780029296875, 'Zoom': 16, 'mode': 'text'}}
+ 'view': {'H': -204, 'Hc': 730.17529296875, 'K': -363, 'Kc': 499.1131591796875, 'Zoom': 11, 'mode': 'text'}}
 ############# -->

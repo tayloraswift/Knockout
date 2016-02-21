@@ -88,6 +88,8 @@ class _MBlock(Block):
             cr.set_line_width(2)
             cr.arc(x, y, r + 13, t, t + arc)
             cr.stroke()
+            self._handle(cr)
+            cr.fill()
 
     def _target_slice(self, x, y):
         px, py = self._pie.center
@@ -103,9 +105,12 @@ class _MBlock(Block):
             return bisect(self._slices_t, t)
     
     def I(self, x, y):
-        s = self._target_slice(x, y)
-        self._pie.active = s
-        return self._FLOW[s]
+        if x <= self['right']:
+            s = self._target_slice(x, y)
+            self._pie.active = s
+            return self._FLOW[s]
+        else:
+            return self['i']
     
     def deposit(self, repository):
         for A in self._FLOW:

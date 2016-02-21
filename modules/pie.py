@@ -42,7 +42,8 @@ class PieChart(Block_element):
         lines.append([indent, '</' + self.namespace + '>'])
         return lines
 
-    def fill(self, bounds, c, y):
+    def typeset(self, bounds, c, y, overlay):
+        P_slice, = self._modstyles(overlay, 'slice')
         r = self._pie.r
         top = y
         y += 22
@@ -50,7 +51,7 @@ class PieChart(Block_element):
         px = (right + left)/2
         py = y + r
         for S in self._FLOW:
-            S.cast(bounds, c, y)
+            S.cast(bounds, c, y, P_slice)
             y += 20
         bottom = py + r + 22
         
@@ -113,7 +114,7 @@ class _MBlock(Block):
             return self['i']
     
     def deposit(self, repository):
+        repository['_paint'].append(self._print_pie) # come before to avoid occluding child elements
+        repository['_paint_annot'].append(self._print_annot)
         for A in self._FLOW:
             A.deposit(repository)
-        repository['_paint'].append(self._print_pie)
-        repository['_paint_annot'].append(self._print_annot)

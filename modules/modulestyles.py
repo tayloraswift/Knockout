@@ -5,6 +5,7 @@ S= {'mod:bounded': {'symbol': {'big': 1},
                 'bottom': {'small': 1},
                 'top': {'small': 1}},
     'table': {'table': {'gray': 1}},
+    'mod:pie': {'slice': {'h3': 1}},
         }
 
 class MS_Library(dict):

@@ -1,7 +1,6 @@
 import bisect
 from itertools import chain
 
-from bulletholes.counter import TCounter as Counter
 from model.olivia import Atomic_text, Block
 from model.george import Swimming_pool
 from interface.base import accent
@@ -124,8 +123,8 @@ class Table(Block_element):
         lines.append([indent, '</' + self.namespace + '>'])
         return lines
 
-    def fill(self, bounds, c, y):
-        P_table, = self._modstyles(Counter(), 'table')
+    def typeset(self, bounds, c, y, overlay):
+        P_table, = self._modstyles(overlay, 'table')
         top = y
         row_y = []
         for r, row in enumerate(self.data):

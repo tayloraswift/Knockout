@@ -26,7 +26,8 @@ def read_binomial(C, SIGN, K):
         val = str(C)
     return val
 
-def pack_binomial(value):
+def pack_binomial(value, letter):
+    value = ''.join(c for c in value if c in set('1234567890.-+' + letter))
     K = 0
     C = 0
     sgn = 1
@@ -55,7 +56,7 @@ def pack_binomial(value):
 
     return C, SIGN, K
 
-def interpret_int(n):
+def interpret_int(n, fail=0):
     if type(n) is int:
         return n
     elif type(n) is float:
@@ -64,18 +65,29 @@ def interpret_int(n):
         try:
             return int(nsp.eval(n))
         except ParseException:
-            return 0
+            return fail
     
-def interpret_float(f):
+def interpret_float(f, fail=0):
     if type(f) in {int, float}:
         return f
 
     else:
         try:
-            return nsp.eval(f)
+            v = nsp.eval(f)
+            if v.is_integer():
+                return int(v)
+            else:
+                return v
         except ParseException:
-            return 0
-    
+            return fail
+
+def interpret_enumeration(e):
+    return set(interpret_int(val) for val in e.split(',') if any(c in '0123456789' for c in val))
+
+def interpret_float_tuple(value):
+    L = (interpret_float(val, fail=None) for val in value.split(','))
+    return (v for v in L if v is not None)
+
 def interpret_rgba(C):
     hx = '0123456789abcdef'
     numeric = '0123456789., '

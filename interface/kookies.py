@@ -3,7 +3,7 @@ from math import pi, ceil
 from itertools import chain
 
 from style.styles import ISTYLES
-from edit.paperairplanes import interpret_float, interpret_int, interpret_rgba, pack_binomial, read_binomial
+from edit.paperairplanes import interpret_float, interpret_int, interpret_enumeration, interpret_rgba, pack_binomial, read_binomial
 from interface.base import Base_kookie, accent, xhover
 from interface import menu
 
@@ -541,10 +541,14 @@ class Integer_field(Numeric_field):
 class Enumerate_field(Numeric_field):
     def __init__(self, x, y, width, callback, value_acquire, params=(), before=lambda: None, after=lambda: None, name=None):
         Blank_space.__init__(self, x, y, width, callback, value_acquire, params, before, after, name)
-        self._domain = lambda k: set([interpret_int(val) for val in k.split(',') if any(c in '0123456789' for c in val)])
+        self._domain = interpret_enumeration
 
     def _ACQUIRE_REPRESENT(self):
-        self._VALUE = str(self._value_acquire( * self._params))[1:-1]
+        S = self._value_acquire( * self._params)
+        if S:
+            self._VALUE = str(self._value_acquire( * self._params))[1:-1]
+        else:
+            self._VALUE = ''
         self._LIST = list(self._VALUE) + [None]
         self._stamp_glyphs(self._LIST)
 
@@ -561,8 +565,7 @@ class RGBA_field(Blank_space):
 class Binomial_field(Numeric_field):
     def __init__(self, x, y, width, callback, value_acquire, params, before=lambda: None, after=lambda: None, name=None, letter='X'):
         Blank_space.__init__(self, x, y, width, callback, value_acquire, params, before, after, name)
-        letters = set('1234567890.-+' + letter)
-        self._domain = lambda k: pack_binomial(''.join([c for c in k if c in letters]))
+        self._domain = lambda k: pack_binomial(k, letter)
 
     def _ACQUIRE_REPRESENT(self):
         self._VALUE = read_binomial( * self._value_acquire( * self._params))

@@ -1,12 +1,12 @@
-import bisect
-from itertools import chain
+from bisect import bisect
+from itertools import chain, accumulate
 
 from model.olivia import Atomic_text, Block
 from model.george import Swimming_pool
 from interface.base import accent
 from IO.xml import print_attrs, print_styles
 from elements.elements import Block_element
-from edit.paperairplanes import interpret_int
+from edit.paperairplanes import interpret_int, interpret_float_tuple
 
 _namespace = 'table'
 
@@ -109,6 +109,12 @@ class Table(Block_element):
         self._FLOW = [cell for row in self.data for cell in row]
         self._MATRIX = _build_matrix(self.data)
         
+        cl = len(self._MATRIX[0])
+        distr = [0] + [d if d else 1 for d in interpret_float_tuple(L[0][1].get('distr', ''))]
+        distr.extend([1] * (cl - len(distr) + 1))
+        total = sum(distr)
+        self._MATRIX.partitions = tuple(accumulate(d/total for d in distr))
+        
     def represent(self, indent):
         name, attrs = self._tree[0][:2]
         attrs.update(print_styles(self.PP))
@@ -130,11 +136,11 @@ class Table(Block_element):
         
         top = y
         row_y = []
+        part = self._MATRIX.partitions
         for r, overlay, row in ((c, P_table, b) if c else (c, head, b) for c, b in enumerate(self.data)):
-            cellcount = len(self._MATRIX[r])
             for i, cell in enumerate(row):
                 # calculate percentages
-                cellbounds = TCell_container(bounds, cell.col/cellcount, (cell.col + cell.cs)/cellcount)
+                cellbounds = TCell_container(bounds, part[cell.col], part[cell.col + cell.cs])
                 if not i:
                     cell.cast(cellbounds, c, y, overlay + P_left)
                 else:
@@ -155,10 +161,11 @@ class _MBlock(Block):
 
         grid = []
         cl = len(matrix[0])
+        part = matrix.partitions
         for y in [self['y'] - self['leading']] + row_y:
             x1, x2 = bounds.bounds(y)
-            cw = (x2 - x1)/cl
-            grid.append([(x1 + cw*c, y) for c in range(0, cl + 1)])
+            width = x2 - x1
+            grid.append([(x1 + width*factor, y) for factor in part])
         self._grid = grid
 
     def _print_annot(self, cr, O):
@@ -172,8 +179,8 @@ class _MBlock(Block):
 
     def I(self, x, y):
         x1, x2 = self._bounds.bounds(y)
-        r = bisect.bisect(self._row_y, y)
-        c = max(0, int((x - x1) // ((x2 - x1) / len(self._matrix[r]))))
+        r = bisect(self._row_y, y)
+        c = max(0, bisect(self._matrix.partitions, (x - x1) / (x2 - x1)) - 1)
         try:
             O = self._matrix[r][c]
             if O is None or not O.text:

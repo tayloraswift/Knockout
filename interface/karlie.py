@@ -175,7 +175,7 @@ class _Properties_panel(ui.Cell):
             scrollbarheight = k / self._total_height * (k - 100)
             top = -self._dy / self._total_height * (k - 100)
             cr.rectangle(width - 10, top + 90, 3, scrollbarheight)
-            cr.set_source_rgba(0, 0, 0, 0.1 + 0.2*self._scroll_anchor)
+            cr.set_source_rgba(0, 0, 0, 0.2 + 0.1*self._scroll_anchor)
             cr.fill()
         
         # DRAW SEPARATOR
@@ -190,7 +190,11 @@ class _Properties_panel(ui.Cell):
     def key_input(self, name, char):
         box = self._active_box_i
         if box is not None:
-            if name == 'Return' and type(box) is not source.Rose_garden:
+            if type(box) is source.Rose_garden:
+                cp = box.type_box(name, char)
+                self._stack(self._y_incr() + 20)
+                return cp
+            elif name == 'Return':
                 box.defocus()
                 self._active_box_i = None
             else:
@@ -236,10 +240,15 @@ class _Properties_panel(ui.Cell):
         if y < 90:
             box = self._tabstrip
             x -= self.width // 2
+            SA = False
+        elif x > self.width - 15:
+            SA = -1
+            box = kookies.Null
         else:
             y -= self._dy
             box = self._stack_bisect(x, y)
-
+            SA = False
+            
         if box.is_over_hover(x, y):
             self._hover_box_ij = (box, box.hover(x, y))
         else:
@@ -247,6 +256,10 @@ class _Properties_panel(ui.Cell):
 
         if hovered[0] != self._hover_box_ij:
             hovered[0] = self._hover_box_ij
+            noticeboard.redraw_klossy.push_change()
+            self._scroll_anchor = SA
+        elif self._scroll_anchor != SA:
+            self._scroll_anchor = SA
             noticeboard.redraw_klossy.push_change()
 
     def scroll(self, x, y, char):
@@ -395,8 +408,8 @@ class Properties(_Properties_panel):
             
             self._items.append(source.Rose_garden(10, y, width=KW + 10, 
                     e_acquire = lambda: contexts.Text.char,
-                    before = un.history.save, after = lambda: (self._stack(self._y_incr() + 1989), meredith.mipsy.recalculate_all())))
-            y = self._y_incr() + 1989
+                    before = un.history.save, after = lambda: (self._stack(self._y_incr() + 20), meredith.mipsy.recalculate_all())))
+            y = self._y_incr() + 20
         return y
 
     def _channels_panel(self, y, KW):

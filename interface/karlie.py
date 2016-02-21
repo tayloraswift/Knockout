@@ -56,7 +56,7 @@ def _stack_row(i, row, y, gap, width, factory, after):
     divisions = zip(divisions, divisions[1:] + [width], row)
     return _columns(chain.from_iterable(factory(TYPE, 15 + a, y + i*gap, b - a - 10, A, after=after, name=name, **dict(kwargs)) for a, b, (factor, TYPE, A, name, * kwargs) in divisions))
 
-def _stack_properties(factory, after, y, gap, width, L):
+def _stack_properties(factory, y, gap, width, L, after):
     return chain.from_iterable(_stack_row(i, row, y, gap, width, factory, after) for i, row in enumerate(L))
 
 class _MULTI_COLUMN(object):
@@ -124,8 +124,13 @@ class _Properties_panel(ui.Cell):
         meredith.mipsy.recalculate_all() # must come before because it rewrites all the paragraph styles
         self._reconstruct()
     
-    def synchronize(self):
+    def _synchronize(self):
         contexts.Text.update()
+        for item in self._items:
+            item._SYNCHRONIZE()
+    
+    def _style_synchronize(self):
+        contexts.Text.update_force()
         for item in self._items:
             item._SYNCHRONIZE()
         
@@ -293,7 +298,7 @@ def _print_counter(counter):
         return '{none}'
 
 class Properties(_Properties_panel):
-    def _text_panel(self, y, KW):        
+    def _text_panel(self, y, KW):
         if self._tab == 'font':
             if styles.PARASTYLES.active is not None:
                 self._heading = ', '.join(T.name for T in styles.PARASTYLES.active.tags)
@@ -308,7 +313,7 @@ class Properties(_Properties_panel):
                     self._items.append(kookies.Counter_editor(15, y, KW, (125, 28),
                                 get_counter = lambda: styles.PARASTYLES.active.layerable.active.tags,
                                 superset = styles.FTAGS,
-                                before = un.history.save, after = lambda: (styles.PARASTYLES.update_f(), meredith.mipsy.recalculate_all(), self.synchronize())))
+                                before = un.history.save, after = lambda: (styles.PARASTYLES.update_f(), meredith.mipsy.recalculate_all(), self._synchronize())))
                     y = self._y_incr() + 20
 
                     _after_ = lambda: (styles.PARASTYLES.update_f(), meredith.mipsy.recalculate_all(), contexts.Text.update(), self._reconstruct())
@@ -333,7 +338,7 @@ class Properties(_Properties_panel):
                                 [(0, kookies.Checkbox, 'capitals', 'CAPITALS')],
                                 [(0, kookies.RGBA_field, 'color', 'COLOR')]
                                 ]
-                        self._items.extend(_stack_properties(_create_f_field, self.synchronize, y, 45, KW, props))
+                        self._items.extend(_stack_properties(_create_f_field, y, 45, KW, props, self._style_synchronize))
                         y += 45*len(props)
         
         elif self._tab == 'paragraph':
@@ -350,7 +355,7 @@ class Properties(_Properties_panel):
                 self._items.append(kookies.Counter_editor(15, y, KW, (125, 28),
                             get_counter = lambda: styles.PARASTYLES.active.tags,
                             superset = styles.PTAGS,
-                            before = un.history.save, after = lambda: (styles.PARASTYLES.update_p(), meredith.mipsy.recalculate_all(), self.synchronize())))
+                            before = un.history.save, after = lambda: (styles.PARASTYLES.update_p(), meredith.mipsy.recalculate_all(), self._synchronize())))
                 y = self._y_incr() + 20
 
                 props = [[(0, kookies.Numeric_field, 'leading', 'LEADING')],
@@ -360,7 +365,7 @@ class Properties(_Properties_panel):
                         [(0, kookies.Numeric_field, 'margin_top', 'SPACE BEFORE'), (0.5, kookies.Numeric_field, 'margin_bottom', 'SPACE AFTER')],
                         [(0, kookies.Checkbox, 'hyphenate', 'HYPHENATE')]
                         ]
-                self._items.extend(_stack_properties(_create_p_field, self.synchronize, y, 45, KW, props))
+                self._items.extend(_stack_properties(_create_p_field, y, 45, KW, props, self._style_synchronize))
                 y += 45*len(props)
                 
         
@@ -377,7 +382,7 @@ class Properties(_Properties_panel):
                 self._items.append(kookies.Blank_space(15, y, width=KW, 
                         callback = lambda * args: styles.PTAGS.active.rename( * args), 
                         value_acquire = lambda: styles.PTAGS.active.name, 
-                        before=un.history.save, after=self.synchronize, name='TAG NAME'))
+                        before=un.history.save, after=self._synchronize, name='TAG NAME'))
             y += 80
             
             self._items.append(kookies.Unordered( 15, y, KW - 50,
@@ -390,7 +395,7 @@ class Properties(_Properties_panel):
                 self._items.append(kookies.Blank_space(15, y, width=KW, 
                         callback = lambda * args: styles.FTAGS.active.rename( * args), 
                         value_acquire = lambda: styles.FTAGS.active.name, 
-                        before=un.history.save, after=self.synchronize, name='TAG NAME'))
+                        before=un.history.save, after=self._synchronize, name='TAG NAME'))
             
         elif self._tab == 'page':
             self._heading = 'Document pages'

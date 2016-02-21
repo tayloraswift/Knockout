@@ -100,7 +100,7 @@ class Table(Block_element):
     tags = {'tr', 'td'}
     DNA = {'table': {},
             'thead': {},
-            'tbody': {}}
+            'tleft': {}}
 
     def _load(self, L):
         self._tree = L
@@ -124,15 +124,21 @@ class Table(Block_element):
         return lines
 
     def typeset(self, bounds, c, y, overlay):
-        P_table, = self._modstyles(overlay, 'table')
+        P_table, P_head, P_left = self._modstyles(overlay, 'table', 'thead', 'tleft')
+        head = P_table + P_head
+        left = P_table + P_left
+        
         top = y
         row_y = []
-        for r, row in enumerate(self.data):
+        for r, overlay, row in ((c, P_table, b) if c else (c, head, b) for c, b in enumerate(self.data)):
             cellcount = len(self._MATRIX[r])
-            for cell in row:
+            for i, cell in enumerate(row):
                 # calculate percentages
                 cellbounds = TCell_container(bounds, cell.col/cellcount, (cell.col + cell.cs)/cellcount)
-                cell.cast(cellbounds, c, y, P_table)
+                if not i:
+                    cell.cast(cellbounds, c, y, overlay + P_left)
+                else:
+                    cell.cast(cellbounds, c, y, overlay)
             y = _row_height(self.data, r, y)
             row_y.append(y)
         

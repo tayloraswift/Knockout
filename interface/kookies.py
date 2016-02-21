@@ -54,7 +54,7 @@ class Button(Base_kookie):
         # set hover function equal to press function
         self.is_over_hover = self.is_over
         
-        self._add_static_text(x + width/2, self._y_bottom - self._height/2 + 5, string, align=0)
+        self._add_static_text(x + width/2, self.y_bottom - self._height/2 + 5, string, align=0)
     
     def focus(self, x, y):
         self._active = 1
@@ -74,7 +74,7 @@ class Button(Base_kookie):
             cr.set_source_rgb( * accent)
 
             radius = 5
-            y1, y2, x1, x2 = self._y, self._y_bottom, self._x, self._x_right
+            y1, y2, x1, x2 = self._y, self.y_bottom, self._x, self._x_right
             cr.arc(x1 + radius, y1 + radius, radius, 2*(pi/2), 3*(pi/2))
             cr.arc(x2 - radius, y1 + radius, radius, 3*(pi/2), 4*(pi/2))
             cr.arc(x2 - radius, y2 - radius, radius, 0*(pi/2), 1*(pi/2))
@@ -107,7 +107,7 @@ class Checkbox(Base_kookie):
         # set hover function equal to press function
         self.is_over_hover = self.is_over
         
-        self._add_static_text(self._x + 20, self._y_bottom - 5, name, align=1)
+        self._add_static_text(self._x + 20, self.y_bottom - 5, name, align=1)
 
     def _ACQUIRE_REPRESENT(self):
         self._STATE = self._value_acquire( * self._params)
@@ -132,11 +132,11 @@ class Checkbox(Base_kookie):
             cr.set_source_rgba(0,0,0, 0.6)
             cr.show_glyphs(self._texts[0])
 
-        cr.arc(self._x + 6, self._y_bottom - 9, 6, 0, 2*pi)
+        cr.arc(self._x + 6, self.y_bottom - 9, 6, 0, 2*pi)
         cr.fill()
         if not self._STATE:
             cr.set_source_rgb(1, 1, 1)
-            cr.arc(self._x + 6, self._y_bottom - 9, 4.5, 0, 2*pi)
+            cr.arc(self._x + 6, self.y_bottom - 9, 4.5, 0, 2*pi)
             cr.fill()
 
 
@@ -155,14 +155,14 @@ class Tabs(Base_kookie):
         self._construct()
 
     def is_over(self, x, y):
-        return self._y <= y <= self._y_bottom and abs(x - self._x) * 2 <= self._width
+        return self._y <= y <= self.y_bottom and abs(x - self._x) * 2 <= self._width
     
     def _construct(self):
         self._button_width = self._width/len(self._strings)
         self._x_left = []
         xo = self._x - self._width // 2
         for string in self._strings:
-            self._add_static_text(xo + self._button_width/2, self._y_bottom - self._height/2 + 5, string, align=0)
+            self._add_static_text(xo + self._button_width/2, self.y_bottom - self._height/2 + 5, string, align=0)
             self._x_left.append(int(round(xo)))
             xo += self._button_width
 
@@ -184,7 +184,7 @@ class Tabs(Base_kookie):
                 cr.set_source_rgb( * accent)
 
                 radius = 5
-                y1, y2, x1, x2 = self._y, self._y_bottom, button, button + int(round(self._button_width))
+                y1, y2, x1, x2 = self._y, self.y_bottom, button, button + int(round(self._button_width))
                 cr.arc(x1 + radius, y1 + radius, radius, 2*(pi/2), 3*(pi/2))
                 cr.arc(x2 - radius, y1 + radius, radius, 3*(pi/2), 4*(pi/2))
                 cr.arc(x2 - radius, y2 - radius, radius, 0*(pi/2), 1*(pi/2))
@@ -217,7 +217,7 @@ class Heading(Base_kookie):
     def draw(self, cr, hover=(None, None)):
         self._render_fonts(cr)
         cr.set_source_rgb(0,0,0)
-        cr.rectangle(self._x, self._y_bottom - 2, self._width, 2)
+        cr.rectangle(self._x, self.y_bottom - 2, self._width, 2)
         cr.fill()
         cr.show_glyphs(self._texts[0])
 
@@ -274,7 +274,7 @@ class Blank_space(Base_kookie):
         self._template = self._build_line(self._text_left, self._y + self.font['fontsize'] + 5, glyphs, self.font)
         
     def is_over(self, x, y):
-        return self._y <= y <= self._y_bottom and self._x - 10 <= x <= self._x_right + 10
+        return self._y <= y <= self.y_bottom and self._x - 10 <= x <= self._x_right + 10
 
     def _entry(self):
         return ''.join(self._LIST[:-1])
@@ -598,7 +598,7 @@ class Selection_menu(Base_kookie):
     def _ACQUIRE_REPRESENT(self):
         label = self._lookup_label[self._get_value( * self._params)]
         self._texts = []
-        self._add_static_text(self._x_right, self._y_bottom - self._height/2 + 5, label, align=-1)
+        self._add_static_text(self._x_right, self.y_bottom - self._height/2 + 5, label, align=-1)
 
     def _SYNCHRONIZE(self):
         self._ACQUIRE_OPTIONS()
@@ -609,7 +609,7 @@ class Selection_menu(Base_kookie):
         self._SYNCHRONIZE()
     
     def focus(self, x, y):
-        menu.menu.create(self._x, self._y_bottom - 5, 200, self._menu_options, self._MENU_PUSH, self._params, before=self._BEFORE, after=self._AFTER, source=self._source )
+        menu.menu.create(self._x, self.y_bottom - 5, 200, self._menu_options, self._MENU_PUSH, self._params, before=self._BEFORE, after=self._AFTER, source=self._source )
         self._active = True
         self._dropdown_active = True
         print('DROPDOWN')
@@ -666,7 +666,7 @@ class New_object_menu(Base_kookie):
             self._library[FS.name] = FS
             self._value_push(self._library[FS.name])
         elif J == 2:
-            menu.menu.create(self._x, self._y_bottom - 5, 200, self._menu_options, lambda *args: (self._BEFORE(), self._value_push(*args), self._AFTER()), (), source=self._source )
+            menu.menu.create(self._x, self.y_bottom - 5, 200, self._menu_options, lambda *args: (self._BEFORE(), self._value_push(*args), self._AFTER()), (), source=self._source )
             self._active = True
             self._dropdown_active = True
             print('DROPDOWN')
@@ -738,7 +738,7 @@ class Object_menu(Blank_space):
             if J == 3:
                 self._value_push(self._O.clone())
             elif J == 2:
-                menu.menu.create(self._x, self._y_bottom - 5, 200, self._menu_options, lambda *args: (self._BEFORE(), self._value_push(*args), self._AFTER()), (),  source=self._source )
+                menu.menu.create(self._x, self.y_bottom - 5, 200, self._menu_options, lambda *args: (self._BEFORE(), self._value_push(*args), self._AFTER()), (),  source=self._source )
                 self._active = True
                 self._dropdown_active = True
                 print('DROPDOWN')

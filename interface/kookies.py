@@ -155,7 +155,7 @@ class Tabs(Base_kookie):
         self._construct()
 
     def is_over(self, x, y):
-        return self._y <= y <= self._y_bottom and abs(x - self._x) <= self._width
+        return self._y <= y <= self._y_bottom and abs(x - self._x) * 2 <= self._width
     
     def _construct(self):
         self._button_width = self._width/len(self._strings)

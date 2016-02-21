@@ -197,7 +197,7 @@ class _Properties_panel(ui.Cell):
     
     def press(self, x, y, char):
         b = None
-        if y < 60:
+        if y < 90:
             box = self._tabstrip
             x -= self.width // 2
         else:
@@ -220,7 +220,7 @@ class _Properties_panel(ui.Cell):
             noticeboard.redraw_klossy.push_change()
     
     def hover(self, x, y, hovered=[None]):
-        if y < 60:
+        if y < 90:
             box = self._tabstrip
             x -= self.width // 2
         else:
@@ -382,7 +382,7 @@ class Properties(_Properties_panel):
             
             self._items.append(source.Rose_garden(10, y, width=KW + 10, 
                     e_acquire = lambda: contexts.Text.char,
-                    before = un.history.save, after = meredith.mipsy.recalculate_all))
+                    before = un.history.save, after = lambda: (self._stack(self._y_incr() + 20), meredith.mipsy.recalculate_all())))
             y = self._y_incr() + 20
         return y
 

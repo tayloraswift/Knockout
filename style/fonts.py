@@ -22,12 +22,14 @@ class Memo_font(freetype.Face):
         
         self._ordinals = {
                 }
+        
+        self.vmetrics = self.ascender / self.units_per_EM, self.descender / self.units_per_EM
     
     def advance_pixel_width(self, character):
         try:
             return self._widths[character]
         except KeyError:
-            p = self.get_advance(self.get_char_index(character), True)/self.units_per_EM
+            p = self.get_advance(self.character_index(character), True)/self.units_per_EM
             self._widths[character] = p
             return p
     

@@ -271,9 +271,12 @@ def cast_liquid_line(letters, startindex, width, leading, PP, F, hyphenate=False
             FSTYLE = styles.PARASTYLES.project_f(PP, F)
             y = -FSTYLE['shift']
             caps = FSTYLE['capitals']
+            
             GLYPHS.append((-4, x, y, FSTYLE, fstat, x))
             
         elif CT is CloseFontpost:
+            GLYPHS.append((-5, x, y, FSTYLE, fstat, x))
+            
             T = letter.F
             TAG = T.name
             
@@ -284,7 +287,6 @@ def cast_liquid_line(letters, startindex, width, leading, PP, F, hyphenate=False
             FSTYLE = styles.PARASTYLES.project_f(PP, F)
             y = -FSTYLE['shift']
             caps = FSTYLE['capitals']
-            GLYPHS.append((-5, x, y, FSTYLE, fstat, x))
             
         elif CT is Paragraph:
             if GLYPHS:
@@ -412,6 +414,7 @@ def cast_liquid_line(letters, startindex, width, leading, PP, F, hyphenate=False
 
     LINE['j'] = startindex + len(GLYPHS)
     LINE['GLYPHS'] = GLYPHS
+    LINE['fstyle'] = FSTYLE
     # cache x's
     LINE['_X_'] = [g[1] for g in GLYPHS]
 
@@ -458,9 +461,12 @@ def cast_mono_line(letters, leading, PP, F):
             FSTYLE = styles.PARASTYLES.project_f(PP, F)
             y = -FSTYLE['shift']
             caps = FSTYLE['capitals']
+            
             GLYPHS.append((-4, x, y, FSTYLE, fstat, x))
             
         elif CT is CloseFontpost:
+            GLYPHS.append((-5, x, y, FSTYLE, fstat, x))
+            
             T = letter.F
             TAG = T.name
             
@@ -471,7 +477,6 @@ def cast_mono_line(letters, leading, PP, F):
             FSTYLE = styles.PARASTYLES.project_f(PP, F)
             y = -FSTYLE['shift']
             caps = FSTYLE['capitals']
-            GLYPHS.append((-5, x, y, FSTYLE, fstat, x))
             
         elif CT is Paragraph:
             GLYPHS.append((
@@ -523,6 +528,7 @@ def cast_mono_line(letters, leading, PP, F):
 
     LINE['j'] = len(GLYPHS)
     LINE['GLYPHS'] = GLYPHS
+    LINE['fstyle'] = FSTYLE
     # cache x's
     LINE['_X_'] = [g[1] for g in GLYPHS]
     
@@ -533,3 +539,13 @@ def cast_mono_line(letters, leading, PP, F):
         LINE['advance'] = 0
     
     return LINE
+
+def calculate_vmetrics(LINE):
+    ascent, descent = LINE['fstyle'].vmetrics()
+    
+    if LINE['GLYPHS']:
+        specials = [(glyph[6].ascent, glyph[6].descent) for glyph in LINE['GLYPHS'] if glyph[0] == -89]
+        if specials:
+            A, D = zip( * specials )
+            ascent, descent = max(ascent, max(A)), min(descent, min(D))
+    return ascent, descent

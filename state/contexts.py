@@ -9,6 +9,7 @@ class Text_context(object):
         self.f = None
         self.char = None
         
+        self.ct = None
         self.c = None
         
         self.changed = set()
@@ -34,9 +35,12 @@ class Text_context(object):
             self.changed.update({'character'})
             self.char = C
 
-    def update_channels(self, c):
-        self.changed.update({'channels'})
-        self.c = c
+    def update_channels(self):
+        ct, c = caramel.delight.at()
+        if c != self.c or ct is not self.ct:
+            self.changed.update({'channels'})
+            self.c = c
+            self.ct = ct
 
     def update_force(self):
         PP, FSTYLE = cursor.fcursor.styling_at()
@@ -52,6 +56,7 @@ class Text_context(object):
         self.changed.update({'character'})
         self.char = C
         
-        self.c = caramel.delight.C()
+        self.ct, self.c = caramel.delight.at()
+        self.changed.update({'channels'})
 
 Text = Text_context()

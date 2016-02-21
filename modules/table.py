@@ -8,8 +8,7 @@ from IO.xml import print_attrs, print_styles
 from elements.elements import Block_element
 from edit.paperairplanes import interpret_int
 
-namespace = 'table'
-tags = {'tr', 'td'}
+_namespace = 'table'
 
 def _print_td(td):
         A = td[1]
@@ -97,6 +96,12 @@ def _build_matrix(data):
     return MATRIX
 
 class Table(Block_element):
+    namespace = _namespace
+    tags = {'tr', 'td'}
+    DNA = {'table': {},
+            'thead': {},
+            'tbody': {}}
+
     def _load(self, L):
         self._tree = L
         self.PP = L[0][2]
@@ -115,7 +120,7 @@ class Table(Block_element):
                 lines.extend(self._SER(C, indent + 3))
                 lines.append([indent + 2, '</td>'])
             lines.append([indent + 1, '</tr>'])
-        lines.append([indent, '</' + namespace + '>'])
+        lines.append([indent, '</' + self.namespace + '>'])
         return lines
 
     def fill(self, bounds, c, y):
@@ -141,22 +146,27 @@ class _MBlock(Block):
         self._row_y = row_y
         self._bounds = bounds
 
+        grid = []
+        cl = len(matrix[0])
+        for y in [self['y'] - self['leading']] + row_y:
+            x1, x2 = bounds.bounds(y)
+            cw = (x2 - x1)/cl
+            grid.append([(x1 + cw*c, y) for c in range(0, cl + 1)])
+        self._grid = grid
+
     def _print_annot(self, cr, O):
         if O in self._FLOW:
             cr.set_source_rgb( * accent)
-            cl = len(self._matrix[0])
-            for r, y in enumerate(self._row_y[:-1]):
-                x1, x2 = self._bounds.bounds(y)
-                cw = (x2 - x1)/cl
-                for c in range(1, cl):
-                    cr.rectangle(int(x1 + cw*c), y - 3, 1, 7)
-                    cr.rectangle(int(x1 + cw*c) - 3, y, 7, 1)
+            for x, y in chain.from_iterable(self._grid):
+                cr.rectangle(int(x), y - 3.25, 0.5, 7)
+                cr.rectangle(int(x) - 3.25, y, 7, 0.5)
+            self._handle(cr)
             cr.fill()
 
     def I(self, x, y):
         x1, x2 = self._bounds.bounds(y)
         r = bisect.bisect(self._row_y, y)
-        c = int((x - x1) // ((x2 - x1) / len(self._matrix[r])))
+        c = max(0, int((x - x1) // ((x2 - x1) / len(self._matrix[r]))))
         try:
             return self._matrix[r][c]
         except IndexError:

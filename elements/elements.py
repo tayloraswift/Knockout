@@ -1,4 +1,5 @@
 from cairo import ImageSurface
+
 from style.styles import DB_Parastyle
 from IO.xml import print_attrs, print_styles
 from state.exceptions import IO_Error
@@ -94,8 +95,10 @@ class Mod_element(object):
 
     def _modstyles(self, X, * tags):
         modstyles = self.MSL[self.__class__]
-        
-        return (X + modstyles[tag] for tag in tags)
+        if X is None:
+            return (modstyles[tag].copy() for tag in tags)
+        else:
+            return (X + modstyles[tag] for tag in tags)
 
 class Block_element(Mod_element):
     namespace = '_undef_block'

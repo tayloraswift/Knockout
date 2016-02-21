@@ -143,7 +143,7 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False, overlay=N
                 PSTYLE = styles.PARASTYLES.project_p(container.PP)
                 y += PSTYLE['margin_top']
                 try:
-                    MOD = container.fill(_Margined_LContainer(channel, PSTYLE['margin_left'], PSTYLE['margin_right']), c, y)
+                    MOD = container.typeset(_Margined_LContainer(channel, PSTYLE['margin_left'], PSTYLE['margin_right']), c, y, overlay)
                 except RuntimeError:
                     break
                 MOD['i'] = i

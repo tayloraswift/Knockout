@@ -677,6 +677,7 @@ class Document_view(ui.Cell):
 
         font = styles.ISTYLES[('strong',)]
         afs = int(6 * sqrt(self._A))
+        uscore = 1 + (self._A > 0.5)
         cr.set_font_size(afs)
         cr.set_font_face(font['font'])
         SN = font['fontmetrics'].spacenames
@@ -731,7 +732,7 @@ class Document_view(ui.Cell):
                 cr.fill()
             
             elif -41 <= a <= -30: # nbsp
-                cr.rectangle(x, y, F['fontmetrics'].spacewidths[a] * fontsize, 2)
+                cr.rectangle(x, y, F['fontmetrics'].spacewidths[a] * fontsize, uscore)
                 cr.rel_move_to(0, afs * 1.25)
                 cr.show_text(SN[a])
                 cr.fill()

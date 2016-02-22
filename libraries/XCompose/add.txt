@@ -1,3 +1,18 @@
 <Multi_key> <i> <n> <t>          	: "∫"   integral # INTEGRAL
 <Multi_key> <less> <period>         : "‹"   guilsinglleft # guillemet, left pointing single
 <Multi_key> <greater> <period>         : "›"   guilsinglright # guillemet, right pointing single
+
+# Spaces
+<Multi_key> <space> <m>      	: " "   emspace # EM SPACE
+<Multi_key> <space> <n>     	: " "   enspace # EN SPACE
+<Multi_key> <space> <3>      	: " "   u2004 # ONE-THIRD EM SPACE
+<Multi_key> <space> <4>     	: " "   u2005 # QUARTER EM SPACE
+<Multi_key> <space> <6>      	: " "   u2006 # ONE SIXTH EM SPACE
+<Multi_key> <space> <f>     	: " "   u2007 # FIGURE SPACE
+<Multi_key> <space> <numbersign>     	: " "   u2007 # FIGURE SPACE
+
+<Multi_key> <space> <5>     	: " "   thinspace # THIN SPACE
+<Multi_key> <space> <0>     	: " "   hairspace # HAIR SPACE
+<Multi_key> <space> <h>     	: " "   hairspace # HAIR SPACE
+<Multi_key> <space> <comma>     	: " "   narrow no break space # narrow no-break space
+<Multi_key> <space> <t>     	: " "   U205F # MATHEMATICAL MEDIUM SPACE

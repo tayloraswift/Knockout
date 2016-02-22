@@ -675,6 +675,12 @@ class Document_view(ui.Cell):
 
     def _draw_annotations(self, cr, annot, page):
 
+        font = styles.ISTYLES[('strong',)]
+        afs = int(6 * sqrt(self._A))
+        cr.set_font_size(afs)
+        cr.set_font_face(font['font'])
+        SN = font['fontmetrics'].spacenames
+        
         for a, x, y, PP, F in annot:
             
             x = self._X_to_screen(x, page)
@@ -722,6 +728,12 @@ class Document_view(ui.Cell):
                 cr.rel_line_to(1, 0)
                 cr.rel_line_to(3, -6)
                 cr.close_path()
+                cr.fill()
+            
+            elif -41 <= a <= -30: # nbsp
+                cr.rectangle(x, y, F['fontmetrics'].spacewidths[a] * fontsize, 2)
+                cr.rel_move_to(0, afs * 1.25)
+                cr.show_text(SN[a])
                 cr.fill()
             
             elif a == -23:

@@ -41,10 +41,9 @@ class Glyphs_line(dict):
         x += self['x']
         y += self['y']
         PP = self['PP']
-        hyphen = self['hyphen']
 
-        if hyphen is not None:
-            glyphs = self['GLYPHS'] + [hyphen]
+        if self['hyphen'] is not None:
+            glyphs = self['GLYPHS'] + [self['hyphen']]
         else:
             glyphs = self['GLYPHS']
         
@@ -57,7 +56,7 @@ class Glyphs_line(dict):
                 elif glyph[0] == -89:
                     glyph[6].deposit_glyphs(repository, x, y)
                 else:
-                    repository['_annot'].append((glyph[0], glyph[1] + x, glyph[2] + y) + (PP, glyph[3]))
+                    repository['_annot'].append((glyph[0], glyph[1] + x, glyph[2] + y, PP, glyph[3]))
             else:
                 K = (glyph[0], glyph[1] + x, glyph[2] + y)
                 N = glyph[3]['hash']

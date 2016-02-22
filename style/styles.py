@@ -194,7 +194,7 @@ class _F_layers(_Active_list):
 def cast_parastyle(pdict, count):
     if 'fontclasses' in pdict:
         i, E = pdict.pop('fontclasses')
-        layerable = _F_layers(i, (_F_container(FONTSTYLES[F], Counter({FTAGS[T]:V for T, V in tags.items()})) for F, tags in E))
+        layerable = _F_layers(i, (_F_container(FONTSTYLES.get(F, None), Counter({FTAGS[T]:V for T, V in tags.items()})) for F, tags in E))
     else:
         layerable = _F_layers()
     return DB_Parastyle(pdict, layerable, Counter(count))
@@ -254,6 +254,11 @@ class T_Library(dict):
         groups = set(chain.from_iterable(G for T, G in L))
         D.update({G: Tag(self, G, [G], True) for G in groups})
         self.update(D)
+    
+    def __missing__(self, name):
+        print('Warning: a new style tag \'' + name + '\' has been introduced')
+        self[name] = Tag(self, name, [])
+        return self[name]
     
     def add_slot(self):
         if self.active is not None:

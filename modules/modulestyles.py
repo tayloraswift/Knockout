@@ -26,7 +26,7 @@ class MS_Library(dict):
             E = module.DNA.copy()
             if ns in S:
                 E.update(S[ns])
-            D[module] = {T: Counter(dict((FTAGS[N], C) for N, C in V.items() if N in FTAGS)) for T, V in E.items()}
+            D[module] = {T: Counter(dict((FTAGS[N], C) for N, C in V.items())) for T, V in E.items()}
         
         PTAGS = styles.PTAGS
         for module in self._block:
@@ -34,5 +34,5 @@ class MS_Library(dict):
             E = module.DNA.copy()
             if ns in S:
                 E.update(S[ns])
-            D[module] = {T: Counter(dict((PTAGS[N], C) for N, C in V.items() if N in PTAGS)) for T, V in E.items()}
+            D[module] = {T: Counter(dict((PTAGS[N], C) for N, C in V.items())) for T, V in E.items()}
         dict.__init__(self, D)

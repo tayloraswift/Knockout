@@ -1,7 +1,8 @@
 from bulletholes.counter import TCounter as Counter
 from style import styles
 
-S= {'mod:bounded': {'symbol': {'big': 1},
+S= {'mi': {'mi': {'emphasis': 1}},
+    'mod:bounded': {'symbol': {'big': 1},
                 'bottom': {'small': 1},
                 'top': {'small': 1}},
     'mod:root': {'index': {'small': 1}},

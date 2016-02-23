@@ -4,7 +4,7 @@ from ast import literal_eval
 from bulletholes.counter import TCounter as Counter
 from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image, Inline_element, Block_element
 from style import styles
-from modules import modules, moduletags, inlinetags, blocktags
+from modules import modules, moduletags, inlinecontainers, inlinetags, blocktags
 from state.exceptions import IO_Error
 
 def _create_paragraph(attrs):
@@ -66,15 +66,21 @@ class Minion(parser.HTMLParser):
             O.append(M)
             self._C.append(M)
 
-    def handle_startendtag(self, tag, attrs):
+    def _se(self, tag, attrs):
         attrs = dict(attrs)
         O = self._C[-1][1]
         if tag == 'br':
             O.append('<br/>')
-        if tag == 'image':
+        elif tag == 'image':
             src = attrs.get('src', None)
             width = int(attrs.get('width', 89))
             O.append(Image(src, width))
+        elif tag in inlinetags:
+            O.append(modules[tag](((tag, attrs), []), deserialize, ser))
+    
+    def handle_startendtag(self, tag, attrs):
+        if self._breadcrumbs[-1] in inlinecontainers:
+            self._se(tag, attrs)
 
     def handle_endtag(self, tag):
         O = self._C[-1][1]
@@ -98,9 +104,8 @@ class Minion(parser.HTMLParser):
 
     def handle_data(self, data):
         # this should be disabled on the last blob, unless we are sure the container is 'p'
-        O = self._C[-1][1]
-        container = self._breadcrumbs[-1]
-        if container in inlinetags:
+        if self._breadcrumbs[-1] in inlinecontainers:
+            O = self._C[-1][1]
             O.extend(list(data))
 
 class Kevin_from_TN(Minion): # to capture the first and last blobs
@@ -113,12 +118,20 @@ class Kevin_from_TN(Minion): # to capture the first and last blobs
         else:
             raise IO_Error('Syntax error: tag mismatch')
     
+    def handle_startendtag(self, tag, attrs):
+        if self._breadcrumbs[-1] in inlinecontainers:
+            self._se(tag, attrs)
+        elif self._first: # register the first blob
+            self._first = False
+            self._breadcrumbs.append('p') # virtual paragraph container
+            self._se(tag, attrs)
+            
     def handle_data(self, data):
-        O = self._C[-1][1]
-        container = self._breadcrumbs[-1]
-        if container in inlinetags:
+        if self._breadcrumbs[-1] in inlinecontainers:
+            O = self._C[-1][1]
             O.extend(list(data))
         elif self._first: # register the first blob
+            O = self._C[-1][1]
             self._first = False
             self._breadcrumbs.append('p') # virtual paragraph container
             liquid = list(data)

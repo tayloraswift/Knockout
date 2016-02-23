@@ -571,6 +571,7 @@ class Outline( object ):
         data = []
         for i in range(n):
             v = self._FT_Outline.points[i]
+            print(self._FT_Outline.points[i].y)
             data.append( (v.x,v.y) )
         return data
     points = property( _get_points,

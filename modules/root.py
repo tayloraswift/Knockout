@@ -28,20 +28,19 @@ class Root(Inline_element):
     
     def cast_inline(self, x, y, leading, PP, F, FSTYLE):
         self._color = FSTYLE['color']
+        y += FSTYLE['shift']
+        
         F_index, F_rad = self._modstyles(F, 'index', 'radicand')
 
         index = cast_mono_line(self._INLINE[0], 13, PP, F_index)
         rad = cast_mono_line(self._INLINE[1], 13, PP, F_rad)
-        
-        
-
         
         rad_asc, rad_desc = calculate_vmetrics(rad)
 
         k = x + index['advance']
         
         rfs = FSTYLE['fontsize']
-        iy = y - rfs * 0.44
+        iy = y - rfs * 0.44 - FSTYLE['shift']
         ix = k - rfs * 0.30
         jx = ix - rad_desc * 0.4
         kx = jx + (rad_asc - rad_desc)*0.3

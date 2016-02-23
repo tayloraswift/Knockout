@@ -9,7 +9,7 @@
 <section>
 <p>This typesetting editor is an application I have been developing for over                     ,   0  +       half a year. The codebase was written fro  +|<mi char="n"/>|+.                           .</p>
 
-<p style="{'margin_bottom': 25, 'leading': 30}">own √ <mod:root>
+<p style="{'leading': 30, 'margin_bottom': 25}">own √ <mod:root>
     <mod:root:index>3</mod:root:index>
     <mod:root:radicand>U</mod:root:radicand>
 </mod:root> + <mod:root>
@@ -51,7 +51,7 @@
 
 <p>&lt;<f class="link">https://github.com/kelvin13/shifty-octocat</f class="link">&gt;, where it will work out of the box on any Linux installation.</p>
 
-<p style="{'margin_bottom': 60, 'leading': 40}"><mod:bounded align="1">
+<p style="{'leading': 40, 'margin_bottom': 60}"><mod:bounded align="1">
     <mod:bounded:symbol>∫</mod:bounded:symbol>
     <mod:bounded:bottom>13</mod:bounded:bottom>
     <mod:bounded:top>22 + <mod:fraction>
@@ -115,7 +115,7 @@
 
 <p style="{'margin_top': 6, 'margin_left': 20, 'fontclasses': (0, [('Italic', {})])}">—Kelvin Ma</p>
 
-<p style="{'leading': 200}"><image src="plantcell.svg" width="300" /></p>
+<p style="{'leading': 200}"><image width="300" src="platcell.svg"/></p>
 
 <p class="h2">What is additive styling?</p>
 
@@ -124,7 +124,7 @@
 <p style="{'align': 0}">Subtitle</p>
 
 <mod:pie radius="60" class="h2">
-    <mod:pie:slice color="#ff3085" prop="13">
+    <mod:pie:slice prop="13" color="#ff3085">
         <p>A = <mod:fraction>
             <mod:fraction:numerator>abc + <mod:fraction>
                     <mod:fraction:numerator>e</mod:fraction:numerator>
@@ -133,23 +133,23 @@
             <mod:fraction:denominator><em>x</em></mod:fraction:denominator>
         </mod:fraction> </p>
     </mod:pie:slice>
-    <mod:pie:slice color="#ff50a0" prop="22">
+    <mod:pie:slice prop="22" color="#ff50a0">
         <p>Section B</p>
     </mod:pie:slice>
-    <mod:pie:slice color="#f020ff" prop="69">
+    <mod:pie:slice prop="69" color="#f020ff">
         <p>Section C</p>
     </mod:pie:slice>
-    <mod:pie:slice color="#b050ff" prop="89">
+    <mod:pie:slice prop="89" color="#b050ff">
         <p>Section D</p>
     </mod:pie:slice>
-    <mod:pie:slice color="#7080ff" prop="113">
+    <mod:pie:slice prop="113" color="#7080ff">
         <p>Section E</p>
     </mod:pie:slice>
 </mod:pie>
 
 <p>Additive styling is the idea that multiple “building block” text styles can be defined and combined to create the visual styles seen on the page. For exam</p>
 
-<table cellbottom="7" rulewidth="1" rulemargin="2" celltop="0" distr="2, 3, 3" hrules="1">
+<table cellbottom="7" hrules="1" rulemargin="2" rulewidth="1" distr="2, 3, 3" celltop="0">
     <tr>
         <td>
             <p>Country</p>
@@ -157,12 +157,12 @@
         <td>
             <p>GDP</p>
             
-            <p class="tablehead units&body">Trillions USD</p>
+            <p class="body&tablehead units">Trillions USD</p>
         </td>
         <td>
             <p>Population</p>
             
-            <p class="tablehead units&body">millions</p>
+            <p class="body&tablehead units">millions</p>
         </td>
     </tr>
     <tr>
@@ -225,7 +225,7 @@
 
 <p>Instead of “single” or “double” spacing, Vedit lets the writer specify the literal point size of the <strong>leading</strong>, or line height. This helps you predict the amount of space that text will take up, and helps you avoid text alignment headaches, since the spacing is always constant and measurable. </p>
 
-<p style="{'indent': (30, 1, 0), 'indent_range': {0, 1}}"><strong>Indentation</strong> is powerful in Vedit. The lines over which it takes effect can be explicitly enumerated (in a relative count from the start of the paragraph), and it can be set in terms of the character positions of the first line. </p>
+<p style="{'indent_range': {0, 1}, 'indent': (30, 1, 0)}"><strong>Indentation</strong> is powerful in Vedit. The lines over which it takes effect can be explicitly enumerated (in a relative count from the start of the paragraph), and it can be set in terms of the character positions of the first line. </p>
 
 <p style="{'indent': (0, -1, 4)}">—&gt;  This is very useful for creating <strong>hanging indents</strong>.</p>
 
@@ -268,10 +268,10 @@
         </td>
         <td>
             <mod:pie radius="40">
-                <mod:pie:slice color="#ff3085" prop="13">
+                <mod:pie:slice prop="13" color="#ff3085">
                     <p>Section A</p>
                 </mod:pie:slice>
-                <mod:pie:slice color="#ff50a0" prop="22">
+                <mod:pie:slice prop="22" color="#ff50a0">
                     <p>Section B</p>
                 </mod:pie:slice>
             </mod:pie>
@@ -305,7 +305,7 @@
         <td colspan="3">
             <p class="h2">Who doesn’t love Meredith Grey?</p>
             
-            <p style="{'align': 0, 'fontclasses': (0, [('Italic', {}), ('Regular', {'emphasis': 1})]), 'leading': 200}"><image src="meredith.png" width="200" />ab<em>c</em>d</p>
+            <p style="{'leading': 200, 'align': 0, 'fontclasses': (0, [('Italic', {}), ('Regular', {'emphasis': 1})])}"><image width="200" src="meredith.png"/>ab<em>c</em>d</p>
             
             <p class="body&gray">(Taylor, evidently.)</p>
             
@@ -364,7 +364,7 @@
                 'Table': {'path': 'fonts/FiraSans-Book.otf', 'tracking': 0.5},
                 'Table bold': {'path': 'fonts/FiraSans-SemiBold.otf'},
                 'h3': {'capitals': True, 'fontsize': 16, 'path': 'fonts/FiraSans-Book.otf', 'tracking': 1}},
- 'FTAGLIST': [('sup', ['small']), ('emphasis', []), ('sub', ['small']), ('big', []), ('link', []), ('strong', []), ('caption', [])],
+ 'FTAGLIST': [('sup', ['small']), ('link', []), ('sub', ['small']), ('strong', []), ('big', []), ('emphasis', []), ('caption', [])],
  'PARASTYLES': (1,
                 [({'fontclasses': (2, [('Black', {}), ('Subscript', {'sub': 1}), ('Superscript', {'sup': 1})])}, {}),
                  ({'fontclasses': (9,
@@ -390,8 +390,8 @@
                  ({'align': 0.8, 'fontclasses': (0, [('Table bold', {})])}, {'tableleft': 1}),
                  ({'align': 0.5, 'align_to': '', 'fontclasses': (None, [('Table bold', {}), ('Capitals', {})]), 'margin_bottom': 0}, {'tablehead': 1}),
                  ({'fontclasses': (1, [('Small', {}), ('Table bold', {})]), 'leading': 16}, {'tablehead units': 1})]),
- 'PTAGLIST': [('tablehead units', []), ('h2', []), ('h1', []), ('gray', []), ('body', []), ('tableleft', []), ('tablehead', []), ('h3', []), ('tablecell', [])],
- 'contexts': {'channels': {'c': 9, 'p': 8, 't': 1}, 'text': {'i': 599, 'j': 599, 'p': 1, 't': 1}},
+ 'PTAGLIST': [('h1', []), ('tableleft', []), ('body', []), ('h3', []), ('gray', []), ('h2', []), ('tablehead units', []), ('tablehead', []), ('tablecell', [])],
+ 'contexts': {'channels': {'c': 9, 'p': 8, 't': 1}, 'text': {'i': 598, 'j': 598, 'p': 1, 't': 1}},
  'grid': [[120, 480], [120, 480]],
  'outlines': ([(([[120, 120, False], [120, 200, False]], [[480, 120, False], [480, 200, False]]), 0)],
               [(([[120, 210, False], [120, 480, False]], [[480, 210, False], [480, 480, False]]), 0),

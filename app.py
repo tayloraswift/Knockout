@@ -283,10 +283,12 @@ class Display(Gtk.Window):
         
         if e.state & Gdk.ModifierType.SHIFT_MASK and name == 'Return':
             self._active.key_input('paragraph', None)
-                
+        
         elif e.state & Gdk.ModifierType.CONTROL_MASK:
+            if e.state & Gdk.ModifierType.MOD1_MASK:
+                self._active.key_input('Ctrl Alt', chr(Gdk.keyval_to_unicode(e.keyval)))
             
-            if name == 'z':
+            elif name == 'z':
                 do.undo()
             elif name == 'y':
                 do.redo()
@@ -306,11 +308,10 @@ class Display(Gtk.Window):
             elif name == 'a':
                 self._active.key_input('All', None)
 
-            elif name not in {'Shift_L', 'Shift_R'}:
+            elif name not in {'Shift_L', 'Shift_R', 'Alt_L', 'Alt_R'}:
                 self._active.key_input('Ctrl ' + name, chr(Gdk.keyval_to_unicode(e.keyval)))
         
         elif name in _special_keys:
-
             if name in _dead_keys:
                 self._compose = True
                 # build compositor

@@ -1,6 +1,6 @@
 from cairo import ImageSurface, Context, FORMAT_ARGB32
+from urllib.error import URLError
 
-from model.cat import cast_mono_line, calculate_vmetrics
 from elements.elements import Inline_SE_element
 from model.olivia import Inline
 from edit.paperairplanes import interpret_int
@@ -18,13 +18,17 @@ class RImage(Inline_SE_element):
         
         self.src = A[0][1].get('src', '')
         self.width = interpret_int(A[0][1].get('width', 89))
-
+        self._surface_cache = None
         if self.src[-4:] == '.svg':
-            self._CSVG = render_SVG(url=self.src)
-            self.h = int(self._CSVG.context_width)
-            self.k = int(self._CSVG.context_height)
-            self.render_image = self.paint_SVG
-            self._surface_cache = None
+            try:
+                self._CSVG = render_SVG(self.src)
+                self.h = int(self._CSVG.context_width)
+                self.k = int(self._CSVG.context_height)
+                self.render_image = self.paint_SVG
+            except URLError:
+                self.h = 89
+                self.k = 0
+                self.render_image = self.paint_Error
         else:
             self.render_image = self.paint_PNG
             self._surface_cache = ImageSurface.create_from_png(self.src)
@@ -52,9 +56,26 @@ class RImage(Inline_SE_element):
         cr.set_source_surface(self._surface_cache)
         cr.paint()
     
+    def paint_Error(self, cr, render):
+        cr.set_source_rgba(1, 0, 0.1, 0.7)
+        cr.rectangle(0, 0, 2 + self.width*0.1, 2)
+        cr.rectangle(0, 2, 2, self.v*0.1)
+        
+        cr.rectangle(0, self.v, 2 + self.width*0.1, -2)
+        cr.rectangle(0, self.v, 2, -self.v*0.1)
+
+        cr.rectangle(self.width, self.v, -2 - self.width*0.1, -2)
+        cr.rectangle(self.width, self.v, -2, -self.v*0.1)
+
+        cr.rectangle(self.width, 0, -2 - self.width*0.1, 2)
+        cr.rectangle(self.width, 0, -2, self.v*0.1)
+        
+        cr.show_text('Image not found')
+        cr.fill()
+    
     def cast_inline(self, x, y, leading, PP, F, FSTYLE):
         glyphwidth = self.width
-
+        self.v = leading
         return _MInline(glyphwidth, leading, self.k * self.factor - leading, self.render_image)
 
     def __len__(self):

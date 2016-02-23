@@ -4,7 +4,7 @@ import time
 from style import styles
 from edit import cursor
 
-from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image
+from elements.elements import Paragraph, OpenFontpost, CloseFontpost
 
 from IO import un, kevin
 

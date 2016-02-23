@@ -569,11 +569,14 @@ class Document_view(ui.Cell):
         return classed_pages
     
     def print_page(self, cr, p, classed_pages):
+        m = self._mode
+        self._mode = 'render'
         if p in classed_pages:
             self._draw_images(cr, classed_pages[p]['_images'])
             for operation in classed_pages[p]['_paint']:
                 operation(cr)
             self._print_sorted(cr, classed_pages[p])
+        self._mode = m
             
     def _draw_by_page(self, cr, mx_cx, my_cy, cx, cy, A=1, refresh=False):
         PHEIGHT = meredith.page.HEIGHT
@@ -661,15 +664,12 @@ class Document_view(ui.Cell):
                 caramel.delight.render_grid(cr, px, py, PWIDTH, PHEIGHT, self._A)
 
     def _draw_images(self, cr, images):
+        mode = self._mode == 'render'
         for IMAGE, x, y in images:
-            image_surface, factor = IMAGE
-            
             cr.save()
             cr.translate(x, y)
-            cr.scale(factor, factor)
             
-            cr.set_source_surface(image_surface, 0, 0)
-            cr.paint()
+            IMAGE(cr, mode)
             
             cr.restore()
 

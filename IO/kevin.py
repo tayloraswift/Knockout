@@ -2,7 +2,7 @@ from html import parser, unescape, escape
 from ast import literal_eval
 
 from bulletholes.counter import TCounter as Counter
-from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image, Inline_element, Block_element
+from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Inline_element, Block_element
 from style import styles
 from modules import modules, moduletags, inlinecontainers, inlinetags, blocktags
 from state.exceptions import IO_Error
@@ -71,10 +71,6 @@ class Minion(parser.HTMLParser):
         O = self._C[-1][1]
         if tag == 'br':
             O.append('<br/>')
-        elif tag == 'image':
-            src = attrs.get('src', None)
-            width = int(attrs.get('width', 89))
-            O.append(Image(src, width))
         elif tag in inlinetags:
             O.append(modules[tag](((tag, attrs), []), deserialize, ser))
     

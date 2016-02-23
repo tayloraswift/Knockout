@@ -417,7 +417,7 @@ class Properties(_Properties_panel):
             
             self._items.append(source.Rose_garden(10, y, width=KW + 10, 
                     e_acquire = lambda: contexts.Text.char,
-                    before = un.history.save, after = lambda: (self._stack(20), meredith.mipsy.recalculate_all())))
+                    before = un.history.save, after = lambda: (self._stack(20), meredith.mipsy.recalculate_all(), contexts.Text.update())))
             y = self._y_incr() + 20
         return y
 

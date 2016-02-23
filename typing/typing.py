@@ -104,7 +104,10 @@ class Keyboard(dict):
         elif name == 'Return':
             un.history.undo_save(1)
             cursor.fcursor.insert(['<br/>'])
-
+        elif name == 'Ctrl Alt':
+            un.history.undo_save(1)
+            cursor.fcursor.insert(kevin.deserialize('<mi char="' + char + '"/>', fragment=True))
+            
         elif name == 'Paste':
             if char:
                 un.history.undo_save(3)

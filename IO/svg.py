@@ -1,5 +1,5 @@
-from cairosvg import surface, parser
-from cairosvg.helpers import node_format, preserved_ratio, size
+from libraries.cairosvg import surface, parser
+from libraries.cairosvg.helpers import node_format, preserved_ratio, size
 
 class RSurface(surface.Surface):
     def __init__(self, tree):

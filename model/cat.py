@@ -5,7 +5,7 @@ from libraries.pyphen import pyphen
 from bulletholes.counter import TCounter as Counter
 from model.george import Swimming_pool
 from style import styles
-from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image, Block_element
+from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Block_element
 
 pyphen.language_fallback('en_US')
 hy = pyphen.Pyphen(lang='en_US')
@@ -51,8 +51,6 @@ class Glyphs_line(dict):
             if glyph[0] < 0:
                 if glyph[0] == -6:
                     repository['_annot'].append( (glyph[0], x, y + self['leading'], PP, glyph[3]))
-                elif glyph[0] == -13:
-                    repository['_images'].append( (glyph[6], glyph[1] + x, glyph[2] + y) )
                 elif glyph[0] == -89:
                     glyph[6].deposit_glyphs(repository, x, y)
                 else:
@@ -337,12 +335,6 @@ def cast_liquid_line(letters, startindex, width, leading, PP, F, hyphenate=False
                         fstat,                                          # 4
                         x + glyphwidth                                  # 5
                         ))
-            
-            elif CT is Image:
-                glyphwidth = letter.width
-                                                              # additional fields:  image object | scale ratio
-                GLYPHS.append((-13, x, y - leading, FSTYLE, fstat, x + glyphwidth, (letter.image_surface, letter.factor)))
-
             else:
                 try:
                     inline = letter.cast_inline(x, y, leading, PP, F, FSTYLE)
@@ -522,12 +514,6 @@ def cast_mono_line(letters, leading, PP, F):
                         fstat,                                          # 4
                         x + glyphwidth                                  # 5
                         ))
-            
-            elif CT is Image:
-                glyphwidth = letter.width
-                                                              # additional fields:  image object | scale ratio
-                GLYPHS.append((-13, x, y - leading, FSTYLE, fstat, x + glyphwidth, (letter.image_surface, letter.factor)))
-
             else:
                 try:
                     inline = letter.cast_inline(x, y, leading, PP, F, FSTYLE)

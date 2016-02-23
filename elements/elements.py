@@ -1,7 +1,8 @@
-from cairo import ImageSurface
+from cairo import ImageSurface, Context, FORMAT_ARGB32
 
 from style.styles import DB_Parastyle
 from IO.xml import print_attrs, print_styles
+from IO.svg import render_SVG
 from state.exceptions import IO_Error
 
 textstyles = {'emphasis': 'em', 'strong': 'strong', 'sup': 'sup', 'sub': 'sub'}
@@ -57,24 +58,6 @@ class CloseFontpost(_Fontpost):
 
     def __len__(self):
         return 4
-
-class Image(object):
-    def __init__(self, src, width):
-        self.src = src
-        self.width = width
-
-        # cache image surface creation
-        self.image_surface = ImageSurface.create_from_png(src)
-        self.factor = width / self.image_surface.get_width()
-
-    def __str__(self):
-        return '<image>'
-
-    def __repr__(self):
-        return '<image src="' + self.src + '" width=' + str(self.width) + ' />'
-
-    def __len__(self):
-        return 7
 
 class Mod_element(object):
     namespace = '_undef'

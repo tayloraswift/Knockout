@@ -1,7 +1,7 @@
 import bisect
 from model.wonder import words, _breaking_chars
 from model import meredith, olivia
-from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Image, Block_element
+from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Block_element
 
 class FCursor(object):
     def __init__(self, ctx):

@@ -34,9 +34,9 @@ class PieChart(Block_element):
     def represent(self, indent):
         name, attrs = self._tree[0][:2]
         attrs.update(print_styles(self.PP))
-        lines = [[indent, print_attrs(name, attrs)]]
+        lines = [[indent, '<' + print_attrs(name, attrs) + '>']]
         for tag, E in self._tree[1]:
-            lines.append([indent + 1, print_attrs( * tag)])
+            lines.append([indent + 1, '<' + print_attrs( * tag ) + '>'])
             lines.extend(self._SER(E, indent + 2))
             lines.append([indent + 1, '</' + tag[0] + '>'])
         lines.append([indent, '</' + self.namespace + '>'])

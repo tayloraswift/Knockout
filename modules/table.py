@@ -132,7 +132,7 @@ class Table(Block_element):
     def represent(self, indent):
         name, attrs = self._tree[0][:2]
         attrs.update(print_styles(self.PP))
-        lines = [[indent, print_attrs(name, attrs)]]
+        lines = [[indent, '<' + print_attrs(name, attrs) + '>']]
         for tr, R in self._tree[1]:
             lines.append([indent + 1, '<tr>'])
             for td, C in R:

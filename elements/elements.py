@@ -20,7 +20,7 @@ class Paragraph(object):
     
     def __repr__(self):
         attrs = print_styles(self)
-        return print_attrs('p', attrs)
+        return '<' + print_attrs('p', attrs) + '>'
 
     def __len__(self):
         return 3
@@ -87,10 +87,10 @@ class Mod_element(object):
     
     def transfer(self, B):
         try:
-            E = self._DESR(B)
+            E = self._DESR(B, fragment = True)
         except IO_Error:
             return False
-        self._load(E[0]._tree) #yes, we are building an entirely new object and taking its image
+        self._load(next(e for e in E if type(e) is self.__class__)._tree) #yes, we are building an entirely new object and taking its image
         return True
 
     def _modstyles(self, X, * tags):
@@ -107,12 +107,16 @@ class Inline_element(Mod_element):
     namespace = '_undef_inline'
 
     def represent(self, indent):
-        lines = [[indent, print_attrs( * self._tree[0])]]
+        lines = [[indent, '<' + print_attrs( * self._tree[0] ) + '>']]
         for tag, E in self._tree[1]:
             content = self._SER(E, indent + 2)
-            content[0] = [indent + 1, print_attrs( * tag) + content[0][1]]
+            content[0] = [indent + 1, '<' + print_attrs( * tag ) + '>' + content[0][1]]
             content[-1][1] += '</' + tag[0] + '>'
             
             lines.extend(content)
         lines.append([indent, '</' + self.namespace + '>'])
         return lines
+
+class Inline_SE_element(Inline_element):
+    def represent(self, indent):
+        return [[indent, '<' + print_attrs( * self._tree[0] ) + '/>']]

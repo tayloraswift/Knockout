@@ -3,7 +3,6 @@ from itertools import chain, accumulate
 from bisect import bisect
 
 from model.olivia import Atomic_text, Block
-from edit.paperairplanes import interpret_rgba, interpret_float
 from IO.xml import print_attrs, print_styles
 from elements.elements import Block_element
 
@@ -20,12 +19,16 @@ class PieChart(Block_element):
     namespace = _namespace
     tags = {_namespace + ':' + T for T in ('slice',)}
     DNA = {'slice': {}}
-            
+    
+    ADNA = {_namespace: [('radius', 89, 'float')],
+            'slice': [('prop', 1, 'float'), ('color', '#ff3085', 'rgba')]}
+    documentation = [(0, _namespace), (1, 'slice')]
+    
     def _load(self, L):
         self._tree = L
         self.PP = L[0][2]
-        radius = interpret_float(L[0][1].get('radius', 89))
-        slices, labels = zip( * (( (interpret_float(tag[1]['prop']), interpret_rgba(tag[1]['color'])), E) for tag, E in L[1] if tag[0] == self.namespace + ':slice'))
+        radius, = self._get_attributes(_namespace)
+        slices, labels = zip( * (( tuple(self._get_attributes('slice', tag[1])), E) for tag, E in L[1] if tag[0] == self.namespace + ':slice'))
         total = sum(P for P, C in slices)
                        # percentage | arc length | color
         self._pie = _Pie([(P/total, P/total*2*pi, C) for P, C in slices], radius)

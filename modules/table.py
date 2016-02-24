@@ -6,7 +6,6 @@ from model.george import Swimming_pool
 from interface.base import accent
 from IO.xml import print_attrs, print_styles
 from elements.elements import Block_element
-from edit.paperairplanes import interpret_int, interpret_float, interpret_float_tuple, interpret_enumeration
 
 _namespace = 'table'
 
@@ -102,30 +101,31 @@ class Table(Block_element):
             'thead': {},
             'tleft': {}}
 
+    ADNA = {_namespace: [('distr', '', 'float tuple'), ('celltop', 0, 'float'), ('cellbottom', 0, 'float'), ('hrules', set(), 'int set'), ('vrules', set(), 'int set'), ('rulemargin', 0, 'int'), ('rulewidth', 1, 'float')],
+            'td': [('rowspan', 1, 'int'), ('colspan', 1, 'int')]
+            }
+    documentation = [(0, _namespace), (1, 'tr'), (2, 'td')]
+
     def _load(self, L):
         self._tree = L
         self.PP = L[0][2]
-        self.data = [[_Table_cell(C, interpret_int(td[1].get('rowspan', 1)), interpret_int(td[1].get('colspan', 1))) for td, C in R] for tr, R in L[1]]
+        
+        GA = self._get_attributes
+        self.data = [[_Table_cell(C, * GA('td', td[1])) for td, C in R] for tr, R in L[1]]
         self._FLOW = [cell for row in self.data for cell in row]
         self._MATRIX = _build_matrix(self.data)
         
-        attrs = L[0][1]
+        distr, self._celltop, self._cellbottom, hrules, vrules, rulemargin, rulewidth = self._get_attributes(_namespace)
         # columns
         cl = len(self._MATRIX[0])
-        distr = [0] + [d if d else 1 for d in interpret_float_tuple(attrs.get('distr', ''))]
+        distr = [0] + [d if d else 1 for d in distr]
         distr.extend([1] * (cl - len(distr) + 1))
         total = sum(distr)
         self._MATRIX.partitions = tuple(accumulate(d/total for d in distr))
         
         # rules
-        rulemargin = interpret_int(attrs.get('rulemargin', 0))
-        rulewidth = interpret_float(attrs.get('rulewidth', 1))
-        hrules = [i for i in interpret_enumeration(attrs.get('hrules', '')) if 0 <= i <= len(self._MATRIX)]
-        vrules = [i for i in interpret_enumeration(attrs.get('vrules', '')) if 0 <= i <= cl]
-
-        # margins
-        self._celltop = interpret_float(attrs.get('celltop', 0))
-        self._cellbottom = interpret_float(attrs.get('cellbottom', 0))
+        hrules = [i for i in hrules if 0 <= i <= len(self._MATRIX)]
+        vrules = [i for i in vrules if 0 <= i <= cl]
                 
         self._table = {'rulemargin': rulemargin, 'rulewidth': rulewidth, 'hrules': hrules, 'vrules': vrules}
         

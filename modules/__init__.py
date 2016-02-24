@@ -1,7 +1,7 @@
 from itertools import chain
 from . import table, pie, fraction, bounded, root, mi, image
 
-INLINE = (fraction.Fraction, bounded.Bounded, root.Root, mi.Math_italic, image.RImage)
+INLINE = (fraction.Fraction, bounded.Bounded, root.Root, mi.Math_italic, image.Image)
 BLOCK = (table.Table, pie.PieChart)
 
 def _load_module(mods):

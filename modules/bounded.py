@@ -1,6 +1,5 @@
 from model.cat import cast_mono_line, calculate_vmetrics
 from elements.elements import Inline_element
-from edit.paperairplanes import interpret_int
 from model.olivia import Inline
 
 _namespace = 'mod:bounded'
@@ -12,13 +11,16 @@ class Bounded(Inline_element):
             'bottom': {},
             'top': {}}
     
+    ADNA = {_namespace: [('align', 1, 'int')]}
+    documentation = [(0, _namespace), (1, 'symbol'), (1, 'bottom'), (1, 'top')]
+    
     def _load(self, L):
         self._tree = L
         symbol = next(E for tag, E in L[1] if tag[0] == self.namespace + ':symbol')
         a = next(E for tag, E in L[1] if tag[0] == self.namespace + ':bottom')
         b = next(E for tag, E in L[1] if tag[0] == self.namespace + ':top')
         
-        align = interpret_int(L[0][1].get('align', 1))
+        align, = self._get_attributes(_namespace)
         if align:
             self.cast_inline = self._cast_inline_inline
         else:

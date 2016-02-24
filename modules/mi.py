@@ -11,9 +11,12 @@ class Math_italic(Inline_SE_element):
     tags = {}
     DNA = {'mi': {}}
     
+    ADNA = {_namespace: [('char', '', 'str')]}
+    documentation = [(0, _namespace)]
+    
     def _load(self, A):
         self._tree = A
-        ch = A[0][1].get('char', '')
+        ch, = self._get_attributes(_namespace)
         if ch:
             self.char = ch
         else:

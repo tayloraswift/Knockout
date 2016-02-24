@@ -10,6 +10,8 @@ class Fraction(Inline_element):
     DNA = {'numerator': {},
             'denominator': {}}
     
+    documentation = [(0, _namespace), (1, 'numerator'), (1, 'denominator')]
+    
     def _load(self, L):
         self._tree = L
         

@@ -16,16 +16,17 @@ class RSurface(surface.Surface):
         self.output = None
         self.dpi = 1989
 
-        width, height, viewbox = node_format(self, tree)
+        self.h, self.k, self.v = node_format(self, tree)
 
-        # Initial, non-rounded dimensions
-        self.set_context_size(width, height, viewbox, preserved_ratio(tree))
-        
         self.tree_cache = {(tree.url, tree.get('id')): tree}
         self.TREE = tree
+        
     
     def paint_SVG(self, CR):
         self.context = CR
+        
+        # Initial, non-rounded dimensions
+        self.set_context_size(self.h, self.k, self.v, preserved_ratio(self.TREE))
         
         self.cursor_position = [0, 0]
         self.cursor_d_position = [0, 0]

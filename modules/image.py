@@ -24,8 +24,8 @@ class Image(Inline_SE_element):
         if self.src[-4:] == '.svg':
             try:
                 self._CSVG = render_SVG(self.src)
-                self.h = int(self._CSVG.context_width)
-                self.k = int(self._CSVG.context_height)
+                self.h = int(self._CSVG.h)
+                self.k = int(self._CSVG.k)
                 self.render_image = self.paint_SVG
             except URLError:
                 self.h = 89

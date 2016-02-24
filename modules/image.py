@@ -45,7 +45,7 @@ class Image(Inline_SE_element):
             self._CSVG.paint_SVG(cr)
             return
         elif self._surface_cache is None:
-            SC = SVGSurface(None, self.h, self.k)
+            SC = ImageSurface(FORMAT_ARGB32, self.h, self.k)
             sccr = Context(SC)
             self._CSVG.paint_SVG(sccr)
             self._surface_cache = SC

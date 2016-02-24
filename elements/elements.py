@@ -1,8 +1,5 @@
-from cairo import ImageSurface, Context, FORMAT_ARGB32
-
 from style.styles import DB_Parastyle
 from IO.xml import print_attrs, print_styles
-from IO.svg import render_SVG
 from state.exceptions import IO_Error
 from edit.paperairplanes import interpret_int, interpret_float, interpret_float_tuple, interpret_enumeration, interpret_rgba
 

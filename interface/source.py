@@ -85,6 +85,14 @@ class Rose_garden(Base_kookie):
         self._LL = [[(FMX(character), xd + i*K, y + l*leading) for i, character in enumerate(line) if character != '\n'] for l, (line, br) in enumerate(lines)]
         N = zip(accumulate(br for line, br in lines), enumerate(lines))
         self._numbers = [[(FMX(character), x + i*K, y + l*leading) for i, character in enumerate(str(int(N)))] for N, (l, (line, br)) in N if br]
+        
+        #documentation
+        """
+        if isinstance(self._element, Mod_element):
+            self._doc = self._element.get_documentation()
+        else:
+            self._doc = [(0, str(type(self._element)) + ' element', [])]
+        """
     
     def _target(self, x, y):
         y -= self._y
@@ -317,6 +325,7 @@ class Rose_garden(Base_kookie):
 
     def draw(self, cr, hover=(None, None)):
         self._render_fonts(cr)
+        
         # line numbers
         cr.set_source_rgb(0.7, 0.7, 0.7)
         cr.show_glyphs(chain.from_iterable(self._numbers))

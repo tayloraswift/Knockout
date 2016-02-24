@@ -4,6 +4,7 @@ from style.styles import DB_Parastyle
 from IO.xml import print_attrs, print_styles
 from IO.svg import render_SVG
 from state.exceptions import IO_Error
+from edit.paperairplanes import interpret_int, interpret_float, interpret_float_tuple, interpret_enumeration, interpret_rgba
 
 textstyles = {'emphasis': 'em', 'strong': 'strong', 'sup': 'sup', 'sub': 'sub'}
 
@@ -63,6 +64,16 @@ class Mod_element(object):
     namespace = '_undef'
     tags = {}
 
+    ADNA = []
+    documentation = []
+    
+    _inload = {'int': interpret_int,
+                'float': interpret_float,
+                'float tuple': interpret_float_tuple, 
+                'int set': interpret_enumeration,
+                'rgba': interpret_rgba,
+                'str': str}
+    
     def __init__(self, L, deserialize, ser):
         self._DESR = deserialize
         self._SER = ser
@@ -82,6 +93,16 @@ class Mod_element(object):
             return (modstyles[tag].copy() for tag in tags)
         else:
             return (X + modstyles[tag] for tag in tags)
+    
+    def _get_attributes(self, tag, tree=None):
+        if tree is None:
+            tree = self._tree[0][1]
+        inload = self._inload
+        return (inload[TYPE](tree[k]) if k in tree else inload[TYPE](v) for k, v, TYPE in self.ADNA[tag])
+    
+    def get_documentation(self):
+        ADNA = self.ADNA
+        return [(indent, key, ADNA.get(key, [])) for indent, key in self.__class__.documentation]
 
 class Block_element(Mod_element):
     namespace = '_undef_block'

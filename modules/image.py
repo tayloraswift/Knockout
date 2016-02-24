@@ -1,23 +1,25 @@
-from cairo import ImageSurface, Context, FORMAT_ARGB32
+from cairo import ImageSurface, SVGSurface, Context, FORMAT_ARGB32
 from urllib.error import URLError
 
 from elements.elements import Inline_SE_element
 from model.olivia import Inline
-from edit.paperairplanes import interpret_int
 from IO.svg import render_SVG
 
 _namespace = 'image'
 
-class RImage(Inline_SE_element):
+class Image(Inline_SE_element):
     namespace = _namespace
     tags = {}
     DNA = {}
     
+    ADNA = {_namespace: [('src', '', 'str'), ('width', 89, 'int')]}
+    documentation = [(0, _namespace)]
+    
     def _load(self, A):
         self._tree = A
         
-        self.src = A[0][1].get('src', '')
-        self.width = interpret_int(A[0][1].get('width', 89))
+        self.src, self.width = self._get_attributes(_namespace)
+        
         self._surface_cache = None
         if self.src[-4:] == '.svg':
             try:
@@ -43,7 +45,7 @@ class RImage(Inline_SE_element):
             self._CSVG.paint_SVG(cr)
             return
         elif self._surface_cache is None:
-            SC = ImageSurface(FORMAT_ARGB32, self.h, self.k)
+            SC = SVGSurface(None, self.h, self.k)
             sccr = Context(SC)
             self._CSVG.paint_SVG(sccr)
             self._surface_cache = SC

@@ -82,7 +82,10 @@ def interpret_float(f, fail=0):
             return fail
 
 def interpret_enumeration(e):
-    return set(interpret_int(val) for val in e.split(',') if any(c in '0123456789' for c in val))
+    if type(e) is set:
+        return e
+    else:
+        return set(interpret_int(val) for val in e.split(',') if any(c in '0123456789' for c in val))
 
 def interpret_float_tuple(value):
     L = (interpret_float(val, fail=None) for val in value.split(','))

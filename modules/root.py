@@ -1,7 +1,6 @@
 from model.cat import cast_mono_line, calculate_vmetrics
 from elements.elements import Inline_element
 from model.olivia import Inline
-from edit.paperairplanes import interpret_int
 
 _namespace = 'mod:root'
 
@@ -10,6 +9,8 @@ class Root(Inline_element):
     tags = {_namespace + ':' + T for T in ('index', 'radicand')}
     DNA = {'index': {},
             'radicand': {}}
+    
+    documentation = [(0, _namespace), (1, 'index'), (1, 'radicand')]
     
     def _load(self, L):
         self._tree = L

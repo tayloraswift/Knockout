@@ -28,12 +28,12 @@ class Bounded(Inline_element):
         
         self._INLINE = [symbol, a, b]
 
-    def _cast_inline_inline(self, x, y, leading, PP, F, FSTYLE):
+    def _cast_inline_inline(self, LINE, x, y, PP, F, FSTYLE):
         F_symbol, F_bottom, F_top = self._modstyles(F, 'symbol', 'bottom', 'top')
-
-        symbol = cast_mono_line(self._INLINE[0], 13, PP, F_symbol)
-        a = cast_mono_line(self._INLINE[1], 13, PP, F_bottom)
-        b = cast_mono_line(self._INLINE[2], 13, PP, F_top)
+        
+        symbol = cast_mono_line(LINE, self._INLINE[0], 13, PP, F_symbol)
+        a = cast_mono_line(LINE, self._INLINE[1], 13, PP, F_bottom)
+        b = cast_mono_line(LINE, self._INLINE[2], 13, PP, F_top)
         
         symbol['x'] = x
         symbol['y'] = y
@@ -57,12 +57,12 @@ class Bounded(Inline_element):
         
         return Inline([symbol, a, b], width, ascent, descent)
 
-    def _cast_inline_display(self, x, y, leading, PP, F, FSTYLE):
+    def _cast_inline_display(self, LINE, x, y, PP, F, FSTYLE):
         F_symbol, F_bottom, F_top = self._modstyles(F, 'symbol', 'bottom', 'top')
 
-        symbol = cast_mono_line(self._INLINE[0], 13, PP, F_symbol)
-        a = cast_mono_line(self._INLINE[1], 13, PP, F_bottom)
-        b = cast_mono_line(self._INLINE[2], 13, PP, F_top)
+        symbol = cast_mono_line(LINE, self._INLINE[0], 13, PP, F_symbol)
+        a = cast_mono_line(LINE, self._INLINE[1], 13, PP, F_bottom)
+        b = cast_mono_line(LINE, self._INLINE[2], 13, PP, F_top)
         
         width = max(a['advance'], b['advance'], symbol['advance'])
 

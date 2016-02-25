@@ -171,7 +171,9 @@ class Document_toolbar(object):
         self._items.append(kookies.Button(5, y, 90, 30, callback=_add_channel, string='Add portal'))
         y += 30
         self._items.append(kookies.Button(5, y, 90, 30, callback=meredith.mipsy.add_tract, string='Add tract'))
-
+        y += 30
+        self._items.append(kookies.Button(5, y, 90, 30, callback=meredith.mipsy.add_repeat_tract, string='Add repeat tract'))
+        
         y += 50
         self._items.append(kookies.Button(5, y, 90, 30, callback=_place_tags, string='Emphasis', params=('Ctrl i',) ))
         y += 30

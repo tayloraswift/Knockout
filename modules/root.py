@@ -27,14 +27,14 @@ class Root(Inline_element):
         cr.close_path()
         cr.fill()
     
-    def cast_inline(self, x, y, leading, PP, F, FSTYLE):
+    def cast_inline(self, LINE, x, y, PP, F, FSTYLE):
         self._color = FSTYLE['color']
         y += FSTYLE['shift']
         
         F_index, F_rad = self._modstyles(F, 'index', 'radicand')
 
-        index = cast_mono_line(self._INLINE[0], 13, PP, F_index)
-        rad = cast_mono_line(self._INLINE[1], 13, PP, F_rad)
+        index = cast_mono_line(LINE, self._INLINE[0], 13, PP, F_index)
+        rad = cast_mono_line(LINE, self._INLINE[1], 13, PP, F_rad)
         
         rad_asc, rad_desc = calculate_vmetrics(rad)
 

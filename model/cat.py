@@ -169,7 +169,7 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False, overlay=N
         if R in PSTYLE['indent_range']:
             D, SIGN, K = PSTYLE['indent']
             if K:
-                INDLINE = cast_mono_line(
+                INDLINE = cast_mono_line({'R': R, 'l': l, 'c': c, 'page': page},
                     LIQUID[i : i + K + (not bool(R))], 
                     0,
                     PP,
@@ -188,7 +188,9 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False, overlay=N
         x2 -= R_indent
         if x1 > x2:
             x1, x2 = x2, x1
-        LINE = cast_liquid_line(
+        # initialize line                               R: line number (within paragraph)
+        LINE = Glyphs_line({'hyphen': None, 'P_BREAK': False, 'R': R, 'left': x1, 'y': y, 'l': l, 'c': c, 'page': page})
+        cast_liquid_line(LINE,
                 LIQUID[i : i + 1989], 
                 i, 
                 
@@ -199,9 +201,7 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False, overlay=N
                 
                 hyphenate = PSTYLE['hyphenate']
                 )
-        # stamp line data
-        LINE['R'] = R # line number (within paragraph)
-        LINE['left'] = x1
+
         # alignment
         if PSTYLE['align_to'] and LINE['GLYPHS']:
             searchtext = LIQUID[i : i + len(LINE['GLYPHS'])]
@@ -220,11 +220,6 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False, overlay=N
             else:
                 rag = LINE['width'] - LINE['advance']
                 LINE['x'] = x1 + rag * PSTYLE['align']
-            
-        LINE['y'] = y
-        LINE['l'] = l
-        LINE['c'] = c
-        LINE['page'] = page
 
         l += 1
         SLUGS.append(LINE)
@@ -241,19 +236,12 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False, overlay=N
 
     return SLUGS
 
-def cast_liquid_line(letters, startindex, width, leading, PP, F, hyphenate=False):
-    LINE = Glyphs_line({
-            'i': startindex,
-            
-            'width': width,           
-            'leading': leading,
-
-            'hyphen': None,
-            
-            'P_BREAK': False,
-            'F': F,
-            'PP': PP
-            })
+def cast_liquid_line(LINE, letters, startindex, width, leading, PP, F, hyphenate=False):
+    LINE['i'] = startindex
+    LINE['width'] = width
+    LINE['leading'] = leading
+    LINE['F'] = F
+    LINE['PP'] = PP
     
     # list that contains glyphs
     GLYPHS = []
@@ -336,7 +324,7 @@ def cast_liquid_line(letters, startindex, width, leading, PP, F, hyphenate=False
                         ))
             else:
                 try:
-                    inline = letter.cast_inline(x, y, leading, PP, F, FSTYLE)
+                    inline = letter.cast_inline(LINE, x, y, PP, F, FSTYLE)
                     glyphwidth = inline.width                               #6. object
                     GLYPHS.append((-89, x, y, FSTYLE, fstat, x + glyphwidth, inline))
                 except AttributeError:
@@ -425,10 +413,8 @@ def cast_liquid_line(letters, startindex, width, leading, PP, F, hyphenate=False
         LINE['advance'] = GLYPHS[-1][5]
     except IndexError:
         LINE['advance'] = 0
-    
-    return LINE
 
-def cast_mono_line(letters, leading, PP, F):
+def cast_mono_line(PARENT, letters, leading, PP, F):
     F = F.copy()
     LINE = Glyphs_line({
             'i': 0,
@@ -438,7 +424,12 @@ def cast_mono_line(letters, leading, PP, F):
             'F': F,
             'PP': PP,
             
-            'hyphen': None
+            'hyphen': None,
+            
+            'R': PARENT['R'], 
+            'l': PARENT['l'], 
+            'c': PARENT['c'], 
+            'page': PARENT['page']
             })
     
     # list that contains glyphs
@@ -515,7 +506,7 @@ def cast_mono_line(letters, leading, PP, F):
                         ))
             else:
                 try:
-                    inline = letter.cast_inline(x, y, leading, PP, F, FSTYLE)
+                    inline = letter.cast_inline(LINE, x, y, PP, F, FSTYLE)
                     glyphwidth = inline.width                               #6. object
                     GLYPHS.append((-89, x, y, FSTYLE, fstat, x + glyphwidth, inline))
                 except AttributeError:

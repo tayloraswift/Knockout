@@ -31,10 +31,10 @@ class Math_italic(Inline_SE_element):
         cr.set_source_rgba(0, 0.8, 1, 0.4)
         cr.fill()
     
-    def cast_inline(self, x, y, leading, PP, F, FSTYLE):
+    def cast_inline(self, LINE, x, y, PP, F, FSTYLE):
         F_mi, = self._modstyles(F, 'mi')
         
-        C = cast_mono_line(list(self.char), 13, PP, F_mi)
+        C = cast_mono_line(LINE, list(self.char), 13, PP, F_mi)
         C['x'] = x
         C['y'] = y + FSTYLE['shift']
         self._cad = C['advance']

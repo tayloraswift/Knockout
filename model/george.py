@@ -9,6 +9,9 @@ class Swimming_pool(object):
     def set_page(self, page):
         self.page = page
     
+    def shallow_copy_to_page(self, page):
+        return self.__class__(self.railings, page)
+    
     def _is_outside(self, y):
         if ( self.railings[0][0][1] <= y <= self.railings[1][-1][1] ):
             return False
@@ -190,4 +193,35 @@ class Washington(object):
     
     def add_channel(self):
         self.channels.append(self.generate_channel())
+
+class Not_his_markings(Washington):
+    def __init__(self, ic):
+        Washington.__init__(self, ic)
+        _len = max(C.page for C in ic) + 1
+        repeat = []
+        for k in range(_len):
+            repeat.append([C.shallow_copy_to_page(k) for C in ic])
+        self.repeat = repeat
+
+    def target_channel(self, x, y, page, radius):
+        for c, channel in enumerate(self.channels):
+            if y >= channel.railings[0][0][1] - radius and y <= channel.railings[1][-1][1] + radius:
+                if x >= channel.edge(0, y)[0] - radius and x <= channel.edge(1, y)[0] + radius:
+                    return c
+        return None
+
+    def target_point(self, x, y, page, radius):
+        C, R = None, None
+        for c, channel in enumerate(self.channels):
+            for r in range(len(channel.railings)):
+                for i, point in enumerate(channel.railings[r]):
+                    if abs(x - point[0]) + abs(y - point[1]) < radius:
+
+                        return c, r, i
+                # if that fails, take a railing, if possible
+                if not channel._is_outside(y) and abs(x - channel.edge(r, y)[0]) <= radius:
+                    C, R = c, r
+        if C is None:
+            C = self.target_channel(x, y, page, radius)
+        return C, R, None
 

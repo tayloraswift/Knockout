@@ -285,7 +285,7 @@ class Display(Gtk.Window):
             self._active.key_input('paragraph', None)
         
         elif e.state & Gdk.ModifierType.CONTROL_MASK:
-            if e.state & Gdk.ModifierType.MOD1_MASK:
+            if e.state & Gdk.ModifierType.LOCK_MASK and name not in {'Shift_L', 'Shift_R'}:
                 self._active.key_input('Ctrl Alt', chr(Gdk.keyval_to_unicode(e.keyval)))
             
             elif name == 'z':

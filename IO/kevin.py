@@ -43,8 +43,9 @@ class Minion(parser.HTMLParser):
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
         O = self._C[-1][1]
-        self._first = False
+        
         if tag == 'p':
+            self._first = False
             O.append(_create_paragraph(attrs))
             
             self._breadcrumbs.append('p')
@@ -60,6 +61,7 @@ class Minion(parser.HTMLParser):
         elif tag in moduletags:
             self._breadcrumbs.append(tag)
             if tag in blocktags:
+                self._first = False
                 M = ((tag, attrs, _create_paragraph(attrs)), [])
             else:
                 M = ((tag, attrs), [])

@@ -6,13 +6,12 @@ from bulletholes.counter import TCounter as Counter
 from model.george import Swimming_pool
 from style import styles
 from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Block_element
-
 pyphen.language_fallback('en_US')
 hy = pyphen.Pyphen(lang='en_US')
 
 # linebreaking characters
 _BREAK_WHITESPACE = set((' '))
-_BREAK_ONLY_AFTER = set('-.,/')
+_BREAK_ONLY_AFTER = set('-')
 _BREAK_AFTER_ELSE_BEFORE = set('–—')
 
 _BREAK = _BREAK_WHITESPACE | _BREAK_ONLY_AFTER | _BREAK_AFTER_ELSE_BEFORE

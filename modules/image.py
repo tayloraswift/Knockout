@@ -75,10 +75,10 @@ class Image(Inline_SE_element):
         cr.show_text('Image not found')
         cr.fill()
     
-    def cast_inline(self, x, y, leading, PP, F, FSTYLE):
+    def cast_inline(self, LINE, x, y, PP, F, FSTYLE):
         glyphwidth = self.width
-        self.v = leading
-        return _MInline(glyphwidth, leading, self.k * self.factor - leading, self.render_image, x, y)
+        self.v = LINE['leading']
+        return _MInline(glyphwidth, LINE['leading'], self.k * self.factor - LINE['leading'], self.render_image, x, y)
 
     def __len__(self):
         return 7

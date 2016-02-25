@@ -14,8 +14,12 @@ class Meredith(list):
 
     def add_tract(self):
         self.append( olivia.Chained_text(kevin.deserialize('<p>{new}</p>'), george.Washington([self[-1].channels.generate_channel()])) )
-        self.recalculate_all()
-    
+        self[-1].deep_recalculate()
+
+    def add_repeat_tract(self):
+        self.append( olivia.Repeat_text(kevin.deserialize('<p>{new}</p>'), george.Not_his_markings([self[-1].channels.generate_channel()])) )
+        self[-1].deep_recalculate()
+        
     def delete_tract(self, tract):
         t = self.index(tract)
         del self[t]

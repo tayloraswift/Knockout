@@ -4,6 +4,7 @@ from itertools import groupby, chain
 from state import noticeboard
 from model.wonder import words
 from model.cat import typeset_chained, typeset_liquid, Glyphs_line
+from model.george import Not_his_markings
 
 class _Empty_F(object):
     def __init__(self):
@@ -294,5 +295,33 @@ class Chained_text(Atomic_text):
                 
                 for line in pageslugs:
                     line.deposit(sorted_page)
+
+        return self._sorted_pages
+
+class Repeat_text(Chained_text):
+    def __init__(self, text, channels):
+        Chained_text.__init__(self, text, channels)
+
+    def deep_recalculate(self):
+        self.repeats = [typeset_chained(R, self.text) for R in self.channels.repeat]
+
+        self._SLUGS = self.repeats[-1]
+        self._precompute_search()
+        self._sorted_pages.clear()
+
+    def partial_recalculate(self, i):
+        for SLUGS in self.repeats:
+            self._SLUGS = SLUGS
+            Chained_text.partial_recalculate(self, i)
+    
+    def extract_glyphs(self, refresh=False):
+        if refresh:
+            self._sorted_pages = {}
+
+        if not self._sorted_pages:
+            for p, pageslugs in enumerate(self.repeats):
+                self._sorted_pages[p] = {'_annot': [], '_images': [], '_paint': [], '_paint_annot': []}
+                for line in pageslugs:
+                    line.deposit(self._sorted_pages[p])
 
         return self._sorted_pages

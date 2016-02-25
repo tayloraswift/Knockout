@@ -78,15 +78,17 @@ class Image(Inline_SE_element):
     def cast_inline(self, x, y, leading, PP, F, FSTYLE):
         glyphwidth = self.width
         self.v = leading
-        return _MInline(glyphwidth, leading, self.k * self.factor - leading, self.render_image)
+        return _MInline(glyphwidth, leading, self.k * self.factor - leading, self.render_image, x, y)
 
     def __len__(self):
         return 7
 
 class _MInline(Inline):
-    def __init__(self, width, A, D, draw):
+    def __init__(self, width, A, D, draw, x, y):
         Inline.__init__(self, None, width, A, D)
         self._draw = draw
+        self._x = x
+        self._y = y
     
     def deposit_glyphs(self, repository, x, y):
-        repository['_images'].append((self._draw, x, y - self.ascent))
+        repository['_images'].append((self._draw, x + self._x, y - self.ascent + self._y))

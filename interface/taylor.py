@@ -573,8 +573,11 @@ class Document_view(ui.Cell):
         self._mode = 'render'
         if p in classed_pages:
             self._draw_images(cr, classed_pages[p]['_images'])
-            for operation in classed_pages[p]['_paint']:
+            for operation, x, y in classed_pages[p]['_paint']:
+                cr.save()
+                cr.translate(x, y)
                 operation(cr)
+                cr.restore()
             self._print_sorted(cr, classed_pages[p])
         self._mode = m
             
@@ -597,14 +600,20 @@ class Document_view(ui.Cell):
                 cr.scale(A, A)
 
                 self._draw_images(cr, sorted_glyphs['_images'])
-                for operation in sorted_glyphs['_paint']:
+                for operation, x, y in sorted_glyphs['_paint']:
+                    cr.save()
+                    cr.translate(x, y)
                     operation(cr)
+                    cr.restore()
                 self._print_sorted(cr, sorted_glyphs)
 
                 # only annotate active tract
                 if tract is self.fcursor.TRACT and self._mode == 'text':
-                    for operation in sorted_glyphs['_paint_annot']:
+                    for operation, x, y in sorted_glyphs['_paint_annot']:
+                        cr.save()
+                        cr.translate(x, y)
                         operation(cr, self.fcursor.FTX)
+                        cr.restore()
                     cr.restore()
                     self._draw_annotations(cr, sorted_glyphs['_annot'], page)
                 else:

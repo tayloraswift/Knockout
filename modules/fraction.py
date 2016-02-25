@@ -20,9 +20,9 @@ class Fraction(Inline_element):
         
         self._INLINE = [numerator, denominator]
 
-    def _draw_vinculum(self, cr, x, y):
+    def _draw_vinculum(self, cr):
         cr.set_source_rgba( * self._color)
-        cr.rectangle(x + self._vx, y + self._vinc_y, self._fracwidth, 0.5)
+        cr.rectangle(0, 0, self._fracwidth, 0.5)
         cr.fill()
         
     def cast_inline(self, x, y, leading, PP, F, FSTYLE):
@@ -51,19 +51,19 @@ class Fraction(Inline_element):
         fascent = vy + nascent - ndescent
         fdescent = vy - dascent + ddescent
         self._fracwidth = fracwidth
-        self._vinc_y = y - vy
-        self._vx = x
-        return _MInline([numerator, denominator], self._draw_vinculum, fracwidth, fascent, fdescent)
+        return _MInline([numerator, denominator], fracwidth, fascent, fdescent, self._draw_vinculum, x, y - vy)
 
     def __len__(self):
         return 11
 
 class _MInline(Inline):
-    def __init__(self, lines, vinculum, width, A, D):
+    def __init__(self, lines, width, A, D, vinculum, x, y):
         Inline.__init__(self, lines, width, A, D)
         self._draw_vinculum = vinculum
+        self._x = x
+        self._vy = y
     
     def deposit_glyphs(self, repository, x, y):
         for line in self._LINES:
             line.deposit(repository, x, y)
-        repository['_paint'].append(lambda cr: self._draw_vinculum(cr, x, y))
+        repository['_paint'].append((self._draw_vinculum, x + self._x, y + self._vy))

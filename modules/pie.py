@@ -69,13 +69,12 @@ class _MBlock(Block):
         self._pie = pie
     
     def _print_pie(self, cr):
-        x, y = self._pie.center
         r = self._pie.r
         t = 0
         for i, S in enumerate(self._slices):
             percent, arc, color = S
-            cr.move_to(x, y)
-            cr.arc(x, y, r, t, t + arc)
+            cr.move_to(0, 0)
+            cr.arc(0, 0, r, t, t + arc)
             cr.close_path()
             cr.set_source_rgba( * color)
             cr.fill()
@@ -83,14 +82,13 @@ class _MBlock(Block):
 
     def _print_annot(self, cr, O):
         if O is self._FLOW[self._pie.active]:
-            x, y = self._pie.center
             r = self._pie.r
             i = self._pie.active
             t = self._slices_t[i - 1]
             percent, arc, color = self._slices[i]
             cr.set_source_rgba( * color)
             cr.set_line_width(2)
-            cr.arc(x, y, r + 13, t, t + arc)
+            cr.arc(0, 0, r + 13, t, t + arc)
             cr.stroke()
             self._handle(cr)
             cr.fill()
@@ -117,7 +115,7 @@ class _MBlock(Block):
             return self['i']
     
     def deposit(self, repository):
-        repository['_paint'].append(self._print_pie) # come before to avoid occluding child elements
-        repository['_paint_annot'].append(self._print_annot)
+        repository['_paint'].append((self._print_pie, * self._pie.center)) # come before to avoid occluding child elements
+        repository['_paint_annot'].append((self._print_annot, * self._pie.center))
         for A in self._FLOW:
             A.deposit(repository)

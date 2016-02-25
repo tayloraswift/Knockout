@@ -69,7 +69,7 @@ class Tabs_round(kookies.Tabs):
         cr.set_source_rgb(1,1,1)
         radius = 10
         width = self._texts[-1][-1][1] - self._texts[-1][0][1] + 20
-        y1, y2, x1, x2 = self.y_bottom + 5, self.y_bottom + 25, self._x + (self._width - width)//2, self._x + (self._width + width)//2
+        y1, y2, x1, x2 = self.y_bottom + 5, self.y_bottom + 25, self._x -width//2, self._x + width//2
         cr.arc(x1 + radius, y1 + radius, radius, 2*(pi/2), 3*(pi/2))
         cr.arc(x2 - radius, y1 + radius, radius, 3*(pi/2), 4*(pi/2))
         cr.arc(x2 - radius, y2 - radius, radius, 0*(pi/2), 1*(pi/2))

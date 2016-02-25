@@ -9,7 +9,7 @@ S= {'mi': {'mi': {'emphasis': 1}},
     'table': {'table': {'tablecell': 1},
                 'thead': {'tablehead': 1},
                 'tleft': {'tableleft': 1}},
-    'mod:pie': {'slice': {'h3': 1}},
+    'mod:pie': {'slice': {'tablecell': 1}},
         }
 
 class MS_Library(dict):

@@ -19,11 +19,11 @@ class Root(Inline_element):
         
         self._INLINE = [index, radicand]
     
-    def _draw_radix(self, cr, x, y):
+    def _draw_radix(self, cr):
         cr.set_source_rgba( * self._color )
-        cr.move_to(self._radix[0][0] + x, self._radix[0][1] + y)
+        cr.move_to(self._radix[0][0], self._radix[0][1])
         for u, v in self._radix[1:]:
-            cr.line_to(x + u, y + v)
+            cr.line_to(u, v)
         cr.close_path()
         cr.fill()
     
@@ -90,4 +90,4 @@ class _MInline(Inline):
     def deposit_glyphs(self, repository, x, y):
         for line in self._LINES:
             line.deposit(repository, x, y)
-        repository['_paint'].append(lambda cr: self._draw(cr, x, y))
+        repository['_paint'].append((self._draw, x, y))

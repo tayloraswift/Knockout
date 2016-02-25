@@ -22,26 +22,42 @@ class Math_italic(Inline_SE_element):
         else:
             self.char = '􏿿'
     
+    def _draw_annot(self, cr, O):
+        cr.move_to(self._cad, 0)
+        cr.rel_line_to(self._icorrection, 0)
+        cr.rel_line_to(0, -self._rise)
+        
+        cr.close_path()
+        cr.set_source_rgba(0, 0.8, 1, 0.4)
+        cr.fill()
+    
     def cast_inline(self, x, y, leading, PP, F, FSTYLE):
         F_mi, = self._modstyles(F, 'mi')
         
         C = cast_mono_line(list(self.char), 13, PP, F_mi)
         C['x'] = x
         C['y'] = y + FSTYLE['shift']
+        self._cad = C['advance']
         
         ink = cairo.ScaledFont(C['fstyle']['font'], cairo.Matrix(yy=C['fstyle']['fontsize'], xx=C['fstyle']['fontsize']), cairo.Matrix(), cairo.FontOptions())
-        rise = -ink.text_extents(self.char[-1])[1]
-        icorrection = rise * 0.19438030913771848 # tan(13°)
+        self._rise = -ink.text_extents(self.char[-1])[1]
+        self._icorrection = self._rise * 0.17632698070846498 # tan(10°)
         
-        charwidth = C['advance'] + icorrection
+        charwidth = self._cad + self._icorrection
         ascent, descent = calculate_vmetrics(C)
 
-        return _MInline(C, charwidth, ascent, descent)
+        return _MInline(C, charwidth, ascent, descent, self._draw_annot, x, y)
 
     def __len__(self):
         return 11
 
 class _MInline(Inline):
+    def __init__(self, lines, width, A, D, draw, x, y):
+        Inline.__init__(self, lines, width, A, D)
+        self._draw = draw
+        self._x = x
+        self._y = y
     
     def deposit_glyphs(self, repository, x, y):
+        repository['_paint_annot'].append((self._draw, self._x + x, self._y + y))
         self._LINES.deposit(repository, x, y)

@@ -83,7 +83,7 @@ class Histogram(Block_element):
                 cr.rectangle(x1, -tide[i], x2 - x1, -bar)
                 tide[i] += bar
             # key
-            cr.rectangle(end, gh + k1 - 4, 4, k2 - k1 - 4)
+            cr.rectangle(end, gh + k1 - 4, -4, k2 - k1 - 4)
             cr.fill()
     
     def regions(self, x, y):
@@ -139,9 +139,7 @@ class Histogram(Block_element):
         self._ki = ky
         self._ky = list(zip(ky, ky[1:]))
         
-        bottom = self._FLOW[0].y
-        
-        return _MBlock(self._FLOW, self._printed_numbers, (top, bottom, left, right), self.draw_bars, g_origin, self.regions, self.PP)
+        return _MBlock(self._FLOW, self._printed_numbers, (top, self._FLOW[0].y, left, right), self.draw_bars, g_origin, self.regions, self.PP)
 
 class _MBlock(Block):
     def __init__(self, FLOW, MONO, box, draw, g_origin, regions, PP):
@@ -156,11 +154,6 @@ class _MBlock(Block):
             cr.set_source_rgb( * accent)
             self._handle(cr)
             cr.fill()
-
-    def _target_slice(self, x, y):
-        dx, dy = self._g_origin
-        return self._regions(x - dx, y - dy)
-        
     
     def I(self, x, y):
         if x <= self['right']:

@@ -79,7 +79,7 @@ class Mod_element(object):
     def transfer(self, B):
         try:
             E = self._DESR(B, fragment = True)
-        except IO_Error:
+        except (IO_Error, IndexError):
             return False
         self._load(next(e for e in E if type(e) is self.__class__)._tree) #yes, we are building an entirely new object and taking its image
         return True
@@ -104,6 +104,17 @@ class Mod_element(object):
 class Block_element(Mod_element):
     namespace = '_undef_block'
 
+    def represent(self, indent):
+        name, attrs = self._tree[0][:2]
+        attrs.update(print_styles(self.PP))
+        lines = [[indent, '<' + print_attrs(name, attrs) + '>']]
+        for tag, E in self._tree[1]:
+            lines.append([indent + 1, '<' + print_attrs( * tag ) + '>'])
+            lines.extend(self._SER(E, indent + 2))
+            lines.append([indent + 1, '</' + tag[0] + '>'])
+        lines.append([indent, '</' + self.namespace + '>'])
+        return lines
+        
 class Inline_element(Mod_element):
     namespace = '_undef_inline'
 

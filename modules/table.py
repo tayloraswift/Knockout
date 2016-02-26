@@ -2,7 +2,7 @@ from bisect import bisect
 from itertools import chain, accumulate
 
 from model.olivia import Atomic_text, Block
-from model.george import Swimming_pool
+from model.george import Subcell
 from interface.base import accent
 from IO.xml import print_attrs, print_styles
 from elements.elements import Block_element
@@ -31,18 +31,6 @@ class _Table_cell(Atomic_text):
     def nail(self, i, j):
         self.col = j
         self.row = i
-
-class TCell_container(Swimming_pool):
-    def __init__(self, bounds, i, j):
-        Swimming_pool.__init__(self, bounds.railings, bounds.page)
-        self._main_bounds = bounds.bounds
-        self.i = i
-        self.j = j
-    
-    def bounds(self, y):
-        x1, x2 = self._main_bounds(y)
-        advance = x2 - x1
-        return x1 + advance*self.i, x1 + advance*self.j
 
 class Matrix(list):
     def __str__(self):
@@ -154,7 +142,7 @@ class Table(Block_element):
             y += self._celltop
             for i, cell in enumerate(row):
                 # calculate percentages
-                cellbounds = TCell_container(bounds, part[cell.col], part[cell.col + cell.cs])
+                cellbounds = Subcell(bounds, part[cell.col], part[cell.col + cell.cs])
                 if not i:
                     cell.cast(cellbounds, c, y, overlay + P_left)
                 else:

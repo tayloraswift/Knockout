@@ -122,9 +122,10 @@ class Mode_switcher(object):
 
 def PDF():
     name = os.path.splitext(constants.filename)[0]
-    surface = cairo.PDFSurface(name + '.pdf', meredith.page.WIDTH, meredith.page.HEIGHT)
+    surface = cairo.PDFSurface(name + '.pdf', meredith.page.WIDTH*0.75, meredith.page.HEIGHT*0.75)
     cr = cairo.Context(surface)
-    
+    cr.scale(0.75, 0.75)
+    cr.translate(0, 0.5)
     classes = becky.page_classes()
     max_page = max(classes.keys())
     for p in range(max_page + 1):
@@ -172,7 +173,7 @@ class Document_toolbar(object):
         y += 30
         self._items.append(kookies.Button(5, y, 90, 30, callback=meredith.mipsy.add_tract, string='Add tract'))
         y += 30
-        self._items.append(kookies.Button(5, y, 90, 30, callback=meredith.mipsy.add_repeat_tract, string='Add repeat tract'))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=meredith.mipsy.add_repeat_tract, string='Add repeat'))
         
         y += 50
         self._items.append(kookies.Button(5, y, 90, 30, callback=_place_tags, string='Emphasis', params=('Ctrl i',) ))
@@ -746,6 +747,11 @@ class Document_view(ui.Cell):
                 cr.rectangle(x, y, F['fontmetrics'].spacewidths[a] * fontsize, uscore)
                 cr.rel_move_to(0, afs * 1.25)
                 cr.show_text(SN[a])
+                cr.fill()
+            
+            elif a == -7:
+                cr.rectangle(x - 4, y + 4, 8, 2)
+                cr.rectangle(x - 1, y + 5, 2, 5)
                 cr.fill()
             
             elif a == -23:

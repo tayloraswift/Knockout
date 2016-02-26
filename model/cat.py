@@ -206,7 +206,7 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False, overlay=N
         if PSTYLE['align_to'] and LINE['GLYPHS']:
             searchtext = LIQUID[i : i + len(LINE['GLYPHS'])]
             ai = -1
-            for aligner in PSTYLE['align_to']:
+            for aligner in '\t' + PSTYLE['align_to']:
                 try:
                     ai = searchtext.index(aligner)
                     break

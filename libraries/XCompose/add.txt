@@ -16,3 +16,5 @@
 <Multi_key> <space> <h>     	: " "   hairspace # HAIR SPACE
 <Multi_key> <space> <comma>     	: " "   narrow no break space # narrow no-break space
 <Multi_key> <space> <t>     	: " "   U205F # MATHEMATICAL MEDIUM SPACE
+
+<Multi_key> <m> <minus>     	: "−" # MINUS

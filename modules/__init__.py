@@ -1,8 +1,8 @@
 from itertools import chain
-from . import table, pie, fraction, bounded, root, mi, image
+from . import table, pie, fraction, bounded, root, mi, image, pagenumber, histogram
 
-INLINE = (fraction.Fraction, bounded.Bounded, root.Root, mi.Math_italic, image.Image)
-BLOCK = (table.Table, pie.PieChart)
+INLINE = (fraction.Fraction, bounded.Bounded, root.Root, mi.Math_italic, pagenumber.Page_number, image.Image)
+BLOCK = (table.Table, pie.PieChart, histogram.Histogram)
 
 def _load_module(mods):
     M = {}

@@ -128,7 +128,7 @@ class Kevin_from_TN(Minion): # to capture the first and last blobs
         if self._breadcrumbs[-1] in inlinecontainers:
             O = self._C[-1][1]
             O.extend(list(data))
-        elif self._first: # register the first blob
+        elif self._first and self._breadcrumbs[-1] is None: # register the first blob
             O = self._C[-1][1]
             self._first = False
             self._breadcrumbs.append('p') # virtual paragraph container

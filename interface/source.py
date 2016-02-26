@@ -296,7 +296,7 @@ class Rose_garden(Base_kookie):
                 return
         else:
             i = cursor.fcursor.i
-            cursor.fcursor.FTX.text[i:i + 1] = deserialize(B, fragment=True)
+            cursor.fcursor.text[i:i + 1] = deserialize(B, fragment=True)
         self._SYNCHRONIZE()
         self._AFTER()
         

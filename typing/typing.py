@@ -27,13 +27,13 @@ class Keyboard(dict):
         # Non replacing
         if name == 'Left':
             un.history.undo_save(0)
-            cursor.fcursor.i -= 1
+            cursor.fcursor.i = max(0, CURSOR - 1)
             cursor.fcursor.j = cursor.fcursor.i
                 
         elif name == 'Right':
             un.history.undo_save(0)
             
-            cursor.fcursor.i += 1
+            cursor.fcursor.i = min(CURSOR + 1, len(cursor.fcursor.text) - 1)
             cursor.fcursor.j = cursor.fcursor.i
             
         elif name == 'Up':

@@ -6,7 +6,7 @@ from state import constants, noticeboard
 from state.contexts import Text
 from model import meredith, page
 from edit import cursor, caramel
-from IO import kevin, un
+from IO import kevin, un, xml
 from typing import typing
 from interface import karlie, taylor, poptarts
 from modules import modulestyles, INLINE, BLOCK
@@ -15,8 +15,8 @@ from elements.elements import Mod_element
 def save():
     HEADER = '<head><meta charset="UTF-8"></head>\n<title>' + constants.filename + '</title>\n\n'
     
-    SECTIONS, channels = zip( * ((kevin.serialize(t.text), [(c.railings, c.page) for c in t.channels.channels]) for t in meredith.mipsy))
-    SECTIONS = '<body>\n<section>\n' + '\n</section>\n\n<section>\n'.join(SECTIONS) + '\n</section>\n</body>\n'
+    SECTIONS, channels = zip( * (( (type(t).sign, kevin.serialize(t.text)), [(c.railings, c.page) for c in t.channels.channels]) for t in meredith.mipsy))
+    SECTIONS = '<body>\n' + '\n\n'.join(sign + section + '\n</section>' for sign, section in SECTIONS) + '\n</body>\n'
 
     page = {'dimensions': (meredith.page.WIDTH, meredith.page.HEIGHT),
             'dual': meredith.page.dual}
@@ -55,9 +55,14 @@ def load(name):
     BODY = doc[doc.find('<body>') + 6 : doc.find('</body>')]
     DATA = literal_eval(doc[doc.find('<!-- #############') + 18 : doc.find('############# -->')])
     
-    text = (H[:H.find('</section>')].strip() for H in BODY.split('<section>'))
-    text = [H for H in text if H]
-    channels = [K for K in DATA['outlines']]
+    text = []
+    for H in BODY.split('<section'):
+        tagend = H.find('>') + 1
+        end = H.find('</section>')
+        section = H[tagend : end].strip()
+        if section:
+            text.append(( literal_eval(xml.read_tag('<section' + H[:tagend])[1].get('repeat', 'False')), section))
+    channels = DATA['outlines']
     
     if len(text) == len(channels):
         KT = zip(text, channels)

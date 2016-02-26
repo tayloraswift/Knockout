@@ -76,6 +76,11 @@ class Swimming_pool(object):
 class Washington(object):
     def __init__(self, ic):
         self.channels = ic
+    
+    @classmethod
+    def from_list(cls, C):
+        return cls([Swimming_pool( * c ) for c in C])
+    
  #####################   
     def target_channel(self, x, y, page, radius):
         for c, channel in enumerate(self.channels):
@@ -197,6 +202,10 @@ class Washington(object):
 class Not_his_markings(Washington):
     def __init__(self, ic):
         Washington.__init__(self, ic)
+        self.calculate_repeats()
+
+    def calculate_repeats(self):
+        ic = self.channels
         _len = max(C.page for C in ic) + 1
         repeat = []
         for k in range(_len):
@@ -225,3 +234,14 @@ class Not_his_markings(Washington):
             C = self.target_channel(x, y, page, radius)
         return C, R, None
 
+class Subcell(Swimming_pool):
+    def __init__(self, bounds, i, j):
+        Swimming_pool.__init__(self, bounds.railings, bounds.page)
+        self._main_bounds = bounds.bounds
+        self.i = i
+        self.j = j
+    
+    def bounds(self, y):
+        x1, x2 = self._main_bounds(y)
+        advance = x2 - x1
+        return x1 + advance*self.i, x1 + advance*self.j

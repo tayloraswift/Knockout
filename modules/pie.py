@@ -3,7 +3,6 @@ from itertools import chain, accumulate
 from bisect import bisect
 
 from model.olivia import Atomic_text, Block
-from IO.xml import print_attrs, print_styles
 from elements.elements import Block_element
 
 _namespace = 'mod:pie'
@@ -33,17 +32,6 @@ class PieChart(Block_element):
                        # percentage | arc length | color
         self._pie = _Pie([(P/total, P/total*2*pi, C) for P, C in slices], radius)
         self._FLOW = [Atomic_text(text) for text in labels]
-        
-    def represent(self, indent):
-        name, attrs = self._tree[0][:2]
-        attrs.update(print_styles(self.PP))
-        lines = [[indent, '<' + print_attrs(name, attrs) + '>']]
-        for tag, E in self._tree[1]:
-            lines.append([indent + 1, '<' + print_attrs( * tag ) + '>'])
-            lines.extend(self._SER(E, indent + 2))
-            lines.append([indent + 1, '</' + tag[0] + '>'])
-        lines.append([indent, '</' + self.namespace + '>'])
-        return lines
 
     def typeset(self, bounds, c, y, overlay):
         P_slice, = self._modstyles(overlay, 'slice')

@@ -1,52 +1,40 @@
-import cairo
-
 from model.cat import cast_mono_line, calculate_vmetrics
 from elements.elements import Inline_SE_element
 from model.olivia import Inline
 
-_namespace = 'mi'
+_namespace = 'pn'
 
-class Math_italic(Inline_SE_element):
+class Page_number(Inline_SE_element):
     namespace = _namespace
     tags = {}
-    DNA = {'mi': {}}
+    DNA = {'pn': {}}
     
-    ADNA = {_namespace: [('char', '', 'str'), ('correct', 1, 'float')]}
+    ADNA = {_namespace: [('offset', '0', 'int')]}
     documentation = [(0, _namespace)]
     
     def _load(self, A):
         self._tree = A
-        ch, self._cfactor = self._get_attributes(_namespace)
-        if ch:
-            self.char = ch
-        else:
-            self.char = '􏿿'
+        self._offset = self._get_attributes(_namespace)
     
     def _draw_annot(self, cr, O):
-        cr.move_to(self._cad, 0)
-        cr.rel_line_to(self._icorrection, 0)
-        cr.rel_line_to(0, -self._rise)
+        cr.move_to(0, 0)
+        cr.rel_line_to(2, 0)
+        cr.rel_line_to(0, -2)
         
         cr.close_path()
         cr.set_source_rgba(0, 0.8, 1, 0.4)
         cr.fill()
     
     def cast_inline(self, LINE, x, y, PP, F, FSTYLE):
-        F_mi, = self._modstyles(F, 'mi')
-        
-        C = cast_mono_line(LINE, list(self.char), 13, PP, F_mi)
+        F_pn, = self._modstyles(F, 'pn')
+        C = cast_mono_line(LINE, list(str(LINE['page'])), 13, PP, F_pn)
         C['x'] = x
         C['y'] = y + FSTYLE['shift']
         self._cad = C['advance']
         
-        ink = cairo.ScaledFont(C['fstyle']['font'], cairo.Matrix(yy=C['fstyle']['fontsize'], xx=C['fstyle']['fontsize']), cairo.Matrix(), cairo.FontOptions())
-        self._rise = -ink.text_extents(self.char[-1])[1]
-        self._icorrection = self._rise * self._cfactor * 0.17632698070846498 # tan(10°)
-        
-        charwidth = self._cad + self._icorrection
         ascent, descent = calculate_vmetrics(C)
 
-        return _MInline(C, charwidth, ascent, descent, self._draw_annot, x, y)
+        return _MInline(C, C['advance'], ascent, descent, self._draw_annot, x, y)
 
     def __len__(self):
         return 11

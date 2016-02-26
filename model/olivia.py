@@ -4,7 +4,6 @@ from itertools import groupby, chain
 from state import noticeboard
 from model.wonder import words
 from model.cat import typeset_chained, typeset_liquid, Glyphs_line
-from model.george import Not_his_markings
 
 class _Empty_F(object):
     def __init__(self):
@@ -196,6 +195,7 @@ class Atomic_text(object):
             S.deposit(repository)
 
 class Chained_text(Atomic_text):
+    sign = '<section>\n'
     def __init__(self, text, channels):
         self.channels = channels
         self._sorted_pages = {}
@@ -255,19 +255,22 @@ class Chained_text(Atomic_text):
 
         return imperfect, O
     
-    def partial_recalculate(self, i):
+    def _partial(self, i, SLUGS, channels):
         l = max(self._index_to_line(i) - 1, 0)
         # avoid recalculating lines that weren't affected
-        del self._SLUGS[l + 1:]
+        del SLUGS[l + 1:]
 
-        trace = self._SLUGS.pop()
+        trace = SLUGS.pop()
         c = trace['c']
         y = trace['y'] - trace['leading']
         
-        arguments = self.channels.channels, self.text, c, y
-        if self._SLUGS:
-            arguments += (self._SLUGS[-1],)
-        self._SLUGS.extend(typeset_chained( * arguments))
+        arguments = channels, self.text, c, y
+        if SLUGS:
+            arguments += (SLUGS[-1],)
+        SLUGS.extend(typeset_chained( * arguments))
+    
+    def partial_recalculate(self, i):
+        self._partial(i, self._SLUGS, self.channels.channels)
         self._precompute_search()
         self._sorted_pages = {}
 
@@ -299,10 +302,12 @@ class Chained_text(Atomic_text):
         return self._sorted_pages
 
 class Repeat_text(Chained_text):
+    sign = '<section repeat="True">\n'
     def __init__(self, text, channels):
         Chained_text.__init__(self, text, channels)
 
     def deep_recalculate(self):
+        self.channels.calculate_repeats()
         self.repeats = [typeset_chained(R, self.text) for R in self.channels.repeat]
 
         self._SLUGS = self.repeats[-1]
@@ -310,9 +315,10 @@ class Repeat_text(Chained_text):
         self._sorted_pages.clear()
 
     def partial_recalculate(self, i):
-        for SLUGS in self.repeats:
-            self._SLUGS = SLUGS
-            Chained_text.partial_recalculate(self, i)
+        for R, SLUGS in enumerate(self.repeats):
+            self._partial(i, SLUGS, self.channels.repeat[R])
+        self._precompute_search()
+        self._sorted_pages = {}
     
     def extract_glyphs(self, refresh=False):
         if refresh:

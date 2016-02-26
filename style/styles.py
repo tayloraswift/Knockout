@@ -298,11 +298,11 @@ def _create_interface():
 
         # set up fonts
         try:
-            projection['fontmetrics'] = fonts.Memo_font(projection['path'])
+            projection['fontmetrics'] = fonts.Memo_I_font(projection['path'])
             projection['font'] = fonts.get_cairo_font(projection['path'])
         except ft_errors.FT_Exception:
             path = F_UNDEFINED.u_path
-            projection['fontmetrics'] = fonts.Memo_font(path)
+            projection['fontmetrics'] = fonts.Memo_I_font(path)
             projection['font'] = fonts.get_cairo_font(path)
         
         font_projections[U] = projection

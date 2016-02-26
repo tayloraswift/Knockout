@@ -17,6 +17,7 @@ class Memo_font(freetype.Face):
         freetype.Face.__init__(self, path)
         UPM = self.units_per_EM
         self._ordinals = {
+                '\t': -7,
                 '\u00A0': -30, # nbsp
                 '\u2003': -31, # em
                 '\u2002': -32, # en
@@ -47,6 +48,7 @@ class Memo_font(freetype.Face):
         self._widths = {
                 None: 0,
                 ' ': space,
+                '\t': 0,
                 '\u00A0': space,
                 '\u2003': 1, # em
                 '\u2002': 0.5, # en
@@ -94,3 +96,9 @@ class Memo_font(freetype.Face):
             i = self.get_char_index(character)
             self._ordinals[character] = i
             return i
+
+class Memo_I_font(Memo_font):
+    def __init__(self, path):
+        Memo_font.__init__(self, path)
+        self._ordinals = {}
+        self._widths = {None: 1}

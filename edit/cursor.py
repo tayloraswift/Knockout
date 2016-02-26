@@ -116,10 +116,10 @@ class FCursor(object):
     #############
 
     def paint_current_selection(self):
-        ftags = {OpenFontpost, CloseFontpost}
+        zeros = {'<f>', '</f>', '\t'}
         signs = (self.j < self.i,
-                (type(self.text[self.i - 1]) in ftags, type(self.text[self.i]) in ftags) , 
-                (type(self.text[self.j - 1]) in ftags, type(self.text[self.j]) in ftags))
+                (str(self.text[self.i - 1]) in zeros, str(self.text[self.i]) in zeros) , 
+                (str(self.text[self.j - 1]) in zeros, str(self.text[self.j]) in zeros))
         return self.FTX.paint_select(self.i, self.j), signs
     
     def take_selection(self):

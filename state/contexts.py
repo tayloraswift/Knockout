@@ -20,7 +20,7 @@ class Text_context(object):
 
     def update(self):
         PP, FSTYLE = cursor.fcursor.styling_at()
-        C = cursor.fcursor.FTX.text[cursor.fcursor.i]
+        C = cursor.fcursor.text[cursor.fcursor.i]
         
         if PP is not self.pp:
             self.changed.update({'paragraph'})
@@ -44,7 +44,7 @@ class Text_context(object):
 
     def update_force(self):
         PP, FSTYLE = cursor.fcursor.styling_at()
-        C = cursor.fcursor.FTX.text[cursor.fcursor.i]
+        C = cursor.fcursor.text[cursor.fcursor.i]
         
         self.changed.update({'paragraph'})
         self.pp = PP

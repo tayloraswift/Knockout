@@ -4,7 +4,8 @@ from IO import kevin
 
 class Meredith(list):
     def __init__(self, KT, grid):
-        list.__init__(self, (olivia.Chained_text(kevin.deserialize(T), george.Washington([george.Swimming_pool( * c ) for c in C])) for T, C in KT))
+        list.__init__(self, (olivia.Repeat_text(kevin.deserialize(T), george.Not_his_markings.from_list(C)) if repeat else
+                            olivia.Chained_text(kevin.deserialize(T), george.Washington.from_list(C)) for (repeat, T), C in KT))
 
         self.page_grid = grid
     
@@ -23,4 +24,3 @@ class Meredith(list):
     def delete_tract(self, tract):
         t = self.index(tract)
         del self[t]
-

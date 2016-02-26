@@ -3,63 +3,39 @@ from itertools import chain, accumulate
 from bisect import bisect
 
 from model.olivia import Atomic_text, Block
+from model.george import Subcell
 from elements.elements import Block_element
 
 _namespace = 'mod:pie'
-
-class _Pie(object):
-    def __init__(self, slices, radius, active=0):
-        self.slices = slices
-        self.active = active
-        self.r = radius
-        self.center = (0, 0)
 
 class PieChart(Block_element):
     namespace = _namespace
     tags = {_namespace + ':' + T for T in ('slice',)}
     DNA = {'slice': {}}
     
-    ADNA = {_namespace: [('radius', 89, 'float')],
+    ADNA = {_namespace: [('radius', 89, 'float'), ('center', 0.5, 'float')],
             'slice': [('prop', 1, 'float'), ('color', '#ff3085', 'rgba')]}
     documentation = [(0, _namespace), (1, 'slice')]
     
     def _load(self, L):
         self._tree = L
         self.PP = L[0][2]
-        radius, = self._get_attributes(_namespace)
+        self._radius, self._center_x = self._get_attributes(_namespace)
+        self.active = 0
+        
         slices, labels = zip( * (( tuple(self._get_attributes('slice', tag[1])), E) for tag, E in L[1] if tag[0] == self.namespace + ':slice'))
         total = sum(P for P, C in slices)
                        # percentage | arc length | color
-        self._pie = _Pie([(P/total, P/total*2*pi, C) for P, C in slices], radius)
+        self._slices = [(P/total, P/total*2*pi, C) for P, C in slices]
+        self._slices_t = list(accumulate(s[1] for s in self._slices))
+        
         self._FLOW = [Atomic_text(text) for text in labels]
 
-    def typeset(self, bounds, c, y, overlay):
-        P_slice, = self._modstyles(overlay, 'slice')
-        r = self._pie.r
-        top = y
-        y += 22
-        left, right = bounds.bounds(y + r)
-        px = (right + left)/2
-        py = y + r
-        for S in self._FLOW:
-            S.cast(bounds, c, y, P_slice)
-            y += 20
-        bottom = py + r + 22
-        
-        self._pie.center = px, py
-        return _MBlock(self._FLOW, (top, bottom, left, right), self._pie, self.PP)
-
-class _MBlock(Block):
-    def __init__(self, FLOW, box, pie, PP):
-        Block.__init__(self, FLOW, * box, PP)
-        self._slices = pie.slices
-        self._slices_t = list(accumulate(s[1] for s in self._slices))
-        self._pie = pie
-    
-    def _print_pie(self, cr):
-        r = self._pie.r
+    def print_pie(self, cr):
+        r = self._radius
         t = 0
-        for i, S in enumerate(self._slices):
+        end = self._to_right
+        for S, (k1, k2) in zip(self._slices, self._ky):
             percent, arc, color = S
             cr.move_to(0, 0)
             cr.arc(0, 0, r, t, t + arc)
@@ -67,17 +43,66 @@ class _MBlock(Block):
             cr.set_source_rgba( * color)
             cr.fill()
             t += arc
+            
+            # key
+            cr.rectangle(end, k1 + 4, -4, k2 - k1 - 4)
+            cr.fill()
+        
+    def pie_annot(self, cr):
+        t = self._slices_t[self.active - 1]
+        percent, arc, color = self._slices[self.active]
+        cr.set_source_rgba( * color)
+        cr.set_line_width(2)
+        cr.arc( * self._center, self._radius + 13, t, t + arc)
+        cr.stroke()
+        cr.fill()
+
+    def regions(self, x, y):
+        if x**2 + y**2 <= (self._radius + 13)**2:
+            t = atan2(y, x)
+            if t < 0:
+                t += 2*pi
+            self.active = bisect(self._slices_t, t)
+        else:
+            self.active = min(len(self._slices) - 1, max(0, bisect(self._ki, y) - 1))
+        return self.active
+
+    def typeset(self, bounds, c, y, overlay):
+        P_slice, = self._modstyles(overlay, 'slice')
+        r = self._radius
+        top = y
+        left, right = bounds.bounds(y + r)
+        px = left + (right - left)*self._center_x
+        py = y + r
+        
+        # key
+        ky = [top - py]
+        k_cell = Subcell(bounds, 0.2, 1)
+        self._gap = top - y
+        for S in self._FLOW:
+            S.cast(k_cell, c, ky[-1] + py, P_slice)
+            ky.append(S.y - py + 4)
+        self._ki = ky
+        self._ky = list(zip(ky, ky[1:]))
+        
+        bottom = max(py + r, self._FLOW[-1].y)
+        
+        self._center = px, py
+        self._to_right = right - px
+        
+        return _MBlock(self._FLOW, (top, bottom, left, right), self.print_pie, self.pie_annot, self._center, self.regions, self.PP)
+
+class _MBlock(Block):
+    def __init__(self, FLOW, box, draw, draw_annot, origin, regions, PP):
+        Block.__init__(self, FLOW, * box, PP)
+        self._origin = origin
+        self._draw = draw
+        self._draw_annot = draw_annot
+        self._regions = regions
 
     def _print_annot(self, cr, O):
-        if O is self._FLOW[self._pie.active]:
-            r = self._pie.r
-            i = self._pie.active
-            t = self._slices_t[i - 1]
-            percent, arc, color = self._slices[i]
-            cr.set_source_rgba( * color)
-            cr.set_line_width(2)
-            cr.arc(0, 0, r + 13, t, t + arc)
-            cr.stroke()
+        if O in self._FLOW:
+            self._draw_annot(cr)
             self._handle(cr)
             cr.fill()
 
@@ -96,14 +121,13 @@ class _MBlock(Block):
     
     def I(self, x, y):
         if x <= self['right']:
-            s = self._target_slice(x, y)
-            self._pie.active = s
-            return self._FLOW[s]
+            px, py = self._origin
+            return self._FLOW[self._regions(x - px, y - py)]
         else:
             return self['i']
     
     def deposit(self, repository):
-        repository['_paint'].append((self._print_pie, * self._pie.center)) # come before to avoid occluding child elements
-        repository['_paint_annot'].append((self._print_annot, * self._pie.center))
+        repository['_paint'].append((self._draw, * self._origin)) # come before to avoid occluding child elements
+        repository['_paint_annot'].append((self._print_annot, 0, 0))
         for A in self._FLOW:
             A.deposit(repository)

@@ -140,8 +140,12 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False, overlay=N
                 y += PSTYLE['margin_top']
                 try:
                     MOD = container.typeset(_Margined_LContainer(channel, PSTYLE['margin_left'], PSTYLE['margin_right']), c, y, overlay)
+                    # see if the lines have overrun the portal
+                    if MOD['y'] > channel.railings[1][-1][1] and not c_leak:
+                        raise RuntimeError
                 except RuntimeError:
                     break
+
                 MOD['i'] = i
                 MOD['j'] = i + 1
                 MOD['l'] = l

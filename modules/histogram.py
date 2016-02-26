@@ -7,6 +7,8 @@ from model.george import Subcell
 from elements.elements import Block_element
 from interface.base import accent
 
+from modules._graph import generate_key
+
 _namespace = 'mod:hist'
 
 class _Pie(object):
@@ -74,7 +76,6 @@ class Histogram(Block_element):
         
         # bars
         end = self._origins[-1]
-        gh = -self._graphheight + self._gap
         
         tide = [0] * self._bins
         for barset, color, (k1, k2) in zip(self._barheights, self._barcolors, self._ky):
@@ -83,16 +84,19 @@ class Histogram(Block_element):
                 cr.rectangle(x1, -tide[i], x2 - x1, -bar)
                 tide[i] += bar
             # key
-            cr.rectangle(end, gh + k1 - 4, -4, k2 - k1 - 4)
+            cr.rectangle(end, k1 + 4, -4, k2 - k1 - 4)
             cr.fill()
     
+    def bar_annot(self, cr):
+        cr.set_source_rgba( * self._barcolors[-1] )
+        
     def regions(self, x, y):
         if y > 0:
             return 0
         elif y < -self._graphheight and x < self._yaxis_div:
             return 1
         else:
-            return bisect(self._ki, y + self._graphheight) + 2
+            return 2 + min(len(self._barheights) - 1, max(0, bisect(self._ki, y) - 1))
     
     def typeset(self, bounds, c, y, overlay):
         P_x, P_y, P_key, = self._modstyles(overlay, 'x', 'y', 'dataset')
@@ -104,7 +108,9 @@ class Histogram(Block_element):
         # y axis
         self._FLOW[1].cast(Subcell(bounds, -0.15, 0.15), c, y, P_y)
         y = self._FLOW[1].y
-        g_origin = (left, int(y + self._graphheight) + 10)
+        
+        px = left
+        py = int(y + self._graphheight) + 10
         
         self._printed_numbers = []
         # y labels
@@ -119,7 +125,7 @@ class Histogram(Block_element):
         w = right - left
         self._yaxis_div = w*0.15
         self._origins = []
-        self._FLOW[0].cast(bounds, c, g_origin[1] + 20, P_x)
+        self._FLOW[0].cast(bounds, c, py + 20, P_x)
         
         for b, m, M, s, k in self._xnumbers:
             x = int(b*w)
@@ -129,44 +135,38 @@ class Histogram(Block_element):
                 XT['y'] = 20
                 self._printed_numbers.append(XT)
             self._origins.append(x)
-
-        ky = [0]
-        k_cell = Subcell(bounds, 0.2, 1)
-        self._gap = top - y
-        for S in self._FLOW[2:]:
-            S.cast(k_cell, c, top + ky[-1], P_key)
-            ky.append(S.y - top + 4)
-        self._ki = ky
-        self._ky = list(zip(ky, ky[1:]))
         
-        return _MBlock(self._FLOW, self._printed_numbers, (top, self._FLOW[0].y, left, right), self.draw_bars, g_origin, self.regions, self.PP)
+        self._ki, self._ky = generate_key(self._FLOW[2:], Subcell(bounds, 0.2, 1), c, top, py, P_key)
+        
+        return _MBlock(self._FLOW, self._printed_numbers, (top, self._FLOW[0].y, left, right), self.draw_bars, self.bar_annot, (px, py), self.regions, self.PP)
 
 class _MBlock(Block):
-    def __init__(self, FLOW, MONO, box, draw, g_origin, regions, PP):
+    def __init__(self, FLOW, MONO, box, draw, draw_annot, origin, regions, PP):
         Block.__init__(self, FLOW, * box, PP)
+        self._origin = origin
         self._MONO = MONO
         self._draw = draw
+        self._draw_annot = draw_annot
         self._regions = regions
-        self._g_origin = g_origin
 
     def _print_annot(self, cr, O):
         if O in self._FLOW:
-            cr.set_source_rgb( * accent)
+            self._draw_annot(cr)
             self._handle(cr)
             cr.fill()
     
     def I(self, x, y):
         if x <= self['right']:
-            dx, dy = self._g_origin
+            dx, dy = self._origin
             s = min(len(self._FLOW) - 1, self._regions(x - dx, y - dy))
             return self._FLOW[s]
         else:
             return self['i']
     
     def deposit(self, repository):
-        repository['_paint'].append((self._draw, * self._g_origin )) # come before to avoid occluding child elements
+        repository['_paint'].append((self._draw, * self._origin )) # come before to avoid occluding child elements
         repository['_paint_annot'].append((self._print_annot, 0, 0))
         for A in self._FLOW:
             A.deposit(repository)
         for A in self._MONO:
-            A.deposit(repository, * self._g_origin)
+            A.deposit(repository, * self._origin)

@@ -6,6 +6,8 @@ from model.olivia import Atomic_text, Block
 from model.george import Subcell
 from elements.elements import Block_element
 
+from modules._graph import generate_key
+
 _namespace = 'mod:pie'
 
 class PieChart(Block_element):
@@ -76,14 +78,7 @@ class PieChart(Block_element):
         py = y + r
         
         # key
-        ky = [top - py]
-        k_cell = Subcell(bounds, 0.2, 1)
-        self._gap = top - y
-        for S in self._FLOW:
-            S.cast(k_cell, c, ky[-1] + py, P_slice)
-            ky.append(S.y - py + 4)
-        self._ki = ky
-        self._ky = list(zip(ky, ky[1:]))
+        self._ki, self._ky = generate_key(self._FLOW, Subcell(bounds, 0.5, 1), c, top, py, P_slice)
         
         bottom = max(py + r, self._FLOW[-1].y)
         
@@ -105,19 +100,6 @@ class _MBlock(Block):
             self._draw_annot(cr)
             self._handle(cr)
             cr.fill()
-
-    def _target_slice(self, x, y):
-        px, py = self._pie.center
-        r = self._pie.r
-        dx = x - px
-        dy = y - py
-        if dx**2 + dy**2 > (r + 13)**2:
-            return self._pie.active
-        else:
-            t = atan2(dy, dx)
-            if t < 0:
-                t += 2*pi
-            return bisect(self._slices_t, t)
     
     def I(self, x, y):
         if x <= self['right']:

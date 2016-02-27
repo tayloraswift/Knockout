@@ -10,7 +10,8 @@ S= {'mi': {'mi': {('f', 'emphasis'): 1}},
                 'thead': {('p', 'tablehead'): 1},
                 'tleft': {('p', 'tableleft'): 1}},
     'mod:pie': {'slice': {('p', 'key'): 1}},
-    'mod:hist': {'num': {('f', 'small'): 1},
+    
+    '_graph': {'num': {('f', 'small'): 1},
                 'dataset': {('p', 'key'): 1},
                 'y': {('p', 'tablecell'): 1, ('p', 'tablehead'): 1},
                 'x': {('p', 'tablecell'): 1, ('p', 'tablehead'): 1}}

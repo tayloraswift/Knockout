@@ -87,8 +87,10 @@ class Mod_element(object):
         self._load(next(e for e in E if type(e) is self.__class__)._tree) #yes, we are building an entirely new object and taking its image
         return True
 
-    def _modstyles(self, X, * tags):
-        modstyles = self.MSL[self.__class__]
+    def _modstyles(self, X, * tags, cls=None):
+        if cls is None:
+            cls = self.__class__
+        modstyles = self.MSL[cls]
         if X is None:
             return (modstyles[tag].copy() for tag in tags)
         else:

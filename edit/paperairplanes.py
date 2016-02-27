@@ -99,7 +99,7 @@ def interpret_haylor(value):
     return (v for v in L if v is not None)
 
 def interpret_tsquared(value):
-    L = (interpret_float_tuple(val, fail=None) for val in value.split())
+    L = (tuple(interpret_float_tuple(val)) for val in value.split())
     return (v for v in L if v is not None and len(v) == 2)
 
 def interpret_rgba(C):

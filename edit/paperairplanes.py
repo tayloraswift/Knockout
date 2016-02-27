@@ -108,3 +108,15 @@ def interpret_rgba(C):
         for pos in range(4):
             RGBA[pos] = int(colorstring[pos*2 : pos*2 + 2], 16) / 255
     return tuple(RGBA)
+
+def interpret_bool(b):
+    t = type(e)
+    if t in {bool, int}:
+        return e
+    elif t is str:
+        if e in {'True', '1'}:
+            return True
+        else:
+            return interpret_int(e)
+    else:
+        return False

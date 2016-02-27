@@ -260,7 +260,30 @@ def cast_liquid_line(LINE, letters, startindex, width, leading, PP, F, hyphenate
 
     for letter in letters:
         CT = type(letter)
-        if CT is OpenFontpost:
+        if CT is str:
+            if letter == '</p>':
+                LINE['P_BREAK'] = True
+                GLYPHS.append((-3, x, y, FSTYLE, fstat, x))
+                break
+            
+            elif letter == '<br/>':
+                GLYPHS.append((-6, x, y, FSTYLE, fstat, x))
+                break
+            else: # regular letter
+                if caps:
+                    letter = letter.upper()
+                glyphwidth = FSTYLE['fontmetrics'].advance_pixel_width(letter) * FSTYLE['fontsize']
+                GLYPHS.append((
+                        FSTYLE['fontmetrics'].character_index(letter),  # 0
+                        x,                                              # 1
+                        y,                                              # 2
+                        
+                        FSTYLE,                                         # 3
+                        fstat,                                          # 4
+                        x + glyphwidth                                  # 5
+                        ))
+        
+        elif CT is OpenFontpost:
             T = letter.F
             TAG = T.name
             
@@ -273,6 +296,7 @@ def cast_liquid_line(LINE, letters, startindex, width, leading, PP, F, hyphenate
             caps = FSTYLE['capitals']
             
             GLYPHS.append((-4, x, y, FSTYLE, fstat, x))
+            continue
             
         elif CT is CloseFontpost:
             GLYPHS.append((-5, x, y, FSTYLE, fstat, x))
@@ -287,6 +311,7 @@ def cast_liquid_line(LINE, letters, startindex, width, leading, PP, F, hyphenate
             FSTYLE = styles.PARASTYLES.project_f(PP, F)
             y = -FSTYLE['shift']
             caps = FSTYLE['capitals']
+            continue
             
         elif CT is Paragraph:
             if GLYPHS:
@@ -302,109 +327,85 @@ def cast_liquid_line(LINE, letters, startindex, width, leading, PP, F, hyphenate
                         fstat,                   # 4
                         x - leading              # 5
                         ))
+                continue
         
-        elif letter == '</p>':
-            LINE['P_BREAK'] = True
-            GLYPHS.append((-3, x, y, FSTYLE, fstat, x))
-            break
-        
-        elif letter == '<br/>':
-            GLYPHS.append((-6, x, y, FSTYLE, fstat, x))
-            break
-
         else:
-            if CT is str:
-                if caps:
-                    letter = letter.upper()
-                glyphwidth = FSTYLE['fontmetrics'].advance_pixel_width(letter) * FSTYLE['fontsize']
-                GLYPHS.append((
-                        FSTYLE['fontmetrics'].character_index(letter),  # 0
-                        x,                                              # 1
-                        y,                                              # 2
-                        
-                        FSTYLE,                                         # 3
-                        fstat,                                          # 4
-                        x + glyphwidth                                  # 5
-                        ))
-            else:
+            try:
+                inline = letter.cast_inline(LINE, x, y, PP, F, FSTYLE)
+                glyphwidth = inline.width                               #6. object
+                GLYPHS.append((-89, x, y, FSTYLE, fstat, x + glyphwidth, inline))
+            except AttributeError:
+                glyphwidth = leading
+                GLYPHS.append((-23, x, y, FSTYLE, fstat, x + leading))
+        
+        x += glyphwidth
+
+        # work out line breaks
+        if x > width:
+            n = len(GLYPHS)
+            CHAR = str(letter)
+            if CHAR not in _BREAK_WHITESPACE:
+
+                LN = letters[:n]
+
                 try:
-                    inline = letter.cast_inline(LINE, x, y, PP, F, FSTYLE)
-                    glyphwidth = inline.width                               #6. object
-                    GLYPHS.append((-89, x, y, FSTYLE, fstat, x + glyphwidth, inline))
-                except AttributeError:
-                    glyphwidth = leading
-                    GLYPHS.append((-23, x, y, FSTYLE, fstat, x + leading))
-            
-            x += glyphwidth
-
-            # work out line breaks
-            if x > width:
-                n = len(GLYPHS)
-                CHAR = str(letter)
-                if CHAR not in _BREAK_WHITESPACE:
-
-                    LN = letters[:n]
-
-                    try:
-                        if CHAR in _BREAK_ONLY_AFTER:
-                            i = next(i + 1 for i, v in zip(range(n - 2, 0, -1), reversed(LN[:-1])) if str(v) in _BREAK)
-                        elif CHAR in _BREAK_AFTER_ELSE_BEFORE:
-                            i = len(LN) - 1
-                        else:
-                            i = next(i + 1 for i, v in zip(range(n - 1, 0, -1), reversed(LN)) if str(v) in _BREAK)
-                    
-                    except StopIteration:
-                        del GLYPHS[-1]
-                        i = 0
-                    
-                    ### AUTO HYPHENATION
-                    if hyphenate:
-                        try:
-                            j = i + next(i for i, v in enumerate(letters[i:]) if v in _BREAK_P)
-                        except StopIteration:
-                            j = i + 1989
-                        except TypeError:
-                            j = i
-                        
-                        word = ''.join([c if len(c) == 1 and c.isalpha() else "'" if c in _APOSTROPHES else ' ' for c in letters[i:j] ])
-
-                        leading_spaces = len(word) - len(word.lstrip(' '))
-
-                        for pair in hy.iterate(word.strip(' ')):
-                            k = len(pair[0]) + leading_spaces
-                            # no sense checking hyphenations that don’t fit
-                            if k >= n - i:
-                                continue
-                            # prevent too-short hyphenations
-                            elif len(pair[0].replace(' ', '')) < 2 or len(pair[1].replace(' ', '')) < 2:
-                                continue
-                            
-                            # check if the hyphen overflows
-
-                            h_F = GLYPHS[i - 1 + k][4]
-                            HFS = styles.PARASTYLES.project_f(PP, h_F)
-                                
-                            if GLYPHS[i - 1 + k][5] + HFS['fontmetrics'].advance_pixel_width('-') * HFS['fontsize'] < width:
-                                i = i + k
-
-                                LINE['hyphen'] = (
-                                        HFS['fontmetrics'].character_index('-'), 
-                                        GLYPHS[i - 1][5], # x
-                                        GLYPHS[i - 1][2], # y
-                                        HFS,
-                                        h_F
-                                        )
-                                break
-                    ####################
-                    if i:
-                        del GLYPHS[i:]
-
-                elif letters[n] == '</p>':
-                    continue
-                break
+                    if CHAR in _BREAK_ONLY_AFTER:
+                        i = next(i + 1 for i, v in zip(range(n - 2, 0, -1), reversed(LN[:-1])) if str(v) in _BREAK)
+                    elif CHAR in _BREAK_AFTER_ELSE_BEFORE:
+                        i = len(LN) - 1
+                    else:
+                        i = n - next(i for i, v in enumerate(reversed(LN)) if str(v) in _BREAK)
                 
-            else:
-                x += FSTYLE['tracking']
+                except StopIteration:
+                    del GLYPHS[-1]
+                    i = 0
+                
+                ### AUTO HYPHENATION
+                if hyphenate:
+                    try:
+                        j = i + next(i for i, v in enumerate(letters[i:]) if v in _BREAK_P)
+                    except StopIteration:
+                        j = i + 1989
+                    except TypeError:
+                        j = i
+                    
+                    word = ''.join(c if len(c) == 1 and c.isalpha() else "'" if c in _APOSTROPHES else ' ' for c in letters[i:j])
+
+                    leading_spaces = len(word) - len(word.lstrip(' '))
+
+                    for pair in hy.iterate(word.strip(' ')):
+                        k = len(pair[0]) + leading_spaces
+                        # no sense checking hyphenations that don’t fit
+                        if k >= n - i:
+                            continue
+                        # prevent too-short hyphenations
+                        elif len(pair[0].replace(' ', '')) < 2 or len(pair[1].replace(' ', '')) < 2:
+                            continue
+                        
+                        # check if the hyphen overflows
+                        HG = GLYPHS[i - 1 + k]
+                        HFS = HG[3]
+                        h_F = HG[4]
+                        
+                        if HG[5] + HFS['fontmetrics'].advance_pixel_width('-') * HFS['fontsize'] <= width:
+                            i = i + k
+                            LINE['hyphen'] = (
+                                    HFS['fontmetrics'].character_index('-'), 
+                                    HG[5], # x
+                                    HG[2], # y
+                                    HFS,
+                                    h_F)
+                            break
+                ####################
+                if i:
+                    del GLYPHS[i:]
+
+            elif letters[n] == '</p>':
+                continue
+            break
+            
+        else:
+            x += FSTYLE['tracking']
 
     LINE['j'] = startindex + len(GLYPHS)
     LINE['GLYPHS'] = GLYPHS

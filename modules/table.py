@@ -230,6 +230,6 @@ class _MBlock(Block):
 
     def deposit(self, repository):
         repository['_paint'].append((self._print_table, 0, 0))
+        repository['_paint_annot'].append((self._print_annot, 0, 0))
         for A in self._FLOW:
             A.deposit(repository)
-        repository['_paint_annot'].append((self._print_annot, 0, 0))

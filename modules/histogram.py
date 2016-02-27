@@ -1,19 +1,11 @@
-from itertools import chain, accumulate
-from bisect import bisect
-
 from model.olivia import Atomic_text
-from model.cat import cast_mono_line
-from model.george import Subcell
-from elements.elements import Block_element
-
-from modules._graph import generate_key, GraphBlock
+from modules._graph import Cartesian
 
 _namespace = 'mod:hist'
 
-class Histogram(Block_element):
+class Histogram(Cartesian):
     namespace = _namespace
     tags = {_namespace + ':' + T for T in ('x', 'y', 'dataset')}
-    DNA = {'x': {}, 'y': {}, 'dataset': {}, 'num': {}}
     
     ADNA = {_namespace: [('height', 89, 'int'), ('tickwidth', 0.5, 'float')],
             'x': [('start', 0, 'float'), ('step', 1, 'float'), ('minor', 1, 'int'), ('major', 2, 'int'), ('every', 2, 'int')],
@@ -33,7 +25,7 @@ class Histogram(Block_element):
         datasets, labels = zip( * (( tuple(self._get_attributes('dataset', tag[1])), E) for tag, E in L[1] if tag[0] == self.namespace + ':dataset'))
         
         # horizontal computations
-        datavalues, self._barcolors = zip( * ((tuple(dataset), attrs) for dataset, attrs in datasets) )
+        datavalues, self._datacolors = zip( * ((tuple(dataset), attrs) for dataset, attrs in datasets) )
         bins = max(len(VV) for VV in datavalues)
                         #   pos  |     minor     |     major     |    str bool   |      str            |
         self._xnumbers = [(b/bins, not b % xminor, not b % xmajor, not b % xevery, str(xstart + xstep*b)) for b in range(bins + 1)]
@@ -46,7 +38,7 @@ class Histogram(Block_element):
         
         self._FLOW = [Atomic_text(text) for text in (xlabel, ylabel) + labels]
     
-    def draw_bars(self, cr):
+    def ink_graph(self, cr):
         barorigins = list(zip(self._origins, self._origins[1:]))
         
         # ticks
@@ -70,7 +62,7 @@ class Histogram(Block_element):
         end = self._origins[-1]
         
         tide = [0] * self._bins
-        for barset, color, (k1, k2) in zip(self._barheights, self._barcolors, self._ky):
+        for barset, color, (k1, k2) in zip(self._barheights, self._datacolors, self._ky):
             cr.set_source_rgba( * color )
             for i, ((x1, x2), bar) in enumerate(zip(barorigins, barset)):
                 cr.rectangle(x1, -tide[i], x2 - x1, -bar)
@@ -78,59 +70,3 @@ class Histogram(Block_element):
             # key
             cr.rectangle(end, k1 + 4, -4, k2 - k1 - 4)
             cr.fill()
-    
-    def bar_annot(self, cr):
-        cr.set_source_rgba( * self._barcolors[-1] )
-        
-    def regions(self, x, y):
-        if y > 0:
-            return 0
-        elif y < -self._graphheight and x < self._yaxis_div:
-            return 1
-        else:
-            return 2 + min(len(self._barheights) - 1, max(0, bisect(self._ki, y) - 1))
-    
-    def typeset(self, bounds, c, y, overlay):
-        P_x, P_y, P_key, = self._modstyles(overlay, 'x', 'y', 'dataset')
-        F_num, = self._modstyles(None, 'num')
-
-        top = y
-        left, right = bounds.bounds(y + self._graphheight/2)
-
-        # y axis
-        self._FLOW[1].cast(Subcell(bounds, -0.15, 0.15), c, y, P_y)
-        y = self._FLOW[1].y
-        
-        px = left
-        py = int(y + self._graphheight) + 10
-        
-        self._printed_numbers = []
-        # y labels
-        for ly, m, M, s, k in self._ynumbers:
-            if s:
-                YT = cast_mono_line({'R': 0, 'l': 0, 'c': c, 'page': bounds.page}, k, 13, self.PP, F_num)
-                YT['x'] = -YT['advance'] - 10
-                YT['y'] = -ly + 4
-                self._printed_numbers.append(YT)
-                
-        # x axis
-        w = right - left
-        self._yaxis_div = w*0.15
-        self._origins = []
-        self._FLOW[0].cast(bounds, c, py + 20, P_x)
-        
-        for b, m, M, s, k in self._xnumbers:
-            x = int(b*w)
-            if s:
-                XT = cast_mono_line({'R': 0, 'l': 0, 'c': c, 'page': bounds.page}, k, 13, self.PP, F_num)
-                XT['x'] = x - XT['advance']/2
-                XT['y'] = 20
-                self._printed_numbers.append(XT)
-            self._origins.append(x)
-        
-        self._ki, self._ky = generate_key(self._FLOW[2:], Subcell(bounds, 0.2, 1), c, top, py, P_key)
-        
-        return GraphBlock(self._FLOW, self._printed_numbers, 
-                    (top, self._FLOW[0].y, left, right), 
-                    self.draw_bars, self.bar_annot, 
-                    (px, py), self.regions, self.PP)

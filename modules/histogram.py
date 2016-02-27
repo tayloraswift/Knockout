@@ -5,18 +5,10 @@ from model.olivia import Atomic_text
 from model.cat import cast_mono_line
 from model.george import Subcell
 from elements.elements import Block_element
-from interface.base import accent
 
 from modules._graph import generate_key, GraphBlock
 
 _namespace = 'mod:hist'
-
-class _Pie(object):
-    def __init__(self, slices, radius, active=0):
-        self.slices = slices
-        self.active = active
-        self.r = radius
-        self.center = (0, 0)
 
 class Histogram(Block_element):
     namespace = _namespace

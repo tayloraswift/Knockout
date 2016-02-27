@@ -1,7 +1,7 @@
 from style.styles import DB_Parastyle
 from IO.xml import print_attrs, print_styles
 from state.exceptions import IO_Error
-from edit.paperairplanes import interpret_int, interpret_float, interpret_float_tuple, interpret_enumeration, interpret_rgba, interpret_bool
+from edit.paperairplanes import interpret_int, interpret_float, interpret_float_tuple, interpret_enumeration, interpret_rgba, interpret_bool, interpret_haylor, interpret_tsquared
 
 textstyles = {'emphasis': 'em', 'strong': 'strong', 'sup': 'sup', 'sub': 'sub'}
 
@@ -70,7 +70,9 @@ class Mod_element(object):
                 'int set': interpret_enumeration,
                 'rgba': interpret_rgba,
                 'str': str,
-                'bool': interpret_bool}
+                'bool': interpret_bool,
+                '1D': interpret_haylor,
+                '2D': interpret_tsquared}
     
     def __init__(self, L, deserialize, ser):
         self._DESR = deserialize

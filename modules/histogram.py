@@ -26,7 +26,7 @@ class Histogram(Block_element):
     ADNA = {_namespace: [('height', 89, 'int'), ('tickwidth', 0.5, 'float')],
             'x': [('start', 0, 'float'), ('step', 1, 'float'), ('minor', 1, 'int'), ('major', 2, 'int'), ('every', 2, 'int')],
             'y': [('start', 0, 'float'), ('step', 22.25, 'float'), ('minor', 1, 'int'), ('major', 2, 'int'), ('every', '2', 'int'), ('stop', 89, 'float')],
-            'dataset': [('data', (), 'float tuple'), ('color', '#ff3085', 'rgba')]}
+            'dataset': [('data', (), '1D'), ('color', '#ff3085', 'rgba')]}
     documentation = [(0, _namespace), (1, 'x'), (1, 'y'), (1, 'dataset')]
     
     def _load(self, L):

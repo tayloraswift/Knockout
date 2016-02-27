@@ -91,6 +91,17 @@ def interpret_float_tuple(value):
     L = (interpret_float(val, fail=None) for val in value.split(','))
     return (v for v in L if v is not None)
 
+def interpret_haylor(value):
+    if ',' in value:
+        print('1 dimensional values take only one coordinate')
+        return ()
+    L = (interpret_float(val, fail=None) for val in value.split())
+    return (v for v in L if v is not None)
+
+def interpret_tsquared(value):
+    L = (interpret_float_tuple(val, fail=None) for val in value.split())
+    return (v for v in L if v is not None and len(v) == 2)
+
 def interpret_rgba(C):
     hx = '0123456789abcdef'
     numeric = '0123456789., '

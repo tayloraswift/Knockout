@@ -41,6 +41,7 @@ class Scatterplot(Cartesian):
         for pointset, color, (k1, k2) in zip(self._t_points, self._datacolors, self._ky):
             cr.set_source_rgba( * color )
             for x, y in pointset:
+                cr.move_to(x, y)
                 cr.arc(x, y, 3, 0, circle_t)
                 cr.close_path()
             # key

@@ -7,7 +7,7 @@ class Histogram(Cartesian):
     namespace = _namespace
     tags = {_namespace + ':' + T for T in ('x', 'y', 'dataset')}
     
-    ADNA = {_namespace: [('height', 89, 'int'), ('tickwidth', 0.5, 'float')],
+    ADNA = {_namespace: [('height', 89, 'int'), ('tickwidth', 0.5, 'float'), ('round', 13, 'int')],
             'x': [('start', 0, 'float'), ('step', 1, 'float'), ('minor', 1, 'int'), ('major', 2, 'int'), ('every', 2, 'int')],
             'y': [('start', 0, 'float'), ('step', 22.25, 'float'), ('minor', 1, 'int'), ('major', 2, 'int'), ('every', '2', 'int'), ('stop', 89, 'float')],
             'dataset': [('data', (), '1D'), ('color', '#ff3085', 'rgba')]}
@@ -17,7 +17,7 @@ class Histogram(Cartesian):
         self._tree = L
         self.PP = L[0][2]
         
-        self._graphheight, self._tw = self._get_attributes(_namespace)
+        self._graphheight, self._tw, self._roundto = self._get_attributes(_namespace)
         
         (xstart, xstep, xminor, xmajor, xevery), xlabel = next((tuple(self._get_attributes('x', tag[1])), E) for tag, E in L[1] if tag[0] == self.namespace + ':x')
         (ystart, ystep, yminor, ymajor, yevery, ystop), ylabel = next((tuple(self._get_attributes('y', tag[1])), E) for tag, E in L[1] if tag[0] == self.namespace + ':y')
@@ -27,19 +27,19 @@ class Histogram(Cartesian):
         # horizontal computations
         datavalues, self._datacolors = zip( * ((tuple(dataset), attrs) for dataset, attrs in datasets) )
         bins = max(len(VV) for VV in datavalues)
-                        #   pos  |     minor     |     major     |    str bool   |      str            |
-        self._xnumbers = [(b/bins, not b % xminor, not b % xmajor, not b % xevery, str(xstart + xstep*b)) for b in range(bins + 1)]
+                        #   pos  |     minor     |     major     |    str bool   |             str              |
+        self._xnumbers = [(b/bins, not b % xminor, not b % xmajor, not b % xevery, str(self.U_1(xstart + xstep*b))) for b in range(bins + 1)]
         yrange = ystop - ystart
         yticks = int(yrange/ystep)
-                          #   pos                    |     minor     |     major     |    str bool   |         str         |
-        self._ynumbers = [(self._graphheight*b/yticks, not b % yminor, not b % ymajor, not b % yevery, str(ystart + b*ystep)) for b in range(yticks + 1)]
+                          #   pos                    |     minor     |     major     |    str bool   |             str              |
+        self._ynumbers = [(self._graphheight*b/yticks, not b % yminor, not b % ymajor, not b % yevery, str(self.V_1(ystart + b*ystep))) for b in range(yticks + 1)]
         
-        self.process_data(datavalues, xstart, bins*xstep, ystart, yrange)
+        self.process_data(datavalues, xstart, xstep, bins*xstep, ystart, ystep, yrange)
         self._bins = bins
         
         self._FLOW = [Atomic_text(text) for text in (xlabel, ylabel) + labels]
 
-    def process_data(self, datavalues, x0, xx, y0, yy):
+    def process_data(self, datavalues, x0, dx, xx, y0, dy, yy):
         self._barheights = [[self._graphheight*self.V(y - y0)/yy for y in VV] for VV in datavalues]
         
     def ink_graph(self, cr):

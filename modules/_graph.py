@@ -13,6 +13,14 @@ def generate_key(FLOW, subcell, c, top, py, P):
         ky.append(S.y - py + 4)
     return ky, list(zip(ky, ky[1:]))
 
+def soft_int(n, decimals):
+    if type(n) is float:
+        if n.is_integer():
+            n = int(n)
+        else:
+            n = round(n, decimals)
+    return n
+    
 class Cartesian(Block_element):
     namespace = '_graph'
     DNA = {'x': {}, 'y': {}, 'dataset': {}, 'num': {}}
@@ -20,18 +28,18 @@ class Cartesian(Block_element):
     def U(self, x):
         return x
     def U_1(self, u):
-        return u
+        return soft_int(u, self._roundto)
     
     def V(self, y):
         return y
     def V_1(self, v):
-        return v
+        return soft_int(v, self._roundto)
     
     def _load(self, L):
         self._tree = L
         self.PP = L[0][2]
         
-        self._graphheight, self._tw = self._get_attributes(self.namespace)
+        self._graphheight, self._tw, self._roundto = self._get_attributes(self.namespace)
         
         (xstart, xstep, xminor, xmajor, xevery, xstop), xlabel = next((tuple(self._get_attributes('x', tag[1])), E) for tag, E in L[1] if tag[0] == self.namespace + ':x')
         (ystart, ystep, yminor, ymajor, yevery, ystop), ylabel = next((tuple(self._get_attributes('y', tag[1])), E) for tag, E in L[1] if tag[0] == self.namespace + ':y')
@@ -51,7 +59,7 @@ class Cartesian(Block_element):
                           #   pos                    |     minor     |     major     |    str bool   |            str          |
         self._ynumbers = [(self._graphheight*b/yticks, not b % yminor, not b % ymajor, not b % yevery, str(self.V_1(ystart + b*ystep))) for b in range(yticks + 1)]
         
-        self.process_data(datavalues, xstart, Xrange, ystart, yrange)
+        self.process_data(datavalues, xstart, xstep, Xrange, ystart, ystep, yrange)
         
         self._FLOW = [Atomic_text(text) for text in (xlabel, ylabel) + labels]
     

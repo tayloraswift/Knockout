@@ -3,13 +3,13 @@ from html import parser
 
 def print_attrs(name, attrs): 
     if attrs:
-        return name + ' ' + ' '.join(A + '="' + repr(V)[1:-1] + '"' for A, V in attrs.items())
+        return name + ' ' + ' '.join(A + '="' + repr(V)[1:-1] + '"' for A, V in sorted(attrs.items()))
     else:
         return name
 
 def print_styles(PP):
     S = {}
-    ptags = '&'.join(chain.from_iterable((P.name for i in range(V)) for P, V in PP.P.items()))
+    ptags = '&'.join(chain.from_iterable((P.name for i in range(V)) for P, V in sorted(PP.P.items(), key=lambda k: k[0].name)))
     if ptags != 'body':
         S['class'] = ptags
     if PP.EP:

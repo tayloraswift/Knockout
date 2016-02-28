@@ -131,6 +131,9 @@ def PDF():
     for p in range(max_page + 1):
         becky.print_page(cr, p, classes)
         cr.show_page()
+    # clear glyph buffers
+    for tract in meredith.mipsy:            
+        tract.extract_glyphs(refresh=True)
 
 def _place_tags(key):
     un.history.undo_save(3)

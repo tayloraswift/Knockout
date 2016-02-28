@@ -33,11 +33,15 @@ class Histogram(Cartesian):
         yticks = int(yrange/ystep)
                           #   pos                    |     minor     |     major     |    str bool   |         str         |
         self._ynumbers = [(self._graphheight*b/yticks, not b % yminor, not b % ymajor, not b % yevery, str(ystart + b*ystep)) for b in range(yticks + 1)]
-        self._barheights = [[self._graphheight*value/yrange for value in VV] for VV in datavalues]
+        
+        self.process_data(datavalues, xstart, bins*xstep, ystart, yrange)
         self._bins = bins
         
         self._FLOW = [Atomic_text(text) for text in (xlabel, ylabel) + labels]
-    
+
+    def process_data(self, datavalues, x0, xx, y0, yy):
+        self._barheights = [[self._graphheight*self.V(y - y0)/yy for y in VV] for VV in datavalues]
+        
     def ink_graph(self, cr):
         barorigins = list(zip(self._origins, self._origins[1:]))
         

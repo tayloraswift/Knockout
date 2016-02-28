@@ -102,6 +102,17 @@ def interpret_tsquared(value):
     L = (tuple(interpret_float_tuple(val)) for val in value.split())
     return (v for v in L if v is not None and len(v) == 2)
 
+# for function plotter
+from math import pi, e, sin, cos, tan, asin, acos, atan, log, exp
+import parser
+ln = log
+def log(x):
+    return ln(x, 10)
+
+def function_x(expression):
+    code = parser.expr(expression).compile()
+    return lambda x: eval(code)
+
 def interpret_rgba(C):
     hx = '0123456789abcdef'
     numeric = '0123456789., '

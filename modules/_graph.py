@@ -1,3 +1,4 @@
+from math import log10
 from bisect import bisect
 
 from model.olivia import Block, Atomic_text
@@ -16,6 +17,16 @@ class Cartesian(Block_element):
     namespace = '_graph'
     DNA = {'x': {}, 'y': {}, 'dataset': {}, 'num': {}}
 
+    def U(self, x):
+        return x
+    def U_1(self, u):
+        return u
+    
+    def V(self, y):
+        return y
+    def V_1(self, v):
+        return v
+    
     def _load(self, L):
         self._tree = L
         self.PP = L[0][2]
@@ -28,19 +39,19 @@ class Cartesian(Block_element):
         datasets, labels = zip( * (( tuple(self._get_attributes('dataset', tag[1])), E) for tag, E in L[1] if tag[0] == self.namespace + ':dataset'))
         
         # horizontal computations
-        datavalues, self._datacolors = zip( * ((tuple(dataset), attrs) for dataset, attrs in datasets) )
+        datavalues, self._datacolors = zip( * datasets )
 
         Xrange = xstop - xstart
         xticks = int(Xrange/xstep)
-                        #   pos    |     minor     |     major     |    str bool   |      str            |
-        self._xnumbers = [(b/xticks, not b % xminor, not b % xmajor, not b % xevery, str(xstart + b*xstep)) for b in range(xticks + 1)]
+                        #   pos    |     minor     |     major     |    str bool   |         str             |
+        self._xnumbers = [(b/xticks, not b % xminor, not b % xmajor, not b % xevery, str(self.U_1(xstart + b*xstep))) for b in range(xticks + 1)]
         
         yrange = ystop - ystart
         yticks = int(yrange/ystep)
-                          #   pos                    |     minor     |     major     |    str bool   |         str         |
-        self._ynumbers = [(self._graphheight*b/yticks, not b % yminor, not b % ymajor, not b % yevery, str(ystart + b*ystep)) for b in range(yticks + 1)]
+                          #   pos                    |     minor     |     major     |    str bool   |            str          |
+        self._ynumbers = [(self._graphheight*b/yticks, not b % yminor, not b % ymajor, not b % yevery, str(self.V_1(ystart + b*ystep))) for b in range(yticks + 1)]
         
-        self.process_data(datavalues, Xrange, yrange)
+        self.process_data(datavalues, xstart, Xrange, ystart, yrange)
         
         self._FLOW = [Atomic_text(text) for text in (xlabel, ylabel) + labels]
     

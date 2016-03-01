@@ -42,7 +42,7 @@ class Scatterplot(Cartesian):
             cr.set_source_rgba( * color )
             for x, y in pointset:
                 cr.move_to(x, y)
-                cr.arc(x, y, 3, 0, circle_t)
+                cr.arc(x, y, 2, 0, circle_t)
                 cr.close_path()
             # key
             cr.rectangle(end, k1 + 4, -4, k2 - k1 - 4)

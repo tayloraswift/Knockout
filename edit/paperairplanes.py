@@ -103,11 +103,8 @@ def interpret_tsquared(value):
     return (v for v in L if v is not None and len(v) == 2)
 
 # for function plotter
-from math import pi, e, sin, cos, tan, asin, acos, atan, log, exp, floor, ceil
+from data.userfunctions import *
 import parser
-ln = log
-def log(x):
-    return ln(x, 10)
 
 def function_x(expression):
     code = parser.expr(expression).compile()

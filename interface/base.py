@@ -72,6 +72,8 @@ class Base_kookie(object):
 
     def focus(self, x, y):
         pass
+    def dpress(self):
+        pass
     def focus_drag(self, x, y):
         pass
     def release(self, action):

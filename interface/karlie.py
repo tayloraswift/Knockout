@@ -229,7 +229,11 @@ class _Properties_panel(ui.Cell):
             if self._active_box_i is not None:
                 self._active_box_i.defocus()
             self._active_box_i = b
-            
+
+    def dpress(self):
+        if self._active_box_i is not None:
+            self._active_box_i.dpress()
+    
     def press_motion(self, x, y):
         yn = y - self._dy
         if self._scroll_anchor:

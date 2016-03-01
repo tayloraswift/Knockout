@@ -6,6 +6,7 @@ from style.styles import ISTYLES
 from IO.kevin import serialize, deserialize
 from elements.elements import Mod_element
 from edit import cursor
+from edit.text import expand_cursors_word
 
 def _chunks(L, n):
     br = [i + 1 for i, v in enumerate(L) if v == '\n']
@@ -277,6 +278,9 @@ class Rose_garden(Base_kookie):
         self._i = self._target(x, y)
         self._j = self._i
         self._active = True
+    
+    def dpress(self):
+        self._i, self._j = expand_cursors_word(self._CHARS, self._i)
 
     def focus_drag(self, x, y):
         j = self._target(x, y)

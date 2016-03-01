@@ -5,7 +5,7 @@
 <section>
 <p class="h1">Moody&#x27;s Mega Math Challenge 2016</p>
 
-<p class="body&firstchild">The automotive industry represents one of the most active components of American culture with millions of workers travelling by car every day.  However, the cost to buy motor vehicles lies outside the price range for many hard working Americans.  Therefore, many commuters rely on car sharing to get from place to place as a means of reducing the cost of transportation.  As new companies and industries arise, new modes of transportation and new models for car sharing systems are born and provide additional options that in effect, cater to the preferences of peoples from various locations and economic situations.</p>
+<p class="body&firstchild">The automotive industry represents one of the most active components of American culture with millions of workers traveling by car every day.  However, the cost to buy motor vehicles lies outside the price range for many hard working Americans.  Therefore, many commuters rely on car sharing to get from place to place as a means of reducing the cost of transportation.  As new companies and industries arise, new modes of transportation and new models for car sharing systems are born and provide additional options that in effect, cater to the preferences of peoples from various locations and economic situations.</p>
 
 <p>Companies effectively create models to represent possible situations that hold the potential to benefit those with various needs.  Statisticians consider many variables when modeling situations including miles driven per day and the time spent in cars for large populations.  From this, modelers find proportions that represent all the different permutations of these variables.  Therefore, statisticians can predict the discrepancies within certain populations.</p>
 
@@ -19,7 +19,7 @@
 <section>
 <p class="firstchild&h2" style="{'margin_left': 40}">Table of contents</p>
 
-<table cellbottom="5" celltop="5" distr="3, 1" hrules="0" style="{'margin_top': 10, 'margin_right': 40, 'margin_left': 40}">
+<table cellbottom="5" celltop="5" distr="3, 1" hrules="0" style="{'margin_right': 40, 'margin_top': 10, 'margin_left': 40}">
     <tr>
         <td>
             <p class="body&h2">Introduction</p>
@@ -104,7 +104,7 @@
 
 <p class="body&firstchild">When we plot the sample means of each demographic subgroup, a strong linear correlation between miles driven and minutes driven appears. </p>
 
-<mod:scatter class="figure" height="100">
+<mod:scatter class="figure" height="80">
     <mod:scatter:x every="4" major="2" minor="1" start="0" step="5" stop="80">
         <p>Minutes</p>
         
@@ -120,7 +120,7 @@
     </mod:scatter:dataset>
 </mod:scatter>
 
-<p class="caption&h3">Figure 1: Driving behavior by demographic subgroup.</p>
+<p class="caption&h3">Figure 1: Driving behavior by demographic group.</p>
 
 <p class="body&firstchild">This should not be unexpected, as spending more time behind the wheel should generally result in a greater distance traveled (traffic jams notwithstanding).</p>
 
@@ -369,10 +369,6 @@
 
 <p class="body&firstchild">Clearly, members of each demographic group are not homogeneous. 16–19 year old drivers do not all drive the mean number of miles each day. We have to then blur each demographic mean into a two-dimensional normal probability distribution to produce a more realistic model of the driving population.</p>
 
-<p>That then begs the question, what standard deviation do we use? Data on the variance of driving habits is unreachable or nonexistent, which forces us to create a function that would return a model of the driving population for any possible input <mi char="σ"/>.</p>
-
-<p>We also have the problem of relating <mi char="σ"/><sub>miles</sub> to <mi char="σ"/><sub>minutes</sub>. We will assume the two-dimensional normal distribution about each mean is “circular”, but to prevent this from being susceptible to changes in scale between the two axes (which could arbitrarily stretch or squash the distributions into ellipses), we must affix the dimensions of the distribution to the slope of the regression line of the original points so that it is circular with respect to our data. Because the slope of the regression <mi char="k"/> equals 0.6536195419, that is the amount we must scale <mi char="σ"/><sub><mi char="y"/></sub> . (We could have also scaled <mi char="σ"/><sub><mi char="x"/></sub> instead of <mi char="σ"/><sub><mi char="y"/></sub> , by the reciprocal of <mi char="k"/>, but our input <mi char="σ"/> would then be in units of miles instead of minutes.)</p>
-
 <mod:scatter class="figure" height="100">
     <mod:scatter:x every="4" major="2" minor="1" start="0" step="5" stop="80">
         <p>Minutes</p>
@@ -409,7 +405,11 @@
 
 <p class="caption">Randomly generated “drivers”, from input standard deviations <mi char="σ"/> = 3 min, <mi char="σ"/> = 10 min.</p>
 
-<p class="body&firstchild">Dividing this simulated population into nine behavioral groups is then a matter of dividing the datapoints into three quantiles in each dimension, yielding nine regions. Table 2 gives the positions of the 33rd and 67th percentiles along both quantities in the <mi char="σ"/> = 3<mi char="k"/> model.</p>
+<p class="body&firstchild">That then begs the question, what standard deviation do we use? Data on the variance of driving habits is unreachable or nonexistent, which forces us to create a function that would return a model of the driving population for any possible input <mi char="σ"/>.</p>
+
+<p>We also have the problem of relating <mi char="σ"/><sub>miles</sub> to <mi char="σ"/><sub>minutes</sub>. We will assume the two-dimensional normal distribution about each mean is “circular”, but to prevent this from being susceptible to changes in scale between the two axes (which could arbitrarily stretch or squash the distributions into ellipses), we must affix the dimensions of the distribution to the slope of the regression line of the original points so that it is circular with respect to our data. Because the slope of the regression <mi char="k"/> equals 0.6536195419, that is the amount we must scale <mi char="σ"/><sub><mi char="y"/></sub> . (We could have also scaled <mi char="σ"/><sub><mi char="x"/></sub> instead of <mi char="σ"/><sub><mi char="y"/></sub> , by the reciprocal of <mi char="k"/>, but our input <mi char="σ"/> would then be in units of miles instead of minutes.)</p>
+
+<p>Dividing this simulated population into nine behavioral groups is then a matter of dividing the datapoints into three quantiles in each dimension, yielding nine regions. Table 2 gives the positions of the 33rd and 67th percentiles along both quantities in the <mi char="σ"/> = 3<mi char="k"/> model.</p>
 
 <table cellbottom="5" class="figure" distr="1, 1, 1" hrules="1" rulemargin="2">
     <tr>
@@ -640,8 +640,6 @@
 
 <p class="caption&firstchild">This table shows the percentages of drivers who would fit into each car usage pattern under selected values of <mi char="σ"/>.</p>
 
-<p class="body&firstchild"></p>
-
 <p class="h2">2  Part 2: Implementing and operating a car sharing system</p>
 
 <p class="h3">2.1 Analysis of the problem</p>
@@ -664,7 +662,7 @@
 
 <p>Now let’s consider the first of our possible car sharing systems: customers rent a car for a certain period of time, and return it to the same station when they are done with the car. For most Americans, the story would involve walking on “foot” to the nearest car station (we will call any form of non automotive travel, i.e. biking, “on foot”). One would then drive the car to their workplace (leaving the car in a parking lot during the workday) and drive it back home in the afternoon. One would return the car to the original car station, then make one’s way back home on foot. The travel graph (“H” for home, “S” for station, and “W” for workplace) would then look something like this:</p>
 
-<p class="body&math">H —<strong><em>foot</strong></em>—&gt; S<sub>1</sub> —<strong><em>car</em></strong>—&gt; W —<strong><em>car</em></strong>—&gt; S<sub>1</sub> —<em><strong>foot</strong></em>—&gt; H .</p>
+<p class="body&math">H —<strong><em>foot</strong></em>—&gt; S<sub>1</sub> —<strong><em>car</em></strong>—&gt; W —<strong><em>car</em></strong>—&gt; S<sub>1</sub> <br/>—<em><strong>foot</strong></em>—&gt; H .</p>
 
 <p class="body&firstchild">The convenience cost <mi char="C"/><sub>1</sub> could then be expressed as </p>
 
@@ -804,7 +802,7 @@
 
 <p class="caption&firstchild">The price of gasoline (as of February 28, 2016) in the four subject cities in our model. Gas prices are highly variant—gas is almost 53.7% more expensive in Riverside than Knoxville.</p>
 
-<p>In system 1, round-trip stationed car sharing, the total distance traveled per day, per customer, would simply be twice the distance from the residential car station to the workplace, <mi char="x"/><sub><mi char="SW"/></sub>.</p>
+<p class="body&firstchild">In system 1, round-trip stationed car sharing, the total distance traveled per day, per customer, would simply be twice the distance from the residential car station to the workplace, <mi char="x"/><sub><mi char="SW"/></sub>.</p>
 
 <p class="body&math"><mi char="d"/> = 2<mi char="x"/><sub><mi char="SW"/></sub></p>
 
@@ -970,29 +968,29 @@
                 'Body bold': {'path': '/home/kelvin/.fonts/Proforma-Bold.otf'},
                 'Body bold italic': {'path': '/home/kelvin/.fonts/Proforma-BoldItalic.otf'},
                 'Body italic': {'path': 'r:Proforma-MediumItalic-patched.otf'},
-                'Body regular': {'fontsize': 14.5, 'path': 'r:Proforma-Medium-patched.otf'},
+                'Body regular': {'fontsize': 13, 'path': 'r:Proforma-Medium-patched.otf'},
                 'Body small': {'fontsize': 9, 'path': '/home/kelvin/.fonts/Proforma-Semibold.otf'},
                 'Body small italic': {'fontsize': 9, 'path': '/home/kelvin/.fonts/Proforma-SemiboldItalic.otf'},
-                'Caption': {'capitals': False, 'fontsize': 13, 'tracking': 0},
+                'Caption': {'capitals': False, 'fontsize': 12, 'tracking': 0},
                 'Sans serif book': {'path': '/home/kelvin/.fonts/FiraSans-Book.otf'},
                 'Sans serif book italic': {'path': '/home/kelvin/.fonts/FiraSans-BookItalic.otf'},
                 'Sans serif light': {'path': '/home/kelvin/.fonts/FiraSans-Light.otf'},
                 'Sans serif semi': {'path': '/home/kelvin/.fonts/FiraSans-SemiBold.otf'},
                 'Smallcaps': {'capitals': False, 'path': '/home/kelvin/.fonts/Proforma_MediumSC.ttf'},
-                'Table': {'fontsize': 12},
+                'Table': {'fontsize': 11},
                 'Table heading': {'capitals': True, 'tracking': 1},
-                'Table units': {'fontsize': 9.5, 'path': '/home/kelvin/.fonts/FiraSans-Medium.otf'},
+                'Table units': {'fontsize': 9, 'path': '/home/kelvin/.fonts/FiraSans-Medium.otf'},
                 'h1': {'fontsize': 36, 'path': '/home/kelvin/.fonts/Kabel.otf'},
                 'h2': {'capitals': True, 'fontsize': 22, 'tracking': 1},
-                'h3': {'capitals': True, 'fontsize': 16, 'tracking': 2},
+                'h3': {'capitals': True, 'fontsize': 14, 'tracking': 2},
                 'h4': {'capitals': True, 'fontsize': 14.5, 'tracking': 2},
                 'lowercase': {'capitals': False},
                 'subscript': {'shift': -2},
                 'superscript': {'shift': 5}},
- 'FTAGLIST': [('caption', []), ('reference', []), ('big', []), ('sub', ['small']), ('sup', ['small']), ('sc', []), ('strong', []), ('emphasis', [])],
- 'PARASTYLES': (15,
+ 'FTAGLIST': [('big', []), ('sc', []), ('sub', ['small']), ('strong', []), ('sup', ['small']), ('reference', []), ('caption', []), ('emphasis', [])],
+ 'PARASTYLES': (4,
                 [({'fontclasses': (2, [('Black', {}), ('subscript', {'sub': 1}), ('superscript', {'sup': 1})])}, {}),
-                 ({'fontclasses': (4,
+                 ({'fontclasses': (0,
                                    [('Body regular', {}),
                                     ('Smallcaps', {'sc': 1}),
                                     ('Body italic', {'emphasis': 1}),
@@ -1026,27 +1024,27 @@
                  ({'align': 1, 'align_to': ''}, {'tableleft': 1}),
                  ({}, {'units': 1}),
                  ({'fontclasses': (0, [('Table units', {})]), 'leading': 14}, {'tablehead': 1, 'units': 1}),
-                 ({'fontclasses': (1, [('Sans serif book italic', {}), ('Caption', {})]), 'hyphenate': True, 'leading': 20, 'margin_bottom': 12}, {'caption': 1}),
+                 ({'fontclasses': (1, [('Sans serif book italic', {}), ('Caption', {})]), 'hyphenate': True, 'leading': 16, 'margin_bottom': 12}, {'caption': 1}),
                  ({'fontclasses': (0, [('Sans serif semi', {})]), 'indent': (0, 1, 0), 'margin_bottom': 2, 'margin_top': 0}, {'caption': 1, 'h3': 1}),
                  ({'indent': (0, 1, 0)}, {'firstchild': 1})]),
  'PTAGLIST': [('', []),
-              ('tablehead', []),
-              ('caption', []),
-              ('tableleft', []),
-              ('math', []),
-              ('h1', []),
-              ('h3', []),
-              ('units', []),
-              ('firstchild', []),
               ('list', []),
-              ('table emphasis', []),
-              ('figure', []),
-              ('body', []),
-              ('key', []),
+              ('firstchild', []),
               ('h2', []),
+              ('figure title', []),
               ('tablecell', []),
-              ('figure title', [])],
- 'contexts': {'channels': {'c': 0, 'p': 16, 't': 4}, 'text': {'i': 6396, 'j': 6396, 'p': 5, 't': 2}},
+              ('math', []),
+              ('units', []),
+              ('caption', []),
+              ('body', []),
+              ('figure', []),
+              ('tablehead', []),
+              ('h1', []),
+              ('key', []),
+              ('h3', []),
+              ('table emphasis', []),
+              ('tableleft', [])],
+ 'contexts': {'channels': {'c': 1, 'p': 16, 't': 3}, 'text': {'i': 9028, 'j': 9028, 'p': 6, 't': 2}},
  'grid': [[90, 370, 410, 690], [100, 130, 910]],
  'outlines': ([(([[90, 100, False], [90, 910, False]], [[370, 100, False], [370, 910, False]]), 0), (([[410, 100, False], [410, 910, False]], [[690, 100, False], [690, 910, True]]), 0)],
               [([[[90, 130, True], [90, 910, False]], [[690, 130, True], [690, 910, False]]], 1)],
@@ -1056,7 +1054,7 @@
                ([[[410, 130, False], [410, 910, False]], [[690, 130, False], [690, 910, False]]], 3),
                ([[[90, 130, False], [90, 910, False]], [[370, 130, False], [370, 910, False]]], 4),
                ([[[410, 130, False], [410, 910, False]], [[690, 130, False], [690, 910, False]]], 4),
-               ([[[90, 130, False], [90, 880, False]], [[370, 130, False], [370, 880, False]]], 5),
+               ([[[90, 130, False], [90, 910, False]], [[370, 130, False], [370, 910, False]]], 5),
                ([[[410, 130, False], [410, 910, False]], [[690, 130, False], [690, 910, False]]], 5),
                ([[[90, 130, False], [90, 910, False]], [[370, 130, False], [370, 910, False]]], 6),
                ([[[410, 130, False], [410, 910, False]], [[690, 130, False], [690, 910, False]]], 6),
@@ -1075,11 +1073,9 @@
                ([[[90, 130, False], [90, 910, False]], [[370, 130, False], [370, 910, False]]], 13),
                ([[[410, 130, False], [410, 910, False]], [[690, 130, False], [690, 910, False]]], 13),
                ([[[90, 130, False], [90, 910, False]], [[370, 130, False], [370, 910, False]]], 14),
-               ([[[410, 130, True], [410, 910, False]], [[690, 130, True], [690, 910, False]]], 14),
-               ([[[90, 130, False], [90, 910, False]], [[370, 130, False], [370, 910, False]]], 15),
-               ([[[410, 130, False], [410, 910, False]], [[690, 130, False], [690, 910, False]]], 15)],
-              [([[[90, 70, True], [90, 100, False]], [[370, 70, True], [370, 100, False]]], 16), ([[[410, 70, False], [410, 100, False]], [[690, 70, False], [690, 100, False]]], 16)],
-              [([[[90, 130, True], [90, 910, False]], [[690, 130, True], [690, 910, False]]], 16)]),
+               ([[[410, 130, False], [410, 910, False]], [[690, 130, False], [690, 910, False]]], 14)],
+              [([[[90, 70, False], [90, 100, False]], [[370, 70, False], [370, 100, False]]], 15), ([[[410, 70, True], [410, 100, False]], [[690, 70, True], [690, 100, False]]], 15)],
+              [([[[90, 130, False], [90, 910, False]], [[690, 130, False], [690, 910, False]]], 15)]),
  'page': {'dimensions': (765, 990), 'dual': True},
- 'view': {'H': -60, 'Hc': 512.4048461914062, 'K': -3229, 'Kc': 440.83056640625, 'Zoom': 11, 'mode': 'text'}}
+ 'view': {'H': -437, 'Hc': 841.171142578125, 'K': -3333, 'Kc': 493.92926025390625, 'Zoom': 17, 'mode': 'text'}}
 ############# -->

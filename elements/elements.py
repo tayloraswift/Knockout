@@ -85,7 +85,13 @@ class Mod_element(object):
             E = self._DESR(B, fragment = True)
         except (IO_Error, IndexError):
             return False
-        self._load(next(e for e in E if type(e) is self.__class__)._tree) #yes, we are building an entirely new object and taking its image
+        
+        # locate rebuilt object
+        try:
+            O = next(e for e in E if type(e) is self.__class__)._tree #yes, we are building an entirely new object and taking its image
+        except StopIteration:
+            return False
+        self._load(O)
         return True
 
     def _modstyles(self, X, * tags, cls=None):

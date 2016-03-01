@@ -1,4 +1,4 @@
-from itertools import chain, accumulate
+from itertools import chain, accumulate, zip_longest, groupby
 from bisect import bisect
 
 from interface.base import Base_kookie, accent
@@ -7,13 +7,18 @@ from IO.kevin import serialize, deserialize
 from elements.elements import Mod_element
 from edit import cursor
 from edit.text import expand_cursors_word
+from edit.paperairplanes import interpret_rgba
+from pygments.lexers import html as pygments_html
+from pygments.token import Token
+
+xml_lexer = pygments_html.XmlLexer(stripnl=False)
 
 def _chunks(L, n):
-    br = [i + 1 for i, v in enumerate(L) if v == '\n']
+    br = [i + 1 for i, v in enumerate(L) if v[1] == '\n']
     for line in (L[i : j] for i, j in zip([0] + br, br + [len(L)])):
         linelen = len(line)
         for i in range(0, linelen, n):
-            if i + n < linelen and line[i + n] == '\n':
+            if i + n < linelen and line[i + n][1] == '\n':
                 yield line[i:], not bool(i)
                 break
             else:
@@ -45,6 +50,13 @@ class Rose_garden(Base_kookie):
         self._charlength = int((width - 30) // self._K)
         width = int(self._charlength * self._K + 30)
 
+        palatte = {Token.Text: "#2e3436",
+                        Token.Name.Attribute: "#6A5ACD",
+                        Token.Literal.String: "#9a43ff",
+                        Token.Name.Tag: "#6b5fef",
+                        Token.Error: "1, 0.2, 0.3"}
+        self._palatte = {token: interpret_rgba(color) for token, color in palatte.items()}
+        
         Base_kookie.__init__(self, x, y, width, 0, font=None)
         
         self._SYNCHRONIZE()
@@ -77,15 +89,29 @@ class Rose_garden(Base_kookie):
         leading = self._leading
         FMX = self.font['fontmetrics'].character_index
         
-        lines = list(_chunks(self._CHARS, self._charlength))
+        colored_chars = list(chain.from_iterable(zip_longest([], text, fillvalue=self._palatte.get(token, (0, 0, 0, 1))) for token, text in xml_lexer.get_tokens(''.join(self._CHARS))))
+#        print(set(token for token, text in xml_lexer.get_tokens(''.join(self._CHARS))))
+        lines = list(_chunks(colored_chars, self._charlength))
         self._IJ = [0] + list(accumulate(len(l) for l, br in lines))
         self.y_bottom = y + leading * len(lines)
         
         y += leading
         xd = x + 30
-        self._LL = [[(FMX(character), xd + i*K, y + l*leading) for i, character in enumerate(line) if character != '\n'] for l, (line, br) in enumerate(lines)]
+        
+        colored_text = {color: [] for color in self._palatte.values()}
+        for l, (line, br) in enumerate(lines):
+            for color, G in groupby(((FMX(character), xd + i*K, y + l*leading, color) for i, (color, character) in enumerate(line) if character != '\n'),
+                    key = lambda k: k[3]):
+                try:
+                    colored_text[color].extend((g, h, k) for g, h, k, c in G)
+                except KeyError:
+                    colored_text[color] = [(g, h, k) for g, h, k, c in G]
+        
         N = zip(accumulate(br for line, br in lines), enumerate(lines))
-        self._numbers = [[(FMX(character), x + i*K, y + l*leading) for i, character in enumerate(str(int(N)))] for N, (l, (line, br)) in N if br]
+        numbers = chain.from_iterable(((FMX(character), x + i*K, y + l*leading) for i, character in enumerate(str(int(N)))) for N, (l, (line, br)) in N if br)
+        colored_text[(0.7, 0.7, 0.7, 1)] = list(numbers)
+        self._rows = len(lines)
+        self._colored_text = colored_text
         
         #documentation
         """
@@ -99,7 +125,7 @@ class Rose_garden(Base_kookie):
         y -= self._y
         x -= self._x + 30
         
-        l = min(max(int(y // self._leading), 0), len(self._LL) - 1)
+        l = min(max(int(y // self._leading), 0), self._rows - 1)
         di = int(round(x / self._K))
         i = self._IJ[l]
         j = self._IJ[l + 1]
@@ -156,7 +182,7 @@ class Rose_garden(Base_kookie):
             self._j = self._i
         elif name == 'Down':
             l = self._index_to_line(self._i)
-            u = min(len(self._LL) - 1, l + 1)
+            u = min(self._rows - 1, l + 1)
             z = self._IJ[l]
             a = self._IJ[u]
             b = self._IJ[u + 1]
@@ -330,11 +356,6 @@ class Rose_garden(Base_kookie):
     def draw(self, cr, hover=(None, None)):
         self._render_fonts(cr)
         
-        # line numbers
-        cr.set_source_rgb(0.7, 0.7, 0.7)
-        cr.show_glyphs(chain.from_iterable(self._numbers))
-        cr.fill()
-        
         # highlight
         if self._active:
             cr.set_source_rgba(0, 0, 0, 0.1)
@@ -347,17 +368,16 @@ class Rose_garden(Base_kookie):
             cr.fill()
 
         # text
-            if self._invalid:
-                cr.set_source_rgb(1, 0.2, 0.2)
-            else:
-                cr.set_source_rgb(0.2, 0.2, 0.2)
+            color_iter = self._colored_text.items()
         else:
             if self._invalid:
-                cr.set_source_rgb(1, 0.4, 0.4)
+                color_iter = (((1, 0.4, 0.4), glyphs) for glyphs in self._colored_text.values())
             else:
-                cr.set_source_rgb(0.5, 0.5, 0.5)
-        cr.show_glyphs(chain.from_iterable(self._LL))
-        cr.fill()
+                color_iter = self._colored_text.items()
+        for color, glyphs in color_iter:
+            cr.set_source_rgba( * color )
+            cr.show_glyphs(glyphs)
+            cr.fill()
 
         # cursor
         if self._active:

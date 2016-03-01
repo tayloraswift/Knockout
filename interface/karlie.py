@@ -215,7 +215,7 @@ class _Properties_panel(ui.Cell):
             x -= self.width // 2
         elif x > self.width - 15:
             self._scroll_anchor = True
-            box = kookies.Null
+            return
         else:
             y -= self._dy
             box = self._stack_bisect(x, y)

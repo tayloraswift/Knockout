@@ -111,21 +111,26 @@ def function_x(expression):
     return lambda x: eval(code)
 
 def interpret_rgba(C):
-    hx = '0123456789abcdef'
-    numeric = '0123456789., '
-    flo = '0123456789.'
-    i = '0123456789'
     RGBA = [0, 0, 0, 1]
-    # rgba
-    if all(c in numeric for c in C):
-        for pos, channel in enumerate(C.split(',')[:4]):
-            RGBA[pos] = interpret_float(channel)
-    # hex
+    if type(C) is tuple:
+        for pos, value in enumerate(C[:4]):
+            RGBA[pos] = value
     else:
-        colorstring = ''.join(c for c in C if c in hx)
-        colorstring = colorstring + '000000ffx'[len(colorstring):]
-        for pos in range(4):
-            RGBA[pos] = int(colorstring[pos*2 : pos*2 + 2], 16) / 255
+        C = C.lower()
+        hx = '0123456789abcdef'
+        numeric = '0123456789., '
+        flo = '0123456789.'
+        i = '0123456789'
+        # rgba
+        if all(c in numeric for c in C):
+            for pos, channel in enumerate(C.split(',')[:4]):
+                RGBA[pos] = interpret_float(channel)
+        # hex
+        else:
+            colorstring = ''.join(c for c in C if c in hx)
+            colorstring = colorstring + '000000ffx'[len(colorstring):]
+            for pos in range(4):
+                RGBA[pos] = int(colorstring[pos*2 : pos*2 + 2], 16) / 255
     return tuple(RGBA)
 
 def interpret_bool(b):

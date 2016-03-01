@@ -258,10 +258,14 @@ def cast_liquid_line(LINE, letters, startindex, width, leading, PP, F, hyphenate
     FSTYLE = styles.PARASTYLES.project_f(PP, F)
     F_advance_width = FSTYLE['fontmetrics'].advance_pixel_width
     F_char_index = FSTYLE['fontmetrics'].character_index
+    F_kern = FSTYLE['fontmetrics'].kern
+    kern_available = FSTYLE['fontmetrics'].has_kerning
+    
     x = 0
     y = -FSTYLE['shift']
     caps = FSTYLE['capitals']
     glyphwidth = 0
+    GI = -1
 
     for letter in letters:
         CT = type(letter)
@@ -278,14 +282,23 @@ def cast_liquid_line(LINE, letters, startindex, width, leading, PP, F, hyphenate
                 if caps:
                     letter = letter.upper()
                 glyphwidth = F_advance_width(letter) * FSTYLE['fontsize']
+                # kern
+                if GI > 0 and kern_available:
+                    new_GI = F_char_index(letter)
+                    kdx, kdy = F_kern(GI, new_GI)
+                    x += kdx
+                    y += kdy
+                    GI = new_GI
+                else:
+                    GI = F_char_index(letter)
                 glyphappend((
-                        F_char_index(letter),                       # 0
-                        x,                                          # 1
-                        y,                                          # 2
+                        GI,             # 0
+                        x,              # 1
+                        y,              # 2
                         
-                        FSTYLE,                                     # 3
-                        fstat,                                      # 4
-                        x + glyphwidth                              # 5
+                        FSTYLE,         # 3
+                        fstat,          # 4
+                        x + glyphwidth  # 5
                         ))
         
         elif CT is OpenFontpost:
@@ -299,10 +312,14 @@ def cast_liquid_line(LINE, letters, startindex, width, leading, PP, F, hyphenate
             FSTYLE = styles.PARASTYLES.project_f(PP, F)
             F_advance_width = FSTYLE['fontmetrics'].advance_pixel_width
             F_char_index = FSTYLE['fontmetrics'].character_index
+            F_kern = FSTYLE['fontmetrics'].kern
+            kern_available = FSTYLE['fontmetrics'].has_kerning
+            
             y = -FSTYLE['shift']
             caps = FSTYLE['capitals']
             
             glyphappend((-4, x, y, FSTYLE, fstat, x))
+            GI = -4
             continue
             
         elif CT is CloseFontpost:
@@ -318,8 +335,12 @@ def cast_liquid_line(LINE, letters, startindex, width, leading, PP, F, hyphenate
             FSTYLE = styles.PARASTYLES.project_f(PP, F)
             F_advance_width = FSTYLE['fontmetrics'].advance_pixel_width
             F_char_index = FSTYLE['fontmetrics'].character_index
+            F_kern = FSTYLE['fontmetrics'].kern
+            kern_available = FSTYLE['fontmetrics'].has_kerning
+            
             y = -FSTYLE['shift']
             caps = FSTYLE['capitals']
+            GI = -5
             continue
             
         elif CT is Paragraph:
@@ -336,6 +357,7 @@ def cast_liquid_line(LINE, letters, startindex, width, leading, PP, F, hyphenate
                         fstat,                   # 4
                         x - leading              # 5
                         ))
+                GI = -2
                 continue
         
         else:
@@ -343,9 +365,11 @@ def cast_liquid_line(LINE, letters, startindex, width, leading, PP, F, hyphenate
                 inline = letter.cast_inline(LINE, x, y, PP, F, FSTYLE)
                 glyphwidth = inline.width                               #6. object
                 glyphappend((-89, x, y, FSTYLE, fstat, x + glyphwidth, inline))
+                GI = -89
             except AttributeError:
                 glyphwidth = leading
                 glyphappend((-23, x, y, FSTYLE, fstat, x + leading))
+                GI = -23
         
         x += glyphwidth
 
@@ -448,37 +472,56 @@ def cast_mono_line(PARENT, letters, leading, PP, F):
     
     # list that contains glyphs
     GLYPHS = []
+    glyphappend = GLYPHS.append
 
     # retrieve font style
     fstat = F.copy()
     FSTYLE = styles.PARASTYLES.project_f(PP, F)
+    F_advance_width = FSTYLE['fontmetrics'].advance_pixel_width
+    F_char_index = FSTYLE['fontmetrics'].character_index
+    F_kern = FSTYLE['fontmetrics'].kern
+    kern_available = FSTYLE['fontmetrics'].has_kerning
+
     x = 0
     y = -FSTYLE['shift']
     caps = FSTYLE['capitals']
     glyphwidth = 0
+    GI = -1
 
     for letter in letters:
         CT = type(letter)
         if CT is str:
             if letter == '</p>':
-                GLYPHS.append((-3, x, y, FSTYLE, fstat, x))
+                glyphappend((-3, x, y, FSTYLE, fstat, x))
+                GI = -3
                 continue
             
             elif letter == '<br/>':
-                GLYPHS.append((-6, x, y, FSTYLE, fstat, x))
+                glyphappend((-6, x, y, FSTYLE, fstat, x))
+                GI = -6
                 continue
             else:
                 if caps:
                     letter = letter.upper()
-                glyphwidth = FSTYLE['fontmetrics'].advance_pixel_width(letter) * FSTYLE['fontsize']
-                GLYPHS.append((
-                        FSTYLE['fontmetrics'].character_index(letter),  # 0
-                        x,                                              # 1
-                        y,                                              # 2
+                glyphwidth = F_advance_width(letter) * FSTYLE['fontsize']
+                # kern
+                if GI > 0 and kern_available:
+                    new_GI = F_char_index(letter)
+                    kdx, kdy = F_kern(GI, new_GI)
+                    x += kdx
+                    y += kdy
+                    GI = new_GI
+                else:
+                    GI = F_char_index(letter)
+
+                glyphappend((
+                        GI,   # 0
+                        x,                      # 1
+                        y,                      # 2
                         
-                        FSTYLE,                                         # 3
-                        fstat,                                          # 4
-                        x + glyphwidth                                  # 5
+                        FSTYLE,                 # 3
+                        fstat,                  # 4
+                        x + glyphwidth          # 5
                         ))
         
         elif CT is OpenFontpost:
@@ -490,14 +533,20 @@ def cast_mono_line(PARENT, letters, leading, PP, F):
             fstat = F.copy()
             
             FSTYLE = styles.PARASTYLES.project_f(PP, F)
+            F_advance_width = FSTYLE['fontmetrics'].advance_pixel_width
+            F_char_index = FSTYLE['fontmetrics'].character_index
+            F_kern = FSTYLE['fontmetrics'].kern
+            kern_available = FSTYLE['fontmetrics'].has_kerning
+
             y = -FSTYLE['shift']
             caps = FSTYLE['capitals']
             
-            GLYPHS.append((-4, x, y, FSTYLE, fstat, x))
+            glyphappend((-4, x, y, FSTYLE, fstat, x))
+            GI = -4
             continue
             
         elif CT is CloseFontpost:
-            GLYPHS.append((-5, x, y, FSTYLE, fstat, x))
+            glyphappend((-5, x, y, FSTYLE, fstat, x))
             
             T = letter.F
             TAG = T.name
@@ -507,12 +556,18 @@ def cast_mono_line(PARENT, letters, leading, PP, F):
             fstat = F.copy()
             
             FSTYLE = styles.PARASTYLES.project_f(PP, F)
+            F_advance_width = FSTYLE['fontmetrics'].advance_pixel_width
+            F_char_index = FSTYLE['fontmetrics'].character_index
+            F_kern = FSTYLE['fontmetrics'].kern
+            kern_available = FSTYLE['fontmetrics'].has_kerning
+            
             y = -FSTYLE['shift']
             caps = FSTYLE['capitals']
+            GI = -5
             continue
             
         elif CT is Paragraph:
-            GLYPHS.append((
+            glyphappend((
                     -2,                      # 0
                     x - leading,             # 1
                     y,                       # 2
@@ -521,16 +576,19 @@ def cast_mono_line(PARENT, letters, leading, PP, F):
                     fstat,                   # 4
                     x - leading              # 5
                     ))
+            GI = -2
             continue
 
         else:
             try:
                 inline = letter.cast_inline(LINE, x, y, PP, F, FSTYLE)
                 glyphwidth = inline.width                               #6. object
-                GLYPHS.append((-89, x, y, FSTYLE, fstat, x + glyphwidth, inline))
+                glyphappend((-89, x, y, FSTYLE, fstat, x + glyphwidth, inline))
+                GI = -89
             except AttributeError:
                 glyphwidth = leading
-                GLYPHS.append((-23, x, y, FSTYLE, fstat, x + leading))
+                glyphappend((-23, x, y, FSTYLE, fstat, x + leading))
+                GI = -23
         
         x += glyphwidth + FSTYLE['tracking']
 

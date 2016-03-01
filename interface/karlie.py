@@ -417,7 +417,7 @@ class Properties(_Properties_panel):
             y += 45
         
         elif self._tab == 'character':
-            self._heading = 'Character source'
+            self._heading = 'Element source'
             
             self._items.append(source.Rose_garden(10, y, width=KW + 10, 
                     e_acquire = lambda: contexts.Text.char,

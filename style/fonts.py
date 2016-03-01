@@ -16,6 +16,7 @@ class Memo_font(freetype.Face):
     def __init__(self, path):
         freetype.Face.__init__(self, path)
         UPM = self.units_per_EM
+        self._kerning = {}
         self._ordinals = {
                 '\t': -7,
                 '\u00A0': -30, # nbsp
@@ -97,6 +98,16 @@ class Memo_font(freetype.Face):
             self._ordinals[character] = i
             return i
 
+    def kern(self, g1, g2):
+        try:
+            return self._kerning[(g1, g2)]
+        except KeyError:
+            kern = self.get_kerning(g1, g2, 2)
+            dx = kern.x / self.units_per_EM
+            dy = kern.y / self.units_per_EM
+            self._kerning[(g1, g2)] = (dx, dy)
+            return (dx, dy)
+    
 class Memo_I_font(Memo_font):
     def __init__(self, path):
         Memo_font.__init__(self, path)

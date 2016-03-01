@@ -22,7 +22,7 @@ def _read_xcompose(compose_file):
 
 with open('libraries/XCompose/Compose.txt', 'rb') as F:
     sequences.update(_read_xcompose(F))
-with open('libraries/XCompose/add.txt', 'rb') as F:
+with open('data/compose/add.txt', 'rb') as F:
     sequences.update(_read_xcompose(F))
 
 class Composition(object):

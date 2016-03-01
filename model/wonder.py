@@ -18,7 +18,7 @@ except ImportError:
         hunspell = None
         print(_bold + _fail + 'ERROR: The hunspell spellchecker can’t be found. Spellcheck has been disabled.' + _endc + _fail + ' \n\tTry ' + _bold + 'pip3 install hunspell' + _endc + _fail + ' (requires python-dev and libhunspell-dev)\n\tMake sure pip installs hunspell for python3.5, not python3.4!' + _endc)
 
-additional_words_file = 'libraries/hunspell/add.txt'
+additional_words_file = 'data/spellcheck/add.txt'
 
 if hunspell is not None:
     struck = hunspell.HunSpell('libraries/hunspell/en_US.dic', 'libraries/hunspell/en_US.aff')

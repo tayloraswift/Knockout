@@ -8,6 +8,7 @@ from elements.elements import Mod_element
 from edit import cursor
 from edit.text import expand_cursors_word
 from edit.paperairplanes import interpret_rgba
+from state.exceptions import IO_Error
 from pygments.lexers import html as pygments_html
 from pygments.token import Token
 
@@ -325,8 +326,13 @@ class Rose_garden(Base_kookie):
                 self._invalid = True
                 return
         else:
+            try:
+                L = deserialize(B, fragment=True)
+            except IO_Error:
+                self._invalid = True
+                return
             i = cursor.fcursor.i
-            cursor.fcursor.text[i:i + 1] = deserialize(B, fragment=True)
+            cursor.fcursor.text[i:i + 1] = L
         self._SYNCHRONIZE()
         self._AFTER()
         

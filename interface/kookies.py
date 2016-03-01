@@ -1072,6 +1072,10 @@ class Para_control_panel(Ordered):
         
     def _ACQUIRE_REPRESENT(self):
         self._texts = []
+        if self._paragraph.I_ is not None:
+            self._present_tags = self._paragraph.P + self._paragraph.I_
+        else:
+            self._present_tags = self._paragraph.P
         for i, l in enumerate(chain((self._display(L) for L in self._LIBRARY), ['ELEMENT'])):
             self._add_static_text(self._x + 55, self._y + self._itemheight*i + 17, l, align=1)
 
@@ -1135,7 +1139,7 @@ class Para_control_panel(Ordered):
                 cr.arc(self._x + radius, y2 - radius, radius, 1*(pi/2), 2*(pi/2))
                 cr.close_path()
                 
-                if PSTYLE.tags <= self._paragraph.P:
+                if PSTYLE.tags <= self._present_tags:
                     cr.set_source_rgb( * accent)
                     cr.fill()
                 else:
@@ -1203,18 +1207,19 @@ class Para_control_panel(Ordered):
                     cr.move_to(self._x + 22, y1 + 17)
                     cr.show_text(str(self._paragraph.P[k]))
                 
-                if PSTYLE.tags <= self._paragraph.P:
+                if PSTYLE.tags <= self._present_tags:
                     cr.set_source_rgb( * accent)
                 else:
                     cr.set_source_rgba(0, 0, 0, 0.4)
 
-            elif PSTYLE.tags <= self._paragraph.P:
+            elif PSTYLE.tags <= self._present_tags:
                 cr.set_source_rgba(0, 0, 0, 0.7)
                 
                 if len(PSTYLE.tags) == 1:
                     k = next(iter(PSTYLE.tags.keys()))
-                    cr.move_to(self._x + 22, y1 + 17)
-                    cr.show_text(str(self._paragraph.P[k]))
+                    if self._paragraph.P[k]:
+                        cr.move_to(self._x + 22, y1 + 17)
+                        cr.show_text(str(self._paragraph.P[k]))
 
             else:
                 cr.set_source_rgba(0, 0, 0, 0.4)

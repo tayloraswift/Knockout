@@ -671,14 +671,14 @@
 <p class="body&firstchild">since the convenience cost of driving a car is still 1. The quantity <mi char="C"/><sub><mi char="f"/></sub> , the convenience cost of having to walk to or from the car station, can also be broken down further, because <mi char="C"/><sub><mi char="f"/></sub> is proportional to the distance a person has to walk to reach the station. Hence, </p>
 
 <p class="body&math"><mi char="C"/><sub><mi char="f"/></sub> = <mod:fraction>
-    <mod:fraction:numerator><mi char="x"/><sub><mi char="SC"/></sub></mod:fraction:numerator>
-    <mod:fraction:denominator><mi char="P"/><sub><mi char="f"/></sub></mod:fraction:denominator>
+    <mod:fraction:numerator><mi char="P"/><sub><mi char="f"/></sub></mod:fraction:numerator>
+    <mod:fraction:denominator><mi char="x"/><sub><mi char="SC"/></sub></mod:fraction:denominator>
 </mod:fraction> = <mod:fraction>
-    <mod:fraction:numerator><mi char="s"/></mod:fraction:numerator>
-    <mod:fraction:denominator><mi char="P"/><sub><mi char="f"/></sub><mod:root>
+    <mod:fraction:numerator><mi char="P"/><sub><mi char="f"/></sub><mod:root>
             <mod:root:index>    </mod:root:index>
             <mod:root:radicand><mi char="D"/></mod:root:radicand>
-        </mod:root></mod:fraction:denominator>
+        </mod:root></mod:fraction:numerator>
+    <mod:fraction:denominator><mi char="s"/></mod:fraction:denominator>
 </mod:fraction> , </p>
 
 <p class="body&firstchild">where <mi char="P"/><sub><mi char="f"/></sub> is a person’s <strong>propensity for foot travel</strong>, and <mi char="x"/><sub><mi char="SC"/></sub> is the distance they must travel to reach the nearest car station. (In a slightly more nuanced model, <mi char="x"/><sub><mi char="SC"/></sub> would probably be <mi char="x"/><sub><mi char="SC"/></sub><sup>2</sup> or some other concave-up function, as Western humans are generally very willing to travel very short distances on foot, but extremely adamant against traveling longer distances on their own power). If we consider that a car sharing company can only afford to build a certain number of car stations to serve a given number of people, then <mi char="x"/><sub><mi char="SC"/></sub> can be expressed as <mod:fraction>
@@ -693,8 +693,8 @@
 </mod:root> approaches <mi char="D"/> as the city becomes less square and more eccentric.) The total convenience cost of system 1 can then be expressed as</p>
 
 <p class="body&math"><mi char="C"/><sub>1</sub> = <mi char="C"/><sub><mi char="f"/></sub><sup>2</sup> = <mod:fraction>
-    <mod:fraction:numerator><mi char="s"/><sup>2</sup></mod:fraction:numerator>
-    <mod:fraction:denominator><mi char="P"/><sub><mi char="f"/></sub><sup>2</sup><mi char="D"/></mod:fraction:denominator>
+    <mod:fraction:numerator><mi char="P"/><sub><mi char="f"/></sub><sup>2</sup><mi char="D"/></mod:fraction:numerator>
+    <mod:fraction:denominator><mi char="s"/><sup>2</sup></mod:fraction:denominator>
 </mod:fraction> .</p>
 
 <p class="h3">2.4 System 2</p>
@@ -722,8 +722,8 @@
 <p class="body&firstchild">In other words, a customer walks to a car station, drives the car to the station nearest to their workplace, returns the car, retrieves the car in the afternoon, drives to the station nearest to their residence, and walks home. The convenience cost <mi char="C"/><sub>3</sub> is then</p>
 
 <p class="body&math"><mi char="C"/><sub>3</sub> = <mi char="C"/><sub>car</sub><sup>2</sup> · <mi char="C"/><sub><mi char="f"/></sub><sup>4</sup> = <mi char="C"/><sub><mi char="f"/></sub><sup>4</sup> = <mod:fraction>
-    <mod:fraction:numerator><mi char="s"/><sup>4</sup></mod:fraction:numerator>
-    <mod:fraction:denominator><mi char="P"/><sub><mi char="f"/></sub><sup>4</sup><mi char="D"/><sup>2</sup></mod:fraction:denominator>
+    <mod:fraction:numerator><mi char="P"/><sub><mi char="f"/></sub><sup>4</sup><mi char="D"/><sup>2</sup></mod:fraction:numerator>
+    <mod:fraction:denominator><mi char="s"/><sup>4</sup></mod:fraction:denominator>
 </mod:fraction> .</p>
 
 <p class="body&firstchild">Note that we are assuming that the distance from the second car station to the workplace is equal to the distance from the first car station to the customer’s house, which given a uniform city, it will average out to be, for all of a city’s residents. If a city is nonuniform, this would not hold if a car company strategizes by building more car stations near the residential sectors or the commercial core. However there is no reason the car company would ever do this, since the maximum of the product of two terms (the <mi char="C"/><sub><mi char="f"/></sub><sup>2</sup> from the home and the <mi char="C"/><sub><mi char="f"/></sub><sup>2</sup> from the workplace) occurs when the two terms are equal, and it is this maximum where customer convenience is best (a higher <mi char="C"/> is better). </p>
@@ -744,7 +744,10 @@
 
 <p class="body&firstchild">Each of our possible car sharing systems includes of course, a monetary cost—the cost of car sharing that is paid for directly with dollars. The primary monetary cost in all of these systems would be gas and car maintenance (whether or not it is initially paid for by the customer or the company is irrelevant—the company will pass on the additional cost to the customer to remain operational, and therefore profitable). These costs will be bundled together by the company entrepreneur as <mi char="M"/><sub><mi char="R"/></sub> , the price of car rent.</p>
 
-<p>All of the components of <mi char="M"/><sub><mi char="R"/></sub> are dependent on the number of miles, <mi char="d"/>, the cars are driven, times the per-mile cost of gasoline, <mi char="G"/>, and the per-mile cost of car maintenance, <mi char="M"/><sub><mi char="M"/></sub>, </p>
+<p>All of the components of <mi char="M"/><sub><mi char="R"/></sub> are dependent on the number of miles, <mi char="d"/>, the cars are driven, times the per-mile cost of gasoline, <mod:fraction>
+    <mod:fraction:numerator><mi char="G"/></mod:fraction:numerator>
+    <mod:fraction:denominator><mi char="ε"/></mod:fraction:denominator>
+</mod:fraction>, and the per-mile cost of car maintenance, <mi char="M"/><sub><mi char="M"/></sub>, </p>
 
 <p class="body&math"><mi char="M"/><sub><mi char="R"/></sub> = <mi char="d"/>(<mod:fraction>
     <mod:fraction:numerator><mi char="G"/></mod:fraction:numerator>
@@ -987,7 +990,7 @@
                 'lowercase': {'capitals': False},
                 'subscript': {'shift': -2},
                 'superscript': {'shift': 5}},
- 'FTAGLIST': [('big', []), ('sc', []), ('sub', ['small']), ('strong', []), ('sup', ['small']), ('reference', []), ('caption', []), ('emphasis', [])],
+ 'FTAGLIST': [('emphasis', []), ('sup', ['small']), ('sub', ['small']), ('reference', []), ('sc', []), ('strong', []), ('caption', []), ('big', [])],
  'PARASTYLES': (4,
                 [({'fontclasses': (2, [('Black', {}), ('subscript', {'sub': 1}), ('superscript', {'sup': 1})])}, {}),
                  ({'fontclasses': (0,
@@ -1029,22 +1032,22 @@
                  ({'indent': (0, 1, 0)}, {'firstchild': 1})]),
  'PTAGLIST': [('', []),
               ('list', []),
-              ('firstchild', []),
-              ('h2', []),
-              ('figure title', []),
-              ('tablecell', []),
               ('math', []),
-              ('units', []),
-              ('caption', []),
-              ('body', []),
+              ('h2', []),
               ('figure', []),
+              ('tablecell', []),
+              ('units', []),
+              ('h3', []),
+              ('firstchild', []),
+              ('caption', []),
               ('tablehead', []),
               ('h1', []),
               ('key', []),
-              ('h3', []),
+              ('figure title', []),
+              ('tableleft', []),
               ('table emphasis', []),
-              ('tableleft', [])],
- 'contexts': {'channels': {'c': 1, 'p': 16, 't': 3}, 'text': {'i': 9028, 'j': 9028, 'p': 6, 't': 2}},
+              ('body', [])],
+ 'contexts': {'channels': {'c': 1, 'p': 16, 't': 3}, 'text': {'i': 15152, 'j': 15152, 'p': 8, 't': 2}},
  'grid': [[90, 370, 410, 690], [100, 130, 910]],
  'outlines': ([(([[90, 100, False], [90, 910, False]], [[370, 100, False], [370, 910, False]]), 0), (([[410, 100, False], [410, 910, False]], [[690, 100, False], [690, 910, True]]), 0)],
               [([[[90, 130, True], [90, 910, False]], [[690, 130, True], [690, 910, False]]], 1)],
@@ -1077,5 +1080,5 @@
               [([[[90, 70, False], [90, 100, False]], [[370, 70, False], [370, 100, False]]], 15), ([[[410, 70, True], [410, 100, False]], [[690, 70, True], [690, 100, False]]], 15)],
               [([[[90, 130, False], [90, 910, False]], [[690, 130, False], [690, 910, False]]], 15)]),
  'page': {'dimensions': (765, 990), 'dual': True},
- 'view': {'H': -437, 'Hc': 841.171142578125, 'K': -3333, 'Kc': 493.92926025390625, 'Zoom': 17, 'mode': 'text'}}
+ 'view': {'H': -804, 'Hc': 517.83642578125, 'K': -4246, 'Kc': 509.40948486328125, 'Zoom': 9, 'mode': 'text'}}
 ############# -->

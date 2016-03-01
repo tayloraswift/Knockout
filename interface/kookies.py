@@ -4,6 +4,7 @@ from itertools import chain
 
 from style.styles import ISTYLES
 from edit.paperairplanes import interpret_float, interpret_int, interpret_enumeration, interpret_rgba, pack_binomial, read_binomial
+from edit.text import expand_cursors_word
 from interface.base import Base_kookie, accent, xhover
 from interface import menu
 
@@ -385,6 +386,9 @@ class Blank_space(Base_kookie):
         
         return output
 
+    def dpress(self):
+        self._i, self._j = expand_cursors_word(self._LIST, self._i)
+    
     # target glyph index
     def _target(self, x):
         x -= self._scroll

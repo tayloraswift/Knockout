@@ -1,7 +1,8 @@
 import bisect
-from model.wonder import words, _breaking_chars
+from model.wonder import words
 from model import meredith, olivia
 from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Block_element
+from edit.text import expand_cursors_word
 
 class FCursor(object):
     def __init__(self, ctx):
@@ -158,9 +159,15 @@ class FCursor(object):
     def delspace(self, direction=False): # only called when i = j
         j = self.j
         if direction:
-            k = self.i + next(i for i, e in enumerate(self.text[self.i + 1:]) if type(e) is not Paragraph) + 1
+            try:
+                k = self.i + next(i for i, e in enumerate(self.text[self.i + 1:]) if type(e) is not Paragraph) + 1
+            except StopIteration:
+                k = len(self.text) - 1
         else:
-            k = self.i - next(i for i, e in enumerate(reversed(self.text[:self.i])) if type(e) is not Paragraph) - 1
+            try:
+                k = self.i - next(i for i, e in enumerate(reversed(self.text[:self.i])) if type(e) is not Paragraph) - 1
+            except StopIteration:
+                k = 1
         
         start, end = sorted((k , j))
         offset = start - end + self._burn(start, end)
@@ -220,37 +227,7 @@ class FCursor(object):
             self.i -= next(i for i, v in enumerate(self.text[self.i::-1]) if type(v) is Paragraph) - 1
 
     def expand_cursors_word(self):
-        try:
-            # select block of spaces
-            if self.text[self.i] == ' ':
-                I = next(i for i, c in enumerate(self.text[self.j::-1]) if c != ' ') - 1
-                self.i -= I
-                
-                J = next(i for i, c in enumerate(self.text[self.j:]) if c != ' ')
-                self.j += J
-            
-            # select block of words
-            elif str(self.text[self.j]) not in _breaking_chars:
-                I = next(i for i, c in enumerate(self.text[self.j::-1]) if str(c) in _breaking_chars) - 1
-                self.i -= I
-                
-                J = next(i for i, c in enumerate(self.text[self.j:]) if str(c) in _breaking_chars)
-                self.j += J
-            
-            # select block of punctuation
-            else:
-                I = next(i for i, c in enumerate(self.text[self.j::-1]) if str(c) not in _breaking_chars or c == ' ') - 1
-                self.i -= I
-                
-                # there can be only breaking chars at the end (</p>)
-                try:
-                    J = next(i for i, c in enumerate(self.text[self.j:]) if str(c) not in _breaking_chars or c == ' ')
-                    self.j += J
-                except StopIteration:
-                    self.j = len(self.text) - 1
-
-        except ValueError:
-            pass
+        self.i, self.j = expand_cursors_word(self.text, self.i)
 
     def bridge(self, tag, sign):
         S = self.take_selection() # also sorts cursors

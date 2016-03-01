@@ -77,7 +77,7 @@ class Root(Inline_element):
         
         width = kx - x + rfs * 0.45 + rad['advance']
         
-        return _MInline([index, rad], width, rad_asc, rad_desc, self._draw_radix)
+        return _MInline([index, rad], width, rad_asc + rfs*0.2, rad_desc, self._draw_radix)
         
     def __len__(self):
         return 8

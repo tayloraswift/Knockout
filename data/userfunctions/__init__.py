@@ -1,4 +1,4 @@
-from math import pi, e, sqrt, sin, cos, tan, asin, acos, atan, log, exp, floor, ceil
+from math import pi, e, sqrt, sin, cos, tan, asin, acos, atan, log, exp, floor, ceil, degrees, factorial
 ln = log
 def log(x):
     return ln(x, 10)

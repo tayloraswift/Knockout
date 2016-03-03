@@ -1,4 +1,4 @@
-from math import ceil
+from math import pi, ceil
 from modules._graph import Cartesian, cart_ADNA
 
 _namespace = 'mod:f'
@@ -35,12 +35,21 @@ class Function(Cartesian):
         return P
     
     def _draw_data(self, cr, data):
+        circle_t = 2*pi
         cr.set_line_width(2)
+        if data and not data[-1]:
+            data = data[:-1]
         for segment in data:
             cr.move_to( * segment[0] )
-            for x, y in segment[1:]:
-                cr.line_to(x, y)
-        cr.stroke()
+            curve = segment[1:]
+            if curve:
+                for x, y in curve:
+                    cr.line_to(x, y)
+                cr.stroke()
+            else:
+                cr.arc( * segment[0], 2, 0, circle_t)
+                cr.close_path()
+                cr.fill()
     
     def transform_data(self, width):
         # TRANSFORM POINTS

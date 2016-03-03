@@ -1,10 +1,12 @@
-from math import log10
+from math import log, log10
 from bisect import bisect
 
 from model.olivia import Block, Atomic_text
 from elements.elements import Block_element
 from model.george import Subcell
 from model.cat import cast_mono_line
+
+_namespace = 'mod:_graph'
 
 def generate_key(FLOW, subcell, c, top, py, P):
     ky = [top - py]
@@ -20,48 +22,125 @@ def soft_int(n, decimals):
         else:
             n = round(n, decimals)
     return n
-    
+
+cart_ADNA = {'GRAPH': [('height', 89, 'int'), ('tickwidth', 0.5, 'float'), ('round', 13, 'int'), ('log', False, 'bool')],
+        'x': [('start', 0, 'float'), ('step', 1, 'float'), ('minor', 1, 'int'), ('major', 2, 'int'), ('every', 2, 'int'), ('stop', 89, 'float')],
+        'y': [('start', 0, 'float'), ('step', 22.25, 'float'), ('minor', 1, 'int'), ('major', 2, 'int'), ('every', '2', 'int'), ('stop', 89, 'float')]}
+        
 class Cartesian(Block_element):
     namespace = '_graph'
     DNA = {'x': {}, 'y': {}, 'dataset': {}, 'num': {}}
-
+    
     def U(self, x):
         return x
     def U_1(self, u):
-        return soft_int(u, self._roundto)
+        return str(soft_int(u, self._roundto)).replace('-', '−')
     
-    def V(self, y):
+    def lin_V(self, y):
         return y
-    def V_1(self, v):
-        return soft_int(v, self._roundto)
+    def lin_V_1(self, v):
+        return str(soft_int(v, self._roundto)).replace('-', '−')
+    
+    def log_V(self, y):
+        if y > 0:
+            return log10(y)
+        else:
+            return self._min
+    
+    def log_V_1(self, v):
+        exp = soft_int(v, self._roundto)
+        if -4 < exp < 4:
+            return str(10**exp).replace('-', '−')
+        else:
+            return '10 E ' + str(exp).replace('-', '−')
+
+    def logB_V(self, y):
+        if y > 0:
+            return log(y, self._logB)
+        else:
+            return self._min
+    
+    def logB_V_1(self, v):
+        exp = soft_int(v, self._roundto)
+        if -4 < exp < 4:
+            return str(self._logB**exp).replace('-', '−')
+        else:
+            return str(self._logB) + ' E ' + str(exp).replace('-', '−')
     
     def _load(self, L):
         self._tree = L
         self.PP = L[0][2]
         
-        self._graphheight, self._tw, self._roundto = self._get_attributes(self.namespace)
-        
-        (xstart, xstep, xminor, xmajor, xevery, xstop), xlabel = next((tuple(self._get_attributes('x', tag[1])), E) for tag, E in L[1] if tag[0] == self.namespace + ':x')
-        (ystart, ystep, yminor, ymajor, yevery, ystop), ylabel = next((tuple(self._get_attributes('y', tag[1])), E) for tag, E in L[1] if tag[0] == self.namespace + ':y')
-        
-        datasets, labels = zip( * (( tuple(self._get_attributes('dataset', tag[1])), E) for tag, E in L[1] if tag[0] == self.namespace + ':dataset'))
-        
-        # horizontal computations
-        datavalues, self._datacolors = zip( * datasets )
+        xaxis, xlabel = next((tuple(self._get_attributes('x', tag[1])), E) for tag, E in L[1] if tag[0] == self.namespace + ':x')
+        yaxis, ylabel = next((tuple(self._get_attributes('y', tag[1])), E) for tag, E in L[1] if tag[0] == self.namespace + ':y')
 
-        Xrange = xstop - xstart
-        xticks = int(Xrange/xstep)
+        datasets, labels = zip( * (( tuple(self._get_attributes('dataset', tag[1])), E) for tag, E in L[1] if tag[0] == self.namespace + ':dataset') )
+        datavalues, self._datacolors = zip( * datasets )
+        
+        self._assemble_graph(xaxis, yaxis, (xlabel, ylabel) + labels, datavalues)
+    
+    def _assemble_graph(self, xaxis, yaxis, labels, datavalues):
+        self._graphheight, self._tw, self._roundto, use_log = self._get_attributes(self.namespace)
+        
+        xstart, xstep, xminor, xmajor, xevery, xstop = xaxis
+        ystart, ystep, yminor, ymajor, yevery, ystop = yaxis
+        
+        if use_log:
+            self._min = ystart
+            if type(use_log) is int and use_log not in {1, 10}:
+                self._logB = use_log
+                self.V = self.logB_V
+                self.V_1 = self.logB_V_1
+            else:
+                self.V = self.log_V
+                self.V_1 = self.log_V_1
+        else:
+            self.V = self.lin_V
+            self.V_1 = self.lin_V_1
+        
+        xr = xstop - xstart
+        xticks = int(xr/xstep)
+        yr = ystop - ystart
+        yticks = int(yr/ystep)
+
                         #   pos    |     minor     |     major     |    str bool   |         str             |
-        self._xnumbers = [(b/xticks, not b % xminor, not b % xmajor, not b % xevery, str(self.U_1(xstart + b*xstep))) for b in range(xticks + 1)]
-        
-        yrange = ystop - ystart
-        yticks = int(yrange/ystep)
+        self._xnumbers = [(b/xticks, not b % xminor, not b % xmajor, not b % xevery, self.U_1(xstart + b*xstep)) for b in range(xticks + 1)]
                           #   pos                    |     minor     |     major     |    str bool   |            str          |
-        self._ynumbers = [(self._graphheight*b/yticks, not b % yminor, not b % ymajor, not b % yevery, str(self.V_1(ystart + b*ystep))) for b in range(yticks + 1)]
+        self._ynumbers = [(self._graphheight*b/yticks, not b % yminor, not b % ymajor, not b % yevery, self.V_1(ystart + b*ystep)) for b in range(yticks + 1)]
         
-        self.process_data(datavalues, xstart, xstep, Xrange, ystart, ystep, yrange)
+        self._data_unscaled = self.process_data(datavalues, xstart, xstep, xr, ystart, ystep, yr)
         
-        self._FLOW = [Atomic_text(text) for text in (xlabel, ylabel) + labels]
+        self._FLOW = [Atomic_text(text) for text in labels]
+    
+    def _draw_grid(self, cr):
+        # ticks
+        # x
+        tw = self._tw
+        cr.set_source_rgb(0, 0, 0)
+        for i, x in enumerate(self._origins):
+            if self._xnumbers[i][2]:
+                cr.rectangle(x, 0, tw, 8)
+            elif self._xnumbers[i][1]:
+                cr.rectangle(x, 0, tw, 4)
+     # y || y, m, M, s, k
+        for Y             in self._ynumbers:
+            if Y[2]:
+                cr.rectangle(0, -int(round(Y[0])), -8, -tw)
+            elif Y[1]:
+                cr.rectangle(0, -int(round(Y[0])), -4, -tw)
+        cr.fill()
+
+    def ink_graph(self, cr):        
+        self._draw_grid(cr)
+        
+        # bars
+        end = self._origins[-1]
+        for data, color, (k1, k2) in self._DRAWDATA:
+            cr.set_source_rgba( * color )
+            self._draw_data(cr, data)
+            # key
+            cr.rectangle(end, k1 + 4, -4, k2 - k1 - 4)
+            cr.fill()
     
     def ink_annot(self, cr):
         cr.set_source_rgba( * self._datacolors[-1] )
@@ -117,7 +196,7 @@ class Cartesian(Block_element):
         
         self._ki, self._ky = generate_key(self._FLOW[2:], Subcell(bounds, 0.2, 1), c, top, py, P_key)
         
-        self.transform_data(w)
+        self._DRAWDATA = self.transform_data(w)
         
         return GraphBlock(self._FLOW, self._printed_numbers, 
                     (top, self._FLOW[0].y, left, right), 

@@ -134,13 +134,13 @@ def interpret_rgba(C):
     return tuple(RGBA)
 
 def interpret_bool(b):
-    t = type(e)
+    t = type(b)
     if t in {bool, int}:
-        return e
+        return b
     elif t is str:
-        if e in {'True', '1'}:
+        if b in {'True', '1'}:
             return True
         else:
-            return interpret_int(e)
+            return interpret_int(b)
     else:
         return False

@@ -6,8 +6,9 @@ from edit.text import expand_cursors_word
 
 class FCursor(object):
     def __init__(self, ctx):
-        self.TRACT = meredith.mipsy[ctx['t']]
-        self.assign_text(self.TRACT)
+        self.R_TXT = meredith.mipsy[ctx['t']]
+        self.R_CMP = self.R_TXT.composition
+        self.assign_text(self.R_CMP)
         if max(ctx['i'], ctx['j']) < len(self.text):
             self.si = ctx['i']
             self.i = ctx['i']
@@ -20,99 +21,56 @@ class FCursor(object):
         self.PG = ctx['p']
 
     def polaroid(self):
-        if self.FTX is self.TRACT:
+        if self.TXT is self.R_TXT:
             i = self.i
             j = self.j
         else:
             i = self.si
             j = i
-        return {'t': meredith.mipsy.index(self.TRACT), 'i': i, 'j': j, 'p': self.PG}
+        return {'t': meredith.mipsy.index(self.R_TXT), 'i': i, 'j': j, 'p': self.PG}
 
-    def assign_text(self, ftext):
-        self.FTX = ftext
-        self.text = ftext.text
+    def assign_text(self, composition):
+        self.CMP = composition
+        self.TXT = composition.manuscript
+        self.text = composition.manuscript.text
 
     # TARGETING SYSTEM
-    def target(self, xo, yo):
-        # perform naïve targeting (current page, current tract)
-        x, y = meredith.page.normalize_XY(xo, yo, self.PG)
-        imperfect, ftext, i_new, si = self.TRACT.target(x, y, self.PG, self.si)
-
-        if imperfect:
-            # fallbacks: current page, other tracts
+    def _to_c_global(self, x, y):
+        c, p = self.R_TXT.channels.target_channel(x, y, 20)
+        if c is None:
+            # try other tracts
             for chained_tract in meredith.mipsy: 
-                imperfect_t, ftext_t, i_t, si_t = chained_tract.target(x, y, self.PG, i=None)
-                if not imperfect_t:
-                    # hit!
-                    if ftext_t is not self.FTX:
-                        # switch of tract context
-                        self.assign_text(ftext_t)
-                    self.TRACT = chained_tract
-                    self.i = i_t
-                    self.j = i_t
-                    self.si = si_t
-                    return
-                    
-            # fallbacks: other page, current tract
-            binned_page = meredith.page.XY_to_page(xo, yo)
-            x, y = meredith.page.normalize_XY(xo, yo, binned_page)
+                c, p = chained_tract.channels.target_channel(x, y, 20)
+                if c is not None:
+                    self.R_TXT = chained_tract
+                    self.R_CMP = self.R_TXT.composition
+                    self.PG = p
+                    return meredith.page.normalize_XY(x, y, p), c
+        else:
+            self.PG = p
+            return meredith.page.normalize_XY(x, y, p), c
+        return meredith.page.normalize_XY(x, y, self.PG), self.CMP.line_at(self.i)['c']
+
+    def _to_c_local(self, x, y):
+        c, p = self.R_TXT.channels.target_channel(x, y, 20)
+        if c is None:
+            return meredith.page.normalize_XY(x, y, self.PG), self.CMP.line_at(self.j)['c']
+        else:
+            self.PG = p
+            return meredith.page.normalize_XY(x, y, p), c
             
-            imperfect_p, ftext_p, i_p, si_p = self.TRACT.target(x, y, binned_page, i=None)
-            if not imperfect_p:
-                # hit!
-                if ftext_p is not self.FTX:
-                    # switch of tract context
-                    self.assign_text(ftext_p)
-                self.i = i_p
-                self.j = i_p
-                self.si = si_p
-                self.PG = binned_page
-                return
-                
-            # fallbacks: other page, other tracts
-            for chained_tract in meredith.mipsy:
-                imperfect_pt, ftext_pt, i_pt, si_pt = chained_tract.target(x, y, binned_page, i=None)
-                if not imperfect_pt:
-                    # hit!
-                    if ftext_pt is not self.FTX:
-                        # switch of tract context
-                        self.assign_text(ftext_pt)
-                    self.TRACT = chained_tract
-                    self.i = i_pt
-                    self.j = i_pt
-                    self.si = si_pt
-                    self.PG = binned_page
-                    return
+    def target(self, x, y):
+        (x, y), c = self._to_c_global(x, y)
+        composition, * breadcrumbs = self.R_CMP.deep_search(x, y, c)
+        self.assign_text(composition)
+        self.i = breadcrumbs[0]
+        self.j = breadcrumbs[0]
+        self.si = breadcrumbs[-1]
 
-        # best guess
-        if ftext is not self.FTX:
-            # switch of tract context
-            self.assign_text(ftext)
-        self.i = i_new
-        self.j = i_new
-        self.si = si
-        return
-
-    def target_select(self, xo, yo):
-        # perform naïve targeting (current page, current tract)
-        x, y = meredith.page.normalize_XY(xo, yo, self.PG)
-        imperfect, i_new = self.FTX.target_select(x, y, self.PG, self.j)
-        
-        if imperfect:
-            # fallbacks: other page, current tract
-            binned_page = meredith.page.XY_to_page(xo, yo)
-            x, y = meredith.page.normalize_XY(xo, yo, binned_page)
-            
-            imperfect_p, i_p = self.FTX.target_select(x, y, binned_page, i=None)
-            if not imperfect_p:
-                # hit!
-                self.j = i_p
-                self.PG = binned_page
-                return
-
-        # simple cursor assignment
-        self.j = i_new
-        return
+    def target_select(self, x, y):
+        (x, y), c = self._to_c_local(x, y)
+        j = self.CMP.shallow_search(x, y, c)
+        self.j = j
     
     #############
 
@@ -121,16 +79,16 @@ class FCursor(object):
         signs = (self.j < self.i,
                 (str(self.text[self.i - 1]) in zeros, str(self.text[self.i]) in zeros) , 
                 (str(self.text[self.j - 1]) in zeros, str(self.text[self.j]) in zeros))
-        return self.FTX.paint_select(self.i, self.j), signs
+        return self.CMP.paint_select(self.i, self.j), signs
     
     def take_selection(self):
         self.i, self.j = sorted((self.i, self.j))
         return self.text[self.i:self.j]
 
     def _recalculate(self):
-        if self.FTX is self.TRACT:
+        if self.CMP is self.R_CMP:
             self.si = self.i
-        self.TRACT.partial_recalculate(self.si)
+        self.R_TXT.partial_recalculate(self.si)
 
     def _burn(self, i, j):
         # filter for paragraph elements
@@ -173,7 +131,7 @@ class FCursor(object):
         offset = start - end + self._burn(start, end)
         
         # fix spelling lines
-        self.FTX.misspellings = [pair if pair[1] < start else (pair[0] + offset, pair[1] + offset, pair[2]) if pair[0] > end else (0, 0, None) for pair in self.FTX.misspellings]
+        self.TXT.misspellings = [pair if pair[1] < start else (pair[0] + offset, pair[1] + offset, pair[2]) if pair[0] > end else (0, 0, None) for pair in self.TXT.misspellings]
         self._recalculate()
 
     def insert(self, segment):
@@ -213,7 +171,7 @@ class FCursor(object):
             self.j = self.i
             
             # fix spelling lines
-            self.FTX.misspellings = [pair if pair[1] < self.i else (pair[0] + m, pair[1] + m, pair[2]) if pair[0] > self.i else (pair[0], pair[1] + m, pair[2]) for pair in self.FTX.misspellings]
+            self.TXT.misspellings = [pair if pair[1] < self.i else (pair[0] + m, pair[1] + m, pair[2]) if pair[0] > self.i else (pair[0], pair[1] + m, pair[2]) for pair in self.TXT.misspellings]
 
     def expand_cursors(self):
         # order
@@ -341,24 +299,24 @@ class FCursor(object):
                 self._recalculate()
                 
                 # redo spelling for this paragraph
-                self.FTX.misspellings = [pair if pair[1] < P_1 else
+                self.TXT.misspellings = [pair if pair[1] < P_1 else
                         (pair[0] + DA, pair[1] + DA, pair[2]) if pair[0] > P_2 else
-                        (0, 0, 0) for pair in self.FTX.misspellings ]
+                        (0, 0, 0) for pair in self.TXT.misspellings ]
                 # paragraph has changed
-                self.FTX.misspellings += words(self.text[P_1:P_2 + DA] + ['</p>'], startindex=P_1, spell=True)[1]
+                self.TXT.misspellings += words(self.text[P_1:P_2 + DA] + ['</p>'], startindex=P_1, spell=True)[1]
                 
                 return True
             else:
                 return False
 
     def hop(self, direction): #implemented exclusively for arrow-up/down events
-        self.i = self.FTX.line_jump(self.i, direction)
+        self.i = self.CMP.line_jump(self.i, direction)
 
     def pp_at(self):
-        return self.FTX.line_at(self.i)['PP']
+        return self.CMP.line_at(self.i)['PP']
 
     def styling_at(self):
-        line = self.FTX.line_at(self.i)
+        line = self.CMP.line_at(self.i)
         try:
             glyph = line['GLYPHS'][self.i - line['i']]
         except IndexError:
@@ -367,4 +325,4 @@ class FCursor(object):
         return line['PP'], glyph[3]
 
     def front_and_back(self):
-        return self.FTX.line_indices(self.i)
+        return self.CMP.line_indices(self.i)

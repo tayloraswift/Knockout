@@ -115,7 +115,7 @@ class Mod_element(object):
 
 class Block_element(Mod_element):
     namespace = '_undef_block'
-
+    
     def represent(self, indent):
         name, attrs = self._tree[0][:2]
         attrs.update(print_styles(self.PP))

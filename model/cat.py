@@ -99,7 +99,7 @@ def typeset_chained(channels, LIQUID, c=0, y=None, LASTLINE = Glyphs_line({'j': 
 
     return SLUGS
 
-def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak, root=False, overlay=None):
+def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak=False, root=False, overlay=None):
     SLUGS = []
     l = INIT['l'] + 1
     if INIT['P_BREAK']:

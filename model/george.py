@@ -1,4 +1,5 @@
 import bisect
+from model import meredith
 
 class Swimming_pool(object):
     def __init__(self, railings, page=0):
@@ -37,6 +38,9 @@ class Swimming_pool(object):
         factor = (y - self.railings[r][i - 1][1])/(self.railings[r][i][1] - self.railings[r][i - 1][1])
         # returns an x coordinate, and the index of the point
         return (xbelow - xabove)*factor + xabove , i
+    
+    def inside(self, x, y, radius):
+        return y >= self.railings[0][0][1] - radius and y <= self.railings[1][-1][1] + radius and x >= self.edge(0, y)[0] - radius and x <= self.edge(1, y)[0] + radius
     
     def insert_point(self, r, y):
         y = 10*round(y/10)
@@ -82,29 +86,32 @@ class Washington(object):
         return cls([Swimming_pool( * c ) for c in C])
     
  #####################   
-    def target_channel(self, x, y, page, radius):
+    def target_channel(self, xo, yo, radius):
+        norm = meredith.page.normalize_XY
         for c, channel in enumerate(self.channels):
-            if channel.page == page:
-                if y >= channel.railings[0][0][1] - radius and y <= channel.railings[1][-1][1] + radius:
-                    if x >= channel.edge(0, y)[0] - radius and x <= channel.edge(1, y)[0] + radius:
-                        return c
-        return None
+            x, y = norm(xo, yo, channel.page)
+            if channel.inside(x, y, radius):
+                return c, channel.page
+        return None, None
 #######################
-    def target_point(self, x, y, page, radius):
-        C, R = None, None
+    def target_point(self, xo, yo, radius):
+        P, C, R = None, None, None
+        norm = meredith.page.normalize_XY
         for c, channel in enumerate(self.channels):
-            if channel.page == page:
-                for r in range(len(channel.railings)):
-                    for i, point in enumerate(channel.railings[r]):
-                        if abs(x - point[0]) + abs(y - point[1]) < radius:
-
-                            return c, r, i
-                    # if that fails, take a railing, if possible
-                    if not channel._is_outside(y) and abs(x - channel.edge(r, y)[0]) <= radius:
-                        C, R = c, r
-        if C is None:
-            C = self.target_channel(x, y, page, radius)
-        return C, R, None
+            x, y = norm(xo, yo, channel.page)
+            for r in range(len(channel.railings)):
+                for i, point in enumerate(channel.railings[r]):
+                    if abs(x - point[0]) + abs(y - point[1]) < radius:
+                        return channel.page, c, r, i
+                # if that fails, take a railing, if possible
+                if not channel._is_outside(y) and abs(x - channel.edge(r, y)[0]) <= radius:
+                    P = channel.page
+                    C = c
+                    R = r
+            if channel.inside(x, y, radius):
+                P = channel.page
+                C = c
+        return P, C, R, None
     
     def is_selected(self, c, r, i):
         try:
@@ -198,41 +205,6 @@ class Washington(object):
     
     def add_channel(self):
         self.channels.append(self.generate_channel())
-
-class Not_his_markings(Washington):
-    def __init__(self, ic):
-        Washington.__init__(self, ic)
-        self.calculate_repeats()
-
-    def calculate_repeats(self):
-        ic = self.channels
-        _len = max(C.page for C in ic) + 1
-        repeat = []
-        for k in range(_len):
-            repeat.append([C.shallow_copy_to_page(k) for C in ic])
-        self.repeat = repeat
-
-    def target_channel(self, x, y, page, radius):
-        for c, channel in enumerate(self.channels):
-            if y >= channel.railings[0][0][1] - radius and y <= channel.railings[1][-1][1] + radius:
-                if x >= channel.edge(0, y)[0] - radius and x <= channel.edge(1, y)[0] + radius:
-                    return c
-        return None
-
-    def target_point(self, x, y, page, radius):
-        C, R = None, None
-        for c, channel in enumerate(self.channels):
-            for r in range(len(channel.railings)):
-                for i, point in enumerate(channel.railings[r]):
-                    if abs(x - point[0]) + abs(y - point[1]) < radius:
-
-                        return c, r, i
-                # if that fails, take a railing, if possible
-                if not channel._is_outside(y) and abs(x - channel.edge(r, y)[0]) <= radius:
-                    C, R = c, r
-        if C is None:
-            C = self.target_channel(x, y, page, radius)
-        return C, R, None
 
 class Subcell(Swimming_pool):
     def __init__(self, bounds, i, j):

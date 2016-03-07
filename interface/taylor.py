@@ -146,8 +146,8 @@ def _punch_tags(key):
         un.history.pop()
 
 def _add_channel():
-    caramel.delight.TRACT.channels.add_channel()
-    caramel.delight.TRACT.deep_recalculate()
+    caramel.delight.R_TXT.channels.add_channel()
+    caramel.delight.R_TXT.deep_recalculate()
 
 class Document_toolbar(object):
     def __init__(self, save):
@@ -271,7 +271,7 @@ def _replace_misspelled(word):
             A.write(word + '\n')
     else:
         typing.keyboard.type_document('Paste', word)
-    cursor.fcursor.FTX.stats(spell=True)
+    cursor.fcursor.TXT.stats(spell=True)
 
 class Document_view(ui.Cell):
     def __init__(self, save, state={'mode': 'text', 'Hc': 0, 'Kc': 0, 'H': 0, 'K': 0, 'Zoom': 11}):
@@ -295,11 +295,7 @@ class Document_view(ui.Cell):
         self._K = state['K']
 
         self._A = self._scroll_notches[self._scroll_notch_i]
-        
-        # initial spellcheck
-        for FTX in self.fcursor.TRACT.collect_text():
-            FTX.stats(spell=True)
-    
+
     def read_display_state(self):
         return {
             'mode': self._mode,
@@ -383,7 +379,7 @@ class Document_view(ui.Cell):
                 CText.update()
                 
                 # count words
-                self.fcursor.FTX.stats()
+                self.fcursor.TXT.stats()
             
             # CHANNEL EDITING MODE
             elif self._mode == 'channels':
@@ -412,7 +408,7 @@ class Document_view(ui.Cell):
                     self.fcursor.target(xo, yo)
                     i = self.fcursor.i
                     
-                    ms = self.fcursor.FTX.misspellings
+                    ms = self.fcursor.TXT.misspellings
                     pair_i = bisect.bisect([pair[0] for pair in ms], i) - 1
 
                     if ms[pair_i][0] <= i <= ms[pair_i][1]:
@@ -614,11 +610,11 @@ class Document_view(ui.Cell):
                 self._print_sorted(cr, sorted_glyphs)
 
                 # only annotate active tract
-                if tract is self.fcursor.TRACT and self._mode == 'text':
+                if tract is self.fcursor.R_TXT and self._mode == 'text':
                     for operation, x, y in sorted_glyphs['_paint_annot']:
                         cr.save()
                         cr.translate(x, y)
-                        operation(cr, self.fcursor.FTX)
+                        operation(cr, self.fcursor.CMP)
                         cr.restore()
                     cr.restore()
                     self._draw_annotations(cr, sorted_glyphs['_annot'], page)
@@ -869,6 +865,6 @@ class Document_view(ui.Cell):
         cr.show_text('{0:g}'.format(self._A*100) + '%')
         
         cr.move_to(constants.UI[1] - 150, k - 20)
-        cr.show_text(str(self.fcursor.FTX.word_count) + ' words · page ' + str(self.fcursor.PG))
+        cr.show_text(str(self.fcursor.TXT.word_count) + ' words · page ' + str(self.fcursor.PG))
         
         cr.reset_clip()

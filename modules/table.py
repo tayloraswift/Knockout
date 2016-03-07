@@ -1,7 +1,7 @@
 from bisect import bisect
 from itertools import chain, accumulate
 
-from model.olivia import Atomic_text, Block
+from model.olivia import Atomic_text, Block, Composition
 from model.george import Subcell
 from interface.base import accent
 from IO.xml import print_attrs, print_styles
@@ -46,10 +46,6 @@ class Matrix(list):
                 R += C
             M.append(R)
         return '\n'.join(M)
-
-def _row_height(data, r, y):
-    cells = (cell for cell in chain.from_iterable(row for row in data) if cell.row + cell.rs - 1 == r)
-    return max(cell.y for cell in cells)
 
 def _build_matrix(data):
     MATRIX = Matrix()
@@ -99,9 +95,9 @@ class Table(Block_element):
         self.PP = L[0][2]
         
         GA = self._get_attributes
-        self.data = [[_Table_cell(C, * GA('td', td[1])) for td, C in R] for tr, R in L[1]]
-        self._FLOW = [cell for row in self.data for cell in row]
-        self._MATRIX = _build_matrix(self.data)
+        data = [[_Table_cell(C, * GA('td', td[1])) for td, C in R] for tr, R in L[1]]
+        self._COMPOSITIONS = [[(cell, Composition(cell)) for cell in row] for row in data]
+        self._MATRIX = _build_matrix(data)
         
         distr, self._celltop, self._cellbottom, hrules, vrules, rulemargin, rulewidth = self._get_attributes(_namespace)
         # columns
@@ -131,50 +127,64 @@ class Table(Block_element):
         lines.append([indent, '</' + self.namespace + '>'])
         return lines
 
+    def regions(self, x, y, bounds, yy):
+        x1, x2 = bounds(y)
+        r = bisect(yy, y) - 1
+        c = max(0, bisect(self._MATRIX.partitions, (x - x1) / (x2 - x1)) - 1)
+        try:
+            cell = self._MATRIX[r][c]
+            return sum(len(row) for row in self._COMPOSITIONS[:cell.row]) + cell.col
+        except IndexError:
+            return None
+    
     def typeset(self, bounds, c, y, overlay):
         P_table, P_head, P_left = self._modstyles(overlay, 'table', 'thead', 'tleft')
         head = P_table + P_head
         left = P_table + P_left
         
-        row_y = [y]
+        row_y = [y] * (len(self._MATRIX) + 1)
         part = self._MATRIX.partitions
-        for r, overlay, row in ((c, P_table, b) if c else (c, head, b) for c, b in enumerate(self.data)):
-            y += self._celltop
-            for i, cell in enumerate(row):
+        cellbottom = self._cellbottom
+        for r, overlay, row in ((c, P_table, b) if c else (c, head, b) for c, b in enumerate(self._COMPOSITIONS)):
+            y = row_y[r] + self._celltop
+            for i, (cell, CMP) in enumerate(row):
                 # calculate percentages
                 cellbounds = Subcell(bounds, part[cell.col], part[cell.col + cell.cs])
                 if not i:
-                    cell.cast(cellbounds, c, y, overlay + P_left)
+                    CMP.pack(cellbounds, cell.text, c, y, overlay + P_left)
                 else:
-                    cell.cast(cellbounds, c, y, overlay)
-            y = _row_height(self.data, r, y) + self._cellbottom
-            row_y.append(y)
-            
-        self._table['row_y'] = row_y
-        return _MBlock(self._FLOW, self._MATRIX, bounds, self._table, self.PP)
-
-class _MBlock(Block):
-    def __init__(self, FLOW, matrix, bounds, table, PP):
-        self._table = table
-        row_y = table['row_y']
-        x1, x2 = bounds.bounds(row_y[0])
-        Block.__init__(self, FLOW, row_y[0], row_y[-1], x1, x2, PP)
+                    CMP.pack(cellbounds, cell.text, c, y, overlay)
+                
+                bottom = CMP.y + cellbottom
+                ki = r + cell.rs
+                if bottom > row_y[ki]:
+                    row_y[ki] = bottom
         
-        self._matrix = matrix
-        self._bounds = bounds
-
+        table = {'_row_y': row_y, '_bounds': bounds.bounds}
+        table.update(self._table)
+        # calculate grid
         grid = []
-        cl = len(matrix[0])
-        part = matrix.partitions
+        cl = len(self._MATRIX[0])
+        part = self._MATRIX.partitions
         for y in row_y:
             x1, x2 = bounds.bounds(y)
             width = x2 - x1
             grid.append([(x1 + width*factor, y) for factor in part])
+
+        COMPOSITIONS = [CMP for row in self._COMPOSITIONS for cell, CMP in row]
+        return _MBlock(COMPOSITIONS, grid, table, self.regions, self.PP)
+
+class _MBlock(Block):
+    def __init__(self, COMPOSITIONS, grid, table, regions, PP):
+        self._table = table
+        Block.__init__(self, COMPOSITIONS, grid[0][0][1], grid[-1][-1][1], grid[0][0][0], grid[-1][-1][0], PP)
+        
         self._grid = grid
         self._ortho = list(zip( * grid ))
+        self._regions = regions
 
     def _print_annot(self, cr, O):
-        if O in self._FLOW:
+        if O in self._COMPOSITIONS:
             cr.set_source_rgb( * accent)
             for x, y in chain.from_iterable(self._grid):
                 cr.rectangle(int(x), y - 3.25, 0.5, 7)
@@ -214,22 +224,13 @@ class _MBlock(Block):
                 cr.line_to(b[0] + e, b[1])
                 cr.stroke()
 
-    def I(self, x, y):
-        x1, x2 = self._bounds.bounds(y)
-        r = bisect(self._table['row_y'], y) - 1
-        c = max(0, bisect(self._matrix.partitions, (x - x1) / (x2 - x1)) - 1)
-        try:
-            O = self._matrix[r][c]
-            if O is None or not O.text:
-                print('Empty cell selected')
-                return self['i']
-            else:
-                return O
-        except IndexError:
-            return self['i']
+    def target(self, x, y):
+        if x <= self['right']:
+            return self._regions(x, y, self._table['_bounds'], self._table['_row_y'])
+        return None
 
     def deposit(self, repository):
         repository['_paint'].append((self._print_table, 0, 0))
         repository['_paint_annot'].append((self._print_annot, 0, 0))
-        for A in self._FLOW:
+        for A in self._COMPOSITIONS:
             A.deposit(repository)

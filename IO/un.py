@@ -22,7 +22,7 @@ class UN(object):
         
         textcontexts = cursor.fcursor.polaroid()
         channelcontexts = {
-#                        't': meredith.mipsy.index(caramel.delight.TRACT),
+#                        't': meredith.mipsy.index(caramel.delight.R_TXT),
 #                        'c': caramel.delight.C(), 
 #                        'p': caramel.delight.PG
                         }

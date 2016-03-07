@@ -46,66 +46,46 @@ class Channels_controls(object):
         
         self.PG = ctx['p']
         self.HPG = ctx['p']
-        self.TRACT = meredith.mipsy[ctx['t']]
-        self._CHANNELS = self.TRACT.channels
+        self.R_TXT = meredith.mipsy[ctx['t']]
+        self._CHANNELS = self.R_TXT.channels
 
     def at(self):
-        return self.TRACT, self._selected_point[0]
+        return self.R_TXT, self._selected_point[0]
 
     def target_select(self, x, y):
-        xn, yn = meredith.page.normalize_XY(x, y, self.HPG)
-        c, r, i = self._CHANNELS.target_point(xn, yn, self.HPG, 20)
-        if c is None:
-            # try different page
-            binned_page = meredith.page.XY_to_page(x, y)
-            xn, yn = meredith.page.normalize_XY(x, y, binned_page)
-            
-            c, r, i = self._CHANNELS.target_point(xn, yn, binned_page, 20)
-            if c is not None:
-                self.HPG = binned_page
-
-        if c is not None and r is None:
-            ptype, dpx, dpy = self._CHANNELS.channels[c].target_portal(xn, yn, radius=5)
-            self._hover_portal = (c, ptype)
-
+        p, c, r, i = self._CHANNELS.target_point(x, y, 20)
+        if c is not None:
+            self.HPG = p
+            xp, yp = meredith.page.normalize_XY(x, y, p)
+            if r is None:
+                ptype, dpx, dpy = self._CHANNELS.channels[c].target_portal(xp, yp, radius=5)
+                self._hover_portal = (c, ptype)
         self._hover_point = c, r, i
 
     def target(self, x, y):
-        old_c = self._selected_point[0]
-        xn, yn = meredith.page.normalize_XY(x, y, self.PG)
-        c, r, i = self._CHANNELS.target_point(xn, yn, self.PG, 20)
+        p, c, r, i = self._CHANNELS.target_point(x, y, 20)
         self._selected_point = [c, r, i]
         if c is not None:
+            self.PG = p
+            xp, yp = meredith.page.normalize_XY(x, y, p)
             if r is None:
-                self._selected_portal = self._CHANNELS.channels[c].target_portal(xn, yn, radius=5)
+                self._selected_portal = self._CHANNELS.channels[c].target_portal(xp, yp, radius=5)
             else:
                 self._selected_portal = (None, 0, 0)
-            return xn, yn
-
-        # try different page
-        binned_page = meredith.page.XY_to_page(x, y)
-        xn, yn = meredith.page.normalize_XY(x, y, binned_page)
-        
-        c, r, i = self._CHANNELS.target_point(xn, yn, binned_page, 20)
-        if c is not None:
-            self.PG = binned_page
-            self._selected_point = [c, r, i]
-            if r is None:
-                self._selected_portal = self._CHANNELS.channels[c].target_portal(xn, yn, radius=5)
-            return xn, yn
+            return xp, yp
         
         # try different tract
         for tract in meredith.mipsy:
-            c, r, i = tract.channels.target_point(xn, yn, binned_page, 20)
+            p, c, r, i = tract.channels.target_point(x, y, 20)
             if c is not None:
-                self.PG = binned_page
+                self.PG = p
                 self._selected_point = [c, r, i]
-                self.TRACT = tract
+                self.R_TXT = tract
                 self._CHANNELS = tract.channels
-                return xn, yn
+                return meredith.page.normalize_XY(x, y, p)
         
         self._selected_portal = (None, 0, 0)
-        return xn, yn
+        return meredith.page.normalize_XY(x, y, self.PG)
 
     def press(self, x, y, name):
         un.history.undo_save(3)
@@ -213,7 +193,7 @@ class Channels_controls(object):
 
             if self._release_locale != anchor:
                 self._release_locale = anchor
-                self.TRACT.deep_recalculate()
+                self.R_TXT.deep_recalculate()
                 return
         
         un.history.pop()
@@ -231,20 +211,20 @@ class Channels_controls(object):
                     del self._CHANNELS.channels[c]
                     # wipe out entire tract if it's the last one
                     if not self._CHANNELS.channels:
-                        old_tract = self.TRACT
+                        old_tract = self.R_TXT
                         meredith.mipsy.delete_tract(old_tract)
-                        self.TRACT = meredith.mipsy[0]
-                        self._CHANNELS = self.TRACT.channels
+                        self.R_TXT = meredith.mipsy[0]
+                        self._CHANNELS = self.R_TXT.channels
                         # cursor needs to be informed
-                        if cursor.fcursor.TRACT is old_tract:
-                            cursor.fcursor.assign_text(self.TRACT)
-                            cursor.fcursor.TRACT = self.TRACT
+                        if cursor.fcursor.R_TXT is old_tract:
+                            cursor.fcursor.assign_text(self.R_TXT)
+                            cursor.fcursor.R_TXT = self.R_TXT
                 else:
                     un.history.undo_save(3)
                     if not self._CHANNELS.delete_selection():
                         un.history.pop()
                 
-                self.TRACT.deep_recalculate()
+                self.R_TXT.deep_recalculate()
             
             elif self._mode == 'grid':
                 self._grid_controls.del_grid()
@@ -326,7 +306,7 @@ class Channels_controls(object):
                             cr.set_line_width(1)
                             cr.stroke()
     
-            for channel in chain.from_iterable(tract.channels.channels for tract in meredith.mipsy if tract is not self.TRACT):
+            for channel in chain.from_iterable(tract.channels.channels for tract in meredith.mipsy if tract is not self.R_TXT):
                 page = channel.page
                 
                 cr.set_source_rgba(0.3, 0.3, 0.3, 0.3)
@@ -341,7 +321,7 @@ class Channels_controls(object):
                 cr.stroke()
 
         else:
-            for c, channel in enumerate(cursor.fcursor.TRACT.channels.channels):
+            for c, channel in enumerate(cursor.fcursor.R_TXT.channels.channels):
                 page = channel.page
                 
                 color = (0.3, 0.3, 0.3, 0.5)

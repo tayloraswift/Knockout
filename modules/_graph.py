@@ -1,7 +1,7 @@
 from math import log, log10
 from bisect import bisect
 
-from model.olivia import Block, Atomic_text
+from model.olivia import Block, Flowing_text
 from elements.elements import Block_element
 from model.george import Subcell
 from model.cat import cast_mono_line
@@ -10,9 +10,9 @@ _namespace = 'mod:_graph'
 
 def generate_key(FLOW, subcell, c, top, py, P):
     ky = [top - py]
-    for S in FLOW:
-        S.cast(subcell, c, ky[-1] + py, P)
-        ky.append(S.y - py + 4)
+    for FTX in FLOW:
+        FTX.layout(subcell, c, ky[-1] + py, P)
+        ky.append(FTX.y - py + 4)
     return ky, list(zip(ky, ky[1:]))
 
 def soft_int(n, decimals):
@@ -110,7 +110,7 @@ class Cartesian(Block_element):
         
         self._data_unscaled = self.process_data(datavalues, xstart, xstep, xr, ystart, ystep, yr)
         
-        self._FLOW = [Atomic_text(text) for text in labels]
+        self._FLOW = [Flowing_text(text) for text in labels]
     
     def _draw_grid(self, cr):
         # ticks
@@ -164,7 +164,7 @@ class Cartesian(Block_element):
         left, right = bounds.bounds(y + self._graphheight/2)
 
         # y axis
-        self._FLOW[1].cast(Subcell(bounds, -0.15, 0.15), c, y, P_y)
+        self._FLOW[1].layout(Subcell(bounds, -0.15, 0.15), c, y, P_y)
         y = self._FLOW[1].y
         
         px = left
@@ -183,7 +183,7 @@ class Cartesian(Block_element):
         w = right - left
         self._yaxis_div = w*0.15
         self._origins = []
-        self._FLOW[0].cast(bounds, c, py + 20, P_x)
+        self._FLOW[0].layout(bounds, c, py + 20, P_x)
         
         for b, m, M, s, k in self._xnumbers:
             x = int(b*w)
@@ -218,12 +218,12 @@ class GraphBlock(Block):
             self._handle(cr)
             cr.fill()
     
-    def I(self, x, y):
+    def target(self, x, y):
         if x <= self['right']:
             dx, dy = self._origin
-            return self._FLOW[self._regions(x - dx, y - dy)]
+            return self._regions(x - dx, y - dy)
         else:
-            return self['i']
+            return None
     
     def deposit(self, repository):
         repository['_paint'].append((self._draw, * self._origin )) # come before to avoid occluding child elements

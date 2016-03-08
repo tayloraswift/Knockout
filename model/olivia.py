@@ -1,11 +1,8 @@
 from bisect import bisect
 from itertools import groupby, chain
 
-from state import noticeboard
-from model.wonder import words
-
+from model import meredith
 from model.cat import typeset_chained, typeset_liquid, Glyphs_line
-from elements.elements import Block_element
 
 class _Empty_F(object):
     def __init__(self):
@@ -16,18 +13,18 @@ class _Empty_F(object):
 
 class Inline(object):
     def __init__(self, lines, width, A, D):
-        self.LINES = lines
+        self._LINES = lines
         self.width = width
         self.ascent = A
         self.descent = D
     
     def deposit_glyphs(self, repository, x, y):
-        for line in self.LINES:
+        for line in self._LINES:
             line.deposit(repository, x, y)
 
 class Block(dict):
-    def __init__(self, COMPOSITIONS, top, bottom, left, right, PP):
-        self._COMPOSITIONS = COMPOSITIONS
+    def __init__(self, FLOW, top, bottom, left, right, PP):
+        self._FLOW = FLOW
         self['x'] = left
         self['left'] = left
         self['right'] = right
@@ -52,25 +49,25 @@ class Block(dict):
     def deep_search(self, x, y):
         i = self.target(x, y)
         if i is not None:
-            CMP = self._COMPOSITIONS[i]
-            return ( * CMP.deep_search(x, y), i)
+            FTX = self._FLOW[i]
+            return ( * FTX.deep_search(x, y), i)
         else:
             return None
     
     def collect_text(self):
-        return list(chain.from_iterable(A.collect_text() for A in self._COMPOSITIONS))
+        return list(chain.from_iterable(A.collect_text() for A in self._FLOW))
     
     def deposit(self, repository):
-        for A in self._COMPOSITIONS:
-            A.deposit(repository)
+        for FTX in self._FLOW:
+            FTX.deposit(repository)
 
-class Composition(object):
-    def __init__(self, manuscript):
-        self.manuscript = manuscript
+class Flowing_text(object):
+    def __init__(self, text):
+        self.text = text
         self.LINES = []
         
-    def pack(self, channel, text, c, y, overlay=None):
-        self.LINES[:] = typeset_liquid(channel, text, {'j': 0, 'l': -1, 'P_BREAK': True}, 0, y, c, overlay=overlay)
+    def layout(self, channel, c, y, overlay=None):
+        self.LINES[:] = typeset_liquid(channel, self.text, {'j': 0, 'l': -1, 'P_BREAK': True}, 0, y, c, overlay=overlay)
         if self.LINES:
             self.y = self.LINES[-1]['y']
         else:
@@ -125,9 +122,9 @@ class Composition(object):
 
         return select
 
-    def paint_misspellings(self, misspellings):
+    def paint_underscores(self):
         underscores = []
-        for pair in misspellings:
+        for pair in self.text.misspellings:
             u, v = pair[:2]
 
             u_l = self._index_to_line(u)
@@ -197,9 +194,15 @@ class Composition(object):
         for S in self.LINES:
             S.deposit(repository)
     
-class _Chained_composition(Composition):
+class Chained_flowing_text(Flowing_text):
+    sign = '<section>\n'
+    def __init__(self, L, channels):
+        Flowing_text.__init__(self, L)
+        self.channels = channels
+        self._sorted_pages = {}
+
     def pack(self, channels, text):
-        self.LINES = typeset_chained(channels, text)
+        self.LINES[:] = typeset_chained(channels, text)
         self._precompute_search()
 
     def pack_partial(self, channels, text, i):
@@ -234,87 +237,69 @@ class _Chained_composition(Composition):
             l = bisect(yy, y)
         return ll[l]
 
-class Atomic_text(object):
-    def __init__(self, text):
-        self.text = text
-
-        # STATS
-        self.word_count = '—'
-        self.misspellings = []
-        self.stats(True)
+    #############
     
-    def stats(self, spell=False):
-        if spell:
-            self.word_count, self.misspellings = words(self.text, spell=True)
-        else:
-            self.word_count = words(self.text)
-
-class Chained_text(Atomic_text):
-    sign = '<section>\n'
-    def __init__(self, text, channels):
-        self.channels = channels
-        self._sorted_pages = {}
-        Atomic_text.__init__(self, text)
-        
-        self.composition = _Chained_composition(self)
-
-    def partial_recalculate(self, i):
-        self.composition.pack_partial(self.channels.channels, self.text, i)
+    def partial_layout(self, i):
+        self.pack_partial(self.channels.channels, self.text, i)
         self._sorted_pages.clear()
 
-    def deep_recalculate(self):
-        self.composition.pack(self.channels.channels, self.text)
+    def layout(self):
+        self.pack(self.channels.channels, self.text)
         self._sorted_pages.clear()
 
     def paint_misspellings(self):
-        return chain.from_iterable(CMP.paint_misspellings(CMP.manuscript.misspellings) for CMP in self.composition.collect_text())
+        return chain.from_iterable(FTX.paint_underscores() for FTX in self.collect_text())
     
     def extract_glyphs(self, refresh=False):
         if refresh:
-            self._sorted_pages = {}
+            self._sorted_pages.clear()
 
         if not self._sorted_pages:
-            for page, pageslugs in ((p, list(ps)) for p, ps in groupby((line for line in self.composition.LINES), key=lambda line: line['page'])):
+            for page, lines in ((p, list(ps)) for p, ps in groupby((line for line in self.LINES), key=lambda line: line['page'])):
                 if page not in self._sorted_pages:
                     self._sorted_pages[page] = {'_annot': [], '_images': [], '_paint': [], '_paint_annot': []}
                 sorted_page = self._sorted_pages[page]
                 
-                for line in pageslugs:
+                for line in lines:
                     line.deposit(sorted_page)
-
         return self._sorted_pages
 
-class Repeat_text(Chained_text):
+class Repeat_flowing_text(Chained_flowing_text):
     sign = '<section repeat="True">\n'
-    def __init__(self, text, channels):
-        Chained_text.__init__(self, text, channels)
+    def __init__(self, L, channels):
+        self.text = L
+        self._sorted_pages = {}
+        
         self.start = 1
         self.until = 13
-        self.repeats = [self.composition]
-        self.repeats.extend(_Chained_composition(self) for _ in range(self.until - self.start))
+        self.repeats = [Chained_flowing_text(L, channels) for _ in range(self.until - self.start)]
         
-        ic = self.channels.channels
-        self.channel_repeats = [[C.shallow_copy_to_page(k) for C in ic] for k in range(self.start, self.until + 1)]
+        self.channel_repeats = [[C.shallow_copy_to_page(k) for C in channels.channels] for k in range(self.start, self.until + 1)]
+        # set representatives
+        self.LINES = self.repeats[0].LINES
+        self.channels = self.repeats[0].channels
 
-    def deep_recalculate(self):
+    def layout(self):
         for R, C in zip(self.repeats, self.channel_repeats):
             R.pack(C, self.text)
+        self._precompute_search()
         self._sorted_pages.clear()
 
-    def partial_recalculate(self, i):
+    def partial_layout(self, i):
         for R, C in zip(self.repeats, self.channel_repeats):
             R.pack_partial(C, self.text, i)
+        self._precompute_search()
         self._sorted_pages.clear()
-    
+        
     def extract_glyphs(self, refresh=False):
         if refresh:
             self._sorted_pages = {}
 
         if not self._sorted_pages:
-            for p, pageslugs in enumerate(R.LINES for R in self.repeats):
+            for p, lines in enumerate(R.LINES for R in self.repeats):
                 page = p + self.start
                 self._sorted_pages[page] = {'_annot': [], '_images': [], '_paint': [], '_paint_annot': []}
-                for line in pageslugs:
+                for line in lines:
                     line.deposit(self._sorted_pages[page])
 
         return self._sorted_pages

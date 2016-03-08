@@ -1,7 +1,7 @@
 from bisect import bisect
 from itertools import chain, accumulate
 
-from model.olivia import Atomic_text, Block, Composition
+from model.olivia import Flowing_text, Block
 from model.george import Subcell
 from interface.base import accent
 from IO.xml import print_attrs, print_styles
@@ -22,9 +22,9 @@ def _print_td(td):
             else:
                 return '<td rowspan="' + A['rowspan'] + '" colspan="' + A['colspan'] + '">'
 
-class _Table_cell(Atomic_text):
+class _Table_cell(Flowing_text):
     def __init__(self, text, rowspan, colspan):
-        Atomic_text.__init__(self, text)
+        Flowing_text.__init__(self, text)
         self.rs = rowspan
         self.cs = colspan
     
@@ -95,9 +95,9 @@ class Table(Block_element):
         self.PP = L[0][2]
         
         GA = self._get_attributes
-        data = [[_Table_cell(C, * GA('td', td[1])) for td, C in R] for tr, R in L[1]]
-        self._COMPOSITIONS = [[(cell, Composition(cell)) for cell in row] for row in data]
-        self._MATRIX = _build_matrix(data)
+        self._CELLS = [[_Table_cell(C, * GA('td', td[1])) for td, C in R] for tr, R in L[1]]
+        self._MATRIX = _build_matrix(self._CELLS)
+        self._FLOW = [FTX for row in self._CELLS for FTX in row]
         
         distr, self._celltop, self._cellbottom, hrules, vrules, rulemargin, rulewidth = self._get_attributes(_namespace)
         # columns
@@ -132,8 +132,7 @@ class Table(Block_element):
         r = bisect(yy, y) - 1
         c = max(0, bisect(self._MATRIX.partitions, (x - x1) / (x2 - x1)) - 1)
         try:
-            cell = self._MATRIX[r][c]
-            return sum(len(row) for row in self._COMPOSITIONS[:cell.row]) + cell.col
+            return self._FLOW.index(self._MATRIX[r][c])
         except IndexError:
             return None
     
@@ -145,17 +144,18 @@ class Table(Block_element):
         row_y = [y] * (len(self._MATRIX) + 1)
         part = self._MATRIX.partitions
         cellbottom = self._cellbottom
-        for r, overlay, row in ((c, P_table, b) if c else (c, head, b) for c, b in enumerate(self._COMPOSITIONS)):
+        for r, overlay, row in ((c, P_table, b) if c else (c, head, b) for c, b in enumerate(self._CELLS)):
             y = row_y[r] + self._celltop
-            for i, (cell, CMP) in enumerate(row):
+            for i, cell in enumerate(row):
                 # calculate percentages
                 cellbounds = Subcell(bounds, part[cell.col], part[cell.col + cell.cs])
                 if not i:
-                    CMP.pack(cellbounds, cell.text, c, y, overlay + P_left)
+                    ol = overlay + P_left
                 else:
-                    CMP.pack(cellbounds, cell.text, c, y, overlay)
+                    ol = overlay
+                cell.layout(cellbounds, c, y, ol)
                 
-                bottom = CMP.y + cellbottom
+                bottom = cell.y + cellbottom
                 ki = r + cell.rs
                 if bottom > row_y[ki]:
                     row_y[ki] = bottom
@@ -170,21 +170,20 @@ class Table(Block_element):
             x1, x2 = bounds.bounds(y)
             width = x2 - x1
             grid.append([(x1 + width*factor, y) for factor in part])
-
-        COMPOSITIONS = [CMP for row in self._COMPOSITIONS for cell, CMP in row]
-        return _MBlock(COMPOSITIONS, grid, table, self.regions, self.PP)
+        
+        return _MBlock(self._FLOW, grid, table, self.regions, self.PP)
 
 class _MBlock(Block):
-    def __init__(self, COMPOSITIONS, grid, table, regions, PP):
+    def __init__(self, FLOW, grid, table, regions, PP):
         self._table = table
-        Block.__init__(self, COMPOSITIONS, grid[0][0][1], grid[-1][-1][1], grid[0][0][0], grid[-1][-1][0], PP)
+        Block.__init__(self, FLOW, grid[0][0][1], grid[-1][-1][1], grid[0][0][0], grid[-1][-1][0], PP)
         
         self._grid = grid
         self._ortho = list(zip( * grid ))
         self._regions = regions
 
     def _print_annot(self, cr, O):
-        if O in self._COMPOSITIONS:
+        if O in self._FLOW:
             cr.set_source_rgb( * accent)
             for x, y in chain.from_iterable(self._grid):
                 cr.rectangle(int(x), y - 3.25, 0.5, 7)
@@ -232,5 +231,5 @@ class _MBlock(Block):
     def deposit(self, repository):
         repository['_paint'].append((self._print_table, 0, 0))
         repository['_paint_annot'].append((self._print_annot, 0, 0))
-        for A in self._COMPOSITIONS:
+        for A in self._FLOW:
             A.deposit(repository)

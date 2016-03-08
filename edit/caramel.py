@@ -46,11 +46,11 @@ class Channels_controls(object):
         
         self.PG = ctx['p']
         self.HPG = ctx['p']
-        self.R_TXT = meredith.mipsy[ctx['t']]
-        self._CHANNELS = self.R_TXT.channels
+        self.R_FTX = meredith.mipsy[ctx['t']]
+        self._CHANNELS = self.R_FTX.channels
 
     def at(self):
-        return self.R_TXT, self._selected_point[0]
+        return self.R_FTX, self._selected_point[0]
 
     def target_select(self, x, y):
         p, c, r, i = self._CHANNELS.target_point(x, y, 20)
@@ -80,7 +80,7 @@ class Channels_controls(object):
             if c is not None:
                 self.PG = p
                 self._selected_point = [c, r, i]
-                self.R_TXT = tract
+                self.R_FTX = tract
                 self._CHANNELS = tract.channels
                 return meredith.page.normalize_XY(x, y, p)
         
@@ -193,7 +193,7 @@ class Channels_controls(object):
 
             if self._release_locale != anchor:
                 self._release_locale = anchor
-                self.R_TXT.deep_recalculate()
+                self.R_FTX.layout()
                 return
         
         un.history.pop()
@@ -211,20 +211,20 @@ class Channels_controls(object):
                     del self._CHANNELS.channels[c]
                     # wipe out entire tract if it's the last one
                     if not self._CHANNELS.channels:
-                        old_tract = self.R_TXT
+                        old_tract = self.R_FTX
                         meredith.mipsy.delete_tract(old_tract)
-                        self.R_TXT = meredith.mipsy[0]
-                        self._CHANNELS = self.R_TXT.channels
+                        self.R_FTX = meredith.mipsy[0]
+                        self._CHANNELS = self.R_FTX.channels
                         # cursor needs to be informed
-                        if cursor.fcursor.R_TXT is old_tract:
-                            cursor.fcursor.assign_text(self.R_TXT)
-                            cursor.fcursor.R_TXT = self.R_TXT
+                        if cursor.fcursor.R_FTX is old_tract:
+                            cursor.fcursor.assign_text(self.R_FTX)
+                            cursor.fcursor.R_FTX = self.R_FTX
                 else:
                     un.history.undo_save(3)
                     if not self._CHANNELS.delete_selection():
                         un.history.pop()
                 
-                self.R_TXT.deep_recalculate()
+                self.R_FTX.layout()
             
             elif self._mode == 'grid':
                 self._grid_controls.del_grid()
@@ -306,7 +306,7 @@ class Channels_controls(object):
                             cr.set_line_width(1)
                             cr.stroke()
     
-            for channel in chain.from_iterable(tract.channels.channels for tract in meredith.mipsy if tract is not self.R_TXT):
+            for channel in chain.from_iterable(tract.channels.channels for tract in meredith.mipsy if tract is not self.R_FTX):
                 page = channel.page
                 
                 cr.set_source_rgba(0.3, 0.3, 0.3, 0.3)
@@ -321,7 +321,7 @@ class Channels_controls(object):
                 cr.stroke()
 
         else:
-            for c, channel in enumerate(cursor.fcursor.R_TXT.channels.channels):
+            for c, channel in enumerate(cursor.fcursor.R_FTX.channels.channels):
                 page = channel.page
                 
                 color = (0.3, 0.3, 0.3, 0.5)

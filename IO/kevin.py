@@ -3,9 +3,25 @@ from ast import literal_eval
 
 from bulletholes.counter import TCounter as Counter
 from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Inline_element, Block_element
+from model.wonder import words
 from style import styles
 from modules import modules, moduletags, inlinecontainers, inlinetags, blocktags
 from state.exceptions import IO_Error
+
+class Text(list):
+    def __init__(self, * args):
+        list.__init__(self, * args)
+
+        # STATS
+        self.word_count = '—'
+        self.misspellings = []
+        self.stats(True)
+    
+    def stats(self, spell=False):
+        if spell:
+            self.word_count, self.misspellings = words(self, spell=True)
+        else:
+            self.word_count = words(self)
 
 def _create_paragraph(attrs):
     if 'class' in attrs:
@@ -27,7 +43,7 @@ class Minion(parser.HTMLParser):
     def feed(self, data):
         self.reset()
         self._first = True
-        self._O = []
+        self._O = Text()
         self._C = [(None, self._O)]
         self._breadcrumbs = [None]
         
@@ -62,9 +78,9 @@ class Minion(parser.HTMLParser):
             self._breadcrumbs.append(tag)
             if tag in blocktags:
                 self._first = False
-                M = ((tag, attrs, _create_paragraph(attrs)), [])
+                M = ((tag, attrs, _create_paragraph(attrs)), Text())
             else:
-                M = ((tag, attrs), [])
+                M = ((tag, attrs), Text())
             O.append(M)
             self._C.append(M)
 
@@ -74,7 +90,7 @@ class Minion(parser.HTMLParser):
         if tag == 'br':
             O.append('<br/>')
         elif tag in inlinetags:
-            O.append(modules[tag](((tag, attrs), []), deserialize, ser))
+            O.append(modules[tag](((tag, attrs), Text()), deserialize, ser))
     
     def handle_startendtag(self, tag, attrs):
         if self._breadcrumbs[-1] in inlinecontainers:
@@ -104,7 +120,7 @@ class Minion(parser.HTMLParser):
         # this should be disabled on the last blob, unless we are sure the container is 'p'
         if self._breadcrumbs[-1] in inlinecontainers:
             O = self._C[-1][1]
-            O.extend(list(data))
+            O.extend(data)
 
 class Kevin_from_TN(Minion): # to capture the first and last blobs
     def _trim(self):
@@ -127,7 +143,7 @@ class Kevin_from_TN(Minion): # to capture the first and last blobs
     def handle_data(self, data):
         if self._breadcrumbs[-1] in inlinecontainers:
             O = self._C[-1][1]
-            O.extend(list(data))
+            O.extend(data)
         elif self._first and self._breadcrumbs[-1] is None: # register the first blob
             O = self._C[-1][1]
             self._first = False
@@ -164,13 +180,13 @@ def ser(L, indent):
     for C in (L[i:j] for i, j in zip(gaps, gaps[1:] + [len(L)]) if j != i): # to catch last blob
         if isinstance(C[0], Block_element):
             lines.append([indent, ''])
-            lines.extend(C[0].represent(indent))
+            lines += C[0].represent(indent)
             lead = 1
         elif isinstance(C[0], Inline_element):
             LL = C[0].represent(indent)
             if lines:
                 lines[-1][1] += LL.pop(0)[1]
-            lines.extend(LL)
+            lines += LL
             lines[-1][1] += ''.join(repr(c) if type(c) is not str else escape(c) if len(c) == 1 else c for c in C[1:])
         else:
             lines.append([indent, ''])

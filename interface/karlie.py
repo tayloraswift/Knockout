@@ -433,9 +433,9 @@ class Properties(_Properties_panel):
             self._heading = 'Channel ' + str(c)
             if c is not None:
                 self._items.append(kookies.Integer_field( 15, y, KW, 
-                        callback = lambda page, C: (caramel.delight.R_TXT.channels.channels[C].set_page(page), caramel.delight.R_TXT.deep_recalculate()), 
+                        callback = lambda page, C: (caramel.delight.R_FTX.channels.channels[C].set_page(page), caramel.delight.R_FTX.layout()), 
                         params = (c,),
-                        value_acquire = lambda C: str(caramel.delight.R_TXT.channels.channels[C].page),
+                        value_acquire = lambda C: str(caramel.delight.R_FTX.channels.channels[C].page),
                         name = 'PAGE' ))
                 y += 30
             

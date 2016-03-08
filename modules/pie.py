@@ -2,7 +2,7 @@ from math import pi, atan2
 from itertools import chain, accumulate
 from bisect import bisect
 
-from model.olivia import Atomic_text
+from model.olivia import Flowing_text
 from model.george import Subcell
 from elements.elements import Block_element
 
@@ -31,7 +31,7 @@ class PieChart(Block_element):
         self._slices = [(P/total, P/total*2*pi, C) for P, C in slices]
         self._slices_t = list(accumulate(s[1] for s in self._slices))
         
-        self._FLOW = [Atomic_text(text) for text in labels]
+        self._FLOW = [Flowing_text(text) for text in labels]
 
     def print_pie(self, cr):
         r = self._radius

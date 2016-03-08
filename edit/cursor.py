@@ -6,9 +6,8 @@ from edit.text import expand_cursors_word
 
 class FCursor(object):
     def __init__(self, ctx):
-        self.R_TXT = meredith.mipsy[ctx['t']]
-        self.R_CMP = self.R_TXT.composition
-        self.assign_text(self.R_CMP)
+        self.R_FTX = meredith.mipsy[ctx['t']]
+        self.assign_text(self.R_FTX)
         if max(ctx['i'], ctx['j']) < len(self.text):
             self.si = ctx['i']
             self.i = ctx['i']
@@ -21,47 +20,45 @@ class FCursor(object):
         self.PG = ctx['p']
 
     def polaroid(self):
-        if self.TXT is self.R_TXT:
+        if self.FTX is self.R_FTX:
             i = self.i
             j = self.j
         else:
             i = self.si
             j = i
-        return {'t': meredith.mipsy.index(self.R_TXT), 'i': i, 'j': j, 'p': self.PG}
+        return {'t': meredith.mipsy.index(self.R_FTX), 'i': i, 'j': j, 'p': self.PG}
 
-    def assign_text(self, composition):
-        self.CMP = composition
-        self.TXT = composition.manuscript
-        self.text = composition.manuscript.text
+    def assign_text(self, ftext):
+        self.FTX = ftext
+        self.text = ftext.text
 
     # TARGETING SYSTEM
     def _to_c_global(self, x, y):
-        c, p = self.R_TXT.channels.target_channel(x, y, 20)
+        c, p = self.R_FTX.channels.target_channel(x, y, 20)
         if c is None:
             # try other tracts
-            for chained_tract in meredith.mipsy: 
-                c, p = chained_tract.channels.target_channel(x, y, 20)
+            for chained_composition in meredith.mipsy: 
+                c, p = chained_composition.channels.target_channel(x, y, 20)
                 if c is not None:
-                    self.R_TXT = chained_tract
-                    self.R_CMP = self.R_TXT.composition
+                    self.R_FTX = chained_composition
                     self.PG = p
                     return meredith.page.normalize_XY(x, y, p), c
         else:
             self.PG = p
             return meredith.page.normalize_XY(x, y, p), c
-        return meredith.page.normalize_XY(x, y, self.PG), self.CMP.line_at(self.i)['c']
+        return meredith.page.normalize_XY(x, y, self.PG), self.FTX.line_at(self.i)['c']
 
     def _to_c_local(self, x, y):
-        c, p = self.R_TXT.channels.target_channel(x, y, 20)
+        c, p = self.R_FTX.channels.target_channel(x, y, 20)
         if c is None:
-            return meredith.page.normalize_XY(x, y, self.PG), self.CMP.line_at(self.j)['c']
+            return meredith.page.normalize_XY(x, y, self.PG), self.FTX.line_at(self.j)['c']
         else:
             self.PG = p
             return meredith.page.normalize_XY(x, y, p), c
             
     def target(self, x, y):
         (x, y), c = self._to_c_global(x, y)
-        composition, * breadcrumbs = self.R_CMP.deep_search(x, y, c)
+        composition, * breadcrumbs = self.R_FTX.deep_search(x, y, c)
         self.assign_text(composition)
         self.i = breadcrumbs[0]
         self.j = breadcrumbs[0]
@@ -69,7 +66,7 @@ class FCursor(object):
 
     def target_select(self, x, y):
         (x, y), c = self._to_c_local(x, y)
-        j = self.CMP.shallow_search(x, y, c)
+        j = self.FTX.shallow_search(x, y, c)
         self.j = j
     
     #############
@@ -79,16 +76,16 @@ class FCursor(object):
         signs = (self.j < self.i,
                 (str(self.text[self.i - 1]) in zeros, str(self.text[self.i]) in zeros) , 
                 (str(self.text[self.j - 1]) in zeros, str(self.text[self.j]) in zeros))
-        return self.CMP.paint_select(self.i, self.j), signs
+        return self.FTX.paint_select(self.i, self.j), signs
     
     def take_selection(self):
         self.i, self.j = sorted((self.i, self.j))
         return self.text[self.i:self.j]
 
     def _recalculate(self):
-        if self.CMP is self.R_CMP:
+        if self.FTX is self.R_FTX:
             self.si = self.i
-        self.R_TXT.partial_recalculate(self.si)
+        self.R_FTX.partial_layout(self.si)
 
     def _burn(self, i, j):
         # filter for paragraph elements
@@ -131,7 +128,7 @@ class FCursor(object):
         offset = start - end + self._burn(start, end)
         
         # fix spelling lines
-        self.TXT.misspellings = [pair if pair[1] < start else (pair[0] + offset, pair[1] + offset, pair[2]) if pair[0] > end else (0, 0, None) for pair in self.TXT.misspellings]
+        self.text.misspellings = [pair if pair[1] < start else (pair[0] + offset, pair[1] + offset, pair[2]) if pair[0] > end else (0, 0, None) for pair in self.text.misspellings]
         self._recalculate()
 
     def insert(self, segment):
@@ -171,7 +168,7 @@ class FCursor(object):
             self.j = self.i
             
             # fix spelling lines
-            self.TXT.misspellings = [pair if pair[1] < self.i else (pair[0] + m, pair[1] + m, pair[2]) if pair[0] > self.i else (pair[0], pair[1] + m, pair[2]) for pair in self.TXT.misspellings]
+            self.text.misspellings = [pair if pair[1] < self.i else (pair[0] + m, pair[1] + m, pair[2]) if pair[0] > self.i else (pair[0], pair[1] + m, pair[2]) for pair in self.text.misspellings]
 
     def expand_cursors(self):
         # order
@@ -299,24 +296,24 @@ class FCursor(object):
                 self._recalculate()
                 
                 # redo spelling for this paragraph
-                self.TXT.misspellings = [pair if pair[1] < P_1 else
+                self.text.misspellings = [pair if pair[1] < P_1 else
                         (pair[0] + DA, pair[1] + DA, pair[2]) if pair[0] > P_2 else
-                        (0, 0, 0) for pair in self.TXT.misspellings ]
+                        (0, 0, 0) for pair in self.text.misspellings ]
                 # paragraph has changed
-                self.TXT.misspellings += words(self.text[P_1:P_2 + DA] + ['</p>'], startindex=P_1, spell=True)[1]
+                self.text.misspellings.extend(words(self.text[P_1:P_2 + DA] + ['</p>'], startindex=P_1, spell=True)[1])
                 
                 return True
             else:
                 return False
 
     def hop(self, direction): #implemented exclusively for arrow-up/down events
-        self.i = self.CMP.line_jump(self.i, direction)
+        self.i = self.FTX.line_jump(self.i, direction)
 
     def pp_at(self):
-        return self.CMP.line_at(self.i)['PP']
+        return self.FTX.line_at(self.i)['PP']
 
     def styling_at(self):
-        line = self.CMP.line_at(self.i)
+        line = self.FTX.line_at(self.i)
         try:
             glyph = line['GLYPHS'][self.i - line['i']]
         except IndexError:
@@ -325,4 +322,4 @@ class FCursor(object):
         return line['PP'], glyph[3]
 
     def front_and_back(self):
-        return self.CMP.line_indices(self.i)
+        return self.FTX.line_indices(self.i)

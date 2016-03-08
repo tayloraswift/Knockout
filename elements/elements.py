@@ -122,7 +122,7 @@ class Block_element(Mod_element):
         lines = [[indent, '<' + print_attrs(name, attrs) + '>']]
         for tag, E in self._tree[1]:
             lines.append([indent + 1, '<' + print_attrs( * tag ) + '>'])
-            lines.extend(self._SER(E, indent + 2))
+            lines += self._SER(E, indent + 2)
             lines.append([indent + 1, '</' + tag[0] + '>'])
         lines.append([indent, '</' + self.namespace + '>'])
         return lines
@@ -137,7 +137,7 @@ class Inline_element(Mod_element):
             content[0] = [indent + 1, '<' + print_attrs( * tag ) + '>' + content[0][1]]
             content[-1][1] += '</' + tag[0] + '>'
             
-            lines.extend(content)
+            lines += content
         lines.append([indent, '</' + self.namespace + '>'])
         return lines
 

@@ -19,7 +19,7 @@
 <section>
 <p class="firstchild&h2" style="{'margin_left': 40}">Table of contents</p>
 
-<table cellbottom="5" celltop="5" distr="3, 1" hrules="0" style="{'margin_right': 40, 'margin_top': 10, 'margin_left': 40}">
+<table cellbottom="5" celltop="5" distr="3, 1" hrules="0" style="{'margin_right': 40, 'margin_left': 40, 'margin_top': 10}">
     <tr>
         <td>
             <p class="body&h2">Introduction</p>
@@ -931,9 +931,16 @@
 </section>
 
 <section repeat="True">
-<p class="body&firstchild">Team 6900</p>
-
-<p class="body&firstchild" style="{'align': 1}"><pn/></p>
+<table class="">
+    <tr>
+        <td>
+            <p class="body&firstchild&~tablecell&~tablehead&~tableleft">Team 6900</p>
+        </td>
+        <td>
+            <p class="body&firstchild&~tablecell&~tablehead" style="{'align': 1}"><pn/></p>
+        </td>
+    </tr>
+</table>
 </section>
 
 <section>
@@ -990,8 +997,8 @@
                 'lowercase': {'capitals': False},
                 'subscript': {'shift': -2},
                 'superscript': {'shift': 5}},
- 'FTAGLIST': [('sup', ['small']), ('sub', ['small']), ('sc', []), ('emphasis', []), ('caption', []), ('reference', []), ('strong', []), ('big', [])],
- 'PARASTYLES': (0,
+ 'FTAGLIST': [('strong', []), ('reference', []), ('sub', ['small']), ('caption', []), ('sc', []), ('sup', ['small']), ('big', []), ('emphasis', [])],
+ 'PARASTYLES': (1,
                 [({'fontclasses': (2, [('Black', {}), ('subscript', {'sub': 1}), ('superscript', {'sup': 1})])}, {}),
                  ({'fontclasses': (0,
                                    [('Body regular', {}),
@@ -1031,27 +1038,27 @@
                  ({'fontclasses': (0, [('Sans serif semi', {})]), 'indent': (0, 1, 0), 'margin_bottom': 2, 'margin_top': 0}, {'caption': 1, 'h3': 1}),
                  ({'indent': (0, 1, 0)}, {'firstchild': 1})]),
  'PTAGLIST': [('', []),
-              ('tablehead', []),
-              ('firstchild', []),
-              ('tableleft', []),
-              ('table emphasis', []),
-              ('math', []),
-              ('key', []),
               ('h3', []),
-              ('body', []),
-              ('figure title', []),
-              ('figure', []),
-              ('units', []),
-              ('list', []),
-              ('caption', []),
+              ('tablecell', []),
+              ('tablehead', []),
+              ('math', []),
               ('h2', []),
-              ('h1', []),
-              ('tablecell', [])],
- 'contexts': {'channels': {'c': 1, 'p': 16, 't': 3}, 'text': {'i': 4666, 'j': 4666, 'p': 4, 't': 2}},
+              ('caption', []),
+              ('figure title', []),
+              ('key', []),
+              ('list', []),
+              ('body', []),
+              ('table emphasis', []),
+              ('tableleft', []),
+              ('firstchild', []),
+              ('units', []),
+              ('figure', []),
+              ('h1', [])],
+ 'contexts': {'channels': {'c': 0, 'p': 1, 't': 3}, 'text': {'i': 4615, 'j': 4615, 'p': 4, 't': 2}},
  'grid': [[90, 370, 410, 690], [100, 130, 910]],
  'outlines': ([(([[90, 100, False], [90, 910, False]], [[370, 100, False], [370, 910, False]]), 0), (([[410, 100, False], [410, 910, False]], [[690, 100, False], [690, 910, True]]), 0)],
               [([[[90, 130, True], [90, 910, False]], [[690, 130, True], [690, 910, False]]], 1)],
-              [([[[90, 130, False], [90, 910, False]], [[370, 130, False], [370, 910, False]]], 2),
+              [([[[90, 130, False], [90, 910, True]], [[370, 130, False], [370, 910, True]]], 2),
                ([[[410, 130, False], [410, 910, False]], [[690, 130, False], [690, 910, False]]], 2),
                ([[[90, 130, False], [90, 910, False]], [[370, 130, False], [370, 910, False]]], 3),
                ([[[410, 130, False], [410, 910, False]], [[690, 130, False], [690, 910, False]]], 3),
@@ -1077,8 +1084,8 @@
                ([[[410, 130, False], [410, 910, False]], [[690, 130, False], [690, 910, False]]], 13),
                ([[[90, 130, False], [90, 910, False]], [[370, 130, False], [370, 910, False]]], 14),
                ([[[410, 130, False], [410, 910, False]], [[690, 130, False], [690, 910, False]]], 14)],
-              [([[[90, 70, False], [90, 100, False]], [[370, 70, False], [370, 100, False]]], 1), ([[[410, 70, True], [410, 100, False]], [[690, 70, True], [690, 100, False]]], 1)],
+              [([[[90, 80, False], [90, 110, True]], [[690, 80, False], [690, 110, True]]], 1)],
               [([[[90, 130, False], [90, 910, False]], [[690, 130, False], [690, 910, False]]], 15)]),
  'page': {'dimensions': (765, 990), 'dual': True},
- 'view': {'H': -561, 'Hc': 517.83642578125, 'K': -2475, 'Kc': 509.40948486328125, 'Zoom': 9, 'mode': 'text'}}
+ 'view': {'H': -183, 'Hc': 479.4200439453125, 'K': -2238, 'Kc': 458.27227783203125, 'Zoom': 11, 'mode': 'text'}}
 ############# -->

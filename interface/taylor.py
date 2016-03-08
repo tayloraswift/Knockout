@@ -131,9 +131,6 @@ def PDF():
     for p in range(max_page + 1):
         becky.print_page(cr, p, classes)
         cr.show_page()
-    # clear glyph buffers
-    for tract in meredith.mipsy:            
-        tract.extract_glyphs(refresh=True)
 
 def _place_tags(key):
     un.history.undo_save(3)
@@ -583,13 +580,13 @@ class Document_view(ui.Cell):
             self._print_sorted(cr, classed_pages[p])
         self._mode = m
             
-    def _draw_by_page(self, cr, mx_cx, my_cy, cx, cy, A=1, refresh=False):
+    def _draw_by_page(self, cr, mx_cx, my_cy, cx, cy, A=1):
         PHEIGHT = meredith.page.HEIGHT
         PWIDTH = meredith.page.WIDTH
         
         max_page = 0
         for tract in meredith.mipsy:            
-            for page, sorted_glyphs in tract.extract_glyphs(refresh).items():
+            for page, sorted_glyphs in tract.extract_glyphs().items():
                 max_page = max(max_page, page)
 
                 # Transform goes
@@ -829,7 +826,7 @@ class Document_view(ui.Cell):
         cr.clip()
         
         # text
-        self._draw_by_page(cr, self._H - self._Hc, self._K - self._Kc, self._Hc, self._Kc, self._A, False)
+        self._draw_by_page(cr, self._H - self._Hc, self._K - self._Kc, self._Hc, self._Kc, self._A)
         
         # channels
         if self._mode == 'text':

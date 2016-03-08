@@ -7,6 +7,7 @@ from model.wonder import words
 from style import styles
 from modules import modules, moduletags, inlinecontainers, inlinetags, blocktags
 from state.exceptions import IO_Error
+from IO.xml import count_styles
 
 class Text(list):
     def __init__(self, * args):
@@ -25,7 +26,7 @@ class Text(list):
 
 def _create_paragraph(attrs):
     if 'class' in attrs:
-        ptags = Counter(styles.PTAGS[T.strip()] for T in attrs['class'].split('&'))
+        ptags = Counter({styles.PTAGS[T.strip()]: V for T, V in count_styles(attrs['class'])})
     else:
         ptags = Counter({styles.PTAGS['body']: 1})
     if 'style' in attrs:

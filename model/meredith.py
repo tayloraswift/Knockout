@@ -13,13 +13,15 @@ class Meredith(list):
         for tract in self:
             tract.layout()
 
-    def add_tract(self):
-        self.append( olivia.Chained_text(kevin.deserialize('<p>{new}</p>'), george.Washington([self[-1].channels.generate_channel()])) )
+    def _gen_tract(self, cls):
+        self.append(cls(kevin.deserialize('<p>{new}</p>'), george.Washington([self[-1].channels.generate_channel()])))
         self[-1].layout()
 
+    def add_tract(self):
+        self._gen_tract(olivia.Chained_flowing_text)
+
     def add_repeat_tract(self):
-        self.append( olivia.Repeat_text(kevin.deserialize('<p>{new}</p>'), george.Not_his_markings([self[-1].channels.generate_channel()])) )
-        self[-1].layout()
+        self._gen_tract(olivia.Repeat_flowing_text)
         
     def delete_tract(self, tract):
         t = self.index(tract)

@@ -240,20 +240,17 @@ class Chained_flowing_text(Flowing_text):
     #############
     
     def partial_layout(self, i):
-        self.pack_partial(self.channels.channels, self.text, i)
         self._sorted_pages.clear()
+        self.pack_partial(self.channels.channels, self.text, i)
 
     def layout(self):
-        self.pack(self.channels.channels, self.text)
         self._sorted_pages.clear()
+        self.pack(self.channels.channels, self.text)
 
     def paint_misspellings(self):
         return chain.from_iterable(FTX.paint_underscores() for FTX in self.collect_text())
     
-    def extract_glyphs(self, refresh=False):
-        if refresh:
-            self._sorted_pages.clear()
-
+    def extract_glyphs(self):
         if not self._sorted_pages:
             for page, lines in ((p, list(ps)) for p, ps in groupby((line for line in self.LINES), key=lambda line: line['page'])):
                 if page not in self._sorted_pages:
@@ -269,37 +266,43 @@ class Repeat_flowing_text(Chained_flowing_text):
     def __init__(self, L, channels):
         self.text = L
         self._sorted_pages = {}
-        
+
         self.start = 1
         self.until = 13
-        self.repeats = [Chained_flowing_text(L, channels) for _ in range(self.until - self.start)]
-        
-        self.channel_repeats = [[C.shallow_copy_to_page(k) for C in channels.channels] for k in range(self.start, self.until + 1)]
+                
+        # correct channels
+        for channel in channels.channels:
+            channel.set_page(self.start)
+
+        self.repeats, self.channel_repeats = zip( * ((Chained_flowing_text(L, channels),
+                        [C.shallow_copy_to_page(k) for C in channels.channels]) 
+                        for k in range(self.start, self.until + 1)) )
         # set representatives
         self.LINES = self.repeats[0].LINES
-        self.channels = self.repeats[0].channels
+        self.channels = channels
 
     def layout(self):
-        for R, C in zip(self.repeats, self.channel_repeats):
-            R.pack(C, self.text)
-        self._precompute_search()
         self._sorted_pages.clear()
+        for p, (R, C) in enumerate(zip(reversed(self.repeats), reversed(self.channel_repeats))):
+            R.pack(C, self.text)
+            self.extract_page(self.until - p, R.LINES)
+        self._precompute_search()
 
     def partial_layout(self, i):
-        for R, C in zip(self.repeats, self.channel_repeats):
-            R.pack_partial(C, self.text, i)
-        self._precompute_search()
         self._sorted_pages.clear()
-        
-    def extract_glyphs(self, refresh=False):
-        if refresh:
-            self._sorted_pages = {}
-
+        for p, (R, C) in enumerate(zip(reversed(self.repeats), reversed(self.channel_repeats))):
+            R.pack_partial(C, self.text, i)
+            self.extract_page(self.until - p, R.LINES)
+        self._precompute_search()
+    
+    def extract_page(self, p, lines):
+        self._sorted_pages[p] = {'_annot': [], '_images': [], '_paint': [], '_paint_annot': []}
+        for line in lines:
+            line.deposit(self._sorted_pages[p])
+    
+    def extract_glyphs(self):
         if not self._sorted_pages:
-            for p, lines in enumerate(R.LINES for R in self.repeats):
-                page = p + self.start
-                self._sorted_pages[page] = {'_annot': [], '_images': [], '_paint': [], '_paint_annot': []}
-                for line in lines:
-                    line.deposit(self._sorted_pages[page])
+            self.layout()
+            print('I just redid the entire layout because the program has a bug')
 
         return self._sorted_pages

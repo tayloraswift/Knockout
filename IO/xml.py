@@ -1,5 +1,6 @@
 from itertools import chain
 from html import parser
+from bulletholes.counter import TCounter as Counter
 
 def print_attrs(name, attrs): 
     if attrs:
@@ -9,12 +10,21 @@ def print_attrs(name, attrs):
 
 def print_styles(PP):
     S = {}
-    ptags = '&'.join(chain.from_iterable((P.name for i in range(V)) for P, V in sorted(PP.P.items(), key=lambda k: k[0].name)))
+    ptags = '&'.join(chain.from_iterable((P.name for i in range(V)) if V > 0 else 
+                        ('~' + P.name for i in range(abs(V))) for P, V in sorted(PP.P.items(), key=lambda k: k[0].name)))
     if ptags != 'body':
         S['class'] = ptags
     if PP.EP:
         S['style'] = repr(PP.EP.polaroid()[0])
     return S
+
+def count_styles(S):
+    if S:
+        C = Counter(T for T in S.split('&') if T[0] != '~')
+        C -= Counter(T[1:] for T in S.split('&') if T[0] == '~')
+        return C.items()
+    else:
+        return ()
 
 class _Tagreader(parser.HTMLParser):
     def feed(self, data):

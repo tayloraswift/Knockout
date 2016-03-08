@@ -11,7 +11,7 @@ class TCounter(Counter):
         return True
     
     def __add__(self, other):
-        result = Counter()
+        result = self.__class__()
         for elem, count in self.items():
             result[elem] = count + other[elem]
         for elem, count in other.items():
@@ -19,3 +19,7 @@ class TCounter(Counter):
                 result[elem] = count
         return result
 
+    def __isub__(self, other):
+        for elem, count in other.items():
+            self[elem] -= count
+        return self

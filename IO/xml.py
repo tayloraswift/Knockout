@@ -2,11 +2,12 @@ from itertools import chain
 from html import parser
 from bulletholes.counter import TCounter as Counter
 
-def print_attrs(name, attrs): 
+def print_attrs(name, attrs, imply={}):
     if attrs:
-        return name + ' ' + ' '.join(A + '="' + repr(V)[1:-1] + '"' for A, V in sorted(attrs.items()))
-    else:
-        return name
+        E = ' '.join(A + '="' + V + '"' for A, V in sorted(attrs.items()) if A not in imply or imply[A] != V)
+        if E:
+            return name + ' ' + E
+    return name
 
 def print_styles(PP):
     S = {}

@@ -10,17 +10,7 @@ from elements.elements import Block_element
 _namespace = 'table'
 
 def _print_td(td):
-        A = td[1]
-        if 'rowspan' not in A or A['rowspan'] == 1:
-            if 'colspan' not in A or A['colspan'] == 1:
-                return '<td>'
-            else:
-                return '<td colspan="' + A['colspan'] + '">'
-        else:
-            if 'colspan' not in A or A['colspan'] == 1:
-                return '<td rowspan="' + A['rowspan'] + '">'
-            else:
-                return '<td rowspan="' + A['rowspan'] + '" colspan="' + A['colspan'] + '">'
+    return '<' + print_attrs('td', td[1], {'rowspan': '1', 'colspan': '1'}) + '>'
 
 class _Table_cell(Flowing_text):
     def __init__(self, text, rowspan, colspan):
@@ -116,7 +106,6 @@ class Table(Block_element):
         self._table = {'rulemargin': rulemargin, 'rulewidth': rulewidth, 'hrules': hrules, 'vrules': vrules}
         
     def represent(self, indent):
-        print(self._tree)
         name, attrs = self._tree[0][:2]
         attrs.update(print_styles(self.PP))
         lines = [[indent, '<' + print_attrs(name, attrs) + '>']]

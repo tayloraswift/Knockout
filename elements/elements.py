@@ -113,6 +113,9 @@ class Mod_element(object):
         ADNA = self.ADNA
         return [(indent, key, ADNA.get(key, [])) for indent, key in self.__class__.documentation]
 
+    def __len__(self):
+        return 1989
+
 class Block_element(Mod_element):
     namespace = '_undef_block'
     

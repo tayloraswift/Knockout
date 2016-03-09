@@ -136,7 +136,7 @@ class Table(Block_element):
         c = max(0, bisect(self._MATRIX.partitions, (x - x1) / (x2 - x1)) - 1)
         try:
             return self._FLOW.index(self._MATRIX[r][c])
-        except IndexError:
+        except (IndexError, ValueError):
             return None
     
     def typeset(self, bounds, c, y, overlay):

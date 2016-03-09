@@ -17,12 +17,12 @@ class PieChart(Block_element):
     
     ADNA = {_namespace: [('radius', 89, 'float'), ('center', 0.5, 'float')],
             'slice': [('prop', 1, 'float'), ('color', '#ff3085', 'rgba')]}
-    documentation = [(0, _namespace), (1, 'slice')]
+    documentation = [(0, namespace), (1, 'slice')]
     
     def _load(self, L):
         self._tree = L
         self.PP = L[0][2]
-        self._radius, self._center_x = self._get_attributes(_namespace)
+        self._radius, self._center_x = self._get_attributes(self.namespace)
         self.active = 0
         
         slices, labels = zip( * (( tuple(self._get_attributes('slice', tag[1])), E) for tag, E in L[1] if tag[0] == self.namespace + ':slice'))

@@ -41,7 +41,7 @@ class Matrix(list):
                 if cell is None:
                     C = '|    None    |'
                 else:
-                    value = ''.join(c for c in cell.text if isinstance(c, str))
+                    value = ''.join(c for c in cell.text if len(c) == 1)
                     C = '|' + value + '            |'[len(value):]
                 R += C
             M.append(R)
@@ -85,10 +85,10 @@ class Table(Block_element):
             'thead': {},
             'tleft': {}}
 
-    ADNA = {_namespace: [('distr', '', 'float tuple'), ('celltop', 0, 'float'), ('cellbottom', 0, 'float'), ('hrules', set(), 'int set'), ('vrules', set(), 'int set'), ('rulemargin', 0, 'int'), ('rulewidth', 1, 'float')],
+    ADNA = {namespace: [('distr', '', 'float tuple'), ('celltop', 0, 'float'), ('cellbottom', 0, 'float'), ('hrules', set(), 'int set'), ('vrules', set(), 'int set'), ('rulemargin', 0, 'int'), ('rulewidth', 1, 'float')],
             'td': [('rowspan', 1, 'int'), ('colspan', 1, 'int')]
             }
-    documentation = [(0, _namespace), (1, 'tr'), (2, 'td')]
+    documentation = [(0, namespace), (1, 'tr'), (2, 'td')]
 
     def _load(self, L):
         self._tree = L
@@ -97,9 +97,11 @@ class Table(Block_element):
         GA = self._get_attributes
         self._CELLS = [[_Table_cell(C, * GA('td', td[1])) for td, C in R] for tr, R in L[1]]
         self._MATRIX = _build_matrix(self._CELLS)
+        print(self._MATRIX)
+        print([len(row) for row in self._MATRIX])
         self._FLOW = [FTX for row in self._CELLS for FTX in row]
         
-        distr, self._celltop, self._cellbottom, hrules, vrules, rulemargin, rulewidth = self._get_attributes(_namespace)
+        distr, self._celltop, self._cellbottom, hrules, vrules, rulemargin, rulewidth = self._get_attributes(self.namespace)
         # columns
         cl = len(self._MATRIX[0])
         distr = [0] + [d if d else 1 for d in distr]
@@ -114,6 +116,7 @@ class Table(Block_element):
         self._table = {'rulemargin': rulemargin, 'rulewidth': rulewidth, 'hrules': hrules, 'vrules': vrules}
         
     def represent(self, indent):
+        print(self._tree)
         name, attrs = self._tree[0][:2]
         attrs.update(print_styles(self.PP))
         lines = [[indent, '<' + print_attrs(name, attrs) + '>']]

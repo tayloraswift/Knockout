@@ -76,7 +76,11 @@ class Flowing_text(object):
     
     def _precompute_search(self):
         self._line_startindices = [line['i'] for line in self.LINES]
-        self._line_y, self._line_l = zip( * ((LINE['y'], LINE['l']) for LINE in self.LINES if LINE['GLYPHS']) )
+        if self.LINES:
+            self._line_y, self._line_l = zip( * ((LINE['y'], LINE['l']) for LINE in self.LINES if LINE['GLYPHS']) )
+        else:
+            self._line_y = []
+            self._line_l = []
 
     def _target_row(self, y, * args):
         if y >= self._line_y[-1]:

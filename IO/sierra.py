@@ -4,13 +4,14 @@ from ast import literal_eval
 from style import fonts, styles
 from state import constants, noticeboard
 from state.contexts import Text
+from state.exceptions import Channel_Error
 from model import meredith, page
 from edit import cursor, caramel
 from IO import kevin, un, xml
 from typing import typing
 from interface import karlie, taylor, poptarts
-from modules import modulestyles, INLINE, BLOCK
-from elements.elements import Mod_element
+from modules import modulestyles, modules
+from elements.elements import Node
 
 def save():
     HEADER = '<head><meta charset="UTF-8"></head>\n<title>' + constants.filename + '</title>\n\n'
@@ -67,12 +68,12 @@ def load(name):
     if len(text) == len(channels):
         KT = zip(text, channels)
     else:
-        raise FileNotFoundError
+        raise Channel_Error
 
     # unpack styles
     styles.daydream()
     styles.faith(DATA)
-    Mod_element.MSL = modulestyles.MS_Library(INLINE, BLOCK)
+    Node.MSL = modulestyles.MS_Library(modules)
     
     # set up page, tract model, page grid objects
     meredith.page = page.Page(DATA['page'])

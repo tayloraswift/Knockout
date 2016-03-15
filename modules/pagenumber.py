@@ -1,20 +1,15 @@
 from model.cat import cast_mono_line, calculate_vmetrics
-from elements.elements import Inline_SE_element
+from elements.elements import Inline_element
 from model.olivia import Inline
 
-_namespace = 'pn'
-
-class Page_number(Inline_SE_element):
-    namespace = _namespace
-    tags = {}
+class Page_number(Inline_element):
+    nodename = 'pn'
     DNA = {'pn': {}}
+    ADNA = [('offset', '0', 'int')]
+    documentation = [(0, nodename)]
     
-    ADNA = {_namespace: [('offset', '0', 'int')]}
-    documentation = [(0, _namespace)]
-    
-    def _load(self, A):
-        self._tree = A
-        self._offset = self._get_attributes(_namespace)
+    def _load(self):
+        self._offset = self.get_attributes()
     
     def _draw_annot(self, cr, O):
         cr.move_to(0, 0)
@@ -26,7 +21,7 @@ class Page_number(Inline_SE_element):
         cr.fill()
     
     def cast_inline(self, LINE, x, y, PP, F, FSTYLE):
-        F_pn, = self._modstyles(F, 'pn')
+        F_pn, = self.styles(F, 'pn')
         C = cast_mono_line(LINE, list(str(LINE['page'])), 13, PP, F_pn)
         C['x'] = x
         C['y'] = y + FSTYLE['shift']
@@ -49,3 +44,6 @@ class _MInline(Inline):
     def deposit_glyphs(self, repository, x, y):
         repository['_paint_annot'].append((self._draw, self._x + x, self._y + y))
         self._LINES.deposit(repository, x, y)
+
+members = [Page_number]
+inline = True

@@ -1,24 +1,25 @@
 from model.cat import cast_mono_line, calculate_vmetrics
-from elements.elements import Inline_element
+from elements.elements import Inline_element, Node
 from model.olivia import Inline
 
-_namespace = 'mod:fraction'
+_namespace = 'mod:frac'
 
+class Numerator(Node):
+    nodename = _namespace + ':n'
+    textfacing = True
+
+class Denominator(Node):
+    nodename = _namespace + ':d'
+    textfacing = True
+    
 class Fraction(Inline_element):
-    namespace = _namespace
-    tags = {_namespace + ':' + T for T in ('numerator', 'denominator')}
-    DNA = {'numerator': {},
-            'denominator': {}}
+    nodename = _namespace
+    DNA = {'numerator': {}, 'denominator': {}}
+    documentation = [(0, nodename), (1, 'numerator'), (1, 'denominator')]
     
-    documentation = [(0, _namespace), (1, 'numerator'), (1, 'denominator')]
-    
-    def _load(self, L):
-        self._tree = L
-        
-        numerator = next(E for tag, E in L[1] if tag[0] == self.namespace + ':numerator')
-        denominator = next(E for tag, E in L[1] if tag[0] == self.namespace + ':denominator')
-        
-        self._INLINE = [numerator, denominator]
+    def _load(self):
+        self._numerator = next(e for e in self.content if type(e) is Numerator)
+        self._denominator = next(e for e in self.content if type(e) is Denominator)
 
     def _draw_vinculum(self, cr):
         cr.set_source_rgba( * self._color)
@@ -27,13 +28,13 @@ class Fraction(Inline_element):
         
     def cast_inline(self, LINE, x, y, PP, F, FSTYLE):
         self._color = FSTYLE['color']
-        F_numerator, F_denominator = self._modstyles(F, 'numerator', 'denominator')
+        F_numerator, F_denominator, = self.styles(F, 'numerator', 'denominator')
         
         ascent, descent = FSTYLE.vmetrics()
         vy = FSTYLE['fontsize'] * 0.25
         
-        numerator = cast_mono_line(LINE, self._INLINE[0], 13, PP, F_numerator)
-        denominator = cast_mono_line(LINE, self._INLINE[1], 13, PP, F_denominator)
+        numerator = cast_mono_line(LINE, self._numerator.content, 13, PP, F_numerator)
+        denominator = cast_mono_line(LINE, self._denominator.content, 13, PP, F_denominator)
         
         nascent, ndescent = calculate_vmetrics(numerator)
         nwidth = numerator['advance']
@@ -67,3 +68,6 @@ class _MInline(Inline):
         for line in self._LINES:
             line.deposit(repository, x, y)
         repository['_paint'].append((self._draw_vinculum, x + self._x, y + self._vy))
+
+members = [Fraction, Numerator, Denominator]
+inline = True

@@ -57,10 +57,12 @@ class CloseFontpost(_Fontpost):
     def __len__(self):
         return 4
 
-class Mod_element(object):
-    namespace = '_undef'
-    tags = {}
+class Node(object):
+    namespace = '_node'
+    is_root = False
+    textfacing = False
 
+    DNA = {}
     ADNA = []
     documentation = []
     
@@ -74,76 +76,67 @@ class Mod_element(object):
                 '1D': interpret_haylor,
                 '2D': interpret_tsquared,
                 'fx': function_x}
-    
-    def __init__(self, L, deserialize, ser):
-        self._DESR = deserialize
-        self._SER = ser
-        self._load(L)
-    
-    def transfer(self, B):
-        try:
-            E = self._DESR(B, fragment = True)
-        except (IO_Error, IndexError):
-            return False
-        
-        # locate rebuilt object
-        try:
-            O = next(e for e in E if type(e) is self.__class__)._tree #yes, we are building an entirely new object and taking its image
-        except StopIteration:
-            return False
-        self._load(O)
-        return True
 
-    def _modstyles(self, X, * tags, cls=None):
-        if cls is None:
-            cls = self.__class__
-        modstyles = self.MSL[cls]
-        if X is None:
-            return (modstyles[tag].copy() for tag in tags)
-        else:
-            return (X + modstyles[tag] for tag in tags)
+    def __init__(self, name, attrs, content, PP=None):
+        self.name = name
+        self.attrs = attrs
+        self.content = content
+        self.PP = PP
     
-    def _get_attributes(self, tag, tree=None):
-        if tree is None:
-            tree = self._tree[0][1]
+    def polaroid(self):
+        return self.name, self.attrs, self.content, self.PP
+
+    def get_attributes(self):
+        attrs = self.attrs
         inload = self._inload
-        return (inload[TYPE](tree[k]) if k in tree else inload[TYPE](v) for k, v, TYPE in self.ADNA[tag])
+        return (inload[TYPE](attrs[k]) if k in attrs else inload[TYPE](v) for k, v, TYPE in self.ADNA)
     
     def get_documentation(self):
         ADNA = self.ADNA
         return [(indent, key, ADNA.get(key, [])) for indent, key in self.__class__.documentation]
+
+    def styles(self, X, * tags):
+        modstyles = Node.MSL[self.__class__]
+        if X is None:
+            return (modstyles[tag].copy() for tag in tags)
+        else:
+            return (X + modstyles[tag] for tag in tags)
+
+    def find_nodes(self, * classes):
+        for cls in classes:
+            try:
+                yield next(e for e in self.content if isinstance(e, cls))
+            except StopIteration:
+                yield None
+
+    def filter_nodes(self, cls, inherit=False):
+        if inherit:
+            return (e for e in self.content if isinstance(e, cls))
+        else:
+            return (e for e in self.content if type(e) is cls)
+        
+class Mod_element(Node):
+    namespace = '_undef'
+    is_root = True
+    
+    def __init__(self, * args, ** kwargs):
+        Node.__init__(self, * args, ** kwargs)
+        self._load()
+    
+    def transfer(self, E):
+        # locate rebuilt object
+        try:
+            O = next(e for e in E if type(e) is self.__class__) #yes, we are building an entirely new object and taking its image
+        except StopIteration:
+            return False
+        self.__init__( * O.polaroid() )
+        return True
 
     def __len__(self):
         return 1989
 
 class Block_element(Mod_element):
     namespace = '_undef_block'
-    
-    def represent(self, indent):
-        name, attrs = self._tree[0][:2]
-        attrs.update(print_styles(self.PP))
-        lines = [[indent, '<' + print_attrs(name, attrs) + '>']]
-        for tag, E in self._tree[1]:
-            lines.append([indent + 1, '<' + print_attrs( * tag ) + '>'])
-            lines += self._SER(E, indent + 2)
-            lines.append([indent + 1, '</' + tag[0] + '>'])
-        lines.append([indent, '</' + self.namespace + '>'])
-        return lines
         
 class Inline_element(Mod_element):
     namespace = '_undef_inline'
-
-    def represent(self, indent):
-        lines = [[indent, '<' + print_attrs( * self._tree[0] ) + '>']]
-        for tag, E in self._tree[1]:
-            content = self._SER(E, indent + 2)
-            content[0] = [indent + 1, '<' + print_attrs( * tag ) + '>' + content[0][1]]
-            content[-1][1] += '</' + tag[0] + '>'
-            
-            lines += content
-        lines.append([indent, '</' + self.namespace + '>'])
-        return lines
-
-class Inline_SE_element(Inline_element):
-    def represent(self, indent):
-        return [[indent, '<' + print_attrs( * self._tree[0] ) + '/>']]

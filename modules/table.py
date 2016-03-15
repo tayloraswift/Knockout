@@ -4,23 +4,7 @@ from itertools import chain, accumulate
 from model.olivia import Flowing_text, Block
 from model.george import Subcell
 from interface.base import accent
-from IO.xml import print_attrs, print_styles
-from elements.elements import Block_element
-
-_namespace = 'table'
-
-def _print_td(td):
-    return '<' + print_attrs('td', td[1], {'rowspan': '1', 'colspan': '1'}) + '>'
-
-class _Table_cell(Flowing_text):
-    def __init__(self, text, rowspan, colspan):
-        Flowing_text.__init__(self, text)
-        self.rs = rowspan
-        self.cs = colspan
-    
-    def nail(self, i, j):
-        self.col = j
-        self.row = i
+from elements.elements import Block_element, Node
 
 class Matrix(list):
     def __str__(self):
@@ -68,30 +52,35 @@ def _build_matrix(data):
                         MATRIX[i + rs][s + cs] = cell
     return MATRIX
 
+class _Table_cell(Flowing_text):
+    def __init__(self, td):
+        Flowing_text.__init__(self, td.content)
+        self.rs, self.cs = td.get_attributes()
+    
+    def nail(self, i, j):
+        self.col = j
+        self.row = i
+
+class Table_td(Node):
+    nodename = 'td'
+    ADNA = [('rowspan', 1, 'int'), ('colspan', 1, 'int')]
+
+class Table_tr(Node):
+    nodename = 'tr'
+
 class Table(Block_element):
-    namespace = _namespace
-    tags = {'tr', 'td'}
-    DNA = {'table': {},
-            'thead': {},
-            'tleft': {}}
+    nodename = 'table'
+    DNA = {'table': {}, 'thead': {}, 'tleft': {}}
 
-    ADNA = {namespace: [('distr', '', 'float tuple'), ('celltop', 0, 'float'), ('cellbottom', 0, 'float'), ('hrules', set(), 'int set'), ('vrules', set(), 'int set'), ('rulemargin', 0, 'int'), ('rulewidth', 1, 'float')],
-            'td': [('rowspan', 1, 'int'), ('colspan', 1, 'int')]
-            }
-    documentation = [(0, namespace), (1, 'tr'), (2, 'td')]
+    ADNA = [('distr', '', 'float tuple'), ('celltop', 0, 'float'), ('cellbottom', 0, 'float'), ('hrules', set(), 'int set'), ('vrules', set(), 'int set'), ('rulemargin', 0, 'int'), ('rulewidth', 1, 'float')]
+    documentation = [(0, nodename), (1, 'tr'), (2, 'td')]
 
-    def _load(self, L):
-        self._tree = L
-        self.PP = L[0][2]
-        
-        GA = self._get_attributes
-        self._CELLS = [[_Table_cell(C, * GA('td', td[1])) for td, C in R] for tr, R in L[1]]
+    def _load(self):
+        self._CELLS = [[_Table_cell(td) for td in tr.content] for tr in self.content]
         self._MATRIX = _build_matrix(self._CELLS)
-        print(self._MATRIX)
-        print([len(row) for row in self._MATRIX])
         self._FLOW = [FTX for row in self._CELLS for FTX in row]
         
-        distr, self._celltop, self._cellbottom, hrules, vrules, rulemargin, rulewidth = self._get_attributes(self.namespace)
+        distr, self._celltop, self._cellbottom, hrules, vrules, rulemargin, rulewidth = self.get_attributes()
         # columns
         cl = len(self._MATRIX[0])
         distr = [0] + [d if d else 1 for d in distr]
@@ -104,20 +93,6 @@ class Table(Block_element):
         vrules = [i for i in vrules if 0 <= i <= cl]
                 
         self._table = {'rulemargin': rulemargin, 'rulewidth': rulewidth, 'hrules': hrules, 'vrules': vrules}
-        
-    def represent(self, indent):
-        name, attrs = self._tree[0][:2]
-        attrs.update(print_styles(self.PP))
-        lines = [[indent, '<' + print_attrs(name, attrs) + '>']]
-        for tr, R in self._tree[1]:
-            lines.append([indent + 1, '<tr>'])
-            for td, C in R:
-                lines.append([indent + 2, _print_td(td)])
-                lines.extend(self._SER(C, indent + 3))
-                lines.append([indent + 2, '</td>'])
-            lines.append([indent + 1, '</tr>'])
-        lines.append([indent, '</' + self.namespace + '>'])
-        return lines
 
     def regions(self, x, y, bounds, yy):
         x1, x2 = bounds(y)
@@ -129,7 +104,7 @@ class Table(Block_element):
             return None
     
     def typeset(self, bounds, c, y, overlay):
-        P_table, P_head, P_left = self._modstyles(overlay, 'table', 'thead', 'tleft')
+        P_table, P_head, P_left = self.styles(overlay, 'table', 'thead', 'tleft')
         head = P_table + P_head
         left = P_table + P_left
         
@@ -164,6 +139,9 @@ class Table(Block_element):
             grid.append([(x1 + width*factor, y) for factor in part])
         
         return _MBlock(self._FLOW, grid, table, self.regions, self.PP)
+
+members = [Table, Table_tr, Table_td]
+inline = False
 
 class _MBlock(Block):
     def __init__(self, FLOW, grid, table, regions, PP):

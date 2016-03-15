@@ -361,15 +361,11 @@ def cast_liquid_line(LINE, letters, startindex, width, leading, PP, F, hyphenate
                 continue
         
         else:
-            try:
-                inline = letter.cast_inline(LINE, x, y, PP, F, FSTYLE)
-                glyphwidth = inline.width                               #6. object
-                glyphappend((-89, x, y, FSTYLE, fstat, x + glyphwidth, inline))
-                GI = -89
-            except AttributeError:
-                glyphwidth = leading
-                glyphappend((-23, x, y, FSTYLE, fstat, x + leading))
-                GI = -23
+            inline = letter.cast_inline(LINE, x, y, PP, F, FSTYLE)
+            glyphwidth = inline.width                               #6. object
+            glyphappend((-89, x, y, FSTYLE, fstat, x + glyphwidth, inline))
+            GI = -89
+
         
         x += glyphwidth
 

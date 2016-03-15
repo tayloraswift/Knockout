@@ -1,39 +1,45 @@
 from model.cat import cast_mono_line, calculate_vmetrics
-from elements.elements import Inline_element
+from elements.elements import Inline_element, Node
 from model.olivia import Inline
 
 _namespace = 'mod:bounded'
 
+class Symbol(Node):
+    nodename = _namespace + ':sym'
+    textfacing = True
+
+class Bottom(Node):
+    nodename = _namespace + ':a'
+    textfacing = True
+
+class Top(Node):
+    nodename = _namespace + ':b'
+    textfacing = True
+    
 class Bounded(Inline_element):
-    namespace = _namespace
-    tags = {_namespace + ':' + T for T in ('symbol', 'bottom', 'top')}
-    DNA = {'symbol': {},
-            'bottom': {},
-            'top': {}}
+    nodename = _namespace
+    DNA = {'symbol': {}, 'bottom': {}, 'top': {}}
+    ADNA = [('align', 1, 'int')]
+    documentation = [(0, nodename), (1, 'symbol'), (1, 'bottom'), (1, 'top')]
     
-    ADNA = {_namespace: [('align', 1, 'int')]}
-    documentation = [(0, _namespace), (1, 'symbol'), (1, 'bottom'), (1, 'top')]
-    
-    def _load(self, L):
-        self._tree = L
-        symbol = next(E for tag, E in L[1] if tag[0] == self.namespace + ':symbol')
-        a = next(E for tag, E in L[1] if tag[0] == self.namespace + ':bottom')
-        b = next(E for tag, E in L[1] if tag[0] == self.namespace + ':top')
+    def _load(self):
+        self._symbol, self._a, self._b = self.find_nodes(Symbol, Bottom, Top)
         
-        align, = self._get_attributes(_namespace)
+        align, = self.get_attributes()
         if align:
             self.cast_inline = self._cast_inline_inline
         else:
             self.cast_inline = self._cast_inline_display
-        
-        self._INLINE = [symbol, a, b]
 
-    def _cast_inline_inline(self, LINE, x, y, PP, F, FSTYLE):
-        F_symbol, F_bottom, F_top = self._modstyles(F, 'symbol', 'bottom', 'top')
+    def _mono(self, LINE, PP, F):
+        F_symbol, F_small = self.styles(F, 'symbol', 'bounds')
+        symbol = cast_mono_line(LINE, self._symbol.content, 13, PP, F_symbol)
+        a = cast_mono_line(LINE, self._a.content, 13, PP, F_small)
+        b = cast_mono_line(LINE, self._b.content, 13, PP, F_small)
+        return symbol, a, b
         
-        symbol = cast_mono_line(LINE, self._INLINE[0], 13, PP, F_symbol)
-        a = cast_mono_line(LINE, self._INLINE[1], 13, PP, F_bottom)
-        b = cast_mono_line(LINE, self._INLINE[2], 13, PP, F_top)
+    def _cast_inline_inline(self, LINE, x, y, PP, F, FSTYLE):
+        symbol, a, b = self._mono(LINE, PP, F)
         
         symbol['x'] = x
         symbol['y'] = y
@@ -58,11 +64,7 @@ class Bounded(Inline_element):
         return Inline([symbol, a, b], width, ascent, descent)
 
     def _cast_inline_display(self, LINE, x, y, PP, F, FSTYLE):
-        F_symbol, F_bottom, F_top = self._modstyles(F, 'symbol', 'bottom', 'top')
-
-        symbol = cast_mono_line(LINE, self._INLINE[0], 13, PP, F_symbol)
-        a = cast_mono_line(LINE, self._INLINE[1], 13, PP, F_bottom)
-        b = cast_mono_line(LINE, self._INLINE[2], 13, PP, F_top)
+        symbol, a, b = self._mono(LINE, PP, F)
         
         width = max(a['advance'], b['advance'], symbol['advance'])
 
@@ -87,3 +89,6 @@ class Bounded(Inline_element):
         
     def __len__(self):
         return 9
+
+members = [Bounded, Symbol, Bottom, Top]
+inline = True

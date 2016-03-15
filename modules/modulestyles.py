@@ -3,8 +3,7 @@ from style import styles
 
 S= {'mi': {'mi': {('f', 'emphasis'): 1}},
     'mod:bounded': {'symbol': {('f', 'big'): 1},
-                'bottom': {('f', 'small'): 1},
-                'top': {('f', 'small'): 1}},
+                'bounds': {('f', 'small'): 1}},
     'mod:root': {'index': {('f', 'small'): 1}},
 #    'mod:fraction': {'numerator': {('f', 'small'): 1}, 'denominator': {('f', 'small'): 1}},
     'table': {'table': {('p', 'tablecell'): 1},
@@ -12,23 +11,22 @@ S= {'mi': {'mi': {('f', 'emphasis'): 1}},
                 'tleft': {('p', 'tableleft'): 1}},
     'mod:pie': {'slice': {('p', 'key'): 1}},
     
-    '_graph': {'num': {('f', 'small'): 1},
+    'mod:plot': {'num': {('f', 'small'): 1},
                 'dataset': {('p', 'key'): 1},
                 'y': {('p', 'tablecell'): 1, ('p', 'tablehead'): 1},
                 'x': {('p', 'tablecell'): 1, ('p', 'tablehead'): 1}}
         }
 
 class MS_Library(dict):
-    def __init__(self, inline, block):
+    def __init__(self, modslist):
         # save modules list
-        self._modslist = inline + block
+        self._modslist = modslist
         self.turnover()
     
     def turnover(self):
         D = {}
         TAGS = {'f': styles.FTAGS, 'p': styles.PTAGS}
-        for module in self._modslist:
-            ns = module.namespace
+        for ns, module in self._modslist.items():
             E = module.DNA.copy()
             if ns in S:
                 E.update(S[ns])

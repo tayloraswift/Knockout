@@ -1,23 +1,24 @@
 from model.cat import cast_mono_line, calculate_vmetrics
-from elements.elements import Inline_element
+from elements.elements import Inline_element, Node
 from model.olivia import Inline
 
 _namespace = 'mod:root'
 
+class Index(Node):
+    nodename = _namespace + ':i'
+    textfacing = True
+
+class Radicand(Node):
+    nodename = _namespace + ':rad'
+    textfacing = True
+
 class Root(Inline_element):
-    namespace = _namespace
-    tags = {_namespace + ':' + T for T in ('index', 'radicand')}
-    DNA = {'index': {},
-            'radicand': {}}
+    nodename = _namespace
+    DNA = {'index': {}, 'radicand': {}}
+    documentation = [(0, nodename), (1, 'index'), (1, 'radicand')]
     
-    documentation = [(0, _namespace), (1, 'index'), (1, 'radicand')]
-    
-    def _load(self, L):
-        self._tree = L
-        index = next(E for tag, E in L[1] if tag[0] == self.namespace + ':index')
-        radicand = next(E for tag, E in L[1] if tag[0] == self.namespace + ':radicand')
-        
-        self._INLINE = [index, radicand]
+    def _load(self):
+        self._index, self._radicand = self.find_nodes(Index, Radicand)
     
     def _draw_radix(self, cr):
         cr.set_source_rgba( * self._color )
@@ -31,10 +32,10 @@ class Root(Inline_element):
         self._color = FSTYLE['color']
         y += FSTYLE['shift']
         
-        F_index, F_rad = self._modstyles(F, 'index', 'radicand')
+        F_index, F_rad = self.styles(F, 'index', 'radicand')
 
-        index = cast_mono_line(LINE, self._INLINE[0], 13, PP, F_index)
-        rad = cast_mono_line(LINE, self._INLINE[1], 13, PP, F_rad)
+        index = cast_mono_line(LINE, self._index.content, 13, PP, F_index)
+        rad = cast_mono_line(LINE, self._radicand.content, 13, PP, F_rad)
         
         rad_asc, rad_desc = calculate_vmetrics(rad)
 
@@ -91,3 +92,6 @@ class _MInline(Inline):
         for line in self._LINES:
             line.deposit(repository, x, y)
         repository['_paint'].append((self._draw, x, y))
+
+members = [Root, Index, Radicand]
+inline = True

@@ -321,7 +321,12 @@ class Rose_garden(Base_kookie):
 
     def _commit(self, B):
         if isinstance(self._element, Mod_element):
-            success = self._element.transfer(B)
+            try:
+                E = deserialize(B, fragment=True)
+                success = self._element.transfer(E)
+            except (IO_Error, IndexError):
+                success = False
+            
             if not success:
                 self._invalid = True
                 return

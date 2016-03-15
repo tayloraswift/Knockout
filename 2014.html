@@ -17,7 +17,7 @@
 <section>
 <p class="firstchild&h2" style="{'margin_left': 40}">Table of contents</p>
 
-<table cellbottom="5" celltop="5" distr="3, 1" hrules="0" style="{'margin_top': 10, 'margin_right': 40, 'margin_left': 40}">
+<table cellbottom="5" celltop="5" distr="3, 1" hrules="0" style="{'margin_left': 40, 'margin_right': 40, 'margin_top': 10}">
     <tr>
         <td>
             <p class="body&h2">Introduction</p>
@@ -139,14 +139,14 @@
 <p class="body&firstchild">To find the total calories burned throughout the day, and thus the number of calories that should be consumed per day, the function <mi char="R"/>(<mi char="t"/>) shown in <f class="reference">Figure 1</f class="reference"> is integrated (the integral of rate is equivalent to quantity) over time (in hours). The integral is then multiplied by the weight of the person (in pounds) in order to determine the total number of calories burned (the rate constants have units of calories / (hour · pound), so the result of the integral has units of calories / pound):</p>
 
 <p class="body&math">Total calories burned = (<mod:bounded align="0">
-    <mod:bounded:symbol>∫</mod:bounded:symbol>
-    <mod:bounded:bottom>0</mod:bounded:bottom>
-    <mod:bounded:top>24</mod:bounded:top>
+    <mod:bounded:sym>∫</mod:bounded:sym>
+    <mod:bounded:a>0</mod:bounded:a>
+    <mod:bounded:b>24</mod:bounded:b>
 </mod:bounded> <mi char="R"/>(<mi char="t"/>) d<mi char="t"/>) · weight .</p>
 
 <p class="body&firstchild">Since our rate equation <mi char="R"/>(<mi char="t"/>) is piecewise with constant values, the integral is equivalent to the area of the rectangles that can be drawn under the curve:</p>
 
-<p class="body&math" style="{'align_to': '+', 'align': 0.45, 'margin_left': -10}">Total calories burned =	 (<mi char="λ" correct="0"/><sub><mi char="S"/></sub>(<mi char="Q"/><sub>1</sub>) + <mi char="λ" correct="0"/><sub><mi char="LA"/></sub>(<mi char="Q"/><sub>3<mi char="i"/></sub> − <mi char="Q"/><sub>1</sub>) <br/>+ <mi char="λ" correct="0"/><sub><mi char="A"/></sub>(<mi char="Q"/><sub>3<mi char="f"/></sub> − <mi char="Q"/><sub>3<mi char="i"/></sub>) + <mi char="λ" correct="0"/><sub><mi char="LA"/></sub>(<mi char="Q"/><sub>5<mi char="i"/></sub> − <mi char="Q"/><sub>3<mi char="f"/></sub>) <br/>+ <mi char="λ" correct="0"/><sub><mi char="A"/></sub> + <mi char="λ" correct="0"/><sub><mi char="LA"/></sub>(<mi char="Q"/><sub>7</sub> − <mi char="Q"/><sub>5<mi char="f"/></sub>) <br/>+ <mi char="λ" correct="0"/><sub><mi char="S"/></sub>(24 − <mi char="Q"/><sub>7</sub>)) · weight ,</p>
+<p class="body&math" style="{'margin_left': -10, 'align_to': '+', 'align': 0.45}">Total calories burned =	 (<mi char="λ" correct="0"/><sub><mi char="S"/></sub>(<mi char="Q"/><sub>1</sub>) + <mi char="λ" correct="0"/><sub><mi char="LA"/></sub>(<mi char="Q"/><sub>3<mi char="i"/></sub> − <mi char="Q"/><sub>1</sub>) <br/>+ <mi char="λ" correct="0"/><sub><mi char="A"/></sub>(<mi char="Q"/><sub>3<mi char="f"/></sub> − <mi char="Q"/><sub>3<mi char="i"/></sub>) + <mi char="λ" correct="0"/><sub><mi char="LA"/></sub>(<mi char="Q"/><sub>5<mi char="i"/></sub> − <mi char="Q"/><sub>3<mi char="f"/></sub>) <br/>+ <mi char="λ" correct="0"/><sub><mi char="A"/></sub> + <mi char="λ" correct="0"/><sub><mi char="LA"/></sub>(<mi char="Q"/><sub>7</sub> − <mi char="Q"/><sub>5<mi char="f"/></sub>) <br/>+ <mi char="λ" correct="0"/><sub><mi char="S"/></sub>(24 − <mi char="Q"/><sub>7</sub>)) · weight ,</p>
 
 <p class="body&firstchild">where <mi char="λ" correct="0"/><sub><mi char="S"/></sub> represents the rate of calorie burn while sleeping, <mi char="λ" correct="0"/><sub><mi char="LA"/></sub> represents the rate while in a low activity state (sitting in class, playing video games, working on the computer, etc.), and <mi char="λ" correct="0"/><sub><mi char="A"/></sub> represents the rate of calorie burn while doing physical activity (running, playing a sport, etc.). Of course, different physical activities can have different rates of calorie burn, but for simplicity we will only consider an average rate for a variety of physical activities. To determine the rate at which calories are burned by an individual during various activities, data from the Harvard Medical School was used. On average, an individual burns 0.2 cal/hr/lb while sleeping, 0.83 cal/hr/lb during a low activity state, and 3.36 cal/hr/lb during a high activity state.</p>
 
@@ -287,20 +287,22 @@
 
 <p class="figure&h3">Calories needed at lunch</p>
 
-<mod:hist class="figure" height="160" round="3">
-    <mod:hist:x every="4" major="2" minor="1" start="-1" step="100">
+<mod:plot class="figure" height="160" round="3">
+    <mod:plot:x major="200" minor="100" number="400" start="-100" stop="3000">
         <p>Calories</p>
-    </mod:hist:x>
-    <mod:hist:y every="2" major="2" minor="1" start="-0.01" step="0.01" stop="0.12">
+    </mod:plot:x>
+    <mod:plot:y major="0.02" minor="0.01" number="0.02" start="-0.01" stop="0.12">
         <p>Frequency</p>
-    </mod:hist:y>
-    <mod:hist:dataset color="#666666" data="0.005 0.018 0.02 0.021 0.06 0.11 0.115 0.075 0.05 0.028 0.017 0.009 0.006 0.005 0.004 0.003 0.002 0.001">
-        <p>Breakfast eaters</p>
-    </mod:hist:dataset>
-    <mod:hist:dataset color="#cccccc" data="0 0 0 0 0 0.001 0.001 0.0015 0.005 0.01 0.015 0.02 0.025 0.03 0.05 0.04 0.032 0.025 0.02 0.01 0.004 0.002 0.001 0.0005">
-        <p>Breakfast skippers</p>
-    </mod:hist:dataset>
-</mod:hist>
+    </mod:plot:y>
+    <mod:hist start="0" step="100">
+        <mod:hist:bars color="#666666" data="0.005 0.018 0.02 0.021 0.06 0.11 0.115 0.075 0.05 0.028 0.017 0.009 0.006 0.005 0.004 0.003 0.002 0.001" step="20">
+            <p>Breakfast eaters</p>
+        </mod:hist:bars>
+        <mod:hist:bars color="#cccccc" data="0 0 0 0 0 0.001 0.001 0.0015 0.005 0.01 0.015 0.02 0.025 0.03 0.05 0.04 0.032 0.025 0.02 0.01 0.004 0.002 0.001 0.0005">
+            <p>Breakfast skippers</p>
+        </mod:hist:bars>
+    </mod:hist>
+</mod:plot>
 
 <p class="caption&h3">Figure 3</p>
 
@@ -310,40 +312,40 @@
 
 <p class="body&firstchild">Given the large sample size of this survey and its geographic scope, we can safely extrapolate our results from this dataset to the general student population. After implementing our model, we found that the variable of whether or not a student has had breakfast in the morning was one of the biggest determinants of a student’s lunchtime calorie need. For the overall student population, only 37.3% of all students will be satisfied by the current standard lunch. If we split the population into those who consumed breakfast and those who didn’t, we find that breakfast eaters have a much higher satisfaction rate from their school lunch (68%) than those who didn’t (0.07%). This is due to how in our model, if a student skipped their morning meal, their lunch will have to satisfy the extra calorie deficit from when they woke up in the morning. Since only about a third of students normally eat breakfast, not considering these effects is a serious shortfall of current meal plans. If instead we have schools serve meals containing up to 1049 calories (the mean lunchtime need of all students, including those who do not eat breakfast), we will be able to satisfy 49% of all students using the 15% margin guideline.</p>
 
-<mod:scatter class="figure" height="160">
-    <mod:scatter:x every="4" major="2" minor="1" start="-100" step="5" stop="100">
+<mod:plot class="figure" height="160">
+    <mod:plot:x major="10" minor="5" number="20" start="-100" stop="100">
         <p>% English speakers</p>
-    </mod:scatter:x>
-    <mod:scatter:y every="2" major="2" minor="1" start="0" step="1" stop="13">
+    </mod:plot:x>
+    <mod:plot:y major="2" minor="1" number="2" start="0" stop="13">
         <p>Chart position</p>
-    </mod:scatter:y>
-    <mod:scatter:dataset color="#666666" data="13,2 6,5 9,6 6,8.5 2,10 20,3 72,1 40,3 89,1">
+    </mod:plot:y>
+    <mod:scatter color="#666666" data="13,2 6,5 9,6 6,8.5 2,10 20,3 72,1 40,3 89,1">
         <p><em>Shake It Off</em></p>
-    </mod:scatter:dataset>
-    <mod:scatter:dataset color="#ff3085" data="4,11 5,10 8,8 60,4">
+    </mod:scatter>
+    <mod:scatter color="#ff3085" data="4,11 5,10 8,8 60,4">
         <p><em>New Romantics</em></p>
-    </mod:scatter:dataset>
-</mod:scatter>
+    </mod:scatter>
+</mod:plot>
 
-<mod:f class="figure" height="160">
-    <mod:f:x every="40" major="20" minor="10" start="-20" step="0.1" stop="20">
+<mod:plot class="figure" height="160">
+    <mod:plot:x every="4" major="2" minor="1" start="-20" stop="20">
         <p>Hour</p>
-    </mod:f:x>
-    <mod:f:y every="2" major="2" minor="1" start="-10" step="1" stop="10">
+    </mod:plot:x>
+    <mod:plot:y every="2" major="2" minor="1" start="-10" stop="10">
         <p>TIDE HEIGHT</p>
         
         <p class="body&units">feet</p>
-    </mod:f:y>
-    <mod:f:dataset color="#ff3085" f="sin(x) + x/3">
+    </mod:plot:y>
+    <mod:fx color="#ff3085" f="sin(x) + x/3" step="0.1">
         <p><mi char="f"/>(<mi char="x"/>) = sin <mi char="x"/> + <mi char="x"/>/3 </p>
-    </mod:f:dataset>
-    <mod:f:dataset color="#666666" f="1/x">
-        <p><mi char="f"/>(<mi char="x"/>) = <mod:fraction>
-            <mod:fraction:numerator>1</mod:fraction:numerator>
-            <mod:fraction:denominator><mi char="x"/></mod:fraction:denominator>
-        </mod:fraction> </p>
-    </mod:f:dataset>
-</mod:f>
+    </mod:fx>
+    <mod:fx color="#666666" f="1/x" step="0.1">
+        <p><mi char="f"/>(<mi char="x"/>) = <mod:frac>
+            <mod:frac:n>1</mod:frac:n>
+            <mod:frac:d><mi char="x"/></mod:frac:d>
+        </mod:frac> </p>
+    </mod:fx>
+</mod:plot>
 
 <p class="body&firstchild"></p>
 </section>
@@ -485,30 +487,6 @@
 </section>
 
 <section>
-<mod:hist class="figure" height="160">
-    <mod:hist:x every="4" major="2" minor="1" start="0" step="100">
-        <p>Calories</p>
-    </mod:hist:x>
-    <mod:hist:y every="2" major="2" minor="1" start="0" step="0.01" stop="0.12">
-        <p>Frequency</p>
-    </mod:hist:y>
-    <mod:hist:dataset color="#cccccc" data="0 0 0 0 0 0.001 0.001 0.0015 0.005 0.01 0.015 0.02 0.025 0.03 0.05 0.04 0.032 0.025 0.02 0.01 0.004 0.002 0.001 0.0005">
-        <p>Breakfast skippers</p>
-    </mod:hist:dataset>
-</mod:hist>
-
-<mod:hist class="figure" height="160">
-    <mod:hist:x every="4" major="2" minor="1" start="0" step="100">
-        <p>Calories</p>
-    </mod:hist:x>
-    <mod:hist:y every="2" major="2" minor="1" start="0" step="0.01" stop="0.12">
-        <p>Frequency</p>
-    </mod:hist:y>
-    <mod:hist:dataset color="#666666" data="0.005 0.018 0.02 0.021 0.06 0.11 0.115 0.075 0.05 0.028 0.017 0.009 0.006 0.005 0.004 0.003 0.002 0.001">
-        <p>Breakfast eaters</p>
-    </mod:hist:dataset>
-</mod:hist>
-
 <p class="caption&h3">Figure 4</p>
 
 <p class="caption">The charts show their respective graphs of lunchtime caloric need frequency distribution for students who skip (average: 1538.3 calories, standard deviation: 454.3 calories) or eat (average: 646.4 calories, standard deviation: 247.6 calories) breakfast. For breakfast skippers, only 0.07% will be satisfied by an offering of 850 calories at lunch, while 68% of breakfast eaters will be content.</p>
@@ -760,7 +738,7 @@
                 'h4': {'capitals': True, 'fontsize': 14.5, 'tracking': 2},
                 'subscript': {'shift': -2},
                 'superscript': {'shift': 5}},
- 'FTAGLIST': [('big', []), ('caption', []), ('sc', []), ('sup', ['small']), ('reference', []), ('strong', []), ('emphasis', []), ('sub', ['small'])],
+ 'FTAGLIST': [('sub', ['small']), ('sup', ['small']), ('emphasis', []), ('big', []), ('caption', []), ('sc', []), ('strong', []), ('reference', [])],
  'PARASTYLES': (6,
                 [({'fontclasses': (2, [('Black', {}), ('subscript', {'sub': 1}), ('superscript', {'sup': 1})])}, {}),
                  ({'fontclasses': (0,
@@ -798,23 +776,23 @@
                  ({'fontclasses': (0, [('Sans serif semi', {})]), 'indent': (0, 1, 0), 'margin_bottom': 2, 'margin_top': 0}, {'caption': 1, 'h3': 1}),
                  ({'indent': (0, 1, 0)}, {'firstchild': 1})]),
  'PTAGLIST': [('', []),
-              ('firstchild', []),
+              ('units', []),
               ('key', []),
-              ('table emphasis', []),
               ('tablecell', []),
+              ('h2', []),
               ('h1', []),
-              ('tablehead', []),
               ('tableleft', []),
-              ('figure title', []),
               ('math', []),
+              ('table emphasis', []),
+              ('figure title', []),
+              ('list', []),
+              ('tablehead', []),
+              ('firstchild', []),
               ('caption', []),
               ('h3', []),
-              ('units', []),
-              ('list', []),
               ('body', []),
-              ('h2', []),
               ('figure', [])],
- 'contexts': {'channels': {'c': 12, 'p': 8, 't': 2}, 'text': {'i': 17325, 'j': 17325, 'p': 9, 't': 2}},
+ 'contexts': {'channels': {'c': 12, 'p': 8, 't': 2}, 'text': {'i': 15757, 'j': 15757, 'p': 8, 't': 2}},
  'grid': [[90, 370, 410, 690], [100, 130, 910]],
  'outlines': ([(([[90, 100, False], [90, 910, False]], [[370, 100, False], [370, 910, False]]), 0), (([[410, 100, False], [410, 910, False]], [[690, 100, False], [690, 910, True]]), 0)],
               [([[[90, 130, True], [90, 910, False]], [[690, 130, True], [690, 910, False]]], 1)],
@@ -834,12 +812,12 @@
                ([[[410, 130, False], [410, 910, False]], [[690, 130, False], [690, 910, False]]], 8),
                ([[[90, 510, False], [90, 910, False]], [[370, 510, False], [370, 910, False]]], 9),
                ([[[410, 510, False], [410, 910, False]], [[690, 510, False], [690, 910, False]]], 9)],
-              [([[[90, 70, False], [90, 100, False]], [[370, 70, False], [370, 100, False]]], 7), ([[[410, 70, False], [410, 100, False]], [[690, 70, False], [690, 100, False]]], 7)],
+              [([[[90, 70, False], [90, 100, False]], [[370, 70, False], [370, 100, False]]], 1), ([[[410, 70, False], [410, 100, False]], [[690, 70, False], [690, 100, False]]], 1)],
               [([[[90, 720, True], [90, 910, False]], [[690, 720, True], [690, 910, False]]], 7)],
               [([[[90, 130, False], [90, 370, False]], [[360, 130, False], [360, 370, False]]], 9),
                ([[[420, 130, False], [420, 370, False]], [[690, 130, False], [690, 370, False]]], 9),
                ([[[90, 390, False], [90, 500, True]], [[690, 390, False], [690, 500, True]]], 9)],
               [([[[90, 630, True], [90, 910, False]], [[690, 630, True], [690, 910, False]]], 6)]),
  'page': {'dimensions': (765, 990), 'dual': True},
- 'view': {'H': 153, 'Hc': 426.30029296875, 'K': -5525, 'Kc': 591.1224365234375, 'Zoom': 11, 'mode': 'text'}}
+ 'view': {'H': -669, 'Hc': 484.596923828125, 'K': -4267, 'Kc': 334.91900634765625, 'Zoom': 11, 'mode': 'text'}}
 ############# -->

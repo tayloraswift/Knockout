@@ -1,7 +1,7 @@
 from cairo import ImageSurface, SVGSurface, Context, FORMAT_ARGB32
 from urllib.error import URLError
 
-from elements.elements import Inline_SE_element
+from elements.elements import Inline_element
 from model.olivia import Inline
 
 from style import styles
@@ -11,8 +11,6 @@ try:
     from IO.svg import render_SVG
 except ImportError:
     render_SVG = None
-    
-_namespace = 'image'
 
 def _paint_fail_frame(cr, h, k, msg):
     cr.set_font_size(10)
@@ -35,18 +33,14 @@ def _paint_fail_frame(cr, h, k, msg):
     cr.show_text(msg)
     cr.fill()
         
-class Image(Inline_SE_element):
-    namespace = _namespace
-    tags = {}
+class Image(Inline_element):
+    nodename = 'image'
     DNA = {}
+    ADNA = [('src', '', 'str'), ('width', 89, 'int')]
+    documentation = [(0, nodename)]
     
-    ADNA = {_namespace: [('src', '', 'str'), ('width', 89, 'int')]}
-    documentation = [(0, _namespace)]
-    
-    def _load(self, A):
-        self._tree = A
-        
-        src, self.width = self._get_attributes(_namespace)
+    def _load(self):
+        src, self.width = self.get_attributes()
         
         self._surface_cache = None
         A, B = self._load_image_file(src)
@@ -124,3 +118,6 @@ class _MInline(Inline):
     
     def deposit_glyphs(self, repository, x, y):
         repository['_images'].append((self._draw, x + self._x, y - self.ascent + self._y))
+
+members = [Image]
+inline = True

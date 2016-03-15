@@ -1,22 +1,17 @@
 import cairo
 
 from model.cat import cast_mono_line, calculate_vmetrics
-from elements.elements import Inline_SE_element
+from elements.elements import Inline_element
 from model.olivia import Inline
 
-_namespace = 'mi'
-
-class Math_italic(Inline_SE_element):
-    namespace = _namespace
-    tags = {}
+class Math_italic(Inline_element):
+    nodename = 'mi'
     DNA = {'mi': {}}
+    ADNA = [('char', '', 'str'), ('correct', 1, 'float')]
+    documentation = [(0, nodename)]
     
-    ADNA = {_namespace: [('char', '', 'str'), ('correct', 1, 'float')]}
-    documentation = [(0, _namespace)]
-    
-    def _load(self, A):
-        self._tree = A
-        ch, self._cfactor = self._get_attributes(_namespace)
+    def _load(self):
+        ch, self._cfactor = self.get_attributes()
         if ch:
             self.char = ch
         else:
@@ -32,7 +27,7 @@ class Math_italic(Inline_SE_element):
         cr.fill()
     
     def cast_inline(self, LINE, x, y, PP, F, FSTYLE):
-        F_mi, = self._modstyles(F, 'mi')
+        F_mi, = self.styles(F, 'mi')
         
         C = cast_mono_line(LINE, list(self.char), 13, PP, F_mi)
         C['x'] = x
@@ -61,3 +56,6 @@ class _MInline(Inline):
     def deposit_glyphs(self, repository, x, y):
         repository['_paint_annot'].append((self._draw, self._x + x, self._y + y))
         self._LINES.deposit(repository, x, y)
+
+members = [Math_italic]
+inline = True

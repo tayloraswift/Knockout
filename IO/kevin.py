@@ -1,13 +1,68 @@
 from html import parser, unescape, escape
 from ast import literal_eval
+from itertools import chain
 
 from bulletholes.counter import TCounter as Counter
-from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Inline_element, Block_element
+from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Inline_element, Block_element, Node
 from model.wonder import words
 from style import styles
-from modules import modules, moduletags, inlinecontainers, inlinetags, blocktags
+from modules import modules, inlinetags, blocktags, textfacing
 from state.exceptions import IO_Error
-from IO.xml import count_styles
+from IO.xml import print_attrs, print_styles, count_styles
+
+inlinecontainers = {'p'} | textfacing
+
+def write_node(node, indent=0):
+    name = node.name
+    attrs = node.attrs
+    if node.PP is not None:
+        attrs = attrs.copy()
+        attrs.update(print_styles(node.PP))
+    # write content
+    return [[indent, '<' + print_attrs(name, attrs) + '>']] + write_html(node.content, indent + 1) + [[indent, '</' + name + '>']]
+
+def write_inline_node(node, indent=0):
+    name = node.name
+    attrs = node.attrs
+    if node.content:
+        if not node.textfacing and all(isinstance(e, Node) for e in node.content):
+            A = [[indent, '<' + print_attrs(name, attrs) + '>']]
+            A.extend(chain.from_iterable(write_inline_node(N, indent + 1) for N in node.content))
+            return A + [[indent, '</' + name + '>']]
+        else:
+            A = [[indent, '<' + print_attrs(name, attrs) + '>']]
+            content = write_html(node.content, indent + 1)
+            if content:
+                A[-1][1] += content.pop(0)[1]
+                A += content
+            A[-1][1] += '</' + name + '>'
+            return A
+    else:
+        return [[indent, '<' + print_attrs(name, attrs) + '/>']]
+    
+def write_html(L, indent=0):
+    lines = []
+    gaps = [i for i, v in enumerate(L) if isinstance(v, (Paragraph, Node))]
+    lead = 0
+    for C in (L[i:j] for i, j in zip([0] + gaps, gaps + [len(L)]) if j != i): # to catch last blob
+        if isinstance(C[0], Node): # node
+            if isinstance(C[0], Inline_element):
+                LL = write_inline_node(C[0], indent)
+                if lines:
+                    lines[-1][1] += LL.pop(0)[1]
+                lines += LL
+                lines[-1][1] += ''.join(repr(c) if type(c) is not str else escape(c) if len(c) == 1 else c for c in C[1:])
+
+            else:
+                if isinstance(C[0], Block_element):
+                    lines.append([indent, ''])
+                    lead = 1
+                lines += write_node(C[0], indent)
+        else:
+            lines.append([indent, ''])
+            lines.append([indent, ''.join(repr(c) if type(c) is not str else escape(c) if len(c) == 1 else c for c in C)])
+            lead = 1
+    return lines[lead:]
 
 class Text(list):
     def __init__(self, * args):
@@ -45,7 +100,7 @@ class Minion(parser.HTMLParser):
         self.reset()
         self._first = True
         self._O = Text()
-        self._C = [(None, self._O)]
+        self._C = [(None, None, self._O)]
         self._breadcrumbs = [None]
         
         self.rawdata = self.rawdata + data
@@ -56,10 +111,13 @@ class Minion(parser.HTMLParser):
 
     def _breadcrumb_error(self):
         raise IO_Error('Syntax error: tag mismatch')
-        
+    
+    def append_to(self):
+        return self._C[-1][2]
+    
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
-        O = self._C[-1][1]
+        O = self.append_to()
         
         if tag == 'p':
             self._first = False
@@ -68,37 +126,39 @@ class Minion(parser.HTMLParser):
             self._breadcrumbs.append('p')
         
         elif tag == 'f':
-            ftag = styles.FTAGS[attrs['class']]
-            O.append(OpenFontpost(ftag))
+            if self._breadcrumbs[-1] in inlinecontainers:
+                ftag = styles.FTAGS[attrs['class']]
+                O.append(OpenFontpost(ftag))
 
         elif tag == 'ff':
-            ftag = styles.FTAGS[attrs['class']]
-            O.append(CloseFontpost(ftag))
+            if self._breadcrumbs[-1] in inlinecontainers:
+                ftag = styles.FTAGS[attrs['class']]
+                O.append(CloseFontpost(ftag))
         
-        elif tag in moduletags:
+        elif tag in modules:
             self._breadcrumbs.append(tag)
             if tag in blocktags:
                 self._first = False
-                M = ((tag, attrs, _create_paragraph(attrs)), Text())
+                M = tag, attrs, Text(), _create_paragraph(attrs)
             else:
-                M = ((tag, attrs), Text())
+                M = tag, attrs, Text()
             O.append(M)
             self._C.append(M)
 
     def _se(self, tag, attrs):
         attrs = dict(attrs)
-        O = self._C[-1][1]
+        O = self.append_to()
         if tag == 'br':
             O.append('<br/>')
         elif tag in inlinetags:
-            O.append(modules[tag](((tag, attrs), Text()), deserialize, ser))
+            O.append(modules[tag](tag, attrs, Text()))
     
     def handle_startendtag(self, tag, attrs):
         if self._breadcrumbs[-1] in inlinecontainers:
             self._se(tag, attrs)
 
     def handle_endtag(self, tag):
-        O = self._C[-1][1]
+        O = self.append_to()
         if tag == 'p':
             O.append('</p>')
             if self._breadcrumbs[-1] == 'p':
@@ -106,21 +166,20 @@ class Minion(parser.HTMLParser):
             else:
                 self._breadcrumb_error()
                 
-        elif tag in moduletags:
+        elif tag in modules:
             if self._breadcrumbs[-1] == tag:
                 self._breadcrumbs.pop()
             else:
                 self._breadcrumb_error()
             
-            L = self._C.pop()
-            if tag in modules:
-                O = self._C[-1][1]
-                O[-1] = modules[tag](L, deserialize, ser)
+            nodedata = self._C.pop()
+            O = self.append_to()
+            O[-1] = modules[tag]( * nodedata )
 
     def handle_data(self, data):
         # this should be disabled on the last blob, unless we are sure the container is 'p'
         if self._breadcrumbs[-1] in inlinecontainers:
-            O = self._C[-1][1]
+            O = self.append_to()
             O.extend(data)
 
 class Kevin_from_TN(Minion): # to capture the first and last blobs
@@ -143,10 +202,10 @@ class Kevin_from_TN(Minion): # to capture the first and last blobs
             
     def handle_data(self, data):
         if self._breadcrumbs[-1] in inlinecontainers:
-            O = self._C[-1][1]
+            O = self.append_to()
             O.extend(data)
         elif self._first and self._breadcrumbs[-1] is None: # register the first blob
-            O = self._C[-1][1]
+            O = self.append_to()
             self._first = False
             self._breadcrumbs.append('p') # virtual paragraph container
             liquid = list(data)
@@ -174,26 +233,5 @@ def deserialize(text, fragment=False):
     text = text.replace('</sub>', '</f class="sub">')
     return parse.feed(text.replace('</f', '<ff'))
 
-def ser(L, indent):
-    lines = []
-    gaps = [0] + [i for i, v in enumerate(L) if isinstance(v, (Paragraph, Block_element, Inline_element))]
-    lead = 0
-    for C in (L[i:j] for i, j in zip(gaps, gaps[1:] + [len(L)]) if j != i): # to catch last blob
-        if isinstance(C[0], Block_element):
-            lines.append([indent, ''])
-            lines += C[0].represent(indent)
-            lead = 1
-        elif isinstance(C[0], Inline_element):
-            LL = C[0].represent(indent)
-            if lines:
-                lines[-1][1] += LL.pop(0)[1]
-            lines += LL
-            lines[-1][1] += ''.join(repr(c) if type(c) is not str else escape(c) if len(c) == 1 else c for c in C[1:])
-        else:
-            lines.append([indent, ''])
-            lines.append([indent, ''.join(repr(c) if type(c) is not str else escape(c) if len(c) == 1 else c for c in C)])
-            lead = 1
-    return lines[lead:]
-
 def serialize(L):
-    return '\n'.join('    ' * indent + line for indent, line in ser(L, 0))
+    return '\n'.join('    ' * indent + line for indent, line in write_html(L))

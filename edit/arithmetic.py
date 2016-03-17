@@ -38,7 +38,7 @@ class NumericStringParser(object):
         expr    :: term [ addop term ]*
         """
         point = Literal( "." )
-        e     = CaselessLiteral( "E" )
+        e     = CaselessLiteral( "e" )
         fnumber = Combine( Word( "+-"+nums, nums ) + 
                            Optional( point + Optional( Word( nums ) ) ) +
                            Optional( e + Word( "+-"+nums, nums ) ) )
@@ -52,7 +52,7 @@ class NumericStringParser(object):
         addop  = plus | minus
         multop = mult | div
         expop = Literal( "^" )
-        pi    = CaselessLiteral( "PI" )
+        pi    = CaselessLiteral( "pi" )
         expr = Forward()
         atom = ((Optional(oneOf("- +")) +
                  (pi|e|fnumber|ident+lpar+expr+rpar).setParseAction(self.pushFirst))
@@ -79,6 +79,8 @@ class NumericStringParser(object):
         self.fn  = { "sin" : math.sin,
                 "cos" : math.cos,
                 "tan" : math.tan,
+                "log" : math.log10,
+                "logbase" : math.log,
                 "abs" : abs,
                 "trunc" : lambda a: int(a),
                 "round" : round,
@@ -91,9 +93,9 @@ class NumericStringParser(object):
             op2 = self.evaluateStack( s )
             op1 = self.evaluateStack( s )
             return self.opn[op]( op1, op2 )
-        elif op == "PI":
+        elif op == "pi":
             return math.pi # 3.1415926535
-        elif op == "E":
+        elif op == "e":
             return math.e  # 2.718281828
         elif op in self.fn:
             return self.fn[op]( self.evaluateStack( s ) )

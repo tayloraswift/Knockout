@@ -113,8 +113,11 @@ from data.userfunctions import *
 import parser
 
 def function_x(expression):
-    code = parser.expr(expression).compile()
-    return lambda x: eval(code)
+    if callable(expression):
+        return expression
+    else:
+        code = parser.expr(expression).compile()
+        return lambda x, y=0: eval(code)
 
 def interpret_rgba(C):
     RGBA = [0, 0, 0, 1]

@@ -13,7 +13,7 @@ _namespace = 'mod:pie'
 
 class PieSlice(Data):
     nodename = _namespace + ':slice'
-    ADNA = [('prop', 1, 'float'), ('color', '#ff3085', 'rgba')]
+    ADNA = [('prop', 1, 'float'), ('color', '#ff3085', 'rgba'), ('key', True, 'bool')]
 
     def freeze(self, h, k):
         self._right = h

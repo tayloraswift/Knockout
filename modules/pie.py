@@ -21,7 +21,7 @@ class PieSlice(Data):
 class PieChart(Block_element):
     nodename = _namespace
     DNA = {'slice': {}}
-    ADNA = [('radius', 89, 'float'), ('center', 0.5, 'float')]
+    ADNA = [('radius', 89, 'float'), ('center', 0.5, 'float'), ('rotate', 0, 'float')]
     documentation = [(0, nodename), (1, 'slice')]
     
     def _load(self):
@@ -38,7 +38,7 @@ class PieChart(Block_element):
 
     def print_pie(self, cr):
         r = self['radius']
-        t = 0
+        t = self['rotate']
         for percent, arc, color in self._slices:
             cr.move_to(0, 0)
             cr.arc(0, 0, r, t, t + arc)

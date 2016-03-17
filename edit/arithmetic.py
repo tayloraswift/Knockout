@@ -51,7 +51,7 @@ class NumericStringParser(object):
         rpar  = Literal( ")" ).suppress()
         addop  = plus | minus
         multop = mult | div
-        expop = Literal( "^" )
+        expop = Literal( "**" )
         pi    = CaselessLiteral( "pi" )
         expr = Forward()
         atom = ((Optional(oneOf("- +")) +
@@ -75,7 +75,7 @@ class NumericStringParser(object):
                 "-" : operator.sub,
                 "*" : operator.mul,
                 "/" : operator.truediv,
-                "^" : operator.pow }
+                "**" : operator.pow }
         self.fn  = { "sin" : math.sin,
                 "cos" : math.cos,
                 "tan" : math.tan,
@@ -89,7 +89,7 @@ class NumericStringParser(object):
         op = s.pop()
         if op == 'unary -':
             return -self.evaluateStack( s )
-        if op in "+-*/^":
+        if op in {"+", "-", "*", "/", "**"}:
             op2 = self.evaluateStack( s )
             op1 = self.evaluateStack( s )
             return self.opn[op]( op1, op2 )

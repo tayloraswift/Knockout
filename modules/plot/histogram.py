@@ -1,40 +1,65 @@
-from itertools import chain
+from itertools import chain, groupby
 from .data import Data
 
 _namespace = 'mod:hist'
 
 class Bars(Data):
     nodename = _namespace + ':bars'
-    ADNA = [('data', (), '1D'), ('color', '#ff3085', 'rgba')]
+    ADNA = [('data', (), '1D'), ('color', '#ff3085', 'rgba'), ('colorneg', '#ff5040', 'rgba')]
+
+    def __init__(self, * args, ** kwargs):
+        Data.__init__(self, * args, ** kwargs)
+        if 'colorneg' not in self.attrs:
+            self['colorneg'] = self['color']
+            self._bi = False
+        else:
+            self._bi = True
     
+    def _key_icon(self, cr, k1, k2):
+        height = (k2 - k1)
+        if self._bi:
+            height = height*0.5
+            cr.set_source_rgba( * self['colorneg'] )
+            cr.rectangle(self._right, k1 + height, -4, height)
+            cr.fill()
+        cr.set_source_rgba( * self['color'] )
+        cr.rectangle(self._right, k1, -4, height)
+        cr.fill()
+        
 class Histogram(Data):
     nodename = _namespace
     ADNA = [('start', 0, 'float'), ('step', 1, 'float')]
 
     def unit(self, axes):
-        start, dx = self.get_attributes()
-        self._barsets = tuple(e.freeze_attrs() for e in self.filter_nodes(Bars, inherit=False))
+        start = self['start']
+        dx = self['step']
+        self._barsets = tuple(self.filter_nodes(Bars, inherit=False))
         if self._barsets:
             if 'start' not in self.attrs:
                 start = axes.X.a
             
             project = axes.project
             
-            data_colors = tuple((tuple(B.data), B.color) for B in self._barsets)
-            bins = max(len(D) for D, C in data_colors)
+            print(id(self), 'replace')
+            data_colors = tuple((tuple(B['data']), B['color'], B['colorneg']) for B in self._barsets)
+            bins = max(len(D[0]) for D in data_colors)
             P = []
             tide = [0] * bins
-            for barset, color in data_colors:
-                segments = []
-                for i, height in enumerate(barset):
-                    d1 = (start + i*dx, tide[i])
-                    d2 = (d1[0] + dx, d1[1] + height)
-                    p1 = project( * d1 )
-                    p2 = project( * d2 )
-                                   # x1   , x2 - x1      , y1   , y2 - y1
-                    segments.append((p1[0], p2[0] - p1[0], p1[1], p2[1] - p1[1]))
-                    tide[i] += height
-                P.append((segments, color))
+            for barset, color, colorneg in data_colors:
+                for sign, G in groupby(enumerate(barset), lambda k: k[1] >= 0):
+                    segments = []
+                    for i, height in G:
+                        d1 = (start + i*dx, tide[i])
+                        d2 = (d1[0] + dx, d1[1] + height)
+                        p1 = project( * d1 )
+                        p2 = project( * d2 )
+                                       #  x1   , x2 - x1      , y1   , y2 - y1
+                        segments.append((p1[0], p2[0] - p1[0], p1[1], p2[1] - p1[1]))
+                        tide[i] += height
+                    if sign:
+                        P.append((segments, color))
+                    else:
+                        P.append((segments, colorneg))
             
             self._unitpoints = P
         else:

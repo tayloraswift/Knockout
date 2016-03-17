@@ -11,9 +11,8 @@ class Math_italic(Inline_element):
     documentation = [(0, nodename)]
     
     def _load(self):
-        ch, self._cfactor = self.get_attributes()
-        if ch:
-            self.char = ch
+        if self['char']:
+            self.char = self['char']
         else:
             self.char = '􏿿'
     
@@ -36,7 +35,7 @@ class Math_italic(Inline_element):
         
         ink = cairo.ScaledFont(C['fstyle']['font'], cairo.Matrix(yy=C['fstyle']['fontsize'], xx=C['fstyle']['fontsize']), cairo.Matrix(), cairo.FontOptions())
         self._rise = -ink.text_extents(self.char[-1])[1]
-        self._icorrection = self._rise * self._cfactor * 0.17632698070846498 # tan(10°)
+        self._icorrection = self._rise * self['correct'] * 0.17632698070846498 # tan(10°)
         
         charwidth = self._cad + self._icorrection
         ascent, descent = calculate_vmetrics(C)

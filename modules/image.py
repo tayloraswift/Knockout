@@ -40,10 +40,10 @@ class Image(Inline_element):
     documentation = [(0, nodename)]
     
     def _load(self):
-        src, self.width = self.get_attributes()
+        self.width = self['width']
         
         self._surface_cache = None
-        A, B = self._load_image_file(src)
+        A, B = self._load_image_file(self['src'])
         if A:
             self.render_image = B
         else:

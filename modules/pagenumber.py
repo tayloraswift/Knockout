@@ -8,9 +8,6 @@ class Page_number(Inline_element):
     ADNA = [('offset', '0', 'int')]
     documentation = [(0, nodename)]
     
-    def _load(self):
-        self._offset = self.get_attributes()
-    
     def _draw_annot(self, cr, O):
         cr.move_to(0, 0)
         cr.rel_line_to(2, 0)
@@ -22,7 +19,7 @@ class Page_number(Inline_element):
     
     def cast_inline(self, LINE, x, y, PP, F, FSTYLE):
         F_pn, = self.styles(F, 'pn')
-        C = cast_mono_line(LINE, list(str(LINE['page'])), 13, PP, F_pn)
+        C = cast_mono_line(LINE, list(str(LINE['page'] + self['offset'])), 13, PP, F_pn)
         C['x'] = x
         C['y'] = y + FSTYLE['shift']
         self._cad = C['advance']

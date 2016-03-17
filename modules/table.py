@@ -55,7 +55,8 @@ def _build_matrix(data):
 class _Table_cell(Flowing_text):
     def __init__(self, td):
         Flowing_text.__init__(self, td.content)
-        self.rs, self.cs = td.get_attributes()
+        self.rs = td['rowspan']
+        self.cs = td['colspan']
     
     def nail(self, i, j):
         self.col = j
@@ -80,19 +81,18 @@ class Table(Block_element):
         self._MATRIX = _build_matrix(self._CELLS)
         self._FLOW = [FTX for row in self._CELLS for FTX in row]
         
-        distr, self._celltop, self._cellbottom, hrules, vrules, rulemargin, rulewidth = self.get_attributes()
         # columns
         cl = len(self._MATRIX[0])
-        distr = [0] + [d if d else 1 for d in distr]
+        distr = [0] + [d if d else 1 for d in self['distr']]
         distr.extend([1] * (cl - len(distr) + 1))
         total = sum(distr)
         self._MATRIX.partitions = tuple(accumulate(d/total for d in distr))
         
         # rules
-        hrules = [i for i in hrules if 0 <= i <= len(self._MATRIX)]
-        vrules = [i for i in vrules if 0 <= i <= cl]
-                
-        self._table = {'rulemargin': rulemargin, 'rulewidth': rulewidth, 'hrules': hrules, 'vrules': vrules}
+        r = len(self._MATRIX)
+        self._table = {'rulemargin': self['rulemargin'], 'rulewidth': self['rulewidth'], 
+                'hrules': [i for i in self['hrules'] if 0 <= i <= r], 
+                'vrules': [i for i in self['vrules'] if 0 <= i <= cl]}
 
     def regions(self, x, y, bounds, yy):
         x1, x2 = bounds(y)
@@ -110,9 +110,9 @@ class Table(Block_element):
         
         row_y = [y] * (len(self._MATRIX) + 1)
         part = self._MATRIX.partitions
-        cellbottom = self._cellbottom
+        cellbottom = self['cellbottom']
         for r, overlay, row in ((c, P_table, b) if c else (c, head, b) for c, b in enumerate(self._CELLS)):
-            y = row_y[r] + self._celltop
+            y = row_y[r] + self['celltop']
             for i, cell in enumerate(row):
                 # calculate percentages
                 cellbounds = Subcell(bounds, part[cell.col], part[cell.col + cell.cs])

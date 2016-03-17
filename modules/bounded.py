@@ -8,25 +8,20 @@ class Symbol(Node):
     nodename = _namespace + ':sym'
     textfacing = True
 
-class Bottom(Node):
+class Bound(Node):
     nodename = _namespace + ':a'
-    textfacing = True
-
-class Top(Node):
-    nodename = _namespace + ':b'
     textfacing = True
     
 class Bounded(Inline_element):
     nodename = _namespace
-    DNA = {'symbol': {}, 'bottom': {}, 'top': {}}
+    DNA = {'symbol': {}, 'bounds': {}}
     ADNA = [('align', 1, 'int')]
     documentation = [(0, nodename), (1, 'symbol'), (1, 'bottom'), (1, 'top')]
     
     def _load(self):
-        self._symbol, self._a, self._b = self.find_nodes(Symbol, Bottom, Top)
+        self._symbol, self._a, self._b = self.find_nodes(Symbol, Bound, Bound)
         
-        align, = self.get_attributes()
-        if align:
+        if self['align']:
             self.cast_inline = self._cast_inline_inline
         else:
             self.cast_inline = self._cast_inline_display
@@ -90,5 +85,5 @@ class Bounded(Inline_element):
     def __len__(self):
         return 9
 
-members = [Bounded, Symbol, Bottom, Top]
+members = [Bounded, Symbol, Bound]
 inline = True

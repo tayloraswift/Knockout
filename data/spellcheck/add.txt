@@ -13,3 +13,4 @@ strategizes
 incongruencies
 Knoxvillians
 driverless
+scatterplot

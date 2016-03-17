@@ -370,7 +370,10 @@
         <p><mi char="x"/> = 0 </p>
     </mod:fx>
     <mod:fx color="#ff3085" linewidth="2" start="0" step="0.1" stop="6" y="0.2*x**2 + 2">
-        <p><mi char="f"/>(<mi char="x"/>) = 6<mi char="x"/> − <mi char="x"/><sup>2</sup></p>
+        <p><mi char="f"/>(<mi char="x"/>) = <mod:frac>
+            <mod:frac:n><mi char="x"/><sup>2</sup></mod:frac:n>
+            <mod:frac:d>5</mod:frac:d>
+        </mod:frac> + 2</p>
     </mod:fx>
     <mod:hist start="0" step="1">
         <mod:hist:bars color="#ff308570" data="
@@ -472,7 +475,7 @@
                 'lowercase': {'capitals': False},
                 'subscript': {'shift': -2},
                 'superscript': {'shift': 5}},
- 'FTAGLIST': [('strong', []), ('sup', ['small']), ('emphasis', []), ('reference', []), ('big', []), ('sc', []), ('caption', []), ('sub', ['small']), ('link', [])],
+ 'FTAGLIST': [('emphasis', []), ('sup', ['small']), ('big', []), ('reference', []), ('sc', []), ('strong', []), ('caption', []), ('link', []), ('sub', ['small'])],
  'PARASTYLES': (15,
                 [({'fontclasses': (2, [('Black', {}), ('subscript', {'sub': 1}), ('superscript', {'sup': 1})])}, {}),
                  ({'fontclasses': (0,
@@ -513,21 +516,21 @@
                  ({'fontclasses': (0, [('Sans serif semi', {})]), 'indent': (0, 1, 0), 'margin_bottom': 2, 'margin_top': 0}, {'caption': 1, 'h3': 1}),
                  ({'indent': (0, 1, 0)}, {'firstchild': 1})]),
  'PTAGLIST': [('', []),
-              ('tablecell', []),
-              ('h3', []),
-              ('units', []),
-              ('h2', []),
-              ('h1', []),
-              ('key', []),
-              ('table emphasis', []),
               ('tableleft', []),
-              ('firstchild', []),
-              ('tablehead', []),
-              ('math', []),
               ('figure title', []),
-              ('figure', []),
-              ('body', []),
               ('list', []),
+              ('math', []),
+              ('body', []),
+              ('figure', []),
+              ('key', []),
+              ('h3', []),
+              ('tablecell', []),
+              ('h2', []),
+              ('units', []),
+              ('tablehead', []),
+              ('firstchild', []),
+              ('table emphasis', []),
+              ('h1', []),
               ('caption', [])],
  'contexts': {'channels': {'c': 1, 'p': 0, 't': 1}, 'text': {'i': 1070, 'j': 1070, 'p': 1, 't': 1}},
  'grid': [[80, 360, 420, 700], [100, 130, 910]],
@@ -559,5 +562,5 @@
                ([[[90, 130, False], [90, 910, False]], [[370, 130, False], [370, 910, False]]], 14),
                ([[[410, 130, False], [410, 910, False]], [[690, 130, False], [690, 910, False]]], 14)]),
  'page': {'dimensions': (765, 990), 'dual': True},
- 'view': {'H': 137, 'Hc': 376, 'K': -963, 'Kc': 438, 'Zoom': 11, 'mode': 'text'}}
+ 'view': {'H': -56, 'Hc': 494, 'K': -1123, 'Kc': 427, 'Zoom': 16, 'mode': 'text'}}
 ############# -->

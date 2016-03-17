@@ -369,12 +369,29 @@
     <mod:fx color="#000000a0" key="False" linewidth="1" step="1" stop="8" x="0">
         <p><mi char="x"/> = 0 </p>
     </mod:fx>
-    <mod:fx color="#ff3085" linewidth="2" start="0" step="0.1" stop="6" y="6*x - x**2">
+    <mod:fx color="#ff3085" linewidth="2" start="0" step="0.1" stop="6" y="0.2*x**2 + 2">
         <p><mi char="f"/>(<mi char="x"/>) = 6<mi char="x"/> − <mi char="x"/><sup>2</sup></p>
     </mod:fx>
     <mod:hist start="0" step="1">
-        <mod:hist:bars color="#ff308570" data="2.75 6.75 8.75 8.75 6.75 2.75" step="20">
-            <p>MRAM<sub>6</sub> <mi char="f"/>(<mi char="x"/>)</p>
+        <mod:hist:bars color="#ff308570" data="
+            0**2*0.2+2
+            1**2*0.2+2
+            2**2*0.2+2
+            3**2*0.2+2
+            4**2*0.2+2
+            5**2*0.2+2" step="20">
+            <p>LRAM<sub>6</sub> <mi char="f"/>(<mi char="x"/>)</p>
+        </mod:hist:bars>
+    </mod:hist>
+    <mod:hist start="0" step="1">
+        <mod:hist:bars color="#ff308550" data="
+            1**2*0.2+2
+            2**2*0.2+2
+            3**2*0.2+2
+            4**2*0.2+2
+            5**2*0.2+2
+            6**2*0.2+2" step="20">
+            <p>RRAM<sub>6</sub> <mi char="f"/>(<mi char="x"/>)</p>
         </mod:hist:bars>
     </mod:hist>
 </mod:plot>
@@ -407,6 +424,26 @@
 </mod:plot>
 
 <p class="body&caption&h3">Function plot: functional/parametric plot</p>
+
+<mod:pie center="0.3" class="h2" radius="80" rotate="-pi/2">
+    <mod:pie:slice color="#7080ff" prop="39.19">
+        <p>Oil</p>
+    </mod:pie:slice>
+    <mod:pie:slice color="#b050ff" prop="23.27">
+        <p>Natural gas</p>
+    </mod:pie:slice>
+    <mod:pie:slice color="#f020ff" prop="22.43">
+        <p>Coal</p>
+    </mod:pie:slice>
+    <mod:pie:slice color="#ff50a0" prop="8.28">
+        <p>Nuclear</p>
+    </mod:pie:slice>
+    <mod:pie:slice color="#ff3085" prop="6.83">
+        <p>Renewables</p>
+    </mod:pie:slice>
+</mod:pie>
+
+<p class="body&caption&h3">Pie chart 1: US energy consumption by type</p>
 </section>
 </body>
 
@@ -435,7 +472,7 @@
                 'lowercase': {'capitals': False},
                 'subscript': {'shift': -2},
                 'superscript': {'shift': 5}},
- 'FTAGLIST': [('caption', []), ('strong', []), ('link', []), ('emphasis', []), ('sc', []), ('big', []), ('sup', ['small']), ('sub', ['small']), ('reference', [])],
+ 'FTAGLIST': [('strong', []), ('sup', ['small']), ('emphasis', []), ('reference', []), ('big', []), ('sc', []), ('caption', []), ('sub', ['small']), ('link', [])],
  'PARASTYLES': (15,
                 [({'fontclasses': (2, [('Black', {}), ('subscript', {'sub': 1}), ('superscript', {'sup': 1})])}, {}),
                  ({'fontclasses': (0,
@@ -476,22 +513,22 @@
                  ({'fontclasses': (0, [('Sans serif semi', {})]), 'indent': (0, 1, 0), 'margin_bottom': 2, 'margin_top': 0}, {'caption': 1, 'h3': 1}),
                  ({'indent': (0, 1, 0)}, {'firstchild': 1})]),
  'PTAGLIST': [('', []),
-              ('caption', []),
-              ('h1', []),
+              ('tablecell', []),
               ('h3', []),
-              ('figure title', []),
+              ('units', []),
+              ('h2', []),
+              ('h1', []),
+              ('key', []),
+              ('table emphasis', []),
+              ('tableleft', []),
               ('firstchild', []),
               ('tablehead', []),
-              ('body', []),
-              ('figure', []),
-              ('table emphasis', []),
-              ('list', []),
-              ('units', []),
-              ('tableleft', []),
               ('math', []),
-              ('h2', []),
-              ('key', []),
-              ('tablecell', [])],
+              ('figure title', []),
+              ('figure', []),
+              ('body', []),
+              ('list', []),
+              ('caption', [])],
  'contexts': {'channels': {'c': 1, 'p': 0, 't': 1}, 'text': {'i': 1070, 'j': 1070, 'p': 1, 't': 1}},
  'grid': [[80, 360, 420, 700], [100, 130, 910]],
  'outlines': ([([[[80, 70, True], [80, 100, False]], [[700, 70, True], [700, 100, False]]], 1)],
@@ -522,5 +559,5 @@
                ([[[90, 130, False], [90, 910, False]], [[370, 130, False], [370, 910, False]]], 14),
                ([[[410, 130, False], [410, 910, False]], [[690, 130, False], [690, 910, False]]], 14)]),
  'page': {'dimensions': (765, 990), 'dual': True},
- 'view': {'H': -12, 'Hc': 845, 'K': -1014, 'Kc': 496, 'Zoom': 11, 'mode': 'text'}}
+ 'view': {'H': 137, 'Hc': 376, 'K': -963, 'Kc': 438, 'Zoom': 11, 'mode': 'text'}}
 ############# -->

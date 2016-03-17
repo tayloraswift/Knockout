@@ -21,9 +21,12 @@ class _Axis(Node):
         self.scalemajor   = [int(round(x*h)) for x in self.major]
         self.scalenumbers = [(int(round(x*h)), S) for x, S in self.numbers]
 
-    def step(self, step):
-        start = self['start']
-        return (start + i * step for i in range(floor(abs(self.r/step)) + 1))
+    def step(self, step, start=None, stop=None):
+        if start is None:
+            start = self['start']
+        if stop is None:
+            stop = self['stop']
+        return (start + i * step for i in range(floor(abs(stop - start)/step) + 1))
 
 class _LinearAxis(_Axis):
     ADNA = [('start', 0, 'float'), ('stop', 89, 'float'), ('minor', 1, 'float'), ('major', 2, 'float'), ('number', 4, 'float'), ('round', 13, 'int')]
@@ -32,7 +35,6 @@ class _LinearAxis(_Axis):
         return (str(_soft_int(u, self['round']))).replace('-', '−')
     
     def enum(self):
-        self.r = self['stop'] - self['start']
         major = self['major']
         minor = self['minor']
         number = self['number']
@@ -41,9 +43,9 @@ class _LinearAxis(_Axis):
         R = self.U(self['stop'])
         self.R = R
 
-        self.minor   = [x/R for x in (i*minor for i in range(floor(self.r / minor) + 1)) if x % major]
-        self.major   = [x/R for x in (i*major for i in range(floor(self.r / major) + 1))]
-        self.numbers = [(x/R, self._format(x + start)) for x in (i*number for i in range(floor(self.r / number) + 1))]
+        self.minor   = [x/R for x in (i*minor for i in range(floor((self['stop'] - start) / minor) + 1)) if x % major]
+        self.major   = [x/R for x in (i*major for i in range(floor((self['stop'] - start) / major) + 1))]
+        self.numbers = [(x/R, self._format(x + start)) for x in (i*number for i in range(floor((self['stop'] - start) / number) + 1))]
         
 
 def floorlog(x, fl=1):
@@ -104,8 +106,7 @@ class _LogAxis(_Axis):
             self.U = lambda x: floorlog(x, i0) - i0
         else:
             self.U = floorlog
-
-        self.r = self['stop'] - self['start']
+        
         number = logbasevalid(self['number'], e)
         minor  = logbasevalid(self['minor'], number)
         major  = logbasevalid(self['major'], number)

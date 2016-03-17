@@ -40,7 +40,6 @@ class Histogram(Data):
             
             project = axes.project
             
-            print(id(self), 'replace')
             data_colors = tuple((tuple(B['data']), B['color'], B['colorneg']) for B in self._barsets)
             bins = max(len(D[0]) for D in data_colors)
             P = []

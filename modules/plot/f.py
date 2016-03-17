@@ -3,7 +3,7 @@ from .data import Data
 
 class Function(Data):
     nodename = 'mod:fx'
-    ADNA = [('f', lambda x: x, 'fx'), ('start', -1, 'float'), ('stop', -1, 'float'), ('step', 1, 'float'), ('color', '#ff3085', 'rgba'), ('radius', 2, 'float'), ('linewidth', 2, 'float'), ('clip', False, 'bool')]
+    ADNA = [('f', lambda x: x, 'fx'), ('start', -1, 'float'), ('stop', -1, 'float'), ('step', 1, 'float'), ('color', '#ff3085', 'rgba'), ('radius', 2, 'float'), ('linewidth', 2, 'float'), ('clip', False, 'bool'), ('key', True, 'bool')]
 
     def unit(self, axes):
         project = axes.project

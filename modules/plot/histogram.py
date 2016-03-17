@@ -5,7 +5,7 @@ _namespace = 'mod:hist'
 
 class Bars(Data):
     nodename = _namespace + ':bars'
-    ADNA = [('data', (), '1D'), ('color', '#ff3085', 'rgba'), ('colorneg', '#ff5040', 'rgba')]
+    ADNA = [('data', (), '1D'), ('color', '#ff3085', 'rgba'), ('colorneg', '#ff5040', 'rgba'), ('key', True, 'bool')]
 
     def __init__(self, * args, ** kwargs):
         Data.__init__(self, * args, ** kwargs)
@@ -28,7 +28,7 @@ class Bars(Data):
         
 class Histogram(Data):
     nodename = _namespace
-    ADNA = [('start', 0, 'float'), ('step', 1, 'float')]
+    ADNA = [('start', 0, 'float'), ('step', 1, 'float'), ('key', True, 'bool')]
 
     def unit(self, axes):
         start = self['start']
@@ -78,6 +78,9 @@ class Histogram(Data):
         self._points = [(tuple((x1*h, y1*k, xw*h, yw*k) for x1, xw, y1, yw in segments), color) for segments, color in self._unitpoints]
 
     def key(self):
-        return chain.from_iterable(barset.key() for barset in self._barsets)
+        if self['key']:
+            return chain.from_iterable(barset.key() for barset in self._barsets)
+        else:
+            return ()
     
 members = [Histogram, Bars]

@@ -1,4 +1,4 @@
-import itertools
+from itertools import groupby
 from edit.arithmetic import NumericStringParser, ParseException
 
 nsp = NumericStringParser()
@@ -31,7 +31,7 @@ def pack_binomial(value, letter):
     K = 0
     C = 0
     sgn = 1
-    for k, g in ( (k, ''.join(g)) for k, g in itertools.groupby(value, key=lambda v: True if v in ('+', '-') else False) ):
+    for k, g in ( (k, ''.join(g)) for k, g in groupby(value, key=lambda v: True if v in ('+', '-') else False) ):
         if k:
             if g.count('-') % 2:
                 sgn = -1

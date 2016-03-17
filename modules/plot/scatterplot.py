@@ -3,7 +3,7 @@ from .data import Data
 
 class Scatterplot(Data):
     nodename = 'mod:scatter'
-    ADNA = [('data', (), '2D'), ('color', '#ff3085', 'rgba'), ('radius', 2, 'float')]
+    ADNA = [('data', (), '2D'), ('color', '#ff3085', 'rgba'), ('radius', 2, 'float'), ('key', True, 'bool')]
 
     def unit(self, axes):
         project = axes.project

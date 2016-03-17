@@ -8,7 +8,10 @@ class Data(Node):
         cr.fill()
 
     def key(self):
-        return (Flowing_text(self.content), self._key_icon, self['color']),
+        if self['key']:
+            return (Flowing_text(self.content), self._key_icon, self['color']),
+        else:
+            return ()
     
     def freeze(self, h):
         self._right = h

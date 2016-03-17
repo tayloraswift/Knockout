@@ -320,24 +320,32 @@ class Rose_garden(Base_kookie):
             return False
 
     def _commit(self, B):
+        success = False
         if isinstance(self._element, Mod_element):
             try:
                 E = deserialize(B, fragment=True)
-                success = self._element.transfer(E)
+
+                try: # locate object
+                    L = [next(e for e in E if type(e) is type(self._element))]
+                    success = True
+                except StopIteration:
+                    pass
+
             except (IO_Error, IndexError):
-                success = False
-            
-            if not success:
-                self._invalid = True
-                return
+                pass
+        
         else:
             try:
                 L = deserialize(B, fragment=True)
+                success = True
             except IO_Error:
-                self._invalid = True
-                return
-            i = cursor.fcursor.i
-            cursor.fcursor.text[i:i + 1] = L
+                pass
+
+        if not success:
+            self._invalid = True
+            return
+        i = cursor.fcursor.i
+        cursor.fcursor.text[i:i + 1] = L
         self._SYNCHRONIZE()
         self._AFTER()
         

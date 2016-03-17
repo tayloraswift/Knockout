@@ -57,7 +57,7 @@ class CloseFontpost(_Fontpost):
     def __len__(self):
         return 4
 
-class Node(object):
+class Node(dict):
     namespace = '_node'
     is_root = False
     textfacing = False
@@ -82,14 +82,12 @@ class Node(object):
         self.attrs = attrs
         self.content = content
         self.PP = PP
-    
-    def polaroid(self):
-        return self.name, self.attrs, self.content, self.PP
+        dict.__init__(self, self._attributes())
 
-    def get_attributes(self):
+    def _attributes(self):
         attrs = self.attrs
         inload = self._inload
-        return (inload[TYPE](attrs[k]) if k in attrs else inload[TYPE](v) for k, v, TYPE in self.ADNA)
+        return ((k, inload[TYPE](attrs[k])) if k in attrs else (k, inload[TYPE](v)) for k, v, TYPE in self.ADNA)
     
     def get_documentation(self):
         ADNA = self.ADNA
@@ -103,9 +101,11 @@ class Node(object):
             return (X + modstyles[tag] for tag in tags)
 
     def find_nodes(self, * classes):
+        nodes = [e for e in self.content if isinstance(e, Node)]
         for cls in classes:
             try:
-                yield next(e for e in self.content if isinstance(e, cls))
+                i = next(i for i, e in enumerate(nodes) if isinstance(e, cls))
+                yield nodes.pop(i)
             except StopIteration:
                 yield None
 
@@ -123,14 +123,8 @@ class Mod_element(Node):
         Node.__init__(self, * args, ** kwargs)
         self._load()
     
-    def transfer(self, E):
-        # locate rebuilt object
-        try:
-            O = next(e for e in E if type(e) is self.__class__) #yes, we are building an entirely new object and taking its image
-        except StopIteration:
-            return False
-        self.__init__( * O.polaroid() )
-        return True
+    def _load(self):
+        pass
 
     def __len__(self):
         return 1989

@@ -6,11 +6,11 @@ class Function(Data):
     ADNA = [('f', lambda x: x, 'fx'), ('step', 1, 'float'), ('color', '#ff3085', 'rgba'), ('radius', 2, 'float'), ('linewidth', 2, 'float')]
 
     def unit(self, axes):
-        F, dx, self.color, self._r, self._lw = self.get_attributes()
         project = axes.project
         
         P = [[]]
-        for x in axes.X.step(dx):
+        F = self['f']
+        for x in axes.X.step(self['step']):
             try:
                 y = F(x)
                 P[-1].append(project(x, y))
@@ -23,10 +23,10 @@ class Function(Data):
         return self
     
     def draw(self, cr):
-        cr.set_source_rgba( * self.color )
+        cr.set_source_rgba( * self['color'] )
         circle_t = 2*pi
-        cr.set_line_width(self._lw)
-        r = self._r
+        cr.set_line_width(self['linewidth'])
+        r = self['radius']
         
         for segment in (p for p in self._points if p):
             cr.move_to( * segment[0] )

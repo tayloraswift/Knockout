@@ -22,7 +22,7 @@ class Plot_key(object):
                 FTX.layout(subcell, c, y, overlay)
                 leading1 = FTX.LINES[0] ['leading']
                 leading2 = FTX.LINES[-1]['leading']
-                ky.append((y - py + leading1*0.25, FTX.y - py + leading2*0.25))
+                ky.append((int(y - py + leading1*0.25), int(FTX.y - py + leading2*0.25)))
                 y = FTX.y + leading2*0.25
             
             self._ky = ky
@@ -52,7 +52,6 @@ class Plot(Block_element):
         self.Y.enum()
         
         self._FLOW = [Flowing_text(A.content) for A in (self.X, self.Y)]
-        self._graphheight, self._tw = self.get_attributes()
         
         AXES = Cartesian2(self.X, self.Y)
         self._datasets = [PL.unit(AXES) for PL in self.filter_nodes(Data, inherit=True)]
@@ -61,8 +60,8 @@ class Plot(Block_element):
     
     def ink_graph(self, cr):
         cr.set_source_rgb(0, 0, 0)
-        self.X.draw(cr, self._tw)
-        self.Y.draw(cr, self._tw)
+        self.X.draw(cr, self['tickwidth'])
+        self.Y.draw(cr, self['tickwidth'])
         cr.fill()
         
         for PL in self._datasets:
@@ -75,7 +74,7 @@ class Plot(Block_element):
     def regions(self, x, y):
         if y > 0:
             return 0
-        elif y < -self._graphheight and x < self._yaxis_div:
+        elif y < -self['height'] and x < self._yaxis_div:
             return 1
         else:
             return self._KEY.target(y)
@@ -88,21 +87,22 @@ class Plot(Block_element):
         F_num, = self.styles(None, 'num')
 
         top = y
-        left, right = bounds.bounds(y + self._graphheight/2)
+        height = self['height']
+        left, right = bounds.bounds(y + height/2)
 
         # y axis
         self._FLOW[1].layout(Subcell(bounds, -0.15, 0.15), c, y, P_y)
         y = self._FLOW[1].y
         
         px = left
-        py = int(y + self._graphheight) + 10
+        py = int(y + height) + 10
         
         w = right - left
         self._yaxis_div = w*0.15
         self.X.freeze(w)
-        self.Y.freeze(self._graphheight)
+        self.Y.freeze(height)
         for PL in self._datasets:
-            PL.freeze(w, -self._graphheight)
+            PL.freeze(w, -height)
         
         MONO = list(chain.from_iterable(A.print_numbers({'R': 0, 'l': 0, 'c': c, 'page': bounds.page}, self.PP, F_num) for A in (self.X, self.Y)))
         

@@ -22,27 +22,29 @@ class _Axis(Node):
         self.scalenumbers = [(int(round(x*h)), S) for x, S in self.numbers]
 
     def step(self, step):
-        start = self.a
+        start = self['start']
         return (start + i * step for i in range(floor(abs(self.r/step)) + 1))
 
 class _LinearAxis(_Axis):
     ADNA = [('start', 0, 'float'), ('stop', 89, 'float'), ('minor', 1, 'float'), ('major', 2, 'float'), ('number', 4, 'float'), ('round', 13, 'int')]
     
     def _format(self, u):
-        return (str(_soft_int(u, self._roundto))).replace('-', '−')
+        return (str(_soft_int(u, self['round']))).replace('-', '−')
     
     def enum(self):
-        start, stop, minor, major, number, self._roundto = self.get_attributes()
+        self.r = self['stop'] - self['start']
+        major = self['major']
+        minor = self['minor']
+        number = self['number']
+        start = self['start']
         self.U = lambda x: x - start
-                
-        R = self.U(stop)
-        self.minor   = [x/R for x in (i*minor for i in range(floor((stop - start) / minor) + 1)) if x % major]
-        self.major   = [x/R for x in (i*major for i in range(floor((stop - start) / major) + 1))]
-        self.numbers = [(x/R, self._format(x + start)) for x in (i*number for i in range(floor((stop - start) / number) + 1))]
+        R = self.U(self['stop'])
         self.R = R
+
+        self.minor   = [x/R for x in (i*minor for i in range(floor(self.r / minor) + 1)) if x % major]
+        self.major   = [x/R for x in (i*major for i in range(floor(self.r / major) + 1))]
+        self.numbers = [(x/R, self._format(x + start)) for x in (i*number for i in range(floor(self.r / number) + 1))]
         
-        self.a = start
-        self.r = stop - start
 
 def floorlog(x, fl=1):
     try:
@@ -74,14 +76,14 @@ class _LogAxis(_Axis):
     ADNA = [('start', 0, 'float'), ('stop', 10000, 'float'), ('minor',  10, 'float'), ('major', 10, 'float'), ('number', 100, 'float'), ('base', 0, 'float'), ('round', 13, 'int')]
 
     def _format_reg(self, u):
-        exp = _soft_int(log(u, self._expressed_base), self._roundto)
+        exp = _soft_int(log(u, self._expressed_base), self['round'])
         if -4 < exp < 4:
-            return (str(_soft_int(u, self._roundto))).replace('-', '−')
+            return (str(_soft_int(u, self['round']))).replace('-', '−')
         else:
-            return (str(_soft_int(self._expressed_base, self._roundto)) + ' E ' + str(exp)).replace('-', '−')
+            return (str(_soft_int(self._expressed_base, self['round'])) + ' E ' + str(exp)).replace('-', '−')
 
     def _format_e(self, u):
-        exp = _soft_int(log(u), self._roundto)
+        exp = _soft_int(log(u), self['round'])
         return ('e E ' + str(exp)).replace('-', '−')
 
     def _set_base(self, expressed_base, number):
@@ -96,28 +98,24 @@ class _LogAxis(_Axis):
         self._format = self._format_reg
 
     def enum(self):
-        start, stop, minor, major, number, expressed_base, self._roundto = self.get_attributes()
-
-        self._set_base(expressed_base, number)
-        if start > 0:
-            i0 = log(start)
+        self._set_base(self['base'], self['number'])
+        if self['start'] > 0:
+            i0 = log(self['start'])
             self.U = lambda x: floorlog(x, i0) - i0
         else:
             self.U = floorlog
 
-        number = logbasevalid(number, e)
-        minor  = logbasevalid(minor, number)
-        major  = logbasevalid(major, number)
+        self.r = self['stop'] - self['start']
+        number = logbasevalid(self['number'], e)
+        minor  = logbasevalid(self['minor'], number)
+        major  = logbasevalid(self['major'], number)
                         
-        R = self.U(stop)
-        majorticks = set(major**i for i in logrange(start, stop, major))
+        R = self.U(self['stop'])
+        majorticks = set(major**i for i in logrange(self['start'], self['stop'], major))
         self.major   = [self.U(x)/R for x in majorticks]
-        self.minor   = [self.U(x)/R for x in (minor**i for i in logrange(start, stop, minor)) if x not in majorticks]
-        self.numbers = [(self.U(x)/R, self._format(x)) for x in (number**i for i in logrange(start, stop, number))]
+        self.minor   = [self.U(x)/R for x in (minor**i for i in logrange(self['start'], self['stop'], minor)) if x not in majorticks]
+        self.numbers = [(self.U(x)/R, self._format(x)) for x in (number**i for i in logrange(self['start'], self['stop'], number))]
         self.R = R
-        
-        self.a = start
-        self.r = stop - start
     
 class _Horizontal(object):
     def print_numbers(self, LINE, PP, F):

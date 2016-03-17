@@ -1,4 +1,7 @@
 <Multi_key> <i> <n> <t>          	: "∫"   integral # INTEGRAL
+<Multi_key> <s> <u> <m>          	: "∑"   summation # SUM
+<Multi_key> <p> <r> <d>          	: "∏"   product # PRODUCT
+
 <Multi_key> <less> <period>         : "‹"   guilsinglleft # guillemet, left pointing single
 <Multi_key> <greater> <period>         : "›"   guilsinglright # guillemet, right pointing single
 

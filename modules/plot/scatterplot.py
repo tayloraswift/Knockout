@@ -6,15 +6,14 @@ class Scatterplot(Data):
     ADNA = [('data', (), '2D'), ('color', '#ff3085', 'rgba'), ('radius', 2, 'float')]
 
     def unit(self, axes):
-        data, self.color, self._r = self.get_attributes()
         project = axes.project
-        self._unitpoints = [project(x, y) for x, y in data]
+        self._unitpoints = [project(x, y) for x, y in self['data']]
         return self
     
     def draw(self, cr):
-        cr.set_source_rgba( * self.color )
+        cr.set_source_rgba( * self['color'] )
         circle_t = 2*pi
-        r = self._r
+        r = self['radius']
         for x, y in self._points:
             cr.move_to(x, y)
             cr.arc(x, y, r, 0, circle_t)

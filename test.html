@@ -368,7 +368,7 @@
     <mod:fx color="#000000a0" f="0" linewidth="1" step="1">
         <p><mi char="y"/> = 0 </p>
     </mod:fx>
-    <mod:fx color="#ff3085" f="6*x - x**2" linewidth="2" step="0.1">
+    <mod:fx color="#ff3085" f="6*x - x**2" linewidth="2" start="0" step="0.1" stop="6">
         <p><mi char="f"/>(<mi char="x"/>) = 6<mi char="x"/> − <mi char="x"/><sup>2</sup> </p>
     </mod:fx>
     <mod:hist start="0" step="1">
@@ -394,7 +394,7 @@
     <mod:fx color="#ff3085" f="sin(x) + x/3" step="0.1">
         <p><mi char="f"/>(<mi char="x"/>) = sin <mi char="x"/> + <mi char="x"/>/3 </p>
     </mod:fx>
-    <mod:fx color="#666666" f="1/x" step="0.1">
+    <mod:fx clip="True" color="#666666" f="1/x" step="0.01">
         <p><mi char="f"/>(<mi char="x"/>) = <mod:frac>
             <mod:frac:n>1</mod:frac:n>
             <mod:frac:d><mi char="x"/></mod:frac:d>
@@ -431,7 +431,7 @@
                 'lowercase': {'capitals': False},
                 'subscript': {'shift': -2},
                 'superscript': {'shift': 5}},
- 'FTAGLIST': [('sub', ['small']), ('emphasis', []), ('strong', []), ('big', []), ('sc', []), ('caption', []), ('sup', ['small']), ('reference', []), ('link', [])],
+ 'FTAGLIST': [('reference', []), ('link', []), ('sub', ['small']), ('big', []), ('caption', []), ('sc', []), ('strong', []), ('sup', ['small']), ('emphasis', [])],
  'PARASTYLES': (15,
                 [({'fontclasses': (2, [('Black', {}), ('subscript', {'sub': 1}), ('superscript', {'sup': 1})])}, {}),
                  ({'fontclasses': (0,
@@ -472,22 +472,22 @@
                  ({'fontclasses': (0, [('Sans serif semi', {})]), 'indent': (0, 1, 0), 'margin_bottom': 2, 'margin_top': 0}, {'caption': 1, 'h3': 1}),
                  ({'indent': (0, 1, 0)}, {'firstchild': 1})]),
  'PTAGLIST': [('', []),
-              ('units', []),
-              ('h3', []),
-              ('figure title', []),
-              ('tablecell', []),
-              ('figure', []),
-              ('firstchild', []),
-              ('math', []),
-              ('table emphasis', []),
-              ('tableleft', []),
-              ('tablehead', []),
+              ('h2', []),
               ('key', []),
-              ('h1', []),
-              ('body', []),
+              ('math', []),
+              ('h3', []),
+              ('figure', []),
+              ('tablehead', []),
+              ('tableleft', []),
+              ('figure title', []),
+              ('table emphasis', []),
+              ('firstchild', []),
+              ('units', []),
+              ('tablecell', []),
               ('caption', []),
-              ('list', []),
-              ('h2', [])],
+              ('body', []),
+              ('h1', []),
+              ('list', [])],
  'contexts': {'channels': {'c': 1, 'p': 0, 't': 1}, 'text': {'i': 1070, 'j': 1070, 'p': 1, 't': 1}},
  'grid': [[80, 360, 420, 700], [100, 130, 910]],
  'outlines': ([([[[80, 70, True], [80, 100, False]], [[700, 70, True], [700, 100, False]]], 1)],
@@ -518,5 +518,5 @@
                ([[[90, 130, False], [90, 910, False]], [[370, 130, False], [370, 910, False]]], 14),
                ([[[410, 130, False], [410, 910, False]], [[690, 130, False], [690, 910, False]]], 14)]),
  'page': {'dimensions': (765, 990), 'dual': True},
- 'view': {'H': 203, 'Hc': 697, 'K': -1001, 'Kc': 611, 'Zoom': 11, 'mode': 'text'}}
+ 'view': {'H': 146, 'Hc': 607, 'K': -993, 'Kc': 549, 'Zoom': 11, 'mode': 'text'}}
 ############# -->

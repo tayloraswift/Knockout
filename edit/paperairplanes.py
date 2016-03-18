@@ -1,6 +1,8 @@
 from itertools import groupby
 from edit.arithmetic import NumericStringParser, ParseException
 
+from style.styles import FTAGS
+
 nsp = NumericStringParser()
 
 def read_binomial(C, SIGN, K):
@@ -153,3 +155,9 @@ def interpret_bool(b):
             return interpret_int(b)
     else:
         return False
+
+def fonttag(f):
+    if type(f) is str:
+        return FTAGS[f]
+    else:
+        return f

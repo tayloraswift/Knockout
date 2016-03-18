@@ -4,7 +4,7 @@ from bulletholes.counter import TCounter as Counter
 
 def print_attrs(name, attrs, imply={}):
     if attrs:
-        E = ' '.join(A + '="' + V + '"' for A, V in sorted(attrs.items()) if A not in imply or imply[A] != V)
+        E = ' '.join(A + '="' + str(V) + '"' for A, V in sorted(attrs.items()) if A not in imply or imply[A] != V)
         if E:
             return name + ' ' + E
     return name

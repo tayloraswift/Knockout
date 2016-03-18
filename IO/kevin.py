@@ -1,6 +1,7 @@
 from html import parser, unescape, escape
 from ast import literal_eval
 from itertools import chain
+import re
 
 from bulletholes.counter import TCounter as Counter
 from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Inline_element, Block_element, Node
@@ -13,32 +14,30 @@ from IO.xml import print_attrs, print_styles, count_styles
 inlinecontainers = {'p'} | textfacing
 
 def write_node(node, indent=0):
-    name = node.name
-    attrs = node.attrs
     if node.PP is not None:
-        attrs = attrs.copy()
+        attrs = node.attrs.copy()
         attrs.update(print_styles(node.PP))
+    else:
+        attrs = node.attrs
     # write content
-    return [[indent, '<' + print_attrs(name, attrs) + '>']] + write_html(node.content, indent + 1) + [[indent, '</' + name + '>']]
+    return [[indent, '<' + print_attrs(node.name, attrs) + '>']] + write_html(node.content, indent + 1) + [[indent, '</' + node.name + '>']]
 
 def write_inline_node(node, indent=0):
-    name = node.name
-    attrs = node.attrs
     if node.content:
         if not node.textfacing and all(isinstance(e, Node) for e in node.content):
-            A = [[indent, '<' + print_attrs(name, attrs) + '>']]
+            A = [[indent, '<' + node.print_A() + '>']]
             A.extend(chain.from_iterable(write_inline_node(N, indent + 1) for N in node.content))
-            return A + [[indent, '</' + name + '>']]
+            return A + [[indent, '</' + node.name + '>']]
         else:
-            A = [[indent, '<' + print_attrs(name, attrs) + '>']]
+            A = [[indent, '<' + node.print_A() + '>']]
             content = write_html(node.content, indent + 1)
             if content:
                 A[-1][1] += content.pop(0)[1]
                 A += content
-            A[-1][1] += '</' + name + '>'
+            A[-1][1] += '</' + node.name + '>'
             return A
     else:
-        return [[indent, '<' + print_attrs(name, attrs) + '/>']]
+        return [[indent, '<' + node.print_A() + '/>']]
     
 def write_html(L, indent=0):
     lines = []
@@ -217,21 +216,27 @@ class Kevin_from_TN(Minion): # to capture the first and last blobs
 Q = Minion()
 R = Kevin_from_TN()
 
+IN = dict((('<em>', '<fo class="emphasis"/>'), 
+    ('</em>', '<fc class="emphasis"/>'),
+    ('<strong>', '<fo class="strong"/>'),
+    ('</strong>', '<fc class="strong"/>'),
+    ('<sup>', '<fo class="sup"/>'),
+    ('</sup>', '<fc class="sup"/>'),
+    ('<sub>', '<fo class="sub"/>'),
+    ('</sub>', '<fc class="sub"/>')))
+INNL = IN.copy()
+INNL['\n'] = ''
+OUT = {k: v for v, k in IN.items()}
+
+inpattern = re.compile("|".join([re.escape(k) for k in IN.keys()]), re.M)
+innlpattern = re.compile("|".join([re.escape(k) for k in INNL.keys()]), re.M)
+outpattern = re.compile("|".join([re.escape(k) for k in OUT.keys()]), re.M)
+
 def deserialize(text, fragment=False):
     if fragment:
-        parse = R
+        return R.feed( inpattern.sub(lambda x: IN[x.group(0)], text) )
     else:
-        text.replace('\n', '')
-        parse = Q
-    text = text.replace('<em>', '<f class="emphasis">')
-    text = text.replace('</em>', '</f class="emphasis">')
-    text = text.replace('<strong>', '<f class="strong">')
-    text = text.replace('</strong>', '</f class="strong">')
-    text = text.replace('<sup>', '<f class="sup">')
-    text = text.replace('</sup>', '</f class="sup">')
-    text = text.replace('<sub>', '<f class="sub">')
-    text = text.replace('</sub>', '</f class="sub">')
-    return parse.feed(text.replace('</f', '<ff'))
+        return Q.feed( innlpattern.sub(lambda x: INNL[x.group(0)], text) )
 
 def serialize(L):
-    return '\n'.join('    ' * indent + line for indent, line in write_html(L))
+    return outpattern.sub(lambda x: OUT[x.group(0)], '\n'.join('    ' * indent + line for indent, line in write_html(L)) )

@@ -242,6 +242,9 @@ class Tag(_DB):
     def polaroid(self):
         return (self.name, self.groups)
     
+    def __str__(self):
+        return self.name
+    
 
 class T_Library(dict):
     def __init__(self, * args, ** kwargs):

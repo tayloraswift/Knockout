@@ -1,7 +1,7 @@
 from style.styles import DB_Parastyle
 from IO.xml import print_attrs, print_styles
 from state.exceptions import IO_Error
-from edit.paperairplanes import interpret_int, interpret_float, interpret_float_tuple, interpret_enumeration, interpret_rgba, interpret_bool, interpret_haylor, interpret_tsquared, function_x
+from edit.paperairplanes import interpret_int, interpret_float, interpret_float_tuple, interpret_enumeration, interpret_rgba, interpret_bool, interpret_haylor, interpret_tsquared, function_x, fonttag
 
 textstyles = {'emphasis': 'em', 'strong': 'strong', 'sup': 'sup', 'sub': 'sub'}
 
@@ -24,41 +24,8 @@ class Paragraph(object):
     def __len__(self):
         return 3
 
-class _Fontpost(object):
-    def __init__(self, F):
-        self.F = F
-
-    def __eq__(self, other):
-        return type(other) is self.__class__ and other.F is self.F
-
-class OpenFontpost(_Fontpost):
-    def __str__(self):
-        return '<f>'
-
-    def __repr__(self):
-        if self.F.name in textstyles:
-            return '<' + textstyles[self.F.name] + '>'
-        else:
-            return '<f class="' + self.F.name + '">'
-
-    def __len__(self):
-        return 3
-
-class CloseFontpost(_Fontpost):
-    def __str__(self):
-        return '</f>'
-
-    def __repr__(self):
-        if self.F.name in textstyles:
-            return '</' + textstyles[self.F.name] + '>'
-        else:
-            return '</f class="' + self.F.name + '">'
-
-    def __len__(self):
-        return 4
-
 class Node(dict):
-    namespace = '_node'
+    nodename = '_node'
     is_root = False
     textfacing = False
 
@@ -75,7 +42,8 @@ class Node(dict):
                 'bool': interpret_bool,
                 '1D': interpret_haylor,
                 '2D': interpret_tsquared,
-                'fx': function_x}
+                'fx': function_x,
+                'ftag': fonttag}
 
     def __init__(self, name, attrs, content, PP=None):
         self.name = name
@@ -114,9 +82,12 @@ class Node(dict):
             return (e for e in self.content if isinstance(e, cls))
         else:
             return (e for e in self.content if type(e) is cls)
-        
+
+    def print_A(self):
+        return print_attrs(self.name, self.attrs)
+
 class Mod_element(Node):
-    namespace = '_undef'
+    nodename = '_undef'
     is_root = True
     
     def __init__(self, * args, ** kwargs):
@@ -130,7 +101,40 @@ class Mod_element(Node):
         return 1989
 
 class Block_element(Mod_element):
-    namespace = '_undef_block'
+    nodename = '_undef_block'
         
 class Inline_element(Mod_element):
-    namespace = '_undef_inline'
+    nodename = '_undef_inline'
+
+class _Fontpost(Inline_element):
+    textfacing = True
+    ADNA = [('class', '_undefined_', 'ftag')]
+    
+    def _load(self):
+        self.F = self['class']
+        self.attrs['class'] = self.F
+
+    def __eq__(self, other):
+        return type(other) is self.__class__ and other.F is self.F
+
+class OpenFontpost(_Fontpost):
+    nodename = 'fo'
+    def __str__(self):
+        return '<fo/>'
+
+    def __len__(self):
+        return 5
+
+class CloseFontpost(_Fontpost):
+    nodename = 'fc'
+    def __str__(self):
+        return '<fc/>'
+
+    def __len__(self):
+        return 5
+
+members = [OpenFontpost, CloseFontpost]
+inline = True
+
+        
+

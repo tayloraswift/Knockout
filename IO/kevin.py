@@ -124,16 +124,6 @@ class Minion(parser.HTMLParser):
             
             self._breadcrumbs.append('p')
         
-        elif tag == 'f':
-            if self._breadcrumbs[-1] in inlinecontainers:
-                ftag = styles.FTAGS[attrs['class']]
-                O.append(OpenFontpost(ftag))
-
-        elif tag == 'ff':
-            if self._breadcrumbs[-1] in inlinecontainers:
-                ftag = styles.FTAGS[attrs['class']]
-                O.append(CloseFontpost(ftag))
-        
         elif tag in modules:
             self._breadcrumbs.append(tag)
             if tag in blocktags:

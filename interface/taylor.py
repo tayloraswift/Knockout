@@ -125,7 +125,6 @@ def PDF():
     surface = cairo.PDFSurface(name + '.pdf', meredith.page.WIDTH*0.75, meredith.page.HEIGHT*0.75)
     cr = cairo.Context(surface)
     cr.scale(0.75, 0.75)
-    cr.translate(0, 0.5)
     classes = becky.page_classes()
     max_page = max(classes.keys())
     for p in range(max_page + 1):

@@ -214,19 +214,16 @@ IN = dict((('<em>', '<fo class="emphasis"/>'),
     ('</sup>', '<fc class="sup"/>'),
     ('<sub>', '<fo class="sub"/>'),
     ('</sub>', '<fc class="sub"/>')))
-INNL = IN.copy()
-INNL['\n'] = ''
 OUT = {k: v for v, k in IN.items()}
 
 inpattern = re.compile("|".join([re.escape(k) for k in IN.keys()]), re.M)
-innlpattern = re.compile("|".join([re.escape(k) for k in INNL.keys()]), re.M)
 outpattern = re.compile("|".join([re.escape(k) for k in OUT.keys()]), re.M)
 
 def deserialize(text, fragment=False):
     if fragment:
         return R.feed( inpattern.sub(lambda x: IN[x.group(0)], text) )
     else:
-        return Q.feed( innlpattern.sub(lambda x: INNL[x.group(0)], text) )
+        return Q.feed( inpattern.sub(lambda x: IN[x.group(0)], text) )
 
 def serialize(L):
     return outpattern.sub(lambda x: OUT[x.group(0)], '\n'.join('    ' * indent + line for indent, line in write_html(L)) )

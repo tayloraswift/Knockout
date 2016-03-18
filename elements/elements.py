@@ -102,7 +102,15 @@ class Mod_element(Node):
 
 class Block_element(Mod_element):
     nodename = '_undef_block'
-        
+
+    def print_A(self):
+        if self.PP is not None:
+            attrs = self.attrs.copy()
+            attrs.update(print_styles(self.PP))
+        else:
+            attrs = node.attrs
+        return print_attrs(self.name, attrs)
+    
 class Inline_element(Mod_element):
     nodename = '_undef_inline'
 

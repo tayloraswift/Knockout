@@ -9,18 +9,12 @@ from model.wonder import words
 from style import styles
 from modules import modules, inlinetags, blocktags, textfacing
 from state.exceptions import IO_Error
-from IO.xml import print_attrs, print_styles, count_styles
+from IO.xml import count_styles
 
 inlinecontainers = {'p'} | textfacing
 
 def write_node(node, indent=0):
-    if node.PP is not None:
-        attrs = node.attrs.copy()
-        attrs.update(print_styles(node.PP))
-    else:
-        attrs = node.attrs
-    # write content
-    return [[indent, '<' + print_attrs(node.name, attrs) + '>']] + write_html(node.content, indent + 1) + [[indent, '</' + node.name + '>']]
+    return [[indent, '<' + node.print_A() + '>']] + write_html(node.content, indent + 1) + [[indent, '</' + node.name + '>']]
 
 def write_inline_node(node, indent=0):
     if node.content:

@@ -34,10 +34,10 @@ def _paint_fail_frame(cr, h, k, msg):
     cr.fill()
         
 class Image(Inline_element):
-    nodename = 'image'
+    name = 'image'
     DNA = {}
     ADNA = [('src', '', 'str'), ('width', 89, 'int')]
-    documentation = [(0, nodename)]
+    documentation = [(0, name)]
     
     def _load(self):
         self.width = self['width']

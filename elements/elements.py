@@ -26,7 +26,7 @@ class Paragraph(object):
         return 3
 
 class Node(dict):
-    nodename = '_node'
+    name = '_node'
     is_root = False
     textfacing = False
 
@@ -46,8 +46,7 @@ class Node(dict):
                 'fx': function_x,
                 'ftag': fonttag}
 
-    def __init__(self, name, attrs, content, PP=None):
-        self.name = name
+    def __init__(self, attrs, content, PP=None):
         self.attrs = attrs
         self.content = content
         self.PP = PP
@@ -91,7 +90,7 @@ class Node(dict):
         return ''.join(chain('<', repr(self.name), '> {', repr(self.attrs), '} {', repr(self.PP), '} ', repr(self.content)))
 
 class Mod_element(Node):
-    nodename = '_undef'
+    name = '_undef'
     is_root = True
     
     def __init__(self, * args, ** kwargs):
@@ -105,7 +104,7 @@ class Mod_element(Node):
         return 1989
 
 class Block_element(Mod_element):
-    nodename = '_undef_block'
+    name = '_undef_block'
 
     def print_A(self):
         if self.PP is not None:
@@ -116,7 +115,7 @@ class Block_element(Mod_element):
         return print_attrs(self.name, attrs)
     
 class Inline_element(Mod_element):
-    nodename = '_undef_inline'
+    name = '_undef_inline'
 
 class _Fontpost(Inline_element):
     textfacing = True
@@ -130,7 +129,7 @@ class _Fontpost(Inline_element):
         return type(other) is self.__class__ and other.F is self.F
 
 class OpenFontpost(_Fontpost):
-    nodename = 'fo'
+    name = 'fo'
     def __str__(self):
         return '<fo/>'
 
@@ -138,7 +137,7 @@ class OpenFontpost(_Fontpost):
         return 5
 
 class CloseFontpost(_Fontpost):
-    nodename = 'fc'
+    name = 'fc'
     def __str__(self):
         return '<fc/>'
 

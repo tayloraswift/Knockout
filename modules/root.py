@@ -5,17 +5,17 @@ from model.olivia import Inline
 _namespace = 'mod:root'
 
 class Index(Node):
-    nodename = _namespace + ':i'
+    name = _namespace + ':i'
     textfacing = True
 
 class Radicand(Node):
-    nodename = _namespace + ':rad'
+    name = _namespace + ':rad'
     textfacing = True
 
 class Root(Inline_element):
-    nodename = _namespace
+    name = _namespace
     DNA = {'index': {}, 'radicand': {}}
-    documentation = [(0, nodename), (1, 'index'), (1, 'radicand')]
+    documentation = [(0, name), (1, 'index'), (1, 'radicand')]
     
     def _load(self):
         self._index, self._radicand = self.find_nodes(Index, Radicand)

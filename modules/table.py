@@ -63,18 +63,18 @@ class _Table_cell(Flowing_text):
         self.row = i
 
 class Table_td(Node):
-    nodename = 'td'
+    name = 'td'
     ADNA = [('rowspan', 1, 'int'), ('colspan', 1, 'int')]
 
 class Table_tr(Node):
-    nodename = 'tr'
+    name = 'tr'
 
 class Table(Block_element):
-    nodename = 'table'
+    name = 'table'
     DNA = {'table': {}, 'thead': {}, 'tleft': {}}
 
     ADNA = [('distr', '', 'float tuple'), ('celltop', 0, 'float'), ('cellbottom', 0, 'float'), ('hrules', set(), 'int set'), ('vrules', set(), 'int set'), ('rulemargin', 0, 'int'), ('rulewidth', 1, 'float')]
-    documentation = [(0, nodename), (1, 'tr'), (2, 'td')]
+    documentation = [(0, name), (1, 'tr'), (2, 'td')]
 
     def _load(self):
         self._CELLS = [[_Table_cell(td) for td in tr.content] for tr in self.content]

@@ -2,7 +2,7 @@ from math import pi
 from .data import Data
 
 class Scatterplot(Data):
-    nodename = 'mod:scatter'
+    name = 'mod:scatter'
     ADNA = [('data', (), '2D'), ('color', '#ff3085', 'rgba'), ('radius', 2, 'float'), ('key', True, 'bool')]
 
     def unit(self, axes):

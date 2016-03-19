@@ -12,17 +12,17 @@ from modules.plot.data import Data
 _namespace = 'mod:pie'
 
 class PieSlice(Data):
-    nodename = _namespace + ':slice'
+    name = _namespace + ':slice'
     ADNA = [('prop', 1, 'float'), ('color', '#ff3085', 'rgba'), ('key', True, 'bool')]
 
     def freeze(self, h, k):
         self._right = h
     
 class PieChart(Block_element):
-    nodename = _namespace
+    name = _namespace
     DNA = {'slice': {}}
     ADNA = [('radius', 89, 'float'), ('center', 0.5, 'float'), ('rotate', 0, 'float')]
-    documentation = [(0, nodename), (1, 'slice')]
+    documentation = [(0, name), (1, 'slice')]
     
     def _load(self):
         self.active = 0

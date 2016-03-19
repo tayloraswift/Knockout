@@ -312,7 +312,7 @@ class _Repeat_flowing_text(_Chained_flowing_text):
         return self._sorted_pages
               
 class Section(Block_element):
-    nodename = 'section'
+    name = 'section'
     ADNA = [('repeat', '', 'str'), ('outlines', '', 'str')]
     def _load(self):
         serchannels = self.pop('outlines')

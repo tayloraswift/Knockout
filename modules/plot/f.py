@@ -2,7 +2,7 @@ from math import pi
 from .data import Data
 
 class Function(Data):
-    nodename = 'mod:fx'
+    name = 'mod:fx'
     ADNA = [('x', lambda t: t, 'fx'), ('y', lambda t: t, 'fx'), ('start', -1, 'float'), ('stop', -1, 'float'), ('step', 1, 'float'), ('color', '#ff3085', 'rgba'), ('radius', 2, 'float'), ('linewidth', 2, 'float'), ('clip', False, 'bool'), ('key', True, 'bool')]
 
     def unit(self, axes):

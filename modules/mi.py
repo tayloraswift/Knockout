@@ -5,10 +5,10 @@ from elements.elements import Inline_element
 from model.olivia import Inline
 
 class Math_italic(Inline_element):
-    nodename = 'mi'
+    name = 'mi'
     DNA = {'mi': {}}
     ADNA = [('char', '', 'str'), ('correct', 1, 'float')]
-    documentation = [(0, nodename)]
+    documentation = [(0, name)]
     
     def _load(self):
         if self['char']:

@@ -1,5 +1,5 @@
 from model.cat import cast_mono_line, calculate_vmetrics
-from elements.elements import Inline_element, Node
+from elements.node import Inline_element, Node
 from model.olivia import Inline
 
 _namespace = 'mod:frac'

@@ -1,4 +1,4 @@
-from elements.elements import Node
+from elements.node import Node
 from model.olivia import Flowing_text
 
 class Data(Node):

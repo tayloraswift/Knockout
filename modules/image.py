@@ -1,7 +1,7 @@
 from cairo import ImageSurface, SVGSurface, Context, FORMAT_ARGB32
 from urllib.error import URLError
 
-from elements.elements import Inline_element
+from elements.node import Inline_element
 from model.olivia import Inline
 from IO.bitmap import make_pixbuf, paint_pixbuf
 

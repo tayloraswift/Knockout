@@ -1,5 +1,5 @@
 from model.cat import cast_mono_line, calculate_vmetrics
-from elements.elements import Inline_element
+from elements.node import Inline_element
 from model.olivia import Inline
 
 class Page_number(Inline_element):

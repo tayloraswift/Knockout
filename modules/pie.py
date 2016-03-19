@@ -4,7 +4,7 @@ from bisect import bisect
 
 from model.olivia import Flowing_text
 from model.george import Subcell
-from elements.elements import Block_element
+from elements.node import Block_element
 
 from modules.plot import Plot_key, GraphBlock
 from modules.plot.data import Data

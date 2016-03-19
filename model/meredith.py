@@ -1,9 +1,10 @@
 from IO import kevin
 
 class Meredith(list):
-    def __init__(self, KT, grid):
+    def __init__(self, KT, grid=None):
         list.__init__(self, (section.create_wrapper() for section in KT))
-        self.page_grid = grid
+        if grid is not None:
+            self.page_grid = grid
     
     def recalculate_all(self):
         for tract in self:

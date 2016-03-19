@@ -1,6 +1,6 @@
 A Python typesetting application, licensed under the GPL 3.0 or later.
 
-Runs out of the box on linux systems, start with ``python3.5 main.py Y.html``
+Runs out of the box on linux systems, start with ``python3.5 main.py test.html``
 Try a few example files: ``python3.5 main.py 2014.html``, ``python3.5 main.py 2016.html``
 (Other systems may need to install freetype-py and pyhunspell)
 

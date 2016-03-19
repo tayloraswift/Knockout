@@ -1,4 +1,5 @@
 import bisect
+from itertools import chain
 from model import meredith
 
 class Swimming_pool(object):
@@ -76,6 +77,8 @@ class Swimming_pool(object):
                 portal = ('portal', x - self.railings[1][-1][0], y - self.railings[1][-1][1])
         return portal
     
+    def __repr__(self):
+        return ' ; '.join(chain((' '.join(str(point[0]) + ',' + str(point[1]) for point in railing) for railing in self.railings), (str(self.page),)))
     
 class Washington(object):
     def __init__(self, ic):

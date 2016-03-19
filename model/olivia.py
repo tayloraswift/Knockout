@@ -1,11 +1,11 @@
 from bisect import bisect
 from itertools import groupby, chain
 
-from model import meredith
 from model.cat import typeset_chained, typeset_liquid, Glyphs_line
 from elements.elements import Block_element
 from model.george import Washington
 from edit.paperairplanes import interpret_int
+from IO.xml import print_attrs
 
 class _Empty_F(object):
     def __init__(self):
@@ -271,30 +271,32 @@ class _Chained_flowing_text(Flowing_text):
 class _Repeat_flowing_text(_Chained_flowing_text):
     def __init__(self, node):
         _Chained_flowing_text.__init__(self, node)
-        self.start, self.until = node.repeat
+        self.rrange = node.repeat
                 
         # correct channels
         for channel in self.channels.channels:
-            channel.set_page(self.start)
+            channel.set_page(node.repeat[0])
 
         self.repeats, self.channel_repeats = zip( * ((_Chained_flowing_text(node),
                         [C.shallow_copy_to_page(k) for C in self.channels.channels]) 
-                        for k in range(self.start, self.until + 1)) )
+                        for k in range(node.repeat[0], node.repeat[1] + 1)) )
         # set representatives
         self.LINES = self.repeats[0].LINES
 
     def layout(self):
         self._sorted_pages.clear()
+        v = self.rrange[1]
         for p, (R, C) in enumerate(zip(reversed(self.repeats), reversed(self.channel_repeats))):
             R.pack(C, self.text)
-            self._extract_page(self.until - p, R.LINES)
+            self._extract_page(v - p, R.LINES)
         self._precompute_search()
 
     def partial_layout(self, i):
         self._sorted_pages.clear()
+        v = self.rrange[1]
         for p, (R, C) in enumerate(zip(reversed(self.repeats), reversed(self.channel_repeats))):
             R.pack_partial(C, self.text, i)
-            self._extract_page(self.until - p, R.LINES)
+            self._extract_page(v - p, R.LINES)
         self._precompute_search()
     
     def _extract_page(self, p, lines):
@@ -308,7 +310,7 @@ class _Repeat_flowing_text(_Chained_flowing_text):
             print('I just redid the entire layout because the program has a bug')
 
         return self._sorted_pages
-
+              
 class Section(Block_element):
     nodename = 'section'
     ADNA = [('repeat', '', 'str'), ('outlines', '', 'str')]
@@ -321,16 +323,24 @@ class Section(Block_element):
         
         repeat = [i for i in (interpret_int(e, fail=None) for e in self.pop('repeat').split(':')) if i is not None]
         self.CC = Washington.from_list(CC)
+        
         if len(repeat) == 2:
             self.repeat = repeat
         else:
-            self.repeat = None
+            self.repeat = []
     
     def create_wrapper(self):
-        if self.repeat is None:
-            return _Chained_flowing_text(self)
-        else:
+        self.print_A()
+        if self.repeat:
             return _Repeat_flowing_text(self)
+        else:
+            return _Chained_flowing_text(self)
 
+    def print_A(self):
+        attrs = {'outlines': ' |\n    '.join(repr(C) for C in self.CC.channels)}
+        if self.repeat:
+            attrs['repeat'] = ':'.join(str(i) for i in self.repeat)
+        return print_attrs(self.name, attrs)
+    
 members = [Section]
 inline = False

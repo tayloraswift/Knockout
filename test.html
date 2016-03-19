@@ -2,7 +2,7 @@
 <title>test.html</title>
 
 <body>
-<section outlines="80,70 80,100 ; 700,70 700,100 ; 1" repeat="0:2">
+<section outlines="80,50 80,80 ; 700,50 700,80 ; 0" repeat="0:2">
 <table class="">
     <tr>
         <td>
@@ -15,12 +15,12 @@
 </table>
 </section>
 
-<section outlines="80,80   80,910  ; 360,80  360,910 ; 0 |
-                   420,80  420,910 ; 700,80  700,910 ; 0 |
-                   80,130  80,910  ; 360,130 360,910 ; 1 |
-                   420,130 420,910 ; 700,130 700,910 ; 1 |
-                   80,130  80,910  ; 360,130 360,910 ; 2 |
-                   420,130 420,910 ; 700,130 700,910 ; 2 |">
+<section outlines="80,80 80,910 ; 360,80 360,910 ; 0 |
+    420,80 420,910 ; 700,80 700,910 ; 0 |
+    80,130 80,910 ; 360,130 360,910 ; 1 |
+    420,130 420,910 ; 700,130 700,910 ; 1 |
+    80,130 80,910 ; 360,130 360,910 ; 2 |
+    420,130 420,910 ; 700,130 700,910 ; 2">
 <p class="h1">Multiline Heading</p>
 
 <p class="h2">1  Text typesetting</p>
@@ -474,8 +474,8 @@
                 'lowercase': {'capitals': False},
                 'subscript': {'shift': -2},
                 'superscript': {'shift': 5}},
- 'FTAGLIST': [('big', []), ('reference', []), ('emphasis', []), ('strong', []), ('sub', ['small']), ('sup', ['small']), ('link', []), ('caption', []), ('sc', [])],
- 'PARASTYLES': (15,
+ 'FTAGLIST': [('caption', []), ('emphasis', []), ('strong', []), ('link', []), ('sup', ['small']), ('sc', []), ('reference', []), ('sub', ['small']), ('big', [])],
+ 'PARASTYLES': (1,
                 [({'fontclasses': (2, [('Black', {}), ('subscript', {'sub': 1}), ('superscript', {'sup': 1})])}, {}),
                  ({'fontclasses': (0,
                                    [('Body regular', {}),
@@ -514,24 +514,24 @@
                  ({'fontclasses': (1, [('Sans serif book italic', {}), ('Caption', {})]), 'hyphenate': True, 'leading': 16, 'margin_bottom': 12}, {'caption': 1}),
                  ({'fontclasses': (0, [('Sans serif semi', {})]), 'indent': (0, 1, 0), 'margin_bottom': 2, 'margin_top': 0}, {'caption': 1, 'h3': 1}),
                  ({'indent': (0, 1, 0)}, {'firstchild': 1})]),
- 'PTAGLIST': [('table emphasis', []),
-              ('list', []),
-              ('figure', []),
-              ('body', []),
-              ('tablehead', []),
-              ('figure title', []),
-              ('h2', []),
-              ('caption', []),
-              ('firstchild', []),
-              ('tableleft', []),
-              ('units', []),
+ 'PTAGLIST': [('body', []),
               ('h1', []),
-              ('h3', []),
+              ('list', []),
+              ('firstchild', []),
+              ('key', []),
               ('tablecell', []),
+              ('h3', []),
+              ('figure', []),
+              ('tablehead', []),
               ('math', []),
-              ('key', [])],
- 'contexts': {'channels': {'c': 1, 'p': 0, 't': 1}, 'text': {'i': 817, 'j': 817, 'p': 0, 't': 1}},
+              ('caption', []),
+              ('figure title', []),
+              ('table emphasis', []),
+              ('units', []),
+              ('h2', []),
+              ('tableleft', [])],
+ 'contexts': {'channels': {'c': 0, 'p': 0, 't': 1}, 'text': {'i': 552, 'j': 552, 'p': 0, 't': 1}},
  'grid': [[80, 360, 420, 700], [100, 130, 910]],
  'page': {'dimensions': (765, 990), 'dual': True},
- 'view': {'H': 49, 'Hc': 578, 'K': -772, 'Kc': 318, 'Zoom': 11, 'mode': 'text'}}
+ 'view': {'H': -127, 'Hc': 414, 'K': -965, 'Kc': 529, 'Zoom': 11, 'mode': 'text'}}
 ############# -->

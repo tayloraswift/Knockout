@@ -1,11 +1,8 @@
-from model import olivia
-from model import george
 from IO import kevin
 
 class Meredith(list):
     def __init__(self, KT, grid):
-        list.__init__(self, (olivia.Repeat_flowing_text(kevin.deserialize(T), george.Washington.from_list(C)) if repeat else
-                            olivia.Chained_flowing_text(kevin.deserialize(T), george.Washington.from_list(C)) for (repeat, T), C in KT))
+        list.__init__(self, (section.create_wrapper() for section in KT))
 
         self.page_grid = grid
     
@@ -13,15 +10,19 @@ class Meredith(list):
         for tract in self:
             tract.layout()
 
-    def _gen_tract(self, cls):
-        self.append(cls(kevin.deserialize('<p>{new}</p>'), george.Washington([self[-1].channels.generate_channel()])))
+    def _gen_tract(self, S):
+        self.append(kevin.deserialize(S)[0].create_wrapper())
         self[-1].layout()
 
     def add_tract(self):
-        self._gen_tract(olivia.Chained_flowing_text)
+        self._gen_tract('''<section outlines="10,10 10,30 ; 30,10 30,30 ; 0">
+    <p>{new}</p>
+</section>''')
 
     def add_repeat_tract(self):
-        self._gen_tract(olivia.Repeat_flowing_text)
+        self._gen_tract('''<section repeat="0:1" outlines="10,10 10,30 ; 30,10 30,30 ; 0">
+    <p>{new}</p>
+</section>''')
         
     def delete_tract(self, tract):
         t = self.index(tract)

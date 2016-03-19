@@ -1,3 +1,4 @@
+from itertools import chain
 from style.styles import DB_Parastyle
 from IO.xml import print_attrs, print_styles
 from state.exceptions import IO_Error
@@ -85,6 +86,9 @@ class Node(dict):
 
     def print_A(self):
         return print_attrs(self.name, self.attrs)
+    
+    def __repr__(self):
+        return ''.join(chain('<', repr(self.name), '> {', repr(self.attrs), '} {', repr(self.PP), '} ', repr(self.content)))
 
 class Mod_element(Node):
     nodename = '_undef'
@@ -140,7 +144,7 @@ class CloseFontpost(_Fontpost):
 
     def __len__(self):
         return 5
-
+    
 members = [OpenFontpost, CloseFontpost]
 inline = True
 

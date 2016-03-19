@@ -4,7 +4,6 @@ from ast import literal_eval
 from style import fonts, styles
 from state import constants, noticeboard
 from state.contexts import Text
-from state.exceptions import Channel_Error
 from model import meredith, page
 from edit import cursor, caramel
 from IO import kevin, un, xml
@@ -14,10 +13,10 @@ from modules import modulestyles, modules
 from elements.elements import Node
 
 def save():
-    HEADER = '<head><meta charset="UTF-8"></head>\n<title>' + constants.filename + '</title>\n\n'
-    
-    SECTIONS, channels = zip( * (( (type(t).sign, kevin.serialize(t.text)), [(c.railings, c.page) for c in t.channels.channels]) for t in meredith.mipsy))
-    SECTIONS = '<body>\n' + '\n\n'.join(sign + section + '\n</section>' for sign, section in SECTIONS) + '\n</body>\n'
+    FI = ('<head><meta charset="UTF-8"></head>\n<title>', constants.filename, '</title>\n\n',
+            '<body>\n',
+            kevin.serialize([F.NODE for F in meredith.mipsy], indent=-1),
+            '\n</body>\n')
 
     page = {'dimensions': (meredith.page.WIDTH, meredith.page.HEIGHT),
             'dual': meredith.page.dual}
@@ -39,15 +38,14 @@ def save():
 
     from interface import taylor
     
-    DATA = {'outlines': channels, 'grid': grid, 'contexts': {'text': textcontexts, 'channels': channelcontexts}, 'PARASTYLES': PPP, 'FONTSTYLES': FFF, 'PTAGLIST': PTT, 'FTAGLIST': FTT, 'view': taylor.becky.read_display_state(), 'page': page}
+    DATA = {'grid': grid, 'contexts': {'text': textcontexts, 'channels': channelcontexts}, 'PARASTYLES': PPP, 'FONTSTYLES': FFF, 'PTAGLIST': PTT, 'FTAGLIST': FTT, 'view': taylor.becky.read_display_state(), 'page': page}
     
     with open(constants.filename, 'w') as fi:
-        fi.write(HEADER)
-        fi.write(SECTIONS)
+        fi.write(''.join(FI))
         fi.write('\n<!-- #############\n')
         fi.write(pformat(DATA, width=189))
         fi.write('\n############# -->\n')
-
+    
 def load(name):
     with open(name, 'r') as fi:
         constants.filename = name
@@ -55,20 +53,6 @@ def load(name):
 
     BODY = doc[doc.find('<body>') + 6 : doc.find('</body>')]
     DATA = literal_eval(doc[doc.find('<!-- #############') + 18 : doc.find('############# -->')])
-    
-    text = []
-    for H in BODY.split('<section'):
-        tagend = H.find('>') + 1
-        end = H.find('</section>')
-        section = H[tagend : end].strip()
-        if section:
-            text.append(( literal_eval(xml.read_tag('<section' + H[:tagend])[1].get('repeat', 'False')), section))
-    channels = DATA['outlines']
-    
-    if len(text) == len(channels):
-        KT = zip(text, channels)
-    else:
-        raise Channel_Error
 
     # unpack styles
     styles.daydream()
@@ -77,7 +61,7 @@ def load(name):
     
     # set up page, tract model, page grid objects
     meredith.page = page.Page(DATA['page'])
-    meredith.mipsy = meredith.Meredith(KT, grid=DATA['grid'])
+    meredith.mipsy = meredith.Meredith(kevin.deserialize(BODY), grid=DATA['grid'])
     
     # aim editor objects
     cursor.fcursor = cursor.FCursor(DATA['contexts']['text'])

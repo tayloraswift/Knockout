@@ -3,6 +3,9 @@ from itertools import groupby, chain
 
 from model import meredith
 from model.cat import typeset_chained, typeset_liquid, Glyphs_line
+from elements.elements import Block_element
+from model.george import Washington
+from edit.paperairplanes import interpret_int
 
 class _Empty_F(object):
     def __init__(self):
@@ -198,12 +201,12 @@ class Flowing_text(object):
         for S in self.LINES:
             S.deposit(repository)
     
-class Chained_flowing_text(Flowing_text):
-    sign = '<section>\n'
-    def __init__(self, L, channels):
-        Flowing_text.__init__(self, L)
-        self.channels = channels
+class _Chained_flowing_text(Flowing_text):
+    def __init__(self, node):
+        Flowing_text.__init__(self, node.content)
+        self.channels = node.CC
         self._sorted_pages = {}
+        self.NODE = node
 
     def pack(self, channels, text):
         self.LINES[:] = typeset_chained(channels, text)
@@ -265,41 +268,36 @@ class Chained_flowing_text(Flowing_text):
                     line.deposit(sorted_page)
         return self._sorted_pages
 
-class Repeat_flowing_text(Chained_flowing_text):
-    sign = '<section repeat="True">\n'
-    def __init__(self, L, channels):
-        self.text = L
-        self._sorted_pages = {}
-
-        self.start = 1
-        self.until = 13
+class _Repeat_flowing_text(_Chained_flowing_text):
+    def __init__(self, node):
+        _Chained_flowing_text.__init__(self, node)
+        self.start, self.until = node.repeat
                 
         # correct channels
-        for channel in channels.channels:
+        for channel in self.channels.channels:
             channel.set_page(self.start)
 
-        self.repeats, self.channel_repeats = zip( * ((Chained_flowing_text(L, channels),
-                        [C.shallow_copy_to_page(k) for C in channels.channels]) 
+        self.repeats, self.channel_repeats = zip( * ((_Chained_flowing_text(node),
+                        [C.shallow_copy_to_page(k) for C in self.channels.channels]) 
                         for k in range(self.start, self.until + 1)) )
         # set representatives
         self.LINES = self.repeats[0].LINES
-        self.channels = channels
 
     def layout(self):
         self._sorted_pages.clear()
         for p, (R, C) in enumerate(zip(reversed(self.repeats), reversed(self.channel_repeats))):
             R.pack(C, self.text)
-            self.extract_page(self.until - p, R.LINES)
+            self._extract_page(self.until - p, R.LINES)
         self._precompute_search()
 
     def partial_layout(self, i):
         self._sorted_pages.clear()
         for p, (R, C) in enumerate(zip(reversed(self.repeats), reversed(self.channel_repeats))):
             R.pack_partial(C, self.text, i)
-            self.extract_page(self.until - p, R.LINES)
+            self._extract_page(self.until - p, R.LINES)
         self._precompute_search()
     
-    def extract_page(self, p, lines):
+    def _extract_page(self, p, lines):
         self._sorted_pages[p] = {'_annot': [], '_images': [], '_paint': [], '_paint_annot': []}
         for line in lines:
             line.deposit(self._sorted_pages[p])
@@ -310,3 +308,29 @@ class Repeat_flowing_text(Chained_flowing_text):
             print('I just redid the entire layout because the program has a bug')
 
         return self._sorted_pages
+
+class Section(Block_element):
+    nodename = 'section'
+    ADNA = [('repeat', '', 'str'), ('outlines', '', 'str')]
+    def _load(self):
+        serchannels = self.pop('outlines')
+        CC = [(c for c in C.split(';') if c) for C in serchannels.split('|') if C]
+        CC = [([[ [int(k) for k in P.split(',')] + ['False'] for P in R1.split()], 
+                [ [int(k) for k in P.split(',')] + ['False'] for P in R2.split()]], 
+                int(page)) for R1, R2, page in CC]
+        
+        repeat = [i for i in (interpret_int(e, fail=None) for e in self.pop('repeat').split(':')) if i is not None]
+        self.CC = Washington.from_list(CC)
+        if len(repeat) == 2:
+            self.repeat = repeat
+        else:
+            self.repeat = None
+    
+    def create_wrapper(self):
+        if self.repeat is None:
+            return _Chained_flowing_text(self)
+        else:
+            return _Repeat_flowing_text(self)
+
+members = [Section]
+inline = False

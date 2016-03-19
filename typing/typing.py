@@ -1,7 +1,6 @@
 from itertools import chain
 import time
 
-from style import styles
 from edit import cursor
 
 from elements.elements import Paragraph, OpenFontpost, CloseFontpost
@@ -10,16 +9,11 @@ from IO import un, kevin
 
 class Keyboard(dict):
     def __init__(self, shortcuts):
-        self._shortcuts = shortcuts
-        self.turnover()
-
-    def turnover(self):
-        shortcuts = self._shortcuts
         _OPEN = set(k[0] for k in shortcuts)
         self._CLOSE = set(k[1] for k in shortcuts)
         self._special_names = set(_OPEN) | set(self._CLOSE)
         
-        dict.__init__(self, chain.from_iterable(((key1, styles.FTAGS[name]), (key2, styles.FTAGS[name])) for key1, key2, name in shortcuts))
+        dict.__init__(self, chain.from_iterable(((key1, name), (key2, name)) for key1, key2, name in shortcuts))
         
     def type_document(self, name, char, lastpress=[0], direction=[0]):
         CURSOR = cursor.fcursor.i
@@ -127,7 +121,6 @@ class Keyboard(dict):
                 return kevin.serialize(sel)
 
         elif name in self._special_names:
-            T = self[name]
             if name in self._CLOSE:
                 B = False
                 F = CloseFontpost
@@ -136,11 +129,11 @@ class Keyboard(dict):
                 F = OpenFontpost
             if cursor.fcursor.take_selection():
                 un.history.undo_save(3)
-                if not cursor.fcursor.bridge(T, B):
+                if not cursor.fcursor.bridge(self[name], B):
                     un.history.pop()
             else:
                 un.history.undo_save(1)
-                cursor.fcursor.insert([F(T)])
+                cursor.fcursor.insert([F({'class': self[name]})])
         else:
             un.history.undo_save(13)
             cursor.fcursor.insert([char])

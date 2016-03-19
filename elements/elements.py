@@ -46,7 +46,7 @@ class Node(dict):
                 'fx': function_x,
                 'ftag': fonttag}
 
-    def __init__(self, attrs, content, PP=None):
+    def __init__(self, attrs, content=None, PP=None):
         self.attrs = attrs
         self.content = content
         self.PP = PP

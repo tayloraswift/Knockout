@@ -31,7 +31,7 @@ class Fraction(Inline_element):
         F_numerator, F_denominator, = self.styles(F, 'numerator', 'denominator')
         
         ascent, descent = FSTYLE.vmetrics()
-        vy = FSTYLE['fontsize'] * 0.25
+        vy = int(FSTYLE['fontsize'] * 0.25)
         
         numerator = cast_mono_line(LINE, self._numerator.content, 13, PP, F_numerator)
         denominator = cast_mono_line(LINE, self._denominator.content, 13, PP, F_denominator)

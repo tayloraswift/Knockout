@@ -17,7 +17,7 @@ def write_node(node, indent=0):
     return [[indent, '<' + node.print_A() + '>']] + write_html(node.content, indent + 1) + [[indent, '</' + node.name + '>']]
 
 def write_inline_node(node, indent=0):
-    if node.content:
+    if node.content is not None:
         if not node.textfacing and all(isinstance(e, Node) for e in node.content):
             A = [[indent, '<' + node.print_A() + '>']]
             A.extend(chain.from_iterable(write_inline_node(N, indent + 1) for N in node.content))
@@ -134,7 +134,7 @@ class Minion(parser.HTMLParser):
         if tag == 'br':
             O.append('<br/>')
         elif tag in inlinetags:
-            O.append(modules[tag](attrs, Text()))
+            O.append(modules[tag](attrs))
     
     def handle_startendtag(self, tag, attrs):
         if self._breadcrumbs[-1] in inlinecontainers:

@@ -1,4 +1,3 @@
-import bisect
 from model.wonder import words
 from model import meredith, olivia
 from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Block_element
@@ -72,7 +71,7 @@ class FCursor(object):
     #############
 
     def paint_current_selection(self):
-        zeros = {'<f>', '</f>', '\t'}
+        zeros = {'<fc/>', '<fo/>', '\t'}
         signs = (self.j < self.i,
                 (str(self.text[self.i - 1]) in zeros, str(self.text[self.i]) in zeros) , 
                 (str(self.text[self.j - 1]) in zeros, str(self.text[self.j]) in zeros))
@@ -199,7 +198,7 @@ class FCursor(object):
             if sign:
                 CAP = (CloseFontpost, OpenFontpost)
                 
-                self.text.insert(P_1, CAP[0](tag))
+                self.text.insert(P_1, CAP[0]({'class': tag}))
                 DA += 1
                 
                 P_2 += 1
@@ -217,10 +216,11 @@ class FCursor(object):
             if type(self.text[J]) is CAP[1]:
                 J += next(i for i, c in enumerate(self.text[J + 1:]) if type(c) is not CAP[1]) + 1
 
+            ftag = OpenFontpost({'class': tag})['class']
             if sign:
-                ftags = [(i + P_1, type(e)) for i, e in enumerate(paragraph) if type(e) in CAP and e.F is tag] + [(P_2, CAP[1])] + [(None, None)]
+                ftags = [(i + P_1, type(e)) for i, e in enumerate(paragraph) if type(e) in CAP and e.F is ftag] + [(P_2, CAP[1])] + [(None, None)]
             else:
-                ftags = [(i + P_1, type(e)) for i, e in enumerate(paragraph) if type(e) in CAP and e.F is tag] + [(None, None)]
+                ftags = [(i + P_1, type(e)) for i, e in enumerate(paragraph) if type(e) in CAP and e.F is ftag] + [(None, None)]
             
             pairs = []
             for i in reversed(range(len(ftags) - 2)):
@@ -245,15 +245,15 @@ class FCursor(object):
                     
                     drift_j += -2
                 elif I < pair[1] <= J:
-                    instructions += [(pair[1], False), (I, True, CAP[1](tag) )]
+                    instructions += [(pair[1], False), (I, True, CAP[1]({'class': tag}) )]
                     if not sign:
                         drift_i += 1
                 elif I <= pair[0] < J:
-                    instructions += [(pair[0], False), (J, True, CAP[0](tag) )]
+                    instructions += [(pair[0], False), (J, True, CAP[0]({'class': tag}) )]
                     if not sign:
                         drift_j += -1
                 elif pair[0] < I and pair[1] > J:
-                    instructions += [(I, True, CAP[1](tag) ), (J, True, CAP[0](tag) )]
+                    instructions += [(I, True, CAP[1]({'class': tag}) ), (J, True, CAP[0]({'class': tag}) )]
                     DA += 2
                     
                     if sign:
@@ -275,7 +275,7 @@ class FCursor(object):
                 activity = False
             
             if sign:
-                if self.text[P_1] == CAP[0](tag):
+                if self.text[P_1] == CAP[0]({'class': tag}):
                     del self.text[P_1]
                     DA -= 1
                     
@@ -283,7 +283,7 @@ class FCursor(object):
                     drift_j -= 1
 
                 else:
-                    self.text.insert(P_1, CAP[1](tag) )
+                    self.text.insert(P_1, CAP[1]({'class': tag}) )
                     DA += 1
                     
                     drift_j += 1

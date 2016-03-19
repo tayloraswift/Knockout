@@ -3,6 +3,7 @@ from urllib.error import URLError
 
 from elements.elements import Inline_element
 from model.olivia import Inline
+from IO.bitmap import make_pixbuf, paint_pixbuf
 
 from style import styles
 
@@ -70,7 +71,7 @@ class Image(Inline_element):
                 renderfunc = 'CairoSVG not available'
         else:
             try:
-                self._surface_cache = ImageSurface.create_from_png(src)
+                self._surface_cache = make_pixbuf(src)
                 renderfunc = self.paint_PNG
                 self.h = int(self._surface_cache.get_width())
                 self.k = int(self._surface_cache.get_height())
@@ -95,8 +96,7 @@ class Image(Inline_element):
     
     def paint_PNG(self, cr, render):
         cr.scale(self.factor, self.factor)
-        cr.set_source_surface(self._surface_cache)
-        cr.paint()
+        paint_pixbuf(cr, self._surface_cache)
     
     def paint_Error(self, cr, render):
         _paint_fail_frame(cr, self.width, self.v, self._msg)

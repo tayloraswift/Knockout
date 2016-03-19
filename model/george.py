@@ -1,4 +1,4 @@
-import bisect
+from bisect import bisect
 from itertools import chain
 from model import meredith
 
@@ -21,7 +21,7 @@ class Swimming_pool(object):
             return True
                     
     def edge(self, r, y):
-        i = bisect.bisect([point[1] for point in self.railings[r]], y)
+        i = bisect([point[1] for point in self.railings[r]], y)
         # if y if below the last point
         try:
             xbelow = self.railings[r][i][0]

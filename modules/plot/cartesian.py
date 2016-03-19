@@ -1,6 +1,6 @@
 from math import log, e, cos, sin, pi, floor, ceil
 
-from elements.elements import Node
+from elements.node import Node
 from model.cat import cast_mono_line
 
 namespace = 'mod:plot'

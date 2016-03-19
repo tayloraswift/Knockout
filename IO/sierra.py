@@ -9,8 +9,9 @@ from edit import cursor, caramel
 from IO import kevin, un, xml
 from typing import typing
 from interface import karlie, taylor, poptarts
-from modules import modulestyles, modules
-from elements.elements import Node
+from modules import modulestyles
+from elements import modules
+from elements.node import Node
 
 def save():
     FI = ('<head><meta charset="UTF-8"></head>\n<title>', constants.filename, '</title>\n\n',

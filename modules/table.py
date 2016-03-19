@@ -4,7 +4,7 @@ from itertools import chain, accumulate
 from model.olivia import Flowing_text, Block
 from model.george import Subcell
 from interface.base import accent
-from elements.elements import Block_element, Node
+from elements.node import Block_element, Node
 
 class Matrix(list):
     def __str__(self):

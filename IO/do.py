@@ -2,7 +2,7 @@ from IO import un
 from model import meredith
 from style import styles
 from state import contexts
-from elements.elements import Mod_element
+from elements.node import Mod_element
     
 def redo():
     if un.history.forward():

@@ -1,15 +1,12 @@
 from html import parser, unescape, escape
-from ast import literal_eval
 from itertools import chain
 import re
 
-from bulletholes.counter import TCounter as Counter
-from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Inline_element, Block_element, Node
 from model.wonder import words
-from style import styles
-from modules import modules, inlinetags, blocktags, textfacing
+from elements.elements import Paragraph
+from elements.node import Inline_element, Block_element, Node
+from elements import modules, inlinetags, blocktags, textfacing
 from state.exceptions import IO_Error
-from IO.xml import count_styles
 
 inlinecontainers = {'p'} | textfacing
 
@@ -114,7 +111,7 @@ class Minion(parser.HTMLParser):
         
         if tag == 'p':
             self._first = False
-            O.append(_create_paragraph(attrs))
+            O.append(Paragraph.from_attrs(attrs))
             
             self._breadcrumbs.append('p')
         
@@ -122,7 +119,7 @@ class Minion(parser.HTMLParser):
             self._breadcrumbs.append(tag)
             if tag in blocktags:
                 self._first = False
-                M = attrs, Text(), _create_paragraph(attrs)
+                M = attrs, Text(), Paragraph.from_attrs(attrs)
             else:
                 M = attrs, Text()
             O.append(M)

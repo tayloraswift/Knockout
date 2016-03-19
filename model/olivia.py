@@ -2,10 +2,10 @@ from bisect import bisect
 from itertools import groupby, chain
 
 from model.cat import typeset_chained, typeset_liquid, Glyphs_line
-from elements.elements import Block_element
 from model.george import Washington
 from edit.paperairplanes import interpret_int
 from IO.xml import print_attrs
+from elements.node import Block_element
 
 class _Empty_F(object):
     def __init__(self):
@@ -201,7 +201,7 @@ class Flowing_text(object):
         for S in self.LINES:
             S.deposit(repository)
     
-class _Chained_flowing_text(Flowing_text):
+class Chained_flowing_text(Flowing_text):
     def __init__(self, node):
         Flowing_text.__init__(self, node.content)
         self.channels = node.CC
@@ -268,16 +268,16 @@ class _Chained_flowing_text(Flowing_text):
                     line.deposit(sorted_page)
         return self._sorted_pages
 
-class _Repeat_flowing_text(_Chained_flowing_text):
+class Repeat_flowing_text(Chained_flowing_text):
     def __init__(self, node):
-        _Chained_flowing_text.__init__(self, node)
+        Chained_flowing_text.__init__(self, node)
         self.rrange = node.repeat
                 
         # correct channels
         for channel in self.channels.channels:
             channel.set_page(node.repeat[0])
 
-        self.repeats, self.channel_repeats = zip( * ((_Chained_flowing_text(node),
+        self.repeats, self.channel_repeats = zip( * ((Chained_flowing_text(node),
                         [C.shallow_copy_to_page(k) for C in self.channels.channels]) 
                         for k in range(node.repeat[0], node.repeat[1] + 1)) )
         # set representatives
@@ -332,9 +332,9 @@ class Section(Block_element):
     def create_wrapper(self):
         self.print_A()
         if self.repeat:
-            return _Repeat_flowing_text(self)
+            return Repeat_flowing_text(self)
         else:
-            return _Chained_flowing_text(self)
+            return Chained_flowing_text(self)
 
     def print_A(self):
         attrs = {'outlines': ' |\n    '.join(repr(C) for C in self.CC.channels)}

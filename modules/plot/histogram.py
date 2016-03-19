@@ -4,7 +4,7 @@ from .data import Data
 _namespace = 'mod:hist'
 
 class Bars(Data):
-    nodename = _namespace + ':bars'
+    name = _namespace + ':bars'
     ADNA = [('data', (), '1D'), ('color', '#ff3085', 'rgba'), ('colorneg', '#ff5040', 'rgba'), ('key', True, 'bool')]
 
     def __init__(self, * args, ** kwargs):
@@ -27,7 +27,7 @@ class Bars(Data):
         cr.fill()
         
 class Histogram(Data):
-    nodename = _namespace
+    name = _namespace
     ADNA = [('start', 0, 'float'), ('step', 1, 'float'), ('key', True, 'bool')]
 
     def unit(self, axes):

@@ -5,17 +5,17 @@ from model.olivia import Inline
 _namespace = 'mod:frac'
 
 class Numerator(Node):
-    nodename = _namespace + ':n'
+    name = _namespace + ':n'
     textfacing = True
 
 class Denominator(Node):
-    nodename = _namespace + ':d'
+    name = _namespace + ':d'
     textfacing = True
     
 class Fraction(Inline_element):
-    nodename = _namespace
+    name = _namespace
     DNA = {'numerator': {}, 'denominator': {}}
-    documentation = [(0, nodename), (1, 'numerator'), (1, 'denominator')]
+    documentation = [(0, name), (1, 'numerator'), (1, 'denominator')]
     
     def _load(self):
         self._numerator = next(e for e in self.content if type(e) is Numerator)

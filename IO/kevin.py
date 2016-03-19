@@ -93,7 +93,7 @@ class Minion(parser.HTMLParser):
         self.reset()
         self._first = True
         self._O = Text()
-        self._C = [(None, None, self._O)]
+        self._C = [(None, self._O)]
         self._breadcrumbs = [None]
         
         self.rawdata = self.rawdata + data
@@ -106,7 +106,7 @@ class Minion(parser.HTMLParser):
         raise IO_Error('Syntax error: tag mismatch')
     
     def append_to(self):
-        return self._C[-1][2]
+        return self._C[-1][1]
     
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
@@ -122,9 +122,9 @@ class Minion(parser.HTMLParser):
             self._breadcrumbs.append(tag)
             if tag in blocktags:
                 self._first = False
-                M = tag, attrs, Text(), _create_paragraph(attrs)
+                M = attrs, Text(), _create_paragraph(attrs)
             else:
-                M = tag, attrs, Text()
+                M = attrs, Text()
             O.append(M)
             self._C.append(M)
 
@@ -134,7 +134,7 @@ class Minion(parser.HTMLParser):
         if tag == 'br':
             O.append('<br/>')
         elif tag in inlinetags:
-            O.append(modules[tag](tag, attrs, Text()))
+            O.append(modules[tag](attrs, Text()))
     
     def handle_startendtag(self, tag, attrs):
         if self._breadcrumbs[-1] in inlinecontainers:

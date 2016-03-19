@@ -3,10 +3,10 @@ from elements.elements import Inline_element
 from model.olivia import Inline
 
 class Page_number(Inline_element):
-    nodename = 'pn'
+    name = 'pn'
     DNA = {'pn': {}}
     ADNA = [('offset', '0', 'int')]
-    documentation = [(0, nodename)]
+    documentation = [(0, name)]
     
     def _draw_annot(self, cr, O):
         cr.move_to(0, 0)

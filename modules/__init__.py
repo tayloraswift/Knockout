@@ -5,8 +5,8 @@ from model import olivia
 
 MODS = [elements, olivia] + [table, pie, fraction, bounded, root, mi, image, pagenumber, plot]
 
-modules = {nodetype.nodename: nodetype for nodetype in chain.from_iterable(module.members for module in MODS)}
+modules = {nodetype.name: nodetype for nodetype in chain.from_iterable(module.members for module in MODS)}
 
-inlinetags = set(nodetype.nodename for nodetype in chain.from_iterable(module.members for module in MODS if module.inline))
-blocktags = set(nodetype.nodename for nodetype in chain.from_iterable(module.members for module in MODS if not module.inline))
-textfacing = set(nodetype.nodename for nodetype in chain.from_iterable(module.members for module in MODS) if nodetype.textfacing)
+inlinetags = set(nodetype.name for nodetype in chain.from_iterable(module.members for module in MODS if module.inline))
+blocktags = set(nodetype.name for nodetype in chain.from_iterable(module.members for module in MODS if not module.inline))
+textfacing = set(nodetype.name for nodetype in chain.from_iterable(module.members for module in MODS) if nodetype.textfacing)

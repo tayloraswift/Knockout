@@ -42,7 +42,7 @@ class Plot_key(object):
         return 2 + min(self._i, max(0, bisect(self._ki, y)))
 
 class Plot(Block_element):
-    nodename = namespace
+    name = namespace
     ADNA = [('height', 89, 'int'), ('tickwidth', 0.5, 'float')]
     DNA = {'x': {}, 'y': {}, 'dataset': {}, 'num': {}}
     

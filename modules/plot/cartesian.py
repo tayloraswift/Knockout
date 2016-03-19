@@ -152,16 +152,16 @@ class Y(object):
     pass
 
 class Linear_X(_LinearAxis, _Horizontal, X):
-    nodename = namespace + ':x'
+    name = namespace + ':x'
 
 class Linear_Y(_LinearAxis, _Vertical, Y):
-    nodename = namespace + ':y'
+    name = namespace + ':y'
 
 class Log_X(_LogAxis, _Horizontal, X):
-    nodename = namespace + ':logx'
+    name = namespace + ':logx'
 
 class Log_Y(_LogAxis, _Vertical, Y):
-    nodename = namespace + ':logy'
+    name = namespace + ':logy'
 
 """
 class Cartesian3(object):

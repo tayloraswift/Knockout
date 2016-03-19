@@ -5,18 +5,18 @@ from model.olivia import Inline
 _namespace = 'mod:bounded'
 
 class Symbol(Node):
-    nodename = _namespace + ':sym'
+    name = _namespace + ':sym'
     textfacing = True
 
 class Bound(Node):
-    nodename = _namespace + ':a'
+    name = _namespace + ':a'
     textfacing = True
     
 class Bounded(Inline_element):
-    nodename = _namespace
+    name = _namespace
     DNA = {'symbol': {}, 'bounds': {}}
     ADNA = [('align', 1, 'int')]
-    documentation = [(0, nodename), (1, 'symbol'), (1, 'bottom'), (1, 'top')]
+    documentation = [(0, name), (1, 'symbol'), (1, 'bottom'), (1, 'top')]
     
     def _load(self):
         self._symbol, self._a, self._b = self.find_nodes(Symbol, Bound, Bound)

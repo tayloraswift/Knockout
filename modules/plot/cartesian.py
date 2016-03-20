@@ -1,4 +1,5 @@
 from math import log, e, cos, sin, pi, floor, ceil
+from itertools import chain
 
 from elements.node import Node
 from model.cat import cast_mono_line
@@ -15,12 +16,11 @@ def _soft_int(n, decimals):
             n = round(n, decimals)
     return n
 
-class _Axis(Node):
-    def freeze(self, h):
-        self.scaleminor   = [int(round(x*h)) for x in self.minor]
-        self.scalemajor   = [int(round(x*h)) for x in self.major]
-        self.scalenumbers = [(int(round(x*h)), S) for x, S in self.numbers]
-
+class Axis(Node):
+    def __init__(self, * args, ** kwargs):
+        Node.__init__(self, * args, ** kwargs)
+        self._enum()
+    
     def step(self, step, start=None, stop=None):
         if start is None:
             start = self['start']
@@ -28,13 +28,14 @@ class _Axis(Node):
             stop = self['stop']
         return (start + i * step for i in range(floor(abs(stop - start)/step) + 1))
 
-class _LinearAxis(_Axis):
+class LinearAxis(Axis):
+    name = namespace + ':axis'
     ADNA = [('start', 0, 'float'), ('stop', 89, 'float'), ('minor', 1, 'float'), ('major', 2, 'float'), ('number', 4, 'float'), ('round', 13, 'int')]
     
     def _format(self, u):
         return (str(_soft_int(u, self['round']))).replace('-', '−')
     
-    def enum(self):
+    def _enum(self):
         major = self['major']
         minor = self['minor']
         number = self['number']
@@ -74,7 +75,8 @@ def logbasevalid(b, number):
     else:
         return number
 
-class _LogAxis(_Axis):
+class LogAxis(Axis):
+    name = namespace + ':logaxis'
     ADNA = [('start', 0, 'float'), ('stop', 10000, 'float'), ('minor',  10, 'float'), ('major', 10, 'float'), ('number', 100, 'float'), ('base', 0, 'float'), ('round', 13, 'int')]
 
     def _format_reg(self, u):
@@ -99,7 +101,7 @@ class _LogAxis(_Axis):
             self._expressed_base = number
         self._format = self._format_reg
 
-    def enum(self):
+    def _enum(self):
         self._set_base(self['base'], self['number'])
         if self['start'] > 0:
             i0 = log(self['start'])
@@ -117,77 +119,75 @@ class _LogAxis(_Axis):
         self.minor   = [self.U(x)/R for x in (minor**i for i in logrange(self['start'], self['stop'], minor)) if x not in majorticks]
         self.numbers = [(self.U(x)/R, self._format(x)) for x in (number**i for i in logrange(self['start'], self['stop'], number))]
         self.R = R
+
+class Cartesian(list):
+    def __init__(self, axes):
+        self.unitaxis = ((1, 0), (0, 1))
+        list.__init__(self, axes)
+
+    def fit(self, * coord ):
+        return tuple(axis.U(i) / axis.R for axis, i in zip(self, coord))
     
-class _Horizontal(object):
-    def print_numbers(self, LINE, PP, F):
-        for x, S in self.scalenumbers:
+    def freeze(self, h, k):
+        self.project = lambda x, y: (x*h, y*k)
+        self.h = h
+        self.k = k
+        # freeze axes
+        self.ticks = tuple(tuple(chain(( (int(round(x*scale)), 4) for x in axis.minor), ( (int(round(x*scale)), 8) for x in axis.major))) 
+                for axis, scale in zip(self, (h, k)))
+        self.scalenumbers = tuple(tuple((int(round(x*scale)), S) for x, S in axis.numbers) for axis, scale in zip(self, (h, k)))
+
+    def _numbers_x(self, LINE, PP, F):
+        for x, S in self.scalenumbers[0]:
             XT = cast_mono_line(LINE, S, 13, PP, F)
             XT['x'] = x - XT['advance']/2
             XT['y'] = 20
             yield XT
     
-    def draw(self, cr, tw):
-        for x in self.scalemajor:
-            cr.rectangle(x, 0, tw, 8)
-        for x in self.scaleminor:
-            cr.rectangle(x, 0, tw, 4)
-
-class _Vertical(object):
-    def print_numbers(self, LINE, PP, F):
-        for y, S in self.scalenumbers:
+    def _numbers_y(self, LINE, PP, F):
+        for y, S in self.scalenumbers[1]:
             YT = cast_mono_line(LINE, S, 13, PP, F)
             YT['x'] = -YT['advance'] - 10
-            YT['y'] = -y + 4
+            YT['y'] = y + 4
             yield YT
     
+    def yield_numbers(self, LINE, PP, F):
+        return chain(self._numbers_x(LINE, PP, F), self._numbers_y(LINE, PP, F))
+        
     def draw(self, cr, tw):
-        for y in self.scalemajor:
-            cr.rectangle(0, -y, -8, -tw)
-        for y in self.scaleminor:
-            cr.rectangle(0, -y, -4, -tw)
+        for x, l in self.ticks[0]:
+            cr.rectangle(x, 0, tw, l)
+        for y, l in self.ticks[1]:
+            cr.rectangle(0, y, -l, -tw)
 
-class X(object):
-    pass
-class Y(object):
-    pass
+def _vector_rotate(x, y, t):
+    return x*cos(t) - y*sin(t), (y*cos(t) + x*sin(t))
 
-class Linear_X(_LinearAxis, _Horizontal, X):
-    name = namespace + ':x'
+def _magnitude(vector, h, k):
+    boxslope = k/h
+    vectorslope = vector[1] / vector[0]
+    if vectorslope > boxslope:
+        return k*(vector[0] / vector[1]), k
+    else:
+        return h, h*vectorslope
 
-class Linear_Y(_LinearAxis, _Vertical, Y):
-    name = namespace + ':y'
+class Cartesian3(Cartesian):
+    def __init__(self, axes, azimuth=0, altitude=0, rotate=0):
+        self.a = azimuth
+        self.b = altitude
+        self.c = rotate
 
-class Log_X(_LogAxis, _Horizontal, X):
-    name = namespace + ':logx'
+        # form axal unit vectors
+        xhat = cos(self.a), sin(self.a) * cos(self.b)
+        yhat = cos(self.a + pi*0.5), sin(self.a + pi*0.5) * cos(self.b)
+        zhat = 0, sin(self.b)
+        self.unitaxis = (_vector_rotate( * xhat, self.c), _vector_rotate( * yhat, self.c), _vector_rotate( * zhat, self.c))
+        list.__init__(self, axes)
+    
+    def freeze(self, h, k):
+        xv, yv, zv = (_magnitude(vector, h, k) for vector in self.unitaxis)
+        self.project = lambda x, y, z=0: (x*xv[0] + y*yv[0] + z*zv[0], x*xv[1] + y*yv[1] + z*zv[1])
+        self.h = h
+        self.k = k
 
-class Log_Y(_LogAxis, _Vertical, Y):
-    name = namespace + ':logy'
-
-"""
-class Cartesian3(object):
-    def __init__(self, xaxis, yaxis, zaxis, azimuth=0, altitude=pi*0.5, rotate=0):
-        self.a = azimuth  #  0
-        self.b = altitude # 90°
-        self.c = rotate   #  0
-        self.X = xaxis
-        self.Y = yaxis
-        self.Z = zaxis
-
-    def project(self, x, y, z=0):
-        u = self.X.U(x)
-        v = self.Y.U(x)
-        h0 = u*cos(self.a) - v*sin(self.a)
-        k0 = (v*cos(self.a) + u*sin(self.a)) * sin(self.b)
-        h = h0*cos(self.c) - k0*sin(self.c)
-        k = k0*cos(self.c) + h0*sin(self.c)
-        return h, k
-"""
-class Cartesian2(object):
-    def __init__(self, xaxis, yaxis):
-        self.X = xaxis
-        self.Y = yaxis
-
-    def project(self, x, y):
-        return self.X.U(x) / self.X.R, self.Y.U(y) / self.Y.R
-
-axismembers = [Linear_X, Linear_Y, Log_X, Log_Y]
+axismembers = [LinearAxis, LogAxis]

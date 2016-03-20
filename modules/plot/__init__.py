@@ -4,7 +4,7 @@ from itertools import chain
 from model.olivia import Block, Flowing_text
 from elements.elements import Block_element
 from model.george import Subcell
-from .cartesian import namespace, X, Y, axismembers, Cartesian2
+from .cartesian import namespace, Axis, axismembers, Cartesian
 from .data import Data
 
 from . import scatterplot, f, histogram
@@ -43,25 +43,21 @@ class Plot_key(object):
 
 class Plot(Block_element):
     name = namespace
-    ADNA = [('height', 89, 'int'), ('tickwidth', 0.5, 'float')]
+    ADNA = [('height', 89, 'int'), ('azm', 0, 'float'), ('alt', 'pi*0.5', 'float'), ('rot', 0, 'float'), ('tickwidth', 0.5, 'float')]
     DNA = {'x': {}, 'y': {}, 'dataset': {}, 'num': {}}
     
     def _load(self):
-        self.X, self.Y = self.find_nodes(X, Y)
-        self.X.enum()
-        self.Y.enum()
+        system = Cartesian(self.filter_nodes(Axis, inherit=True))
+        self._FLOW = [Flowing_text(A.content) for A in system]
         
-        self._FLOW = [Flowing_text(A.content) for A in (self.X, self.Y)]
-        
-        AXES = Cartesian2(self.X, self.Y)
-        self._datasets = [PL.unit(AXES) for PL in self.filter_nodes(Data, inherit=True)]
+        self._datasets = [PL.unit(system) for PL in self.filter_nodes(Data, inherit=True)]
         self._keys = list(chain.from_iterable(PL.key() for PL in self._datasets))
         self._FLOW += [K[0] for K in self._keys]
+        self._CS = system
     
     def ink_graph(self, cr):
         cr.set_source_rgb(0, 0, 0)
-        self.X.draw(cr, self['tickwidth'])
-        self.Y.draw(cr, self['tickwidth'])
+        self._CS.draw(cr, self['tickwidth'])
         cr.fill()
         
         for PL in self._datasets:
@@ -79,32 +75,28 @@ class Plot(Block_element):
         else:
             return self._KEY.target(y)
     
-    def transform_data(self, width):
-        pass
-    
     def typeset(self, bounds, c, y, overlay):
         P_x, P_y, P_key, = self.styles(overlay, 'x', 'y', 'dataset')
         F_num, = self.styles(None, 'num')
 
         top = y
-        height = self['height']
-        left, right = bounds.bounds(y + height/2)
+        left, right = bounds.bounds(y + self['height']/2)
+        width = right - left
+        self._yaxis_div = width*0.15
 
         # y axis
         self._FLOW[1].layout(Subcell(bounds, -0.15, 0.15), c, y, P_y)
         y = self._FLOW[1].y
         
         px = left
-        py = int(y + height) + 10
+        py = int(y + self['height']) + 10
         
-        w = right - left
-        self._yaxis_div = w*0.15
-        self.X.freeze(w)
-        self.Y.freeze(height)
+        system = self._CS
+        system.freeze(width, -self['height'])
         for PL in self._datasets:
-            PL.freeze(w, -height)
+            PL.freeze(system)
         
-        MONO = list(chain.from_iterable(A.print_numbers({'R': 0, 'l': 0, 'c': c, 'page': bounds.page}, self.PP, F_num) for A in (self.X, self.Y)))
+        MONO = list(system.yield_numbers({'R': 0, 'l': 0, 'c': c, 'page': bounds.page}, self.PP, F_num))
         
         # x axis
         self._FLOW[0].layout(bounds, c, py + 20, P_x)

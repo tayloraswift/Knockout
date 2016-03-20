@@ -103,12 +103,11 @@ def interpret_haylor(value): # X X X X X : (X, X, X, X, X)
         L = (interpret_float(val, fail=None) for val in value.split())
         return (v for v in L if v is not None)
 
-def interpret_tsquared(value): # X,Y X,Y X,Y : ((X,Y), (X,Y), (X,Y))
+def interpret_tsquared(value):
     if type(value) is tuple:
         return value
     else:
-        L = (tuple(interpret_float_tuple(val)) for val in value.split())
-        return (v for v in L if v is not None and len(v) == 2)
+        return (tuple(interpret_float_tuple(val)) for val in value.split())
 
 # for function plotter
 from data.userfunctions import *

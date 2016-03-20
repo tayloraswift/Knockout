@@ -304,12 +304,12 @@
 <p class="figure&h3">Calories needed at lunch</p>
 
 <mod:plot class="figure" height="160" round="3">
-    <mod:plot:x major="200" minor="100" number="400" start="-100" stop="3000">
+    <mod:plot:axis major="200" minor="100" number="400" start="-100" stop="3000">
         <p>Calories</p>
-    </mod:plot:x>
-    <mod:plot:y major="0.02" minor="0.01" number="0.02" start="-0.01" stop="0.12">
+    </mod:plot:axis>
+    <mod:plot:axis major="0.02" minor="0.01" number="0.02" start="-0.01" stop="0.12">
         <p>Frequency</p>
-    </mod:plot:y>
+    </mod:plot:axis>
     <mod:hist start="0" step="100">
         <mod:hist:bars color="#666666" data="0.005 0.018 0.02 0.021 0.06 0.11 0.115 0.075 0.05 0.028 0.017 0.009 0.006 0.005 0.004 0.003 0.002 0.001" step="20">
             <p>Breakfast eaters</p>
@@ -329,12 +329,12 @@
 <p class="body&firstchild">Given the large sample size of this survey and its geographic scope, we can safely extrapolate our results from this dataset to the general student population. After implementing our model, we found that the variable of whether or not a student has had breakfast in the morning was one of the biggest determinants of a student’s lunchtime calorie need. For the overall student population, only 37.3% of all students will be satisfied by the current standard lunch. If we split the population into those who consumed breakfast and those who didn’t, we find that breakfast eaters have a much higher satisfaction rate from their school lunch (68%) than those who didn’t (0.07%). This is due to how in our model, if a student skipped their morning meal, their lunch will have to satisfy the extra calorie deficit from when they woke up in the morning. Since only about a third of students normally eat breakfast, not considering these effects is a serious shortfall of current meal plans. If instead we have schools serve meals containing up to 1049 calories (the mean lunchtime need of all students, including those who do not eat breakfast), we will be able to satisfy 49% of all students using the 15% margin guideline.</p>
 
 <mod:plot class="figure" height="160">
-    <mod:plot:x major="10" minor="5" number="20" start="-100" stop="100">
+    <mod:plot:axis major="10" minor="5" number="20" start="-100" stop="100">
         <p>% English speakers</p>
-    </mod:plot:x>
-    <mod:plot:y major="2" minor="1" number="2" start="0" stop="13">
+    </mod:plot:axis>
+    <mod:plot:axis major="2" minor="1" number="2" start="0" stop="13">
         <p>Chart position</p>
-    </mod:plot:y>
+    </mod:plot:axis>
     <mod:scatter color="#666666" data="13,2 6,5 9,6 6,8.5 2,10 20,3 72,1 40,3 89,1">
         <p><em>Shake It Off</em></p>
     </mod:scatter>
@@ -344,14 +344,14 @@
 </mod:plot>
 
 <mod:plot class="figure" height="160">
-    <mod:plot:x every="4" major="2" minor="1" start="-20" stop="20">
+    <mod:plot:axis every="4" major="2" minor="1" start="-20" stop="20">
         <p>Hour</p>
-    </mod:plot:x>
-    <mod:plot:y every="2" major="2" minor="1" start="-10" stop="10">
+    </mod:plot:axis>
+    <mod:plot:axis every="2" major="2" minor="1" start="-10" stop="10">
         <p>TIDE HEIGHT</p>
         
         <p class="body&units">feet</p>
-    </mod:plot:y>
+    </mod:plot:axis>
     <mod:fx color="#ff3085" step="0.1" y="sin(x) + x/3">
         <p><mi char="f"/>(<mi char="x"/>) = sin <mi char="x"/> + <mi char="x"/>/3 </p>
     </mod:fx>

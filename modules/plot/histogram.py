@@ -3,6 +3,9 @@ from .data import Data
 
 _namespace = 'mod:hist'
 
+def _rectangle(p1, p2):
+    return p1[0], p1[1], p2[0] - p1[0], p2[1] - p1[1]
+
 class Bars(Data):
     name = _namespace + ':bars'
     ADNA = [('data', (), '1D'), ('color', '#ff3085', 'rgba'), ('colorneg', '#ff5040', 'rgba'), ('key', True, 'bool')]
@@ -36,9 +39,9 @@ class Histogram(Data):
         self._barsets = tuple(self.filter_nodes(Bars, inherit=False))
         if self._barsets:
             if 'start' not in self.attrs:
-                start = axes.X.a
+                start = axes[0].a
             
-            project = axes.project
+            fit = axes.fit
             
             data_colors = tuple((tuple(B['data']), B['color'], B['colorneg']) for B in self._barsets)
             bins = max(len(D[0]) for D in data_colors)
@@ -50,10 +53,7 @@ class Histogram(Data):
                     for i, height in G:
                         d1 = (start + i*dx, tide[i])
                         d2 = (d1[0] + dx, d1[1] + height)
-                        p1 = project( * d1 )
-                        p2 = project( * d2 )
-                                       #  x1   , x2 - x1      , y1   , y2 - y1
-                        segments.append((p1[0], p2[0] - p1[0], p1[1], p2[1] - p1[1]))
+                        segments.append((fit( * d1 ), fit( * d2 )))
                         tide[i] += height
                     if sign:
                         P.append((segments, color))
@@ -72,10 +72,11 @@ class Histogram(Data):
                 cr.rectangle( * rectangle )
             cr.fill()
     
-    def freeze(self, h, k):
+    def freeze(self, axes):
         for barset in self._barsets:
-            barset.freeze(h)
-        self._points = [(tuple((x1*h, y1*k, xw*h, yw*k) for x1, xw, y1, yw in segments), color) for segments, color in self._unitpoints]
+            barset.freeze(axes.h)
+        project = axes.project
+        self._points = [(tuple(_rectangle(project( * p1 ), project( * p2 )) for p1, p2 in segments), color) for segments, color in self._unitpoints]
 
     def key(self):
         if self['key']:

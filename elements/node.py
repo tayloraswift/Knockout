@@ -20,7 +20,7 @@ class Node(dict):
                 'str': str,
                 'bool': interpret_bool,
                 '1D': interpret_haylor,
-                '2D': interpret_tsquared,
+                'multi_D': interpret_tsquared,
                 'fx': function_x,
                 'ftag': fonttag}
 

@@ -3,11 +3,11 @@ from .data import Data
 
 class Scatterplot(Data):
     name = 'mod:scatter'
-    ADNA = [('data', (), '2D'), ('color', '#ff3085', 'rgba'), ('radius', 2, 'float'), ('key', True, 'bool')]
+    ADNA = [('data', (), 'multi_D'), ('color', '#ff3085', 'rgba'), ('radius', 2, 'float'), ('key', True, 'bool')]
 
     def unit(self, axes):
-        project = axes.project
-        self._unitpoints = [project(x, y) for x, y in self['data']]
+        fit = axes.fit
+        self._unitpoints = [fit( * coord ) for coord in self['data']]
         return self
     
     def draw(self, cr):
@@ -20,8 +20,9 @@ class Scatterplot(Data):
             cr.close_path()
         cr.fill()
     
-    def freeze(self, h, k):
-        self._right = h
-        self._points = [(x*h, y*k) for x, y in self._unitpoints]
+    def freeze(self, axes):
+        self._right = axes.h
+        project = axes.project
+        self._points = [project( * coords ) for coords in self._unitpoints]
 
 members = [Scatterplot]

@@ -6,16 +6,16 @@ class Function(Data):
     ADNA = [('x', lambda t: t, 'fx'), ('y', lambda t: t, 'fx'), ('start', -1, 'float'), ('stop', -1, 'float'), ('step', 1, 'float'), ('color', '#ff3085', 'rgba'), ('radius', 2, 'float'), ('linewidth', 2, 'float'), ('clip', False, 'bool'), ('key', True, 'bool')]
 
     def unit(self, axes):
-        project = axes.project
+        fit = axes.fit
         
         P = [[]]
         Fx = self['x']
         Fy = self['y']
-        for t in axes.X.step(self['step'], ** {k: self[k] for k in ('start', 'stop') if k in self.attrs} ):
+        for t in axes[0].step(self['step'], ** {k: self[k] for k in ('start', 'stop') if k in self.attrs} ):
             try:
                 x = Fx(t)
                 y = Fy(t)
-                P[-1].append(project(x, y))
+                P[-1].append(fit(x, y))
                 continue
             except (ZeroDivisionError, ValueError):
                 pass
@@ -47,9 +47,10 @@ class Function(Data):
                 cr.fill()
         cr.restore()
     
-    def freeze(self, h, k):
-        self._right = h
-        self._points = [[(x*h, y*k) for x, y in segment] for segment in self._unitpoints]
-        self._box = (h, k)
+    def freeze(self, axes):
+        self._right = axes.h
+        project = axes.project
+        self._points = [[project( * coords ) for coords in segment] for segment in self._unitpoints]
+        self._box = (axes.h, axes.k)
 
 members = [Function]

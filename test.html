@@ -427,6 +427,24 @@
 
 <p class="body&caption&h3">Function plot: functional/parametric plot</p>
 
+<mod:plot class="figure" height="120">
+    <mod:plot:axis major="4" minor="2" number="8" start="0" stop="80">
+        <p>Y</p>
+        
+        <p class="body&units">Units</p>
+    </mod:plot:axis>
+    <mod:plot:axis major="10" minor="5" number="10" round="4" start="0" stop="60">
+        <p>X</p>
+        
+        <p class="body&units">Units</p>
+    </mod:plot:axis>
+    <mod:bubble color="#ff308570" data="8,7,9 24,13,5 25,23,13 48,31,11 32,45,67 18,31,5 20,25,24 15,23,45 34,41,36 39,52,89" radius="3*sqrt(x)">
+        <p>Data</p>
+    </mod:bubble>
+</mod:plot>
+
+<p class="caption&h3">Scatterplot 1: Bubble plot</p>
+
 <mod:plot alt="0.6" azm="6" class="figure" height="280" rot="1">
     <mod:plot:axis major="2" minor="1" number="4" start="-12" stop="12">
         <p>X</p>
@@ -518,7 +536,7 @@
                 'lowercase': {'capitals': False},
                 'subscript': {'shift': -2},
                 'superscript': {'shift': 5}},
- 'FTAGLIST': [('strong', []), ('caption', []), ('reference', []), ('sc', []), ('emphasis', []), ('sup', ['small']), ('sub', ['small']), ('link', []), ('big', [])],
+ 'FTAGLIST': [('reference', []), ('caption', []), ('sub', ['small']), ('link', []), ('strong', []), ('emphasis', []), ('big', []), ('sc', []), ('sup', ['small'])],
  'PARASTYLES': (5,
                 [({'fontclasses': (2, [('Black', {}), ('subscript', {'sub': 1}), ('superscript', {'sup': 1})])}, {}),
                  ({'fontclasses': (0,
@@ -558,24 +576,24 @@
                  ({'fontclasses': (1, [('Sans serif book italic', {}), ('Caption', {})]), 'hyphenate': True, 'leading': 16, 'margin_bottom': 12}, {'caption': 1}),
                  ({'fontclasses': (0, [('Sans serif semi', {})]), 'indent': (0, 1, 0), 'margin_bottom': 2, 'margin_top': 0}, {'caption': 1, 'h3': 1}),
                  ({'indent': (0, 1, 0)}, {'firstchild': 1})]),
- 'PTAGLIST': [('h3', []),
-              ('list', []),
-              ('tableleft', []),
+ 'PTAGLIST': [('firstchild', []),
               ('h2', []),
-              ('key', []),
-              ('figure', []),
-              ('math', []),
-              ('body', []),
-              ('h1', []),
-              ('firstchild', []),
-              ('caption', []),
               ('table emphasis', []),
-              ('tablecell', []),
               ('units', []),
+              ('body', []),
+              ('figure', []),
+              ('h3', []),
+              ('key', []),
+              ('tableleft', []),
               ('figure title', []),
-              ('tablehead', [])],
- 'contexts': {'channels': {'c': 0, 'p': 0, 't': 1}, 'text': {'i': 1038, 'j': 1038, 'p': 1, 't': 1}},
+              ('caption', []),
+              ('tablecell', []),
+              ('list', []),
+              ('tablehead', []),
+              ('math', []),
+              ('h1', [])],
+ 'contexts': {'channels': {'c': 0, 'p': 0, 't': 1}, 'text': {'i': 1150, 'j': 1150, 'p': 2, 't': 1}},
  'grid': [[80, 360, 420, 700], [100, 130, 910]],
  'page': {'dimensions': (765, 990), 'dual': True},
- 'view': {'H': -124, 'Hc': 523, 'K': -903, 'Kc': 372, 'Zoom': 11, 'mode': 'text'}}
+ 'view': {'H': -159, 'Hc': 501, 'K': -945, 'Kc': 354, 'Zoom': 11, 'mode': 'text'}}
 ############# -->

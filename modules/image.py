@@ -7,10 +7,15 @@ from IO.bitmap import make_pixbuf, paint_pixbuf
 
 from style import styles
 
+_fail = '\033[91m'
+_endc = '\033[0m'
+_bold = '\033[1m'
+
 # cairo svg may not have all needed libraries
 try:
     from IO.svg import render_SVG
-except ImportError:
+except ImportError as message:
+    print(_fail + _bold + 'ERROR: ' + _endc + _fail + str(message) + ', SVG image display has been disabled.' + _endc)
     render_SVG = None
 
 def _paint_fail_frame(cr, h, k, msg):

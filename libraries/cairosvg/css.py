@@ -21,7 +21,7 @@ Handle CSS stylesheets.
 
 import os
 
-import cssselect
+from libraries import cssselect
 import tinycss
 
 from .url import parse_url, read_url

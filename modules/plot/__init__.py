@@ -39,7 +39,7 @@ class Plot_key(object):
             icon(cr, * cell)
     
     def target(self, y):
-        return 2 + min(self._i, max(0, bisect(self._ki, y)))
+        return min(self._i, max(0, bisect(self._ki, y)))
 
 class Plot(Block_element):
     name = namespace
@@ -73,7 +73,7 @@ class Plot(Block_element):
         elif y < -self['height'] and x < self._yaxis_div:
             return 1
         else:
-            return self._KEY.target(y)
+            return len(self._CS) + self._KEY.target(y)
     
     def typeset(self, bounds, c, y, overlay):
         P_x, P_y, P_key, = self.styles(overlay, 'x', 'y', 'dataset')

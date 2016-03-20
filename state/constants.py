@@ -47,7 +47,7 @@ interface_fstyles = {'_interface:LABEL': {'fontsize': 11,
                 '_interface:STRONG': {'path': 'interface/FiraSans-Medium.otf',
                                       'tracking': 0.5},
                 '_interface:TITLE': {'fontsize': 18, 'tracking': 4},
-                '_interface:CODE': {'path': 'interface/ShareTechMono-Regular.ttf', 'fontsize': 16}}
+                '_interface:CODE': {'path': 'interface/Share-TechMono.otf', 'fontsize': 16}}
 
 interface_pstyle = [('_interface:REGULAR', ()),
                           ('_interface:LABEL', ('label',)),

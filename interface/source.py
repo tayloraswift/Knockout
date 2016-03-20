@@ -53,7 +53,7 @@ class Rose_garden(Base_kookie):
         width = int(self._charlength * self._K + 30)
 
         palatte = {Token.Text: "#2e3436",
-                        Token.Name.Attribute: "#6A5ACD",
+                        Token.Name.Attribute: "#7A6ACD",
                         Token.Literal.String: "#9a43ff",
                         Token.Name.Tag: "#6b5fef",
                         Token.Error: "1, 0.2, 0.3"}

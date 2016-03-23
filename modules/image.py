@@ -42,7 +42,7 @@ def _paint_fail_frame(cr, h, k, msg):
 class Image(Inline_element):
     name = 'image'
     DNA = {}
-    ADNA = [('src', '', 'str'), ('width', 89, 'int')]
+    ADNA = [('src', '', 'str'), ('width', 89, 'int'), ('resolution', 0, 'int')]
     documentation = [(0, name)]
     
     def _load(self):
@@ -76,7 +76,7 @@ class Image(Inline_element):
                 renderfunc = 'CairoSVG not available'
         else:
             try:
-                self._surface_cache = make_pixbuf(src)
+                self._surface_cache = make_pixbuf(src, self['resolution'])
                 renderfunc = self.paint_PNG
                 self.h = int(self._surface_cache.get_width())
                 self.k = int(self._surface_cache.get_height())

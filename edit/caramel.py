@@ -32,10 +32,11 @@ def _draw_broken_bar(cr, x1, y1, x2, color_rgba, top):
     cr.set_dash([], 0)
         
 class Channels_controls(object):
-    def __init__(self, ctx, grid):
+    def __init__(self, ctx, grid=None):
         self._mode = 'outlines'
         
-        self._grid_controls = grid
+        if grid is not None:
+            self._grid_controls = grid
 
         self._selected_point = [ctx['c'], None, None]
         self._selected_portal = (None, None, None)
@@ -48,6 +49,9 @@ class Channels_controls(object):
         self.HPG = ctx['p']
         self.R_FTX = meredith.mipsy[ctx['t']]
         self._CHANNELS = self.R_FTX.channels
+
+    def polaroid(self):
+        return {'t': meredith.mipsy.index(self.R_FTX), 'c': self._selected_point[0], 'p': self.PG}
 
     def at(self):
         return self.R_FTX, self._selected_point[0]

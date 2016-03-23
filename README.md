@@ -31,12 +31,12 @@ This problem is quite common, and users with the same problem on other platforms
 
 Special thanks to the developers of Pygments, Pyphen, and CairoSVG for their valuable free libraries.
 
-![Screenshot](screenshot.png?raw=true "Text")
+![Screenshot](screenshots/screenshot.png?raw=true "Text")
 
-![Screenshot](screenshot2.png?raw=true "Graphing")
+![Screenshot](screenshots/screenshot2.png?raw=true "Graphing")
 
-![Screenshot](screenshot3.png?raw=true "Example typesetting")
+![Screenshot](screenshots/screenshot3.png?raw=true "Example typesetting")
 
-![Screenshot](screenshot4.png?raw=true "Example typesetting")
+![Screenshot](screenshots/screenshot4.png?raw=true "Example typesetting")
 
-![Screenshot](screenshot5.png?raw=true "Example typesetting")
+![Screenshot](screenshots/screenshot5.png?raw=true "Example typesetting")

@@ -89,6 +89,7 @@ class Display(Gtk.Window):
         self._HINTS = constants.HINTS
         
         self._periodic = GObject.timeout_add(2000, self._on_periodic)
+        self._on_periodic()
     
     def _on_periodic(self):
         cursor.fcursor.text.stats(spell=True)

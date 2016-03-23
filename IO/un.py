@@ -1,9 +1,7 @@
-from copy import deepcopy
-
 from style import styles
 from model import meredith
 from IO import kevin
-from edit import cursor
+from edit import cursor, caramel
 
 class UN(object):
     def __init__(self):
@@ -21,11 +19,7 @@ class UN(object):
         page_xy = (meredith.page.WIDTH, meredith.page.HEIGHT)
         
         textcontexts = cursor.fcursor.polaroid()
-        channelcontexts = {
-#                        't': meredith.mipsy.index(caramel.delight.R_FTX),
-#                        'c': caramel.delight.C(), 
-#                        'p': caramel.delight.PG
-                        }
+        channelcontexts = caramel.delight.polaroid()
         if len(self._history) > self._i:
             del self._history[self._i:]
         
@@ -51,6 +45,7 @@ class UN(object):
         meredith.mipsy.__init__(kevin.deserialize(image['kitty']))
         
         cursor.fcursor.__init__(image['contexts']['text'])
+        caramel.delight.__init__(image['contexts']['channels'])
     
     def back(self):
         if self._i > 0:

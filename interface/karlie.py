@@ -348,6 +348,12 @@ class Properties(_Properties_panel):
         elif self._tab == 'paragraph':
             self._heading = ', '.join(T.name if V == 1 else T.name + ' (' + str(V) + ')' for T, V in contexts.Text.pp.P.items() if V)
 
+            self._items.append(kookies.Counter_editor(15, y, KW, (125, 28),
+                        get_counter = lambda: contexts.Text.pp.P,
+                        superset = styles.PTAGS,
+                        before = un.history.save, after = lambda: (meredith.mipsy.recalculate_all(), self._synchronize())))
+            y = self._y_incr() + 20
+            
             self._items.append(kookies.Para_control_panel(15, y, KW, 
                     paragraph = contexts.Text.pp, 
                     display = _print_counter,

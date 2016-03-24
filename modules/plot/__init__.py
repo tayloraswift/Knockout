@@ -44,7 +44,7 @@ class Plot_key(object):
 class Plot(Block_element):
     name = namespace
     ADNA = [('height', 89, 'int'), ('azm', 0, 'float'), ('alt', 'pi*0.5', 'float'), ('rot', 0, 'float'), ('tickwidth', 0.5, 'float')]
-    DNA = {'x': {}, 'y': {}, 'dataset': {}, 'num': {}}
+    DNA = {'axis': {}, 'key': {}, 'num': {}}
     
     def _load(self):
         system = Cartesian(self.filter_nodes(Axis, inherit=True))
@@ -76,7 +76,7 @@ class Plot(Block_element):
             return len(self._CS) + self._KEY.target(y)
     
     def typeset(self, bounds, c, y, overlay):
-        P_x, P_y, P_key, = self.styles(overlay, 'x', 'y', 'dataset')
+        P_axis, P_key, = self.styles(overlay, 'axis', 'key')
         F_num, = self.styles(None, 'num')
 
         top = y
@@ -85,7 +85,7 @@ class Plot(Block_element):
         self._yaxis_div = width*0.15
 
         # y axis
-        self._FLOW[1].layout(Subcell(bounds, -0.15, 0.15), c, y, P_y)
+        self._FLOW[1].layout(Subcell(bounds, -0.15, 0.15), c, y, P_axis)
         y = self._FLOW[1].y
         
         px = left
@@ -99,7 +99,7 @@ class Plot(Block_element):
         MONO = list(system.yield_numbers({'R': 0, 'l': 0, 'c': c, 'page': bounds.page}, self.PP, F_num))
         
         # x axis
-        self._FLOW[0].layout(bounds, c, py + 20, P_x)
+        self._FLOW[0].layout(bounds, c, py + 20, P_axis)
         
         self._KEY = Plot_key(self._keys, Subcell(bounds, 0.2, 1), c, top, py, P_key)
         

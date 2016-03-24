@@ -39,8 +39,9 @@ class Node(dict):
         ADNA = self.ADNA
         return [(indent, key, ADNA.get(key, [])) for indent, key in self.__class__.documentation]
 
-    def styles(self, X, * tags):
-        modstyles = Node.MSL[self.__class__]
+    @classmethod
+    def styles(cls, X, * tags):
+        modstyles = Node.MSL[cls]
         if X is None:
             return (modstyles[tag].copy() for tag in tags)
         else:

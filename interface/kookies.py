@@ -821,10 +821,10 @@ class _Enumerated(Base_kookie):
         return i, j
 
 class Unordered(_Enumerated):
-    def __init__(self, x, y, width, library, display=lambda: None, before=lambda: None, after=lambda: None, refresh=lambda: None):
+    def __init__(self, x, y, width, library, display=lambda: None, before=lambda: None, after=lambda: None, refresh=lambda: None, lcap=0):
         self._display = display
 
-        _Enumerated.__init__(self, x, y, width, itemheight=26, library=library, before=before, after=after, refresh=refresh)
+        _Enumerated.__init__(self, x, y, width, itemheight=26, library=library, before=before, after=after, refresh=refresh, lcap=lcap)
 
         # set hover function equal to press function
         self.is_over_hover = self.is_over
@@ -915,9 +915,9 @@ class Unordered(_Enumerated):
         cr.fill()
 
 class Ordered(_Enumerated):
-    def __init__(self, x, y, width, library, display=lambda: None, before=lambda: None, after=lambda: None, refresh=lambda: None):
+    def __init__(self, x, y, width, library, display=lambda: None, before=lambda: None, after=lambda: None, refresh=lambda: None, lcap=0):
         self._display = display
-        _Enumerated.__init__(self, x, y, width, itemheight=26, library=library, before=before, after=after, refresh=refresh)
+        _Enumerated.__init__(self, x, y, width, itemheight=26, library=library, before=before, after=after, refresh=refresh, lcap=lcap)
 
         # set hover function equal to press function
         self.is_over_hover = self.is_over
@@ -981,6 +981,12 @@ class Ordered(_Enumerated):
             
             self._AFTER()
 
+    def _colored(self, value):
+        return True
+    
+    def _list(self):
+        return enumerate(self._LIBRARY)
+    
     def draw(self, cr, hover=(None, None)):
         self._render_fonts(cr)
         
@@ -988,151 +994,9 @@ class Ordered(_Enumerated):
         cr.set_line_width(2)
         
         y1 = self._y
-        for i, value in enumerate(self._LIBRARY):
-            l = self._texts[i]
+        for i, value in self._list():
+
             if value is self._LIBRARY.active:
-                cr.set_source_rgb( * accent)
-
-                radius = 5
-
-                y2 = y1 + self._itemheight
-                cr.arc(self._x + radius, y1 + radius, radius, 2*(pi/2), 3*(pi/2))
-                cr.arc(self._x_right - radius, y1 + radius, radius, 3*(pi/2), 4*(pi/2))
-                cr.arc(self._x_right - radius, y2 - radius, radius, 0*(pi/2), 1*(pi/2))
-                cr.arc(self._x + radius, y2 - radius, radius, 1*(pi/2), 2*(pi/2))
-                cr.close_path()
-
-                cr.fill()
-                
-                cr.set_source_rgb(1, 1, 1)
-                cr.show_glyphs(l)
-
-                upchevron(cr, self._subdivisions[0], y1)
-                cr.stroke()
-                
-                downchevron(cr, self._subdivisions[1], y1)
-                cr.stroke()
-
-                cross(cr, self._subdivisions[2], y1)
-                cr.stroke()
-
-                cr.set_source_rgba(0, 0, 0, 0.7)
-            elif hover[1] is not None and hover[1][0] == i:
-                if hover[1][1] == 1:
-                    cr.set_source_rgb( * accent)
-                else:
-                    cr.set_source_rgba(0, 0, 0, 0.7)
-                cr.show_glyphs(l)
-
-                if hover[1][1] == 2:
-                    cr.set_source_rgb( * accent)
-                else:
-                    cr.set_source_rgba(0, 0, 0, 0.7)
-                upchevron(cr, self._subdivisions[0], y1)
-                cr.stroke()
-
-                if hover[1][1] == 3:
-                    cr.set_source_rgb( * accent)
-                else:
-                    cr.set_source_rgba(0, 0, 0, 0.7)
-                downchevron(cr, self._subdivisions[1], y1)
-                cr.stroke()
-
-                if hover[1][1] == 4:
-                    cr.set_source_rgb( * accent)
-                else:
-                    cr.set_source_rgba(0, 0, 0, 0.7)
-                cross(cr, self._subdivisions[2], y1)
-                cr.stroke()
-                
-                cr.set_source_rgba(0, 0, 0, 0.7)
-            else:
-                cr.show_glyphs(l)
-
-            y1 += self._itemheight
-        
-        if hover[1] is not None and hover[1][0] == len(self._LIBRARY):
-            cr.set_source_rgb( * accent)
-        else:
-            cr.set_source_rgba(0, 0, 0, 0.7)
-        plus_sign(cr, self._x + 4, y1)
-        cr.fill()
-
-class Para_control_panel(Ordered):
-    def __init__(self, x, y, width, paragraph, library, display=lambda: None, before=lambda: None, after=lambda: None, refresh=lambda: None):
-        self._display = display
-        _Enumerated.__init__(self, x, y, width, itemheight=26, library=library, before=before, after=after, refresh=refresh, lcap=1)
-
-        self._paragraph = paragraph
-
-        # set hover function equal to press function
-        self.is_over_hover = self.is_over
-
-        self._SYNCHRONIZE = self._ACQUIRE_REPRESENT
-        self._SYNCHRONIZE()
-        
-        x2 = x + width
-        self._make_sd([(x + 25, 5), (x + 50, 6), (x2 - 69, 1), (x2 - 47, 2), (x2 - 25, 3)], 4)
-        
-    def _ACQUIRE_REPRESENT(self):
-        self._texts = []
-        if self._paragraph.I_ is not None:
-            self._present_tags = self._paragraph.P + self._paragraph.I_
-        else:
-            self._present_tags = self._paragraph.P
-        for i, l in enumerate(chain((self._display(L) for L in self._LIBRARY), ['ELEMENT'])):
-            self._add_static_text(self._x + 55, self._y + self._itemheight*i + 17, l, align=1)
-
-    def focus(self, x, y):
-        F, C = self.hover(x, y)
-        items = self._LIBRARY + [self._paragraph.EP]
-
-        if F == len(items):
-            self._BEFORE()
-            self._add()
-            self._SYNCHRONIZE()
-            self._AFTER()
-
-        else:
-            PSTYLE = items[F]
-            if C == 1:
-                self._LIBRARY.active = PSTYLE
-                self._REFRESH()
-                return C
-            
-            elif F < len(items) - 1:
-                if C == 2:
-                    self._BEFORE()
-                    self._move(F, F - 1)
-
-                elif C == 3:
-                    self._BEFORE()
-                    self._move(F, F + 1)
-                
-                elif C == 4:
-                    self._BEFORE()
-                    del self._LIBRARY[F]
-                
-                if C == 5 or C == 6 and len(PSTYLE.tags) == 1:
-                    tag, count = next(iter(PSTYLE.tags.items()))
-                    self._BEFORE()
-                    if C == 5:
-                        self._paragraph.P[tag] -= 1
-                    else:
-                        self._paragraph.P[tag] += 1
-
-            self._SYNCHRONIZE()
-            self._AFTER()
-            return C
-    
-    def draw(self, cr, hover=(None, None)):
-        self._render_fonts(cr)
-        cr.set_line_width(2)
-        y1 = self._y
-        
-        for i, PSTYLE in enumerate(chain(self._LIBRARY, [self._paragraph.EP])):
-
-            if PSTYLE is self._LIBRARY.active:
                 radius = 5
 
                 y2 = y1 + self._itemheight
@@ -1143,7 +1007,7 @@ class Para_control_panel(Ordered):
                 cr.arc(self._x + radius, y2 - radius, radius, 1*(pi/2), 2*(pi/2))
                 cr.close_path()
                 
-                if PSTYLE.tags <= self._present_tags:
+                if self._colored(value):
                     cr.set_source_rgb( * accent)
                     cr.fill()
                 else:
@@ -1152,22 +1016,14 @@ class Para_control_panel(Ordered):
 
                 cr.set_source_rgb(1, 1, 1)
                 
-                upchevron(cr, self._subdivisions[2], y1)
+                upchevron(cr, self._subdivisions[0], y1)
                 cr.stroke()
                 
-                downchevron(cr, self._subdivisions[3], y1)
+                downchevron(cr, self._subdivisions[1], y1)
                 cr.stroke()
 
-                cross(cr, self._subdivisions[4], y1)
+                cross(cr, self._subdivisions[2], y1)
                 cr.stroke()
-
-                if len(PSTYLE.tags) == 1:
-                    minus_sign(cr, self._x, y1)
-                    plus_sign(cr, self._x + 25, y1)
-                    k = next(iter(PSTYLE.tags.keys()))
-                    cr.move_to(self._x + 22, y1 + 17)
-                    cr.show_text(str(self._paragraph.P[k]))
-                    cr.fill()
 
                 cr.set_source_rgb(1, 1, 1)
 
@@ -1176,54 +1032,30 @@ class Para_control_panel(Ordered):
                     cr.set_source_rgb( * accent)
                 else:
                     cr.set_source_rgba(0, 0, 0, 0.7)
-                upchevron(cr, self._subdivisions[2], y1)
+                upchevron(cr, self._subdivisions[0], y1)
                 cr.stroke()
 
                 if hover[1][1] == 3:
                     cr.set_source_rgb( * accent)
                 else:
                     cr.set_source_rgba(0, 0, 0, 0.7)
-                downchevron(cr, self._subdivisions[3], y1)
+                downchevron(cr, self._subdivisions[1], y1)
                 cr.stroke()
 
                 if hover[1][1] == 4:
                     cr.set_source_rgb( * accent)
                 else:
                     cr.set_source_rgba(0, 0, 0, 0.7)
-                cross(cr, self._subdivisions[4], y1)
+                cross(cr, self._subdivisions[2], y1)
                 cr.stroke()
-
-                if len(PSTYLE.tags) == 1:
-                    if hover[1] == (i, 5):
-                        cr.set_source_rgb( * accent)
-                    else:
-                        cr.set_source_rgba(0, 0, 0, 0.7)
-                    minus_sign(cr, self._x, y1)
-                    cr.fill()
-
-                    if hover[1] == (i, 6):
-                        cr.set_source_rgb( * accent)
-                    else:
-                        cr.set_source_rgba(0, 0, 0, 0.7)
-                    plus_sign(cr, self._x + 25, y1)
-                    cr.fill()
-                    k = next(iter(PSTYLE.tags.keys()))
-                    cr.move_to(self._x + 22, y1 + 17)
-                    cr.show_text(str(self._paragraph.P[k]))
                 
-                if PSTYLE.tags <= self._present_tags:
+                if self._colored(value):
                     cr.set_source_rgb( * accent)
                 else:
                     cr.set_source_rgba(0, 0, 0, 0.4)
 
-            elif PSTYLE.tags <= self._present_tags:
+            elif self._colored(value):
                 cr.set_source_rgba(0, 0, 0, 0.7)
-                
-                if len(PSTYLE.tags) == 1:
-                    k = next(iter(PSTYLE.tags.keys()))
-                    if self._paragraph.P[k]:
-                        cr.move_to(self._x + 22, y1 + 17)
-                        cr.show_text(str(self._paragraph.P[k]))
 
             else:
                 cr.set_source_rgba(0, 0, 0, 0.4)
@@ -1231,12 +1063,64 @@ class Para_control_panel(Ordered):
             cr.show_glyphs(self._texts[i])
             y1 += self._itemheight
 
-        if hover[1] is not None and hover[1][0] == len(self._LIBRARY) + 1:
+        if hover[1] is not None and hover[1][0] == self._LMAX:
             cr.set_source_rgb( * accent)
         else:
             cr.set_source_rgba(0, 0, 0, 0.7)
-        plus_sign(cr, self._x + 50, y1)
+        plus_sign(cr, self._x, y1)
         cr.fill()
+
+class Para_control_panel(Ordered):
+    def __init__(self, x, y, width, paragraph, library, display=lambda: None, before=lambda: None, after=lambda: None, refresh=lambda: None):
+        self._paragraph = paragraph
+        Ordered.__init__(self, x, y, width, library=library, display=display, before=before, after=after, refresh=refresh, lcap=1)
+        
+    def _ACQUIRE_REPRESENT(self):
+        self._texts = []
+        if self._paragraph.I_ is not None:
+            self._present_tags = self._paragraph.P + self._paragraph.I_
+        else:
+            self._present_tags = self._paragraph.P
+        for i, l in enumerate(chain((self._display(L) for L in self._LIBRARY), ['ELEMENT'])):
+            self._add_static_text(self._x + 15, self._y + self._itemheight*i + 17, l, align=1)
+
+    def _colored(self, value):
+        return value.tags <= self._present_tags
+
+    def _list(self):
+        return enumerate(chain(self._LIBRARY, [self._paragraph.EP]))
+    
+    def focus(self, x, y):
+        F, C = self.hover(x, y)
+        items = self._LIBRARY + [self._paragraph.EP]
+
+        if F == len(items):
+            self._BEFORE()
+            self._add()
+            self._SYNCHRONIZE()
+            self._AFTER()
+        else:
+            if C == 1:
+                self._LIBRARY.active = items[F]
+                self._REFRESH()
+                return C
+
+            elif F < len(items) - 1:
+                if C == 2:
+                    self._BEFORE()
+                    self._move(F, F - 1)
+
+                elif C == 3:
+                    self._BEFORE()
+                    self._move(F, F + 1)
+
+                elif C == 4:
+                    self._BEFORE()
+                    del self._LIBRARY[F]
+            
+            self._SYNCHRONIZE()
+            self._AFTER()
+            return C
 
 class Z_indicator(Base_kookie):
     def __init__(self, x, y, width, height, get_projection, get_attributes, A, copy_value, library, before=lambda: None, after=lambda: None):

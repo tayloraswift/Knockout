@@ -15,16 +15,31 @@ from pygments.token import Token
 
 xml_lexer = pygments_html.XmlLexer(stripnl=False)
 
-def _chunks(L, n):
-    br = [i + 1 for i, v in enumerate(L) if v[1] == '\n']
-    for line in (L[i : j] for i, j in zip([0] + br, br + [len(L)])):
-        linelen = len(line)
-        for i in range(0, linelen, n):
-            if i + n < linelen and line[i + n][1] == '\n':
-                yield line[i:], not bool(i)
-                break
+def _linebreak(L, n):
+    start = 0
+    limit = n
+    br = limit
+    check = {' ', '\n'}
+    new = True
+    for i, (c, v) in enumerate(L):
+        if v in check:
+            if v == '\n':
+                line = L[start:i + 1], new
+                new = True
+                start = i + 1
+                limit = start + n
+                br = limit
+                yield line
             else:
-                yield line[i : i + n], not bool(i)
+                br = i
+        if i > limit:
+            line = L[start:br + 1], new
+            if new:
+                new = False
+            start = br + 1
+            limit = start + n
+            br = limit
+            yield line
 
 def _paint_select(cl, sl, cx, sx, left, right):
     select = []
@@ -93,7 +108,7 @@ class Rose_garden(Base_kookie):
         
         colored_chars = list(chain.from_iterable(zip_longest([], text, fillvalue=self._palatte.get(token, (0, 0, 0, 1))) for token, text in xml_lexer.get_tokens(''.join(self._CHARS))))
 #        print(set(token for token, text in xml_lexer.get_tokens(''.join(self._CHARS))))
-        lines = list(_chunks(colored_chars, self._charlength))
+        lines = list(_linebreak(colored_chars, self._charlength))
         self._IJ = [0] + list(accumulate(len(l) for l, br in lines))
         self.y_bottom = y + leading * len(lines)
         
@@ -101,16 +116,16 @@ class Rose_garden(Base_kookie):
         xd = x + 30
         
         colored_text = {color: [] for color in self._palatte.values()}
-        for l, (line, br) in enumerate(lines):
-            for color, G in groupby(((FMX(character), xd + i*K, y + l*leading, color) for i, (color, character) in enumerate(line) if character != '\n'),
+        for l, line in enumerate(lines):
+            for color, G in groupby(((FMX(character), xd + i*K, y + l*leading, color) for i, (color, character) in enumerate(line[0]) if character != '\n'),
                     key = lambda k: k[3]):
                 try:
                     colored_text[color].extend((g, h, k) for g, h, k, c in G)
                 except KeyError:
                     colored_text[color] = [(g, h, k) for g, h, k, c in G]
         
-        N = zip(accumulate(br for line, br in lines), enumerate(lines))
-        numbers = chain.from_iterable(((FMX(character), x + i*K, y + l*leading) for i, character in enumerate(str(int(N)))) for N, (l, (line, br)) in N if br)
+        N = zip(accumulate(line[1] for line in lines), enumerate(lines))
+        numbers = chain.from_iterable(((FMX(character), x + i*K, y + l*leading) for i, character in enumerate(str(int(N)))) for N, (l, line) in N if line[1])
         colored_text[(0.7, 0.7, 0.7, 1)] = list(numbers)
         self._rows = len(lines)
         self._colored_text = colored_text

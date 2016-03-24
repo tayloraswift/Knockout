@@ -76,7 +76,7 @@ class Plot(Block_element):
             return len(self._CS) + self._KEY.target(y)
     
     def typeset(self, bounds, c, y, overlay):
-        P_axis, P_key, = self.styles(overlay, 'axis', 'key')
+        P_axis, P_key, P_right = self.styles(overlay, 'axis', 'key', '_right')
         F_num, = self.styles(None, 'num')
 
         top = y
@@ -101,7 +101,7 @@ class Plot(Block_element):
         # x axis
         self._FLOW[0].layout(bounds, c, py + 20, P_axis)
         
-        self._KEY = Plot_key(self._keys, Subcell(bounds, 0.2, 1), c, top, py, P_key)
+        self._KEY = Plot_key(self._keys, Subcell(bounds, 0.2, 1), c, top, py, P_key + P_right)
         
         return GraphBlock(self._FLOW, MONO, 
                     (top, self._FLOW[0].y, left, right), 

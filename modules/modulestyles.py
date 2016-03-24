@@ -11,13 +11,13 @@ S= {'_global': {'_left': {('p', '_left'): 1},
     'mod:root': {'index': {('f', 'small'): 1}},
 #    'mod:fraction': {'numerator': {('f', 'small'): 1}, 'denominator': {('f', 'small'): 1}},
     'table': {'table': {('p', 'tablecell'): 1},
-                'thead': {('p', 'tablehead'): 1},
-                'tleft': {('p', 'tableleft'): 1}},
+                'thead': {('p', 'tablecell'): 1, ('p', 'h1'): 1},
+                'tleft': {('p', 'tablecell'): 1, ('p', 'firstchild'): 1}},
     'mod:pie': {'slice': {('p', 'key'): 1}},
     
     'mod:plot': {'num': {('f', 'small'): 1},
                 'key': {('p', 'key'): 1},
-                'axis': {('p', 'tablecell'): 1, ('p', 'tablehead'): 1}}
+                'axis': {('p', 'tablecell'): 1, ('p', 'h1'): 1}}
         }
 
 class MS_Library(dict):

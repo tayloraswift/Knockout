@@ -34,8 +34,8 @@ def save():
     PPP = styles.PARASTYLES.polaroid()
     FFF = {N: F.polaroid() for N, F in styles.FONTSTYLES.items()}
     
-    PTT = [T.polaroid() for T in styles.PTAGS.values() if not T.is_group]
-    FTT = [T.polaroid() for T in styles.FTAGS.values() if not T.is_group]
+    PTT = list(sorted(T.polaroid() for T in styles.PTAGS.values() if not T.is_group))
+    FTT = list(sorted(T.polaroid() for T in styles.FTAGS.values() if not T.is_group))
 
     from interface import taylor
     

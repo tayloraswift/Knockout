@@ -943,7 +943,11 @@ class Ordered(_Enumerated):
             O = self._LIBRARY.active.copy()
         else:
             O = self._LIBRARY.template.copy()
-        self._LIBRARY.append(O)
+        try:
+            i = self._LIBRARY.index(self._LIBRARY.active) + 1
+        except ValueError:
+            i = 0
+        self._LIBRARY.insert(i, O)
         self._LIBRARY.active = O
  
     def focus(self, x, y):

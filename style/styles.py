@@ -214,7 +214,6 @@ class DB_Parastyle(object):
         else:
             self.attributes = A
         
-#        ('leading', 'indent', 'indent_range', 'margin_bottom', 'margin_top', 'margin_left', 'margin_right', 'hyphenate')
     def polaroid(self):
         pdict = self.attributes.copy()
         if self.layerable:
@@ -222,7 +221,8 @@ class DB_Parastyle(object):
         return pdict, {T.name: V for T, V in self.tags.items()}
 
     def copy(self):
-        return DB_Parastyle(self.attributes.copy(), self.layerable.copy(), self.tags.copy())
+#        return DB_Parastyle(self.attributes.copy(), self.layerable.copy(), self.tags.copy()) we don't want the user to accidently create duplicate styles
+        return DB_Parastyle(count=self.tags.copy())
     
     def __bool__(self):
         return bool(self.layerable) or bool(self.attributes)

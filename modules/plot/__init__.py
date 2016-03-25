@@ -54,6 +54,7 @@ class Plot(Block_element):
         self._keys = list(chain.from_iterable(PL.key() for PL in self._datasets))
         self._FLOW += [K[0] for K in self._keys]
         self._CS = system
+        self._hk = (None, None)
     
     def ink_graph(self, cr):
         cr.set_source_rgb(0, 0, 0)
@@ -91,10 +92,13 @@ class Plot(Block_element):
         px = left
         py = int(y + self['height']) + 10
         
+        hk = (width, -self['height'])
         system = self._CS
-        system.freeze(width, -self['height'])
-        for PL in self._datasets:
-            PL.freeze(system)
+        if self._hk != hk:
+            self._hk = hk
+            system.freeze( * hk )
+            for PL in self._datasets:
+                PL.freeze(system)
         
         MONO = list(system.yield_numbers({'R': 0, 'l': 0, 'c': c, 'page': bounds.page}, self.PP, F_num))
         

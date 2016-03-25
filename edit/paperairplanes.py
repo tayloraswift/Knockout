@@ -160,3 +160,15 @@ def fonttag(f):
         return FTAGS[f]
     else:
         return f
+
+datatypes = {'int': (interpret_int, None),
+            'float': (interpret_float, None),
+            'float tuple': (interpret_float_tuple, None), 
+            'int set': (interpret_enumeration, None),
+            'rgba': (interpret_rgba, None),
+            'str': (str, str),
+            'bool': (interpret_bool, None),
+            '1D': (interpret_haylor, None),
+            'multi_D': (interpret_tsquared, None),
+            'fx': (function_x, None),
+            'ftag': (fonttag, None)}

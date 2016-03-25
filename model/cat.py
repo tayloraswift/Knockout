@@ -98,7 +98,6 @@ class Wheels(list):
             W[position] = f(W[position])
             if position >= 0:
                 W[position + 1:] = (0 for _ in range(len(W) - position - 1))
-        print(W)
         return W
     
     def __getitem__(self, i):

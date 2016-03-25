@@ -346,6 +346,6 @@ def daydream():
             
             'incr_place_value': 0,
             'incr_assign': lambda n: n + 1,
-            'show_count': lambda l: '.'.join(str(n) for n in l)})
+            'show_count': None}) # lambda l: '.'.join(str(n) for n in l)})
 
     ISTYLES.update(_create_interface())

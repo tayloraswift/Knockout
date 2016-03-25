@@ -1,6 +1,6 @@
 from itertools import chain
 
-from edit.paperairplanes import interpret_int, interpret_float, interpret_float_tuple, interpret_enumeration, interpret_rgba, interpret_bool, interpret_haylor, interpret_tsquared, function_x, fonttag
+from edit.paperairplanes import datatypes
 from IO.xml import print_attrs, print_styles
 
 class Node(dict):
@@ -12,17 +12,7 @@ class Node(dict):
     ADNA = []
     documentation = []
     
-    _inload = {'int': interpret_int,
-                'float': interpret_float,
-                'float tuple': interpret_float_tuple, 
-                'int set': interpret_enumeration,
-                'rgba': interpret_rgba,
-                'str': str,
-                'bool': interpret_bool,
-                '1D': interpret_haylor,
-                'multi_D': interpret_tsquared,
-                'fx': function_x,
-                'ftag': fonttag}
+    _inload = {k: v[0] for k, v in datatypes.items()}
 
     def __init__(self, attrs, content=None, PP=None):
         self.attrs = attrs

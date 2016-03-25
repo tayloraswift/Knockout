@@ -70,7 +70,7 @@ class Flowing_text(object):
         self.LINES = []
         
     def layout(self, channel, c, y, overlay=None):
-        self.LINES[:] = typeset_liquid(channel, self.text, {'j': 0, 'l': -1, 'P_BREAK': True}, 0, y, c, overlay=overlay)
+        self.LINES[:] = typeset_liquid(channel, self.text, 0, y, c, overlay=overlay)
         if self.LINES:
             self.y = self.LINES[-1]['y']
         else:

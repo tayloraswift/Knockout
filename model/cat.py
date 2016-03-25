@@ -1,5 +1,5 @@
-import bisect
-from itertools import groupby
+from bisect import bisect
+from itertools import groupby, chain
 
 from libraries.pyphen import pyphen
 from bulletholes.counter import TCounter as Counter
@@ -24,7 +24,7 @@ class Glyphs_line(dict):
     def I(self, x, y):
         x -= self['x']
         y -= self['y']
-        i = bisect.bisect(self['_X_'], x)
+        i = bisect(self['_X_'], x)
         if i:
             try:
                 # compare before and after glyphs
@@ -41,8 +41,8 @@ class Glyphs_line(dict):
         y += self['y']
         PP = self['PP']
 
-        if self['hyphen'] is not None:
-            glyphs = self['GLYPHS'] + [self['hyphen']]
+        if self['observer'] is not None:
+            glyphs = chain(self['GLYPHS'], self['observer'])
         else:
             glyphs = self['GLYPHS']
         
@@ -62,6 +62,15 @@ class Glyphs_line(dict):
                 except KeyError:
                     repository[N] = (glyph[3], [K])
 
+    def merge(self, other):
+        dx = other['x'] - self['x']
+        if self['observer'] is None:
+            self['observer'] = [(g, x + dx, * e) for g, x, * e in other['GLYPHS']]
+        else:
+            self['observer'].extend((g, x + dx, * e) for g, x, * e in other['GLYPHS'])
+        if other['observer'] is not None:
+            self['observer'].extend((g, x + dx, * e) for g, x, * e in other['observer'])
+
 class _LContainer(Swimming_pool):
     def __init__(self, SP):
         Swimming_pool.__init__(self, SP.railings, SP.page)
@@ -78,7 +87,38 @@ class _Margined_LContainer(Swimming_pool):
     def bounds(self, y):
         return self.edge(0, y)[0] + self._left, self.edge(1, y)[0] - self._right
 
-def typeset_chained(channels, LIQUID, c=0, y=None, LASTLINE = Glyphs_line({'j': 0, 'l': -1, 'P_BREAK': True})):
+class Wheels(list):
+    def __init__(self, dense = [0 for _ in range(13)], iso = {}):
+        list.__init__(self, dense)
+        self._iso = iso
+    
+    def increment(self, position, f):
+        W = self.copy()
+        if position < len(W):
+            W[position] = f(W[position])
+            if position >= 0:
+                W[position + 1:] = (0 for _ in range(len(W) - position - 1))
+        print(W)
+        return W
+    
+    def __getitem__(self, i):
+        if i < 0:
+            return self._iso.get(i, 0)
+        else:
+            return list.__getitem__(self, i)
+    
+    def __setitem__(self, i, v):
+        if type(i) is not slice and i < 0:
+            self._iso[i] = v
+        else:
+            list.__setitem__(self, i, v)
+    
+    def copy(self):
+        return Wheels(self, self._iso)
+
+_dummyline = {'j': 0, 'l': -1, 'wheels': Wheels(), 'P_BREAK': True}
+
+def typeset_chained(channels, LIQUID, c=0, y=None, LASTLINE = _dummyline):
     SLUGS = []
     rchannels = channels[c:]
     rlen = len(rchannels) - 1
@@ -91,7 +131,7 @@ def typeset_chained(channels, LIQUID, c=0, y=None, LASTLINE = Glyphs_line({'j': 
             y = channel.railings[0][0][1]
         if c_number == rlen:
             c_leak = True
-        SLUGS += typeset_liquid(channel, LIQUID, LASTLINE, i, y, c_number + c, c_leak, root=True)
+        SLUGS += typeset_liquid(channel, LIQUID, i, y, c_number + c, c_leak, INIT=LASTLINE, root=True)
         y = None
         
         if SLUGS:
@@ -99,9 +139,10 @@ def typeset_chained(channels, LIQUID, c=0, y=None, LASTLINE = Glyphs_line({'j': 
 
     return SLUGS
 
-def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak=False, root=False, overlay=None):
+def typeset_liquid(channel, LIQUID, i, y, c, c_leak=False, root=False, INIT=_dummyline, overlay=None):
     SLUGS = []
     l = INIT['l'] + 1
+    WHEELS = INIT['wheels']
     if INIT['P_BREAK']:
         gap = True
     else:
@@ -125,6 +166,8 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak=False, root=False, ove
                 PP = container
                 PP.I_ = overlay
                 PSTYLE = styles.PARASTYLES.project_p(PP)
+                
+                WHEELS = WHEELS.increment(PSTYLE['incr_place_value'], PSTYLE['incr_assign'])
                 
                 F = Counter()
                 R = 0
@@ -153,6 +196,7 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak=False, root=False, ove
                 MOD['l'] = l
                 MOD['c'] = c
                 MOD['page'] = page
+                MOD['wheels'] = WHEELS
                 y = MOD['y']
                 
                 SLUGS.append(MOD)
@@ -195,7 +239,7 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak=False, root=False, ove
         if x1 > x2:
             x1, x2 = x2, x1
         # initialize line                               R: line number (within paragraph)
-        LINE = Glyphs_line({'hyphen': None, 'P_BREAK': False, 'R': R, 'left': x1, 'y': y, 'l': l, 'c': c, 'page': page})
+        LINE = Glyphs_line({'observer': None, 'P_BREAK': False, 'R': R, 'left': x1, 'y': y, 'l': l, 'c': c, 'page': page, 'wheels': WHEELS})
         cast_liquid_line(LINE,
                 LIQUID[i : i + 1989], 
                 i, 
@@ -207,6 +251,8 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak=False, root=False, ove
                 
                 hyphenate = PSTYLE['hyphenate']
                 )
+        
+
 
         # alignment
         if PSTYLE['align_to'] and LINE['GLYPHS']:
@@ -227,6 +273,13 @@ def typeset_liquid(channel, LIQUID, INIT, i, y, c, c_leak=False, root=False, ove
                 rag = LINE['width'] - LINE['advance']
                 LINE['x'] = x1 + rag * PSTYLE['align']
 
+        # print counters
+        if not R and PSTYLE['show_count'] is not None:
+            wheelprint = cast_mono_line({'R': R, 'l': l, 'c': c, 'page': page}, 
+                                PSTYLE['show_count'](WHEELS), 0, PP, F.copy())
+            wheelprint['x'] = LINE['x'] - wheelprint['advance'] - PSTYLE['leading']*0.5
+            LINE.merge(wheelprint)
+        
         l += 1
         SLUGS.append(LINE)
 
@@ -418,12 +471,12 @@ def cast_liquid_line(LINE, letters, startindex, width, leading, PP, F, hyphenate
                         
                         if HG[5] + HFS['fontmetrics'].advance_pixel_width('-') * HFS['fontsize'] <= width:
                             i = i + k
-                            LINE['hyphen'] = (
+                            LINE['observer'] = [(
                                     HFS['fontmetrics'].character_index('-'), 
                                     HG[5], # x
                                     HG[2], # y
                                     HFS,
-                                    h_F)
+                                    h_F)]
                             break
                 ####################
                 if i:
@@ -458,7 +511,7 @@ def cast_mono_line(PARENT, letters, leading, PP, F):
             'F': F,
             'PP': PP,
             
-            'hyphen': None,
+            'observer': None,
             
             'R': PARENT['R'], 
             'l': PARENT['l'], 

@@ -165,7 +165,6 @@ def typeset_liquid(channel, LIQUID, i, y, c, c_leak=False, root=False, INIT=_dum
                 PP = container
                 PP.I_ = overlay
                 PSTYLE = styles.PARASTYLES.project_p(PP)
-                
                 WHEELS = WHEELS.increment(PSTYLE['incr_place_value'], PSTYLE['incr_assign'])
                 
                 F = Counter()
@@ -178,7 +177,11 @@ def typeset_liquid(channel, LIQUID, i, y, c, c_leak=False, root=False, INIT=_dum
                 gap = False
 
             else:
-                PSTYLE = styles.PARASTYLES.project_p(container.PP)
+                PP = container.PP
+                PP.I_ = overlay
+                PSTYLE = styles.PARASTYLES.project_p(PP)
+                WHEELS = WHEELS.increment(PSTYLE['incr_place_value'], PSTYLE['incr_assign'])
+                
                 if l != INIT['l'] + 1: # prevent accumulating y error
                     y += PSTYLE['margin_top']
                 
@@ -196,12 +199,11 @@ def typeset_liquid(channel, LIQUID, i, y, c, c_leak=False, root=False, INIT=_dum
                 MOD['c'] = c
                 MOD['page'] = page
                 MOD['wheels'] = WHEELS
-                y = MOD['y']
                 
                 SLUGS.append(MOD)
                 l += 1
                 i += 1
-                y += PSTYLE['margin_bottom']
+                y = MOD['y'] + PSTYLE['margin_bottom']
                 continue
         else:
             y += PSTYLE['leading']
@@ -250,7 +252,6 @@ def typeset_liquid(channel, LIQUID, i, y, c, c_leak=False, root=False, INIT=_dum
                 
                 hyphenate = PSTYLE['hyphenate']
                 )
-
 
         # alignment
         if PSTYLE['align_to'] and LINE['GLYPHS']:

@@ -205,5 +205,8 @@ def deserialize(text, fragment=False):
     else:
         return Q.feed( inpattern.sub(lambda x: IN[x.group(0)], text) )
 
+def miniserialize(L):
+    return ''.join(line for ind, line in write_html(L))
+
 def serialize(L, indent=0):
     return outpattern.sub(lambda x: OUT[x.group(0)], '\n'.join('    ' * ind + line for ind, line in write_html(L, indent)) )

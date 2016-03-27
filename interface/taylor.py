@@ -185,7 +185,7 @@ class Document_toolbar(object):
         self._items.append(kookies.Button(5, y, 90, 30, callback=_punch_tags, string='x Strong', params=('Ctrl B',) ))
 
         y += 50
-        self._items.append(kookies.Checkbox(15, y, 80, callback=meredith.page.toggle_dual, value_acquire=lambda: meredith.page.dual, name='Dual'.upper()))
+        self._items.append(kookies.Checkbox(15, y, 80, read=lambda: meredith.page.dual, assign=meredith.page.toggle_dual, name='Dual'.upper()))
         
         y += 50
         self._items.append(kookies.Selection_menu(5, y, 90, 30, menu_callback=constants.HINTS.set_hint_style, options_acquire=constants.default_hints, value_acquire=constants.HINTS.get_hint_style, source=0))

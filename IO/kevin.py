@@ -69,17 +69,6 @@ class Text(list):
         else:
             self.word_count = words(self)
 
-def _create_paragraph(attrs):
-    if 'class' in attrs:
-        ptags = Counter({styles.PTAGS[T.strip()]: V for T, V in count_styles(attrs['class'])})
-    else:
-        ptags = Counter({styles.PTAGS['body']: 1})
-    if 'style' in attrs:
-        EP = styles.cast_parastyle(literal_eval(attrs['style']), ())
-    else:
-        EP = styles.DB_Parastyle()
-    return Paragraph(ptags, EP)
-
 class Minion(parser.HTMLParser):
     def _trim(self):
         if self._breadcrumbs != [None]:

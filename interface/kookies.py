@@ -94,14 +94,14 @@ class Button(Base_kookie):
         cr.show_glyphs(self._texts[0])
 
 class Checkbox(Base_kookie):
-    def __init__(self, x, y, width, callback, params = (), value_acquire=None, before=lambda: None, after=lambda: None, name=''):
+    def __init__(self, x, y, width, read, assign, before=lambda: None, after=lambda: None, name=''):
         Base_kookie.__init__(self, x, y, width, 20, font=('label',))
 
         self._BEFORE = before
         self._AFTER = after
-        self._callback = callback
-        self._params = params
-        self._value_acquire = value_acquire
+        self._read = read
+        self._assign = assign
+        
         self._ACQUIRE_REPRESENT()
         self._SYNCHRONIZE = self._ACQUIRE_REPRESENT
 
@@ -111,11 +111,11 @@ class Checkbox(Base_kookie):
         self._add_static_text(self._x + 20, self.y_bottom - 5, name, align=1)
 
     def _ACQUIRE_REPRESENT(self):
-        self._STATE = self._value_acquire( * self._params)
+        self._STATE = self._read()
 
     def focus(self, x, y):
         self._BEFORE()
-        self._callback(not self._STATE, * self._params)
+        self._assign(not self._STATE)
         self._ACQUIRE_REPRESENT()
         self._AFTER()
 
@@ -224,22 +224,20 @@ class Heading(Base_kookie):
 
 
 class Blank_space(Base_kookie):
-    def __init__(self, x, y, width, callback, value_acquire, params = (), before=lambda: None, after=lambda: None, name=''):
-        self._params = params
+    def __init__(self, x, y, width, read, assign, before=lambda: None, after=lambda: None, name=''):
         self._BEFORE = before
         self._AFTER = after
         
         Base_kookie.__init__(self, x, y, width, 28)
 
-        self._callback = callback
-        self._value_acquire = value_acquire
+        self._read = read
+        self._assign = assign
         
         self._set_text_bounds()
         self._text_width = self._text_right - self._text_left
         
         self._SYNCHRONIZE()
-
-        self._domain = lambda k: k
+        
         self._name = name
         
         self.is_over_hover = self.is_over
@@ -263,7 +261,7 @@ class Blank_space(Base_kookie):
         self._text_right = self._x_right
 
     def _ACQUIRE_REPRESENT(self):
-        self._VALUE = self._value_acquire( * self._params)
+        self._VALUE = str(self._read())
         self._LIST = list(self._VALUE) + [None]
         self._stamp_glyphs(self._LIST)
 
@@ -436,7 +434,7 @@ class Blank_space(Base_kookie):
         self._VALUE = self._entry()
         if self._VALUE != self._PREV_VALUE:
             self._BEFORE()
-            self._callback(self._domain(self._VALUE), * self._params)
+            self._assign(self._VALUE)
             self._SYNCHRONIZE()
             self._AFTER()
         else:
@@ -522,59 +520,73 @@ class Blank_space(Base_kookie):
         cr.rectangle(self._text_left, self._y + fontsize + 10, self._text_width, 1)
         cr.fill()
 
-#########
+class Z_indicator(Base_kookie):
+    def __init__(self, x, y, width, height, read, copy_value, delete_value, before=lambda: None, after=lambda: None):
+        self._BEFORE = before
+        self._AFTER = after
+        Base_kookie.__init__(self, x, y, width, height)
 
-class Numeric_field(Blank_space):
-    def __init__(self, x, y, width, callback, value_acquire, params=(), before=lambda: None, after=lambda: None, name=None):
-        Blank_space.__init__(self, x, y, width, callback, value_acquire, params, before, after, name)
-        self._domain = interpret_float
+        # set hover function equal to press function
+        self.is_over_hover = self.is_over
 
-    def _stamp_glyphs(self, text):
-        self._template = self._build_line(self._text_left, self._y + self.font['fontsize'] + 5, text, self.font, sub_minus=True)
+        self._read = read
+        self._copy_value = copy_value
+        self._delete_value = delete_value
+        
+        self._state = 0
+        
+        self._colors = ((0.6, 0.6, 0.6), accent, accent, (0.7, 0.7, 0.7))
+        self._hover_colors = ((0.4, 0.4, 0.4), tuple(v + 0.2 for v in accent), tuple(v + 0.2 for v in accent), (0.5, 0.5, 0.5))
 
-    def _ACQUIRE_REPRESENT(self):
-        self._VALUE = str(self._value_acquire( * self._params))
-        self._LIST = list(self._VALUE) + [None]
-        self._stamp_glyphs(self._LIST)
+        self._SYNCHRONIZE = self._ACQUIRE_REPRESENT
+        self._SYNCHRONIZE()
 
-class Integer_field(Numeric_field):
-    def __init__(self, x, y, width, callback, value_acquire, params=(), before=lambda: None, after=lambda: None, name=None):
-        Numeric_field.__init__(self, x, y, width, callback, value_acquire, params, before, after, name)
-        self._domain = interpret_int
-
-class Enumerate_field(Numeric_field):
-    def __init__(self, x, y, width, callback, value_acquire, params=(), before=lambda: None, after=lambda: None, name=None):
-        Blank_space.__init__(self, x, y, width, callback, value_acquire, params, before, after, name)
-        self._domain = interpret_enumeration
-
-    def _ACQUIRE_REPRESENT(self):
-        S = self._value_acquire( * self._params)
-        if S:
-            self._VALUE = str(self._value_acquire( * self._params))[1:-1]
+    def is_over(self, x, y):
+        return True
+        
+    def hover(self, x, y):
+        return 1
+    
+    def focus(self, x, y):
+        self._BEFORE()
+        if self._state == 3:
+            self._copy_value()
         else:
-            self._VALUE = ''
-        self._LIST = list(self._VALUE) + [None]
-        self._stamp_glyphs(self._LIST)
-
-class RGBA_field(Blank_space):
-    def __init__(self, x, y, width, callback, value_acquire, params=(), before=lambda: None, after=lambda: None, name=None):
-        Blank_space.__init__(self, x, y, width, callback, value_acquire, params, before, after, name)
-        self._domain = interpret_rgba
+            self._delete_value()
+        self._AFTER()
 
     def _ACQUIRE_REPRESENT(self):
-        self._VALUE = str(self._value_acquire( * self._params))[1:-1]
-        self._LIST = list(self._VALUE) + [None]
-        self._stamp_glyphs(self._LIST)
+        self._state = self._read()
 
-class Binomial_field(Numeric_field):
-    def __init__(self, x, y, width, callback, value_acquire, params, before=lambda: None, after=lambda: None, name=None, letter='X'):
-        Blank_space.__init__(self, x, y, width, callback, value_acquire, params, before, after, name)
-        self._domain = lambda k: pack_binomial(k, letter)
+    def draw(self, cr, hover=(None, None)):
+        self._render_fonts(cr)
+        cr.rectangle(self._x, self._y, self._width, self._height)
+        if hover[1]:
+            colors = self._hover_colors
+        else:
+            colors = self._colors
+        
+        cr.set_source_rgb( * colors[self._state])
+        if self._state == 2:
+            cr.clip()
+            cr.move_to(self._x, self._y)
 
-    def _ACQUIRE_REPRESENT(self):
-        self._VALUE = read_binomial( * self._value_acquire( * self._params))
-        self._LIST = list(self._VALUE) + [None]
-        self._stamp_glyphs(self._LIST)
+            for i in range(6):
+                
+                cr.rel_line_to(self._width, -12)
+                cr.rel_line_to(0, 3.8)
+                cr.rel_line_to(-self._width, 12)
+                cr.rel_move_to(0, 2.8)
+            
+            cr.fill()
+            cr.reset_clip()
+        if self._state == 3:
+            cr.fill()
+            cr.rectangle(self._x + 2, self._y + 2, self._width - 4, self._height - 4)
+            cr.set_source_rgb(1, 1, 1)
+            cr.fill()
+        else:
+            cr.fill()
 
 #############
 class Selection_menu(Base_kookie):
@@ -706,11 +718,11 @@ class New_object_menu(Base_kookie):
         
 class Object_menu(Blank_space):
     hover = xhover
-    def __init__(self, x, y, width, value_acquire, value_push, library, before=lambda: None, after=lambda: None, name='', source=0):
+    def __init__(self, x, y, width, read, value_push, library, before=lambda: None, after=lambda: None, name='', source=0):
         self._library = library
         self._value_push = value_push
 
-        Blank_space.__init__(self, x, y, width, lambda O, N, *args: O.rename(N, *args), value_acquire, (), before, after, name)
+        Blank_space.__init__(self, x, y, width, read=read, assign=lambda N: self._O.rename(N), before=before, after=after, name=name)
 
         self._dropdown_active = False
         self._source = source
@@ -725,7 +737,7 @@ class Object_menu(Blank_space):
         # scan objects
         self._menu_options = tuple( (v, k) for k, v in sorted(self._library.items()) )
         
-        self._O = self._value_acquire()
+        self._O = self._read()
 
         self._VALUE = self._O.name
         self._LIST = list(self._VALUE) + [None]
@@ -764,7 +776,7 @@ class Object_menu(Blank_space):
         self._VALUE = self._entry()
         if self._VALUE != self._PREV_VALUE:
             self._BEFORE()
-            self._callback(self._O, self._VALUE, * self._params)
+            self._assign(self._VALUE)
             self._AFTER()
 
         else:
@@ -1121,90 +1133,6 @@ class Para_control_panel(Ordered):
             self._SYNCHRONIZE()
             self._AFTER()
             return C
-
-class Z_indicator(Base_kookie):
-    def __init__(self, x, y, width, height, get_projection, get_attributes, A, copy_value, library, before=lambda: None, after=lambda: None):
-        self._BEFORE = before
-        self._AFTER = after
-        Base_kookie.__init__(self, x, y, width, height)
-
-        # set hover function equal to press function
-        self.is_over_hover = self.is_over
-
-        self._get_projection = get_projection
-        self._get_attributes = get_attributes
-        self._LIBRARY = library
-        self._attribute = A
-        self._copy_value = copy_value
-        
-        self._state = 0
-        
-        self._colors = ((0.6, 0.6, 0.6), accent, accent, (0.7, 0.7, 0.7))
-        self._hover_colors = ((0.4, 0.4, 0.4), tuple(v + 0.2 for v in accent), tuple(v + 0.2 for v in accent), (0.5, 0.5, 0.5))
-
-        self._SYNCHRONIZE = self._ACQUIRE_REPRESENT
-        self._SYNCHRONIZE()
-
-    def is_over(self, x, y):
-        return True
-        
-    def hover(self, x, y):
-        return 1
-    
-    def focus(self, x, y):
-        self._BEFORE()
-        if self._state == 3:
-            self._copy_value(self._attribute)
-        else:
-            del self._get_attributes(self._LIBRARY)[self._attribute]
-        self._AFTER()
-
-    def _ACQUIRE_REPRESENT(self):
-        L = self._get_projection()
-        # test for definition
-        if self._attribute in self._get_attributes(self._LIBRARY):
-            # test for stack membership
-            if self._LIBRARY.active in L.members:
-                # test for stack visibility
-                if self._LIBRARY.active is L.Z[self._attribute]:
-                    self._state = 1 # defined, in effect
-                else:
-                    self._state = 2 # defined, but overriden
-            else:   
-                self._state = 0 # defined, but not applicable
-
-        else:
-            self._state = 3 # undefined, unapplicable
-
-    def draw(self, cr, hover=(None, None)):
-        self._render_fonts(cr)
-        cr.rectangle(self._x, self._y, self._width, self._height)
-        if hover[1]:
-            colors = self._hover_colors
-        else:
-            colors = self._colors
-        
-        cr.set_source_rgb( * colors[self._state])
-        if self._state == 2:
-            cr.clip()
-            cr.move_to(self._x, self._y)
-
-            for i in range(6):
-                
-                cr.rel_line_to(self._width, -12)
-                cr.rel_line_to(0, 3.8)
-                cr.rel_line_to(-self._width, 12)
-                cr.rel_move_to(0, 2.8)
-            
-            cr.fill()
-            cr.reset_clip()
-        if self._state == 3:
-            cr.fill()
-            cr.rectangle(self._x + 2, self._y + 2, self._width - 4, self._height - 4)
-            cr.set_source_rgb(1, 1, 1)
-            cr.fill()
-        else:
-            cr.fill()
 
 class _Table(Base_kookie):
     def __init__(self, x, y, width, cellsize, n):

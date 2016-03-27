@@ -5,7 +5,8 @@ from style.styles import FTAGS
 
 nsp = NumericStringParser()
 
-def read_binomial(C, SIGN, K):
+def read_binomial(S):
+    C, SIGN, K = S
     if K:
         if abs(K) == 1:
             coefficient = ''
@@ -28,8 +29,8 @@ def read_binomial(C, SIGN, K):
         val = str(C)
     return val
 
-def pack_binomial(value, letter):
-    value = ''.join(c for c in value if c in set('1234567890.-+' + letter))
+def pack_binomial(value):
+    value = ''.join(c for c in value if c in set('1234567890.-+K'))
     K = 0
     C = 0
     sgn = 1
@@ -113,12 +114,23 @@ def interpret_tsquared(value):
 from data.userfunctions import *
 import parser
 
-def function_x(expression):
-    if callable(expression):
+def f(expression, template):
+    if expression == 'None':
+        return None
+    elif callable(expression):
         return expression
     else:
         code = parser.expr(expression).compile()
-        return lambda x, y=0: eval(code)
+        return template(code)
+
+def function_x(expression):
+    return f(expression, lambda code: lambda x, y=0: eval(code))
+
+def function_array(expression):
+    return f(expression, lambda code: lambda A: eval(code))
+
+def function_int(expression):
+    return f(expression, lambda code: lambda n: eval(code))
 
 def interpret_rgba(C):
     RGBA = [0, 0, 0, 1]
@@ -138,7 +150,7 @@ def interpret_rgba(C):
         # hex
         else:
             colorstring = ''.join(c for c in C if c in hx)
-            colorstring = colorstring + '000000ffx'[len(colorstring):]
+            colorstring = colorstring + '000000ff'[len(colorstring):]
             for pos in range(4):
                 RGBA[pos] = int(colorstring[pos*2 : pos*2 + 2], 16) / 255
     return tuple(RGBA)
@@ -161,14 +173,21 @@ def fonttag(f):
     else:
         return f
 
-datatypes = {'int': (interpret_int, None),
-            'float': (interpret_float, None),
-            'float tuple': (interpret_float_tuple, None), 
-            'int set': (interpret_enumeration, None),
-            'rgba': (interpret_rgba, None),
-            'str': (str, str),
-            'bool': (interpret_bool, None),
-            '1D': (interpret_haylor, None),
-            'multi_D': (interpret_tsquared, None),
-            'fx': (function_x, None),
-            'ftag': (fonttag, None)}
+datatypes = {'null': lambda x: x,
+            'int': interpret_int,
+            'float': interpret_float,
+            'binomial': pack_binomial,
+            'float tuple': interpret_float_tuple, 
+            'int set': interpret_enumeration,
+            'rgba': interpret_rgba,
+            'str': str,
+            'bool': interpret_bool,
+            '1D': interpret_haylor,
+            'multi_D': interpret_tsquared,
+            'fx': function_x,
+            'farray': function_array,
+            'fn': function_int,
+            'ftag': fonttag}
+
+formatable = {'binomial': read_binomial,
+              'int set': lambda S: ', '.join(str(i) for i in sorted(S))}

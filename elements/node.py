@@ -11,8 +11,6 @@ class Node(dict):
     DNA = {}
     ADNA = []
     documentation = []
-    
-    _inload = {k: v[0] for k, v in datatypes.items()}
 
     def __init__(self, attrs, content=None, PP=None):
         self.attrs = attrs
@@ -22,7 +20,7 @@ class Node(dict):
 
     def _attributes(self):
         attrs = self.attrs
-        inload = self._inload
+        inload = datatypes
         return ((k, inload[TYPE](attrs[k])) if k in attrs else (k, inload[TYPE](v)) for k, v, TYPE in self.ADNA)
     
     def get_documentation(self):

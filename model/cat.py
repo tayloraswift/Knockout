@@ -101,7 +101,7 @@ class Wheels(list):
         return W
     
     def __getitem__(self, i):
-        if i < 0:
+        if type(i) is not slice and i < 0:
             return self._iso.get(i, 0)
         else:
             return list.__getitem__(self, i)
@@ -250,7 +250,6 @@ def typeset_liquid(channel, LIQUID, i, y, c, c_leak=False, root=False, INIT=_dum
                 
                 hyphenate = PSTYLE['hyphenate']
                 )
-        
 
 
         # alignment

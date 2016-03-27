@@ -3,7 +3,7 @@
 
 <body>
 <section outlines="90,100 90,910 ; 370,100 370,910 ; 0 |
-    410,100 410,910 ; 690,100 690,910 ; 0 ">
+    410,100 410,910 ; 690,100 690,910 ; 0">
 <p class="h1">Moody&#x27;s Mega Math Challenge 2016</p>
 
 <p class="body&firstchild">The automotive industry represents one of the most active components of American culture with millions of workers traveling by car every day.  However, the cost to buy motor vehicles lies outside the price range for many hard working Americans.  Therefore, many commuters rely on car sharing to get from place to place as a means of reducing the cost of transportation.  As new companies and industries arise, new modes of transportation and new models for car sharing systems are born and provide additional options that in effect, cater to the preferences of peoples from various locations and economic situations.</p>
@@ -20,7 +20,7 @@
 <section outlines="90,130 90,910 ; 690,130 690,910 ; 1">
 <p class="firstchild&h2" style="{'margin_left': 40}">Table of contents</p>
 
-<table cellbottom="5" celltop="5" distr="3, 1" hrules="0" style="{'margin_top': 10, 'margin_left': 40, 'margin_right': 40}">
+<table cellbottom="5" celltop="5" distr="3, 1" hrules="0" style="{'margin_left': 40, 'margin_top': 10, 'margin_right': 40}">
     <tr>
         <td>
             <p class="body&h2">Introduction</p>
@@ -99,14 +99,14 @@
     90,130 90,910 ; 370,130 370,910 ; 13 |
     410,130 410,910 ; 690,130 690,910 ; 13 |
     90,130 90,910 ; 370,130 370,910 ; 14 |
-    410,130 410,910 ; 690,130 690,910 ; 14 ">
+    410,130 410,910 ; 690,130 690,910 ; 14">
 <p class="h2">1  Part 1: Driving patterns in the United States</p>
 
 <p class="h3">1.1 Analysis of the problem</p>
 
 <p class="body&firstchild">Using “low–medium–high” terciles for each dimension implies a 3 × 3 nine-cell matrix: “low time, low distance” drivers, “low time, medium distance” drivers, “low time, high distance” drivers, “medium time, low distance” drivers, “medium time, medium distance” drivers, and so forth.</p>
 
-<p>Because this two-dimensional distribution is lost through the use of most statistical processes in the data sources available, we must use other cleavage points to decouple the metrics and reconstruct the two-dimensional distributions. One way to do this is to generate random datapoints off of the means of demographic subgroups in the data—groups by age, gender, ethnicity, education, or location.</p>
+<p style="{'align_to': '.,\''}">Because this two-dimensional distribution is lost through the use of most statistical processes in the data sources available, we must use other cleavage points to decouple the metrics and reconstruct the two-dimensional distributions. One way to do this is to generate random datapoints off of the means of demographic subgroups in the data—groups by age, gender, ethnicity, education, or location.</p>
 
 <p class="h3">1.2 Assumptions</p>
 
@@ -394,6 +394,7 @@
 <p class="h3">1.6 Modeling the Driver population</p>
 
 <p class="body&firstchild">Clearly, members of each demographic group are not homogeneous. 16–19 year old drivers do not all drive the mean number of miles each day. We have to then blur each demographic mean into a two-dimensional normal probability distribution to produce a more realistic model of the driving population.</p>
+
 <mod:plot class="figure" height="100">
     <mod:plot:axis major="10" minor="5" number="20" start="0" stop="80">
         <p>Minutes</p>
@@ -955,7 +956,7 @@
 <p class="body&firstchild">Richmond would be an ideal city to deploy a car sharing system of any type. It has the highest population density out of all four subject cities, adequate disposable income to demand car sharing services, and low gas and electricity prices.</p>
 </section>
 
-<section repeat="1:15" outlines="90,80 90,110 ; 690,80 690,110 ; 1">
+<section outlines="90,80 90,110 ; 690,80 690,110 ; 1" repeat="1:15">
 <table class="">
     <tr>
         <td>
@@ -1022,8 +1023,8 @@
                 'lowercase': {'capitals': False},
                 'subscript': {'shift': -2},
                 'superscript': {'shift': 5}},
-  'FTAGLIST': [('strong', []), ('reference', []), ('sub', ['small']), ('caption', []), ('sc', []), ('sup', ['small']), ('big', []), ('emphasis', [])],
- 'PARASTYLES': (1,
+ 'FTAGLIST': [('big', []), ('caption', []), ('emphasis', []), ('reference', []), ('sc', []), ('strong', []), ('sub', ['small']), ('sup', ['small'])],
+ 'PARASTYLES': (None,
                 [({'fontclasses': (2, [('Black', {}), ('subscript', {'sub': 1}), ('superscript', {'sup': 1})])}, {}),
                  ({'fontclasses': (0,
                                    [('Body regular', {}),
@@ -1036,6 +1037,7 @@
                                     ('Body small italic', {'emphasis': 1, 'small': 1})]),
                    'hyphenate': True,
                    'indent': (15, 1, 0),
+                   'indent_range': {0},
                    'leading': 20},
                   {'body': 1}),
                  ({'indent': (0, -1, 5), 'margin_left': 20}, {'list': 1}),
@@ -1062,24 +1064,27 @@
                  ({'fontclasses': (1, [('Sans serif book italic', {}), ('Caption', {})]), 'hyphenate': True, 'leading': 16, 'margin_bottom': 12}, {'caption': 1}),
                  ({'fontclasses': (0, [('Sans serif semi', {})]), 'indent': (0, 1, 0), 'margin_bottom': 2, 'margin_top': 0}, {'caption': 1, 'h3': 1}),
                  ({'indent': (0, 1, 0)}, {'firstchild': 1})]),
- 'PTAGLIST': [('h3', []),
-              ('tablecell', []),
-              ('tablehead', []),
-              ('math', []),
-              ('h2', []),
+ 'PTAGLIST': [('_center', []),
+              ('_left', []),
+              ('_right', []),
+              ('body', []),
               ('caption', []),
+              ('figure', []),
               ('figure title', []),
+              ('firstchild', []),
+              ('h1', []),
+              ('h2', []),
+              ('h3', []),
               ('key', []),
               ('list', []),
-              ('body', []),
+              ('math', []),
               ('table emphasis', []),
+              ('tablecell', []),
+              ('tablehead', []),
               ('tableleft', []),
-              ('firstchild', []),
-              ('units', []),
-              ('figure', []),
-              ('h1', [])],
- 'contexts': {'channels': {'c': 0, 'p': 1, 't': 3}, 'text': {'i': 4615, 'j': 4615, 'p': 4, 't': 2}},
+              ('units', [])],
+ 'contexts': {'channels': {'c': 0, 'p': 1, 't': 3}, 'text': {'i': 363, 'j': 363, 'p': 2, 't': 2}},
  'grid': [[90, 370, 410, 690], [100, 130, 910]],
  'page': {'dimensions': (765, 990), 'dual': True},
- 'view': {'H': -175, 'Hc': 479, 'K': -2217, 'Kc': 458, 'Zoom': 11, 'mode': 'text'}}
+ 'view': {'H': -428, 'Hc': 479, 'K': -1282, 'Kc': 458, 'Zoom': 11, 'mode': 'text'}}
 ############# -->

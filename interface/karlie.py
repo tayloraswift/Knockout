@@ -1,60 +1,74 @@
-import bisect
+from bisect import bisect
 from itertools import chain
 
 from state import constants, contexts, noticeboard
 from style import styles
 from interface import kookies, ui, source
 from edit import ops, caramel
+from edit.paperairplanes import datatypes
 from model import meredith
 from IO import un, kevin
 
-def _create_f_field(TYPE, x, y, width, attribute, after, name='', **kwargs):
+def _Z_state(obj, L, A, defined):
+    # test for definition
+    if A in defined:
+        O = obj()
+        # test for stack membership
+        if O in L.members:
+            # test for stack visibility
+            if O is L.Z[A]:
+                return 1 # defined, in effect
+            else:
+                return 2 # defined, but overriden
+        else:   
+            return 0 # defined, but not applicable
+    else:
+        return 3 # undefined, unapplicable
+
+def _create_f_field(TYPE, x, y, width, attribute, after, name=''):
     if TYPE == kookies.Checkbox:
         z_y = y
     else:
         z_y = y - 7
-    V_A = lambda A: styles.PARASTYLES.active.layerable.active.F.attributes[A] if A in styles.PARASTYLES.active.layerable.active.F.attributes else contexts.Text.f[A]
+    
+    LIB = styles.PARASTYLES.active.content
+    read = lambda: LIB.active.F.attrs[attribute] if attribute in LIB.active.F.attrs else contexts.Text.f.Z[attribute].attrs[attribute]
     ZI = kookies.Z_indicator(x, y, 10, height=24, 
-            get_projection = lambda: contexts.Text.f, 
-            get_attributes = lambda LIB: LIB.active.F.attributes, 
-            A = attribute, 
-            copy_value = lambda A: ops.f_set_attribute(V_A(A), A), 
-            library=styles.PARASTYLES.active.layerable,
+            read = lambda: _Z_state(lambda: LIB.active.F, contexts.Text.f, attribute, LIB.active.F.attrs),
+            copy_value = lambda: ops.f_set_attribute(attribute, read()), 
+            delete_value = lambda: LIB.active.F.remove_entry(attribute),
             before=un.history.save, after= lambda: (styles.PARASTYLES.update_f(), meredith.mipsy.recalculate_all(), contexts.Text.update_force()))
     return [ZI, TYPE(x + 25, z_y, width - 25,
-            callback= ops.f_set_attribute, 
-            value_acquire = V_A,
-            params = (attribute,), 
+            read = read,
+            assign= lambda V: ops.f_set_attribute(attribute, V), 
             before=un.history.save,
             after=after,
-            name=name, **kwargs)]
+            name=name)]
             
-def _create_p_field(TYPE, x, y, width, attribute, after, name='', **kwargs):
+def _create_p_field(TYPE, x, y, width, attribute, after, name=''):
     if TYPE == kookies.Checkbox:
         z_y = y
     else:
         z_y = y - 7
-    V_A = lambda A: styles.PARASTYLES.active.attributes[A] if A in styles.PARASTYLES.active.attributes else contexts.Text.p[A]
+    LIB = styles.PARASTYLES
+    read = lambda: LIB.active.attrs[attribute] if attribute in LIB.active.attrs else contexts.Text.p.Z[attribute].attrs[attribute]
     ZI = kookies.Z_indicator(x, y, 10, height=24, 
-            get_projection = lambda: contexts.Text.p, 
-            get_attributes = lambda LIB: LIB.active.attributes, 
-            A = attribute, 
-            copy_value = lambda A: ops.p_set_attribute(V_A(A), A), 
-            library=styles.PARASTYLES, 
+            read = lambda: _Z_state(lambda: LIB.active, contexts.Text.p, attribute, LIB.active.attrs),
+            copy_value = lambda: ops.p_set_attribute(attribute, read()), 
+            delete_value = lambda: LIB.active.remove_entry(attribute),
             before=un.history.save, after= lambda: (styles.PARASTYLES.update_p(), meredith.mipsy.recalculate_all(), contexts.Text.update_force()))
     return [ZI, TYPE(x + 25, z_y, width - 25,
-            callback = ops.p_set_attribute, 
-            value_acquire = V_A,
-            params = (attribute,), 
+            read = read,
+            assign = lambda V: ops.p_set_attribute(attribute, V), 
             before=un.history.save,
             after=after,
-            name=name, **kwargs)]
+            name=name)]
 
 def _stack_row(i, row, y, gap, width, factory, after):
     width += 10
     divisions = [r[0] * width for r in row]
     divisions = zip(divisions, divisions[1:] + [width], row)
-    return _columns(chain.from_iterable(factory(TYPE, 15 + a, y + i*gap, b - a - 10, A, after=after, name=name, **dict(kwargs)) for a, b, (factor, TYPE, A, name, * kwargs) in divisions))
+    return _columns(chain.from_iterable(factory(TYPE, 15 + a, y + i*gap, b - a - 10, A, after=after, name=name) for a, b, (factor, TYPE, A, name) in divisions))
 
 def _stack_properties(factory, y, gap, width, L, after):
     return chain.from_iterable(_stack_row(i, row, y, gap, width, factory, after) for i, row in enumerate(L))
@@ -102,7 +116,7 @@ class _Properties_panel(ui.Cell):
             self._total_height = 100 + padding
 
     def _stack_bisect(self, x, y):
-        i = bisect.bisect(self._rows, y)
+        i = bisect(self._rows, y)
         try:
             item = self._items[i]
         except IndexError:
@@ -113,7 +127,7 @@ class _Properties_panel(ui.Cell):
                 return kookies.Null
         
         if isinstance(item, _MULTI_COLUMN):
-            return self._items[i + bisect.bisect(item.partitions, x) + 1]
+            return self._items[i + bisect(item.partitions, x) + 1]
         else:
             return item
 
@@ -308,20 +322,20 @@ class Properties(_Properties_panel):
                 self._heading = ', '.join(T.name for T in styles.PARASTYLES.active.tags)
                 
                 self._items.append(kookies.Ordered(15, y, KW,
-                            library = styles.PARASTYLES.active.layerable, 
+                            library = styles.PARASTYLES.active.content, 
                             display = _print_counter,
                             before = un.history.save, after = lambda: (styles.PARASTYLES.update_f(), meredith.mipsy.recalculate_all(), self._reconstruct()), refresh = self._reconstruct))
                 y = self._y_incr() + 20
                 
-                if styles.PARASTYLES.active.layerable.active is not None:
+                if styles.PARASTYLES.active.content.active is not None:
                     self._items.append(kookies.Counter_editor(15, y, KW, (125, 28),
-                                get_counter = lambda: styles.PARASTYLES.active.layerable.active.tags,
+                                get_counter = lambda: styles.PARASTYLES.active.content.active.tags,
                                 superset = styles.FTAGS,
                                 before = un.history.save, after = lambda: (styles.PARASTYLES.update_f(), meredith.mipsy.recalculate_all(), self._synchronize())))
                     y = self._y_incr() + 20
 
                     _after_ = lambda: (styles.PARASTYLES.update_f(), meredith.mipsy.recalculate_all(), contexts.Text.update(), self._reconstruct())
-                    if styles.PARASTYLES.active.layerable.active.F is None:
+                    if styles.PARASTYLES.active.content.active.F is None:
                         self._items.append(kookies.New_object_menu(15, y, KW,
                                     value_push = ops.link_fontstyle, 
                                     library = styles.FONTSTYLES,
@@ -329,18 +343,18 @@ class Properties(_Properties_panel):
                                     before = un.history.save, after = _after_, name='FONTSTYLE', source=self._partition))
                     else:
                         self._items.append(kookies.Object_menu(15, y, KW,
-                                    value_acquire = lambda: styles.PARASTYLES.active.layerable.active.F, 
+                                    read = lambda: styles.PARASTYLES.active.content.active.F, 
                                     value_push = ops.link_fontstyle, 
                                     library = styles.FONTSTYLES, 
                                     before = un.history.save, after = _after_, name='FONTSTYLE', source=self._partition))
 
                         y += 55
                         props = [[(0, kookies.Blank_space, 'path', 'FONT FILE')],
-                                [(0, kookies.Numeric_field, 'fontsize', 'FONT SIZE')],
-                                [(0, kookies.Numeric_field, 'tracking', 'TRACKING')],
-                                [(0, kookies.Numeric_field, 'shift', 'VERTICAL SHIFT')],
+                                [(0, kookies.Blank_space, 'fontsize', 'FONT SIZE')],
+                                [(0, kookies.Blank_space, 'tracking', 'TRACKING')],
+                                [(0, kookies.Blank_space, 'shift', 'VERTICAL SHIFT')],
                                 [(0, kookies.Checkbox, 'capitals', 'CAPITALS')],
-                                [(0, kookies.RGBA_field, 'color', 'COLOR')]
+                                [(0, kookies.Blank_space, 'color', 'COLOR')]
                                 ]
                         self._items.extend(_stack_properties(_create_f_field, y, 45, KW, props, self._style_synchronize))
                         y += 45*len(props)
@@ -368,12 +382,14 @@ class Properties(_Properties_panel):
                             before = un.history.save, after = lambda: (styles.PARASTYLES.update_p(), meredith.mipsy.recalculate_all(), self._synchronize())))
                 y = self._y_incr() + 20
 
-                props = [[(0, kookies.Numeric_field, 'leading', 'LEADING')],
-                        [(0, kookies.Numeric_field, 'align', 'ALIGN') , (0.6, kookies.Blank_space, 'align_to', 'ALIGN ON')],
-                        [(0, kookies.Binomial_field, 'indent', 'INDENT', ('letter', 'K')) , (0.6, kookies.Enumerate_field, 'indent_range', 'FOR LINES')],
-                        [(0, kookies.Numeric_field, 'margin_left', 'SPACE LEFT'), (0.5, kookies.Numeric_field, 'margin_right', 'SPACE RIGHT')],
-                        [(0, kookies.Numeric_field, 'margin_top', 'SPACE BEFORE'), (0.5, kookies.Numeric_field, 'margin_bottom', 'SPACE AFTER')],
-                        [(0, kookies.Checkbox, 'hyphenate', 'HYPHENATE')]
+                props = [[(0, kookies.Blank_space, 'leading', 'LEADING')],
+                        [(0, kookies.Blank_space, 'align', 'ALIGN') , (0.6, kookies.Blank_space, 'align_to', 'ALIGN ON')],
+                        [(0, kookies.Blank_space, 'indent', 'INDENT') , (0.6, kookies.Blank_space, 'indent_range', 'FOR LINES')],
+                        [(0, kookies.Blank_space, 'margin_left', 'SPACE LEFT'), (0.5, kookies.Blank_space, 'margin_right', 'SPACE RIGHT')],
+                        [(0, kookies.Blank_space, 'margin_top', 'SPACE BEFORE'), (0.5, kookies.Blank_space, 'margin_bottom', 'SPACE AFTER')],
+                        [(0, kookies.Checkbox, 'hyphenate', 'HYPHENATE')],
+                        [(0, kookies.Blank_space, 'incr_place_value', 'INCREMENT'), (0.3, kookies.Blank_space, 'incr_assign', 'BY')],
+                        [(0, kookies.Blank_space, 'show_count', 'COUNTER TEXT')],
                         ]
                 self._items.extend(_stack_properties(_create_p_field, y, 45, KW, props, self._style_synchronize))
                 y += 45*len(props)
@@ -390,8 +406,8 @@ class Properties(_Properties_panel):
             y = self._y_incr() + 20
             if styles.PTAGS.active is not None:
                 self._items.append(kookies.Blank_space(15, y, width=KW, 
-                        callback = lambda * args: styles.PTAGS.active.rename( * args), 
-                        value_acquire = lambda: styles.PTAGS.active.name, 
+                        read = lambda: styles.PTAGS.active.name,
+                        assign = lambda N: styles.PTAGS.active.rename(N), 
                         before=un.history.save, after=self._synchronize, name='TAG NAME'))
             y += 80
             
@@ -403,22 +419,22 @@ class Properties(_Properties_panel):
             y = self._y_incr() + 20
             if styles.FTAGS.active is not None:
                 self._items.append(kookies.Blank_space(15, y, width=KW, 
-                        callback = lambda * args: styles.FTAGS.active.rename( * args), 
-                        value_acquire = lambda: styles.FTAGS.active.name, 
+                        read = lambda: styles.FTAGS.active.name,
+                        assign = lambda N: styles.FTAGS.active.rename(N), 
                         before=un.history.save, after=self._synchronize, name='TAG NAME'))
             
         elif self._tab == 'page':
             self._heading = 'Document pages'
             
-            self._items.append(kookies.Integer_field( 15, y, KW, 
-                        callback = meredith.page.set_width,
-                        value_acquire = lambda: meredith.page.WIDTH,
+            self._items.append(kookies.Blank_space( 15, y, KW, 
+                        read = lambda: meredith.page.WIDTH,
+                        assign = lambda V: meredith.page.set_width(datatypes['int'](V)),
                         name = 'WIDTH' ))
             
             y += 45
-            self._items.append(kookies.Integer_field( 15, y, KW,
-                        callback = meredith.page.set_height,
-                        value_acquire = lambda: meredith.page.HEIGHT,
+            self._items.append(kookies.Blank_space( 15, y, KW,
+                        read = lambda: meredith.page.HEIGHT,
+                        assign = lambda V: meredith.page.set_height(datatypes['int'](V)),
                         name = 'HEIGHT' ))
             y += 45
         
@@ -438,10 +454,9 @@ class Properties(_Properties_panel):
         if self._tab == 'channels':
             self._heading = 'Channel ' + str(c)
             if c is not None:
-                self._items.append(kookies.Integer_field( 15, y, KW, 
-                        callback = lambda page, C: (caramel.delight.R_FTX.channels.channels[C].set_page(page), caramel.delight.R_FTX.layout()), 
-                        params = (c,),
-                        value_acquire = lambda C: str(caramel.delight.R_FTX.channels.channels[C].page),
+                self._items.append(kookies.Blank_space( 15, y, KW, 
+                        read = lambda: caramel.delight.R_FTX.channels.channels[c].page,
+                        assign = lambda V: (caramel.delight.R_FTX.channels.channels[c].set_page(datatypes['int'](V)), caramel.delight.R_FTX.layout()), 
                         name = 'PAGE' ))
                 y += 30
             

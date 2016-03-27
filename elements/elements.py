@@ -1,6 +1,6 @@
 from ast import literal_eval
 
-from style.styles import DB_Parastyle, cast_parastyle, PTAGS
+from style.styles import Paragraph_style, cast_parastyle, PTAGS
 from bulletholes.counter import TCounter as Counter
 from IO.xml import count_styles, print_attrs, print_styles
 from elements.node import Inline_element, Block_element
@@ -9,7 +9,7 @@ class Paragraph(object):
     def __init__(self, counts, element=None):
         self.P = counts
         if element is None:
-            self.EP = DB_Parastyle()
+            self.EP = Paragraph_style()
         else:
             self.EP = element
         self.I_ = None
@@ -21,9 +21,9 @@ class Paragraph(object):
         else:
             ptags = Counter({PTAGS['body']: 1})
         if 'style' in attrs:
-            EP = cast_parastyle(literal_eval(attrs['style']), ())
+            EP = cast_parastyle(literal_eval(attrs['style']))
         else:
-            EP = DB_Parastyle()
+            EP = None
         return cls(ptags, EP)
     
     def __str__(self):

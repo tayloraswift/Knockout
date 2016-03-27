@@ -20,13 +20,13 @@
 <section outlines="90,130 90,910 ; 690,130 690,910 ; 1">
 <p class="firstchild&h2" style="{'margin_left': 40}">Table of contents</p>
 
-<table cellbottom="5" celltop="5" distr="3, 1" hrules="0" style="{'margin_left': 40, 'margin_top': 10, 'margin_right': 40}">
+<table cellbottom="5" celltop="5" distr="3, 1" hrules="0" style="{'margin_top': 10, 'margin_right': 40, 'margin_left': 40}">
     <tr>
         <td>
             <p class="body&h2">Introduction</p>
         </td>
         <td>
-            <p class="body&h2&table emphasis">Page 0</p>
+            <p class="body&emphasis&h2">Page 0</p>
         </td>
     </tr>
     <tr>
@@ -34,7 +34,7 @@
             <p class="body&h2">Part 1: Driving patterns in the United States</p>
         </td>
         <td>
-            <p class="body&h2&table emphasis">Page 2</p>
+            <p class="body&emphasis&h2">Page 2</p>
         </td>
     </tr>
     <tr>
@@ -42,7 +42,7 @@
             <p class="body&h2">Part 2: Implementing and operating a car sharing system</p>
         </td>
         <td>
-            <p class="body&h2&table emphasis">Page 6</p>
+            <p class="body&emphasis&h2">Page 6</p>
         </td>
     </tr>
     <tr>
@@ -50,7 +50,7 @@
             <p class="body&h2">Part 3: Discussion of emerging technologies</p>
         </td>
         <td>
-            <p class="body&h2&table emphasis">Page 13</p>
+            <p class="body&emphasis&h2">Page 13</p>
         </td>
     </tr>
     <tr>
@@ -58,7 +58,7 @@
             <p class="body&h2">Conclusion</p>
         </td>
         <td>
-            <p class="body&h2&table emphasis">Page 15</p>
+            <p class="body&emphasis&h2">Page 15</p>
         </td>
     </tr>
     <tr>
@@ -66,7 +66,7 @@
             <p class="body&h2">References</p>
         </td>
         <td>
-            <p class="body&h2&table emphasis">Page 16</p>
+            <p class="body&emphasis&h2">Page 16</p>
         </td>
     </tr>
 </table>
@@ -100,23 +100,23 @@
     410,130 410,910 ; 690,130 690,910 ; 13 |
     90,130 90,910 ; 370,130 370,910 ; 14 |
     410,130 410,910 ; 690,130 690,910 ; 14">
-<p class="h2">1  Part 1: Driving patterns in the United States</p>
+<p class="h2">Part 1: Driving patterns in the United States</p>
 
-<p class="h3">1.1 Analysis of the problem</p>
+<p class="h3">Analysis of the problem</p>
 
 <p class="body&firstchild">Using “low–medium–high” terciles for each dimension implies a 3 × 3 nine-cell matrix: “low time, low distance” drivers, “low time, medium distance” drivers, “low time, high distance” drivers, “medium time, low distance” drivers, “medium time, medium distance” drivers, and so forth.</p>
 
-<p style="{'align_to': '.,\''}">Because this two-dimensional distribution is lost through the use of most statistical processes in the data sources available, we must use other cleavage points to decouple the metrics and reconstruct the two-dimensional distributions. One way to do this is to generate random datapoints off of the means of demographic subgroups in the data—groups by age, gender, ethnicity, education, or location.</p>
+<p>Because this two-dimensional distribution is lost through the use of most statistical processes in the data sources available, we must use other cleavage points to decouple the metrics and reconstruct the two-dimensional distributions. One way to do this is to generate random datapoints off of the means of demographic subgroups in the data—groups by age, gender, ethnicity, education, or location.</p>
 
-<p class="h3">1.2 Assumptions</p>
+<p class="h3">Assumptions</p>
 
 <p class="body&firstchild">As we are attempting to reconstruct a dataset based on the sample means of various subgroups in the subject pool, we must state several assumptions before proceeding:</p>
 
-<p class="body&list"><strong>1</strong>  The variation among each demographic cleavage is the same—i.e. African Americans exhibit the same <em>variance</em> in miles and minutes driven as do white Americans, even if their <em>mean</em> miles and minutes driven are unequal. This assumption is justified across all the groups <em>in a particular cleavage</em> because there is no apparent reason why a certain demographic section might be more homogeneous than others. This assumption is not justified for groups across <em>different</em> cleavages (for example, “men” vs. “college educated”) because some cleavages may be more disjoint than others. However, the existence of such data that would determine the specific variation across cleavages would render this part of the Challenge moot, so to proceed with our model, we will assume all social cleavages are equally variant in regards to the behavior of its members.</p>
+<p class="body&firstchild&list">The variation among each demographic cleavage is the same—i.e. African Americans exhibit the same <em>variance</em> in miles and minutes driven as do white Americans, even if their <em>mean</em> miles and minutes driven are unequal. This assumption is justified across all the groups <em>in a particular cleavage</em> because there is no apparent reason why a certain demographic section might be more homogeneous than others. This assumption is not justified for groups across <em>different</em> cleavages (for example, “men” vs. “college educated”) because some cleavages may be more disjoint than others. However, the existence of such data that would determine the specific variation across cleavages would render this part of the Challenge moot, so to proceed with our model, we will assume all social cleavages are equally variant in regards to the behavior of its members.</p>
 
-<p class="body&list"><strong>2</strong>  We drew our sample means from the AAA <em>American Driving Survey</em>, which may have surveyed licensed drivers in slightly different proportions than those of the actual population of US licensed drivers. We believe that the survey proportions present in the AAA’s survey are representative to the true proportions of licensed drivers in the US because the AAA published total statistics covering its entire subject pool. As a reputable organization, it would not have calculated such statistics if it knew the total was invalid, as it would be if a sampling bias was present in its demographic subgroups.</p>
+<p class="body&list">We drew our sample means from the AAA <em>American Driving Survey</em>, which may have surveyed licensed drivers in slightly different proportions than those of the actual population of US licensed drivers. We believe that the survey proportions present in the AAA’s survey are representative to the true proportions of licensed drivers in the US because the AAA published total statistics covering its entire subject pool. As a reputable organization, it would not have calculated such statistics if it knew the total was invalid, as it would be if a sampling bias was present in its demographic subgroups.</p>
 
-<p class="h3">1.3 Definition of the model</p>
+<p class="h3">Definition of the model</p>
 
 <p class="body&firstchild">For the purposes of our model, we will consider “low–medium–high” to refer to three terciles in our modeled population. Hence, the “low” category for driving duration will refer to the <mod:frac>
     <mod:frac:n>1</mod:frac:n>
@@ -126,7 +126,7 @@
     <mod:frac:d>3</mod:frac:d>
 </mod:frac> of drivers who drive the greatest distance. The “high distance, low duration” category will then refer to the intersection of these two sets of drivers, and so forth for our nine time vs. distance categories.</p>
 
-<p class="h3">1.4 The correlation between miles and minutes driven</p>
+<p class="h3">The correlation between miles and minutes driven</p>
 
 <p class="body&firstchild">When we plot the sample means of each demographic subgroup, a strong linear correlation between miles driven and minutes driven appears. </p>
 
@@ -146,7 +146,7 @@
     </mod:scatter>
 </mod:plot>
 
-<p class="caption&h3">Figure 1: Driving behavior by demographic group.</p>
+<p class="caption&h4">Figure 1: Driving behavior by demographic group.</p>
 
 <p class="body&firstchild">This should not be unexpected, as spending more time behind the wheel should generally result in a greater distance traveled (traffic jams notwithstanding).</p>
 
@@ -158,7 +158,7 @@
 
 <p>The upshot of such a strong linearity is that the nine cells of our driver behavior matrix will not be equal—the top-left and bottom-right cells will have very few drivers (few drivers are able to travel a long distance in a short time, and few are willing to drive for a long time to travel a short distance). Similarly, cells aligned on the axis of our regression will have many drivers, since they will match typical driving patterns—long time, long distance; short time, short distance.</p>
 
-<p class="h3">1.5 Weighting the subgroups</p>
+<p class="h3">Weighting the subgroups</p>
 
 <p class="body&firstchild">Because each demographic subgroup is not the same size, we must weight our means appropriately to reflect the proportion of individuals belonging to that subgroup. Note the proportion total of each cleavage is by definition equal to 1.</p>
 
@@ -173,7 +173,7 @@
     </tr>
     <tr>
         <td colspan="2">
-            <p class="body&table emphasis" style="{'align': 0.5}">Gender</p>
+            <p class="body&emphasis" style="{'align': 0.5}">Gender</p>
         </td>
     </tr>
     <tr>
@@ -194,7 +194,7 @@
     </tr>
     <tr>
         <td colspan="2">
-            <p class="body&table emphasis" style="{'align': 0.5}">Race</p>
+            <p class="body&emphasis" style="{'align': 0.5}">Race</p>
         </td>
     </tr>
     <tr>
@@ -231,7 +231,7 @@
     </tr>
     <tr>
         <td colspan="2">
-            <p class="body&table emphasis" style="{'align': 0.5}">Age</p>
+            <p class="body&emphasis" style="{'align': 0.5}">Age</p>
         </td>
     </tr>
     <tr>
@@ -284,7 +284,7 @@
     </tr>
     <tr>
         <td colspan="2">
-            <p class="body&table emphasis" style="{'align': 0.5}">Education</p>
+            <p class="body&emphasis" style="{'align': 0.5}">Education</p>
         </td>
     </tr>
     <tr>
@@ -329,7 +329,7 @@
     </tr>
     <tr>
         <td colspan="2">
-            <p class="body&table emphasis" style="{'align': 0.5}">Setting</p>
+            <p class="body&emphasis" style="{'align': 0.5}">Setting</p>
         </td>
     </tr>
     <tr>
@@ -350,7 +350,7 @@
     </tr>
     <tr>
         <td colspan="2">
-            <p class="body&table emphasis" style="{'align': 0.5}">Section</p>
+            <p class="body&emphasis" style="{'align': 0.5}">Section</p>
         </td>
     </tr>
     <tr>
@@ -387,11 +387,11 @@
     </tr>
 </table>
 
-<p class="caption&h3">Table 1: Demographic proportions</p>
+<p class="caption&h4">Table 1: Demographic proportions</p>
 
 <p class="caption">Note: cleavage totals may not equal 1 due to rounding.</p>
 
-<p class="h3">1.6 Modeling the Driver population</p>
+<p class="h3">Modeling the Driver population</p>
 
 <p class="body&firstchild">Clearly, members of each demographic group are not homogeneous. 16–19 year old drivers do not all drive the mean number of miles each day. We have to then blur each demographic mean into a two-dimensional normal probability distribution to produce a more realistic model of the driving population.</p>
 
@@ -427,7 +427,7 @@
     </mod:scatter>
 </mod:plot>
 
-<p class="caption&h3">Figure 2: Reconstructed driver populations </p>
+<p class="caption&h4">Figure 2: Reconstructed driver populations </p>
 
 <p class="caption">Randomly generated “drivers”, from input standard deviations <mi char="σ"/> = 3 min, <mi char="σ"/> = 10 min.</p>
 
@@ -473,7 +473,7 @@
     </tr>
 </table>
 
-<p class="caption&h3">Table 2: Tercile positions, <mi char="σ"/> = 3<mi char="k"/>.</p>
+<p class="caption&h4">Table 2: Tercile positions, <mi char="σ"/> = 3<mi char="k"/>.</p>
 
 <p class="body&firstchild">Sorting the “drivers” into the nine regions is then a matter of counting the number of points in each region. The following graph shows the proportion of drivers in each matrix cell, as a function of <mi char="σ"/>. The cells are labeled (<mi char="h"/>, <mi char="k"/>), where <mi char="h"/> is the horizontal index and <mi char="k"/> is the vertical index. ((0, 0) is the bottom left.)</p>
 
@@ -513,7 +513,7 @@
     </mod:fx>
 </mod:plot>
 
-<p class="caption&h3">Figure 3: Cell proportions as a function of <mi char="σ"/></p>
+<p class="caption&h4">Figure 3: Cell proportions as a function of <mi char="σ"/></p>
 
 <p class="caption">It should be apparent that the three cells aligned with the axis of regression ((0, 0), (1, 1), (2, 2)) contain the greatest percentages of drivers. The two cells opposite the axis of regression ((0, 2), (2, 0)) contain the least. And the four cells peripheral to the axis contain an intermediate percentage of drivers.</p>
 
@@ -662,17 +662,17 @@
     </tr>
 </table>
 
-<p class="caption&firstchild&h3">Table 3: Car usage patterns</p>
+<p class="caption&h4">Table 3: Car usage patterns</p>
 
 <p class="caption&firstchild">This table shows the percentages of drivers who would fit into each car usage pattern under selected values of <mi char="σ"/>.</p>
 
-<p class="h2">2  Part 2: Implementing and operating a car sharing system</p>
+<p class="h2">Part 2: Implementing and operating a car sharing system</p>
 
-<p class="h3">2.1 Analysis of the problem</p>
+<p class="h3">Analysis of the problem</p>
 
 <p class="body&firstchild">To plan a viable car sharing system, we need to be able to model public participation in the system, given cost and factors such as density of car stations, willingness to travel to pick up a car (“first leg costs”), willingness to travel to the destination (“last leg costs”), the cost of gasoline, the cost of parking, and the required car investment for the car sharing company. These costs fall into two types: <strong>monetary costs</strong> (measured in dollars) and <strong>convenience costs</strong> (measured in probabilities). These two types of costs can then be compared on the basis of income—the marginal value of money decreases as disposable income increases, in other words, the richer a city’s population is, the more willing they are to trade money for convenience.</p>
 
-<p class="h3">2.2 Design of the model</p>
+<p class="h3">Design of the model</p>
 
 <p class="body&firstchild">To begin, let’s model a typical car usage routine. Most Americans are incredibly rut-bound—we wake up, transport ourselves to work, work an eight hour day, transport ourselves home, go to sleep, and repeat the next day:</p>
 
@@ -684,9 +684,9 @@
 
 <p class="body&firstchild">Note that we multiply convenience costs to find the total—if you must do two things to accomplish an activity, it doesn’t matter how easy one of the things is, if the other thing is incredibly difficult—you won’t perform the activity.</p>
 
-<p class="h3">2.3 System 1</p>
+<p class="h3">System 1</p>
 
-<p>Now let’s consider the first of our possible car sharing systems: customers rent a car for a certain period of time, and return it to the same station when they are done with the car. For most Americans, the story would involve walking on “foot” to the nearest car station (we will call any form of non automotive travel, i.e. biking, “on foot”). One would then drive the car to their workplace (leaving the car in a parking lot during the workday) and drive it back home in the afternoon. One would return the car to the original car station, then make one’s way back home on foot. The travel graph (“H” for home, “S” for station, and “W” for workplace) would then look something like this:</p>
+<p class="body&firstchild">Now let’s consider the first of our possible car sharing systems: customers rent a car for a certain period of time, and return it to the same station when they are done with the car. For most Americans, the story would involve walking on “foot” to the nearest car station (we will call any form of non automotive travel, i.e. biking, “on foot”). One would then drive the car to their workplace (leaving the car in a parking lot during the workday) and drive it back home in the afternoon. One would return the car to the original car station, then make one’s way back home on foot. The travel graph (“H” for home, “S” for station, and “W” for workplace) would then look something like this:</p>
 
 <p class="body&math">H —<strong><em>foot</strong></em>—&gt; S<sub>1</sub> —<strong><em>car</em></strong>—&gt; W —<strong><em>car</em></strong>—&gt; S<sub>1</sub> <br/>—<em><strong>foot</strong></em>—&gt; H .</p>
 
@@ -723,7 +723,7 @@
     <mod:frac:d><mi char="s"/><sup>2</sup></mod:frac:d>
 </mod:frac> .</p>
 
-<p class="h3">2.4 System 2</p>
+<p class="h3">System 2</p>
 
 <p class="body&firstchild">Let’s consider system 2: on-demand car sharing. On demand car sharing is simple, and its convenience costs are very similar to that of car ownership, since the car is brought to your door, and the company picks up the car for you when you are finished.</p>
 
@@ -739,7 +739,7 @@
 
 <p class="body&firstchild">where <mi char="C"/><sub>0</sub> is the baseline convenience cost of car ownership, by definition equal to 1.</p>
 
-<p class="h3">2.5 System 3</p>
+<p class="h3">System 3</p>
 
 <p class="body&firstchild">System 3, one-way stationed car sharing, involves customers picking up and returning cars to car stations, much like in system 1, with the difference being that customers can return a car to a different car station than where they originally got it. Although the travel graph for this system may degenerate into that of system 1 (discussed later), the proper travel graph of system 3 looks something like this:</p>
 
@@ -760,13 +760,13 @@
 
 <p class="body&firstchild">otherwise the customer will simply pay the parking fee and leave the car in an office parking lot instead of checking it back in at a car station.</p>
 
-<p class="h3">2.6 System 4</p>
+<p class="h3">System 4</p>
 
 <p class="body&firstchild">Finally, in system 4, fractional car ownership (similar to a timeshare), the only additional convenience cost over that of regular car ownership would be the trouble of organizing and planning a car sharing schedule between the various part-owners, <mi char="C"/><sub><mi char="L"/></sub>.</p>
 
 <p class="body&math"><mi char="C"/><sub>4</sub> = <mi char="C"/><sub>car</sub><sup>2</sup> · <mi char="C"/><sub><mi char="L"/></sub> = <mi char="C"/><sub><mi char="L"/></sub> .</p>
 
-<p class="h3">2.7 Monetary costs</p>
+<p class="h3">Monetary costs</p>
 
 <p class="body&firstchild">Each of our possible car sharing systems includes of course, a monetary cost—the cost of car sharing that is paid for directly with dollars. The primary monetary cost in all of these systems would be gas and car maintenance (whether or not it is initially paid for by the customer or the company is irrelevant—the company will pass on the additional cost to the customer to remain operational, and therefore profitable). These costs will be bundled together by the company entrepreneur as <mi char="M"/><sub><mi char="R"/></sub> , the price of car rent.</p>
 
@@ -785,7 +785,7 @@
 <table cellbottom="5" class="figure" distr="1, 1" hrules="1" rulemargin="2">
     <tr>
         <td>
-            <p>City</p>
+            <p style="{'align': 0.5}">City</p>
         </td>
         <td>
             <p>Gasoline Price</p>
@@ -827,7 +827,7 @@
     </tr>
 </table>
 
-<p class="caption&firstchild&h3">Table 3: Gasoline prices in subject cities</p>
+<p class="caption&h4">Table 3: Gasoline prices in subject cities</p>
 
 <p class="caption&firstchild">The price of gasoline (as of February 28, 2016) in the four subject cities in our model. Gas prices are highly variant—gas is almost 53.7% more expensive in Riverside than Knoxville.</p>
 
@@ -887,21 +887,21 @@
 
 <p class="body&firstchild"><mi char="x"/><sub><mi char="D"/></sub> itself is also roughly proportional to the square root of the density of the city.</p>
 
-<p class="h3">2.8 Determination of behavioral constants</p>
+<p class="h3">Determination of behavioral constants</p>
 
 <p class="body&firstchild">As we are attempting to model human behavior, our math relies on several behavioral constants that reflect human behavior, such as the propensity for foot travel, <mi char="P"/><sub><mi char="f"/></sub> . Like any parameter that attempts to quantify human behavior, this value can only be determined by surveys or behavioral scientific studies. Similarly, a quantity like <mi char="s"/>, a firm’s ability to invest in building car stations, can only be known by entrepreneurs familiar with the car business. However, while we cannot determine an absolute estimate of costs, and therefore, of participation in various car sharing models, we can perform a relative analysis, ranking the systems in estimated car sharing participation for each of our four subject cities.</p>
 
-<p class="h3">2.9 Knoxville, TN (System 3)</p>
+<p class="h3">Knoxville, TN (System 3)</p>
 
 <p class="body&firstchild">Knoxville, TN would best respond to a one-way model where customers would pick up and drop off cars at existing stations (system 3) because it is the cheapest option due to the fact that it eliminates the need for parking (<mi char="t"/><mi char="K"/>). Although <mi char="K"/> in Knoxville is the lowest of any subject city (0.45¢/hr), it is still more expensive than zero. <mi char="M"/><sub><mi char="R"/></sub> , for its part, is equivalent between systems 1 and 2 since <mi char="x"/><sub><mi char="SW"/></sub> ≈ <mi char="x"/><sub><mi char="SS"/></sub> . Although system 1 has a better convenience cost, we can eliminate system 1 for the same reason we eliminate system 2: Systems 2 and 3 are distinguished by their exchange of convenience and monetary costs—system 2 has high monetary costs and low convenience costs while system 3 has low monetary costs and high convenience costs, since this system requires the customer to travel to each station before picking up their cars. Because Knoxville has the lowest disposable income of the four cities ($2,392.61 per month), money has a greater marginal value to Knoxvillians. Customers will be more willing to sacrifice convenience in exchange for  spending less money. Therefore system 3 is the best fit.</p>
 
-<p class="h3">2.10 Poughkeepsie, NY (System 2)</p>
+<p class="h3">Poughkeepsie, NY (System 2)</p>
 
 <p class="body&firstchild">Poughkeepsie, NY would best respond to a “jockey” system in which cars are dropped off to the customers on demand by the company and subsequently picked up by the company (system 2). This option is most convenient for customers as it would eliminate the need for customers to travel to stations to pick up their cars. The “jockey” system would be much more expensive than system 3 in terms of dollars as the company would have to pay for drivers, and the slightly increased mileage on the cars (<mi char="x"/><sub><mi char="SW"/></sub> ≈ <mi char="x"/><sub><mi char="D"/></sub> ≈ <mi char="x"/><sub><mi char="SS"/></sub> &lt; <mi char="x"/><sub><mi char="D"/></sub> + 2<mi char="x"/><sub><mi char="SC"/></sub>). There will also be an additional expense for the gas usage because gas prices are high in Poughkeepsie. However, because Poughkeepsie also has the highest disposable income of the four cities ($4,000 per month), money has a lower marginal value to its residents, and so customers will be much more willing to spend additional money in exchange for convenience. It’s unlikely that system 1 will be much less expensive than system 2, because parking in Poughkeepsie is extremely high—$1.50/hr.</p>
 
 <p>Both Knoxville and Poughkeepsie are probably poor areas to run a car sharing system of any type in, which we will discuss later.</p>
 
-<p class="h3">2.11 Riverside, CA and Richmond, VA</p>
+<p class="h3">Riverside, CA and Richmond, VA</p>
 
 <p class="body&firstchild">While Riverside, CA and Richmond, VA have very similar disposable incomes ($2766.67 and $2775.75 respectively), similar population densities (3315/sq. mi, 3,625/sq. mi, respectively), and somewhat similar parking prices ($1.00/hr, and $0.75/hr, respectively), the gas prices differ by about a dollar between these cities. Gas in Riverside is $2.92 per gallon while gas in Richmond is $1.94 per gallon. Clearly, system 2 is a bad fit for Riverside, since with a high <mi char="G"/>, the small number of additional miles driven in that system incurs a greater monetary cost, and it is probably not a good fit for Richmond either. Both cities have moderate-to-low disposable incomes which makes the high convenience cost/low monetary cost options more appropriate. </p>
 
@@ -909,13 +909,13 @@
 
 <p>We believe that either system 1 or system 3 would appropriate for people in Richmond. Because of the lower gas prices and comparable disposable income of the two cities, Richmond residents would feel less pressure to avoid the high marginal costs of renting over partial ownership. For the same reasons as discussed for Knoxville and Poughkeepsie, system 3 will work for residents of Richmond, who have a low–moderate amount of disposable income. However because disposable income in Richmond is some $400 higher than in Knoxville (and an additional $400 is very significant in the lower income brackets), Richmond residents may demonstrate a greater affinity for system 1 than do Knoxville residents.</p>
 
-<p class="h3">2.12 Best City for car sharing companies</p>
+<p class="h3">Best City for car sharing companies</p>
 
 <p class="body&firstchild">Just as it is possible to rank the systems for the cities, it is also possible to rank the cities for the car companies. Some of the reasons why a company would choose one city over another include differences in population density and disposable income. Since we assume most people are using these services for short distance travels, higher population density correlates to greater popularity. Also, since people with greater disposable incomes are more likely to buy their own car, a more moderate disposable income would correlate to greater popularity as well (though this could also nudge potential customers into partial-ownership arrangements). While there are apparent flaws in each of the systems and cities, several stand out above the others. In Poughkeepsie, disposable incomes are much higher than in any of the other four cities. Also, the population density here is the lowest of all the cities (1,520 people per square mile in Poughkeepsie, 1,816 people per square mile in Knoxville, 3,315 people per square mile in Riverside, and 3,625 people per square mile in Richmond). These are two factors that weigh heavily against Poughkeepsie being the most opportune city for a company to set up a rental car service. In Knoxville, the population density is the second lowest of the four cities, being nearly half of Riverside and Richmond. For this same reason, it would not be as good of a choice for a company to set up a rental car service there. Richmond and Riverside have very similar qualities and both seem opportune for a company to set up a rental car service due to high population densities and moderate disposable incomes. However, since Richmond has a slightly higher population density, a rental car service would be slightly more popular here than in Riverside. In addition, Richmond residents would be more able and willing to pay the higher marginal cost of a car rental over a private car sharing arrangement due to the much lower cost of gasoline in Richmond. (Just 4¢ higher than in Knoxville!)</p>
 
-<p class="h2">3  Part 3: Discussion of emerging technologies</p>
+<p class="h2">Part 3: Discussion of emerging technologies</p>
 
-<p class="h3">3.1 Driverless and electric cars</p>
+<p class="h3">Driverless and electric cars</p>
 
 <p class="body&firstchild">The expansion of car sharing enterprises (systems 1–3) offers a unique opportunity to deploy emerging automotive technologies such as electric cars and driverless cars on a mass scale.</p>
 
@@ -928,30 +928,30 @@
     <mod:frac:d><mi char="ε"/></mod:frac:d>
 </mod:frac> term with a much smaller <mi char="E"/> term—the price of electricity in a given city. Monetary cost terms such as <mi char="t"/><mi char="K"/> and <mi char="M"/><sub><mi char="f"/></sub> suddenly become much more influential in the total monetary cost of car rental. We could predict an environment where systems 1 and 4—round-trip car rental, and partial private ownership—become much less attractive since they involve a parking cost. System 2 conversely becomes more viable, since the labor cost of rearranging the cars disappears and its distance penalty is greatly reduced. We will not speculate on the development of behavioral pattern recognition software that would allow companies to preemptively make cars available to regular renters, but this could eliminate the (already mostly irrelevant) <mi char="C"/><sub><mi char="w"/></sub> term in the system 2 convenience cost.</p>
 
-<p class="h3">3.2 Availability and Practicality</p>
+<p class="h3">Availability and Practicality</p>
 
 <p class="body&firstchild">In a world where system 2 becomes very viable, and systems 1 and 4 obsolete, we could see parking become obsolete as the service would become a direct on demand taxi service. Customers would no longer have to find parking spaces or pay for parking tolls; rather, self-driving cars would pick up and drop off customers at their homes and workplaces on demand. In the short run, this could briefly revive systems 1 and 4 by reducing parking prices, but supply would contract in response. All of this would do nothing to affect the fact that without the <mod:frac>
     <mod:frac:n><mi char="G"/></mod:frac:n>
     <mod:frac:d><mi char="ε"/></mod:frac:d>
 </mod:frac> term, parking now makes up a much larger fraction of a car sharing system’s cost.</p>
 
-<p class="h3">3.3 Overall</p>
+<p class="h3">Overall</p>
 
 <p class="body&firstchild">Because the savings from electric and self driving cars would decrease prices, system 2 and 1—the more convenient systems—would become more attractive over system 3.</p>
 
-<p class="body&firstchild">1. Poughkeepsie, NY (High disposable income), nothing would change—system 2 is still optimal, though participation will increase due to the lower prices (demand is negatively sloped). Due to high gas and parking costs there is a high incentive for companies to deploy both emerging technologies here.</p>
+<p class="body&firstchild&list">Poughkeepsie, NY (High disposable income), nothing would change—system 2 is still optimal, though participation will increase due to the lower prices (demand is negatively sloped). Due to high gas and parking costs there is a high incentive for companies to deploy both emerging technologies here.</p>
 
-<p class="body&firstchild">2. Riverside, CA (Medium disposable income, medium availability for parking, high gas prices) There is a very high incentive for a company to deploy new technologies in Riverside because of the high cost of gasoline. This makes the car sharing services less expensive relative to private partial ownership (which most likely still uses a gasoline car). Either systems 2 or 1 would then be viable in Riverside.</p>
+<p class="body&list">Riverside, CA (Medium disposable income, medium availability for parking, high gas prices) There is a very high incentive for a company to deploy new technologies in Riverside because of the high cost of gasoline. This makes the car sharing services less expensive relative to private partial ownership (which most likely still uses a gasoline car). Either systems 2 or 1 would then be viable in Riverside.</p>
 
-<p class="body&firstchild">3. Richmond, VA (Medium disposable income, medium availability for parking, low gas prices). The decreased monetary prices and corresponding lower opportunity cost of increased convenience will give system 1 an edge over system 3 here. System 1 then becomes the optimal system in Richmond. Due to low gas prices and mid–low parking prices however, there is no particularly high incentive for a company to deploy the technology here.</p>
+<p class="body&list">Richmond, VA (Medium disposable income, medium availability for parking, low gas prices). The decreased monetary prices and corresponding lower opportunity cost of increased convenience will give system 1 an edge over system 3 here. System 1 then becomes the optimal system in Richmond. Due to low gas prices and mid–low parking prices however, there is no particularly high incentive for a company to deploy the technology here.</p>
 
-<p class="body&firstchild">4. Knoxville, TN (Low disposable income, high availability for parking) It is ambiguous how emerging technologies would affect car sharing in Knoxville, TN. Knoxville has a very low disposable income level, which keeps option 3 viable, and there are conflicting incentives for the companies to deploy—both gasoline, electricity, and parking are very inexpensive in Knoxville.</p>
+<p class="body&list">Knoxville, TN (Low disposable income, high availability for parking) It is ambiguous how emerging technologies would affect car sharing in Knoxville, TN. Knoxville has a very low disposable income level, which keeps option 3 viable, and there are conflicting incentives for the companies to deploy—both gasoline, electricity, and parking are very inexpensive in Knoxville.</p>
 
-<p>While solutions requiring parking availability would not be required through the introduction of self driving cars, the parking for the cars after fulfilling their purpose would still exist, causing the baseline costs of running the service to not decline entirely. Also, as most self driving cars are proposed to run off electricity, costs for charging the cars would be introduced in the wake of gas charges dropping. On top of the need to charge the cars, the charging of the cars will take additional time that will take away from how often a car could be rented out. In order to be able to serve more customers in the same time frame, a larger fleet of cars would need to be purchased.</p>
+<p class="body&firstchild">While solutions requiring parking availability would not be required through the introduction of self driving cars, the parking for the cars after fulfilling their purpose would still exist, causing the baseline costs of running the service to not decline entirely. Also, as most self driving cars are proposed to run off electricity, costs for charging the cars would be introduced in the wake of gas charges dropping. On top of the need to charge the cars, the charging of the cars will take additional time that will take away from how often a car could be rented out. In order to be able to serve more customers in the same time frame, a larger fleet of cars would need to be purchased.</p>
 
 <p>Richmond has a slightly higher population density, it also carries a smaller cost per kilowatt hour, the main cost in charging an electric vehicle (Self driving or not). Virginia’s cost per kWh is $0.105 while California’s cost per kWh is $0.152. This furthers Richmond as the prime location for the starting location for this service, in an age of electric and self driving cars. Tennessee has a very low kWh at $0.098, meaning electric cars are more feasible in Tennessee, boosting the likelihood of using such vehicles there. New York has a large kWh of $0.181, further reducing the likelihood of using self driving cars in Poughkeepsie. Based on the Tesla, a self driving capable car that is fully electric, it takes roughly 0.32 kWh to charge an electric car per mile driven (With the best charging station setup, most likely bought by a company specializing in the use of them). In addition, it takes roughly one minute to charge per mile driven, meaning that two electric cars must be used for what each gasoline powered car could service. The cost to charge an electric vehicle is found through the equation Cost<sub>Charge</sub> = D<sub>total</sub>(.32 kWh/Mile) (Cost<sub>kWh</sub>). In addition, the time for the charge is give by the formula Time<sub>Charge</sub> = D<sub>total</sub> (in minutes).</p>
 
-<p class="h2">4  conclusion</p>
+<p class="h2">conclusion</p>
 
 <p class="body&firstchild">Richmond would be an ideal city to deploy a car sharing system of any type. It has the highest population density out of all four subject cities, adequate disposable income to demand car sharing services, and low gas and electricity prices.</p>
 </section>
@@ -960,10 +960,10 @@
 <table class="">
     <tr>
         <td>
-            <p class="body&firstchild&~tablecell&~tablehead&~tableleft">Team 6900</p>
+            <p class="body&~h1&~tablecell&~tablecell&~tablecell">Team 6900</p>
         </td>
         <td>
-            <p class="body&firstchild&~tablecell&~tablehead" style="{'align': 1}"><pn/></p>
+            <p class="body&~h1&~tablecell&~tablecell&~tablecell" style="{'align': 1}"><pn/></p>
         </td>
     </tr>
 </table>
@@ -1003,8 +1003,8 @@
                 'Black': {'color': (0, 0, 0, 1)},
                 'Body bold': {'path': '/home/kelvin/.fonts/Proforma-Bold.otf'},
                 'Body bold italic': {'path': '/home/kelvin/.fonts/Proforma-BoldItalic.otf'},
-                'Body italic': {'path': 'r:Proforma-MediumItalic-patched.otf'},
-                'Body regular': {'fontsize': 13, 'path': 'r:Proforma-Medium-patched.otf'},
+                'Body italic': {'path': '/home/kelvin/.fonts/Proforma-BookItalic.otf'},
+                'Body regular': {'fontsize': 13, 'path': '/home/kelvin/.fonts/Proforma-Book.otf'},
                 'Body small': {'fontsize': 9, 'path': '/home/kelvin/.fonts/Proforma-Semibold.otf'},
                 'Body small italic': {'fontsize': 9, 'path': '/home/kelvin/.fonts/Proforma-SemiboldItalic.otf'},
                 'Caption': {'capitals': False, 'fontsize': 12, 'tracking': 0},
@@ -1024,9 +1024,9 @@
                 'subscript': {'shift': -2},
                 'superscript': {'shift': 5}},
  'FTAGLIST': [('big', []), ('caption', []), ('emphasis', []), ('reference', []), ('sc', []), ('strong', []), ('sub', ['small']), ('sup', ['small'])],
- 'PARASTYLES': (None,
+ 'PARASTYLES': (18,
                 [({'fontclasses': (2, [('Black', {}), ('subscript', {'sub': 1}), ('superscript', {'sup': 1})])}, {}),
-                 ({'fontclasses': (0,
+                 ({'fontclasses': (2,
                                    [('Body regular', {}),
                                     ('Smallcaps', {'sc': 1}),
                                     ('Body italic', {'emphasis': 1}),
@@ -1036,55 +1036,63 @@
                                     ('Smallcaps', {'reference': 1}),
                                     ('Body small italic', {'emphasis': 1, 'small': 1})]),
                    'hyphenate': True,
-                   'indent': (15, 1, 0),
-                   'indent_range': {0},
+                   'indent': '15',
+                   'indent_range': '0',
                    'leading': 20},
                   {'body': 1}),
-                 ({'indent': (0, -1, 5), 'margin_left': 20}, {'list': 1}),
-                 ({'fontclasses': (0, [('h1', {})]), 'hyphenate': True, 'leading': 40, 'margin_bottom': 20}, {'h1': 1}),
-                 ({'fontclasses': (0, [('Sans serif light', {}), ('h2', {})]), 'indent': (0, -1, 3), 'leading': 24, 'margin_bottom': 12, 'margin_top': 24}, {'h2': 1}),
+                 ({'incr_assign': 'n + 1', 'incr_place_value': -1, 'indent': '0', 'margin_left': 20, 'show_count': "str(A[-1]) + '.'"}, {'list': 1}),
+                 ({'fontclasses': (0, [('h1', {})]), 'hyphenate': True, 'incr_assign': 'n + 1', 'leading': 40, 'margin_bottom': 20}, {'h1': 1}),
+                 ({'fontclasses': (0, [('Sans serif light', {}), ('h2', {})]),
+                   'incr_assign': 'n + 1',
+                   'incr_place_value': 1,
+                   'leading': 24,
+                   'margin_bottom': 12,
+                   'margin_top': 24,
+                   'show_count': 'str(A[1])'},
+                  {'h2': 1}),
                  ({'fontclasses': (2, [('Sans serif book', {}), ('Sans serif book italic', {'emphasis': 1}), ('h3', {})]),
-                   'indent': (0, -1, 4),
+                   'incr_assign': 'n + 1',
+                   'incr_place_value': 2,
                    'leading': 24,
                    'margin_bottom': 4,
-                   'margin_top': 12},
+                   'margin_top': 12,
+                   'show_count': "'.'.join(str(i) for i in A[1:3])"},
                   {'h3': 1}),
                  ({'align': 0.5, 'fontclasses': (0, [('Sans serif book', {}), ('Table', {'small': 1})]), 'margin_bottom': 10, 'margin_top': 10}, {'figure': 1}),
-                 ({'align': 0.5, 'fontclasses': (0, [('h4', {})]), 'indent': (0, 0, 0), 'leading': 20, 'margin_bottom': 0, 'margin_top': 8}, {'figure': 1, 'h3': 1}),
-                 ({'align': 1, 'margin_right': 10}, {'key': 1}),
-                 ({'align': 0.5, 'fontclasses': (0, [('Big', {'big': 1})]), 'indent': (0, 1, 0), 'margin_bottom': 20, 'margin_top': 20}, {'math': 1}),
-                 ({'align': 0.4, 'align_to': '.:', 'fontclasses': (1, [('Sans serif book', {}), ('Table', {})]), 'indent': (0, 1, 0), 'leading': 18, 'margin_left': 4, 'margin_right': 4},
+                 ({'align': 0.5, 'fontclasses': (0, [('h4', {})]), 'indent': '0', 'leading': 20, 'margin_bottom': 0, 'margin_top': 8}, {'figure': 1, 'h3': 1}),
+                 ({'margin_right': 10}, {'key': 1}),
+                 ({'align': 0.5, 'fontclasses': (0, [('Big', {'big': 1})]), 'indent': '0', 'margin_bottom': 20, 'margin_top': 20}, {'math': 1}),
+                 ({'align': 0.5, 'align_to': '.:', 'fontclasses': (1, [('Sans serif book', {}), ('Table', {})]), 'indent': '0', 'leading': 18, 'margin_left': 4, 'margin_right': 4},
                   {'tablecell': 1}),
-                 ({'align_to': '', 'fontclasses': (1, [('Sans serif semi', {}), ('Table heading', {})])}, {'tablehead': 1}),
-                 ({'align': 0, 'align_to': '', 'fontclasses': (0, [('Sans serif book italic', {})])}, {'h2': 1, 'tablecell': 1}),
-                 ({'align': 0.5, 'align_to': '', 'fontclasses': (0, [('Sans serif semi', {})])}, {'table emphasis': 1}),
-                 ({'align': 1, 'align_to': ''}, {'tableleft': 1}),
-                 ({}, {'units': 1}),
-                 ({'fontclasses': (0, [('Table units', {})]), 'leading': 14}, {'tablehead': 1, 'units': 1}),
+                 ({'align_to': '', 'fontclasses': (1, [('Sans serif semi', {}), ('Table heading', {})]), 'margin_bottom': 0}, {'h1': 1, 'tablecell': 1}),
+                 ({'align': 0, 'align_to': '', 'fontclasses': (0, [('Sans serif book italic', {})]), 'show_count': ''}, {'h2': 1, 'tablecell': 1}),
+                 ({'align': 0.5, 'align_to': '', 'fontclasses': (0, [('Sans serif semi', {})])}, {'emphasis': 1}),
+                 ({'align': 1, 'align_to': ''}, {'firstchild': 1, 'tablecell': 1}),
+                 ({'fontclasses': (0, [('Table units', {})]), 'leading': 14}, {'h1': 1, 'tablecell': 1, 'units': 1}),
                  ({'fontclasses': (1, [('Sans serif book italic', {}), ('Caption', {})]), 'hyphenate': True, 'leading': 16, 'margin_bottom': 12}, {'caption': 1}),
-                 ({'fontclasses': (0, [('Sans serif semi', {})]), 'indent': (0, 1, 0), 'margin_bottom': 2, 'margin_top': 0}, {'caption': 1, 'h3': 1}),
-                 ({'indent': (0, 1, 0)}, {'firstchild': 1})]),
+                 ({'fontclasses': (0, [('Sans serif semi', {})]), 'incr_assign': '', 'indent': '0', 'margin_bottom': 2, 'margin_top': 0, 'show_count': ''}, {'caption': 1, 'h4': 1}),
+                 ({'incr_assign': '1', 'indent': '0'}, {'firstchild': 1}),
+                 ({'align': 0.5}, {'_center': 1}),
+                 ({'align': 1}, {'_right': 1})]),
  'PTAGLIST': [('_center', []),
               ('_left', []),
               ('_right', []),
               ('body', []),
               ('caption', []),
+              ('emphasis', []),
               ('figure', []),
-              ('figure title', []),
               ('firstchild', []),
               ('h1', []),
               ('h2', []),
               ('h3', []),
+              ('h4', []),
               ('key', []),
               ('list', []),
               ('math', []),
-              ('table emphasis', []),
               ('tablecell', []),
-              ('tablehead', []),
-              ('tableleft', []),
               ('units', [])],
- 'contexts': {'channels': {'c': 0, 'p': 1, 't': 3}, 'text': {'i': 363, 'j': 363, 'p': 2, 't': 2}},
+ 'contexts': {'channels': {'c': 0, 'p': 1, 't': 3}, 'text': {'i': 30006, 'j': 30006, 'p': 12, 't': 2}},
  'grid': [[90, 370, 410, 690], [100, 130, 910]],
  'page': {'dimensions': (765, 990), 'dual': True},
- 'view': {'H': -428, 'Hc': 479, 'K': -1282, 'Kc': 458, 'Zoom': 11, 'mode': 'text'}}
+ 'view': {'H': 107, 'Hc': 396, 'K': -6570, 'Kc': 605, 'Zoom': 11, 'mode': 'text'}}
 ############# -->

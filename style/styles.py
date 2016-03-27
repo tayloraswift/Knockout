@@ -307,7 +307,7 @@ class Paragraph_style(_Harry):
                 'align_to':     (''         , 'str'),
                 
                 'incr_place_value': (13      , 'int'),
-                'incr_assign':  ('n + 1'    , 'fn'),
+                'incr_assign':  ('None'    , 'fn'),
                 'show_count':   ('None'   , 'farray')}
     
     def __init__(self, attrs=None, content=None, count=None):

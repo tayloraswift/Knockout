@@ -33,25 +33,15 @@ class Root(Inline_element):
         y += FSTYLE['shift']
         
         F_index, F_rad = self.styles(F, 'index', 'radicand')
-
-        index = cast_mono_line(LINE, self._index.content, 13, PP, F_index)
-        rad = cast_mono_line(LINE, self._radicand.content, 13, PP, F_rad)
         
+        rad = cast_mono_line(LINE, self._radicand.content, 13, PP, F_rad)
         rad_asc, rad_desc = calculate_vmetrics(rad)
-
-        k = x + index['advance']
         
         rfs = FSTYLE['fontsize']
         iy = y - rfs * 0.44 - FSTYLE['shift']
-        ix = k - rfs * 0.30
+        ix = x + rfs*0.05
         jx = ix - rad_desc * 0.4
         kx = jx + (rad_asc - rad_desc)*0.3
-        
-        index['x'] = x
-        index['y'] = y - rfs * 0.6
-        
-        rad['x'] = k + rfs * 0.35
-        rad['y'] = y
 
         self._radix = [(ix - rfs*0.050, iy),
                 (ix + rfs*0.105, iy - rfs*0.02), #crest
@@ -59,8 +49,8 @@ class Root(Inline_element):
                 (jx + rfs*0.135, y - rad_desc - rfs*0.35), # inner vertex
                 (kx + rfs*0.05, y - rad_asc - rfs*0.04),
                 
-                (kx + rad['advance'] + rfs*0.45, y - rad_asc - rfs*0.04), # overbar
-                (kx + rad['advance'] + rfs*0.445, y - rad_asc),
+                (kx + rad['advance'] + rfs*0.35, y - rad_asc - rfs*0.04), # overbar
+                (kx + rad['advance'] + rfs*0.345, y - rad_asc),
                 
                 (kx + rfs*0.09, y - rad_asc),
                 (jx + rfs*0.15, y - rad_desc - rfs*0.24), # outer vertex
@@ -69,16 +59,21 @@ class Root(Inline_element):
                 (ix + rfs*0.010, iy + rfs*0.04), # lip
                 (ix - rfs*0.050, iy + rfs*0.03),
                 ]
-        
-        index['x'] = x
-        index['y'] = y - rfs * 0.6
-        
-        rad['x'] = kx + rfs * 0.30
+
+        rad['x'] = kx + rfs * 0.2
         rad['y'] = y
+              
+        if self._index is None:
+            NL = [rad]
+        else:
+            index = cast_mono_line(LINE, self._index.content, 13, PP, F_index)
+            index['x'] = jx - index['advance']*0.5
+            index['y'] = y - rfs * 0.6
+            NL = [index, rad]
         
-        width = kx - x + rfs * 0.45 + rad['advance']
+        width = kx - x + rfs * 0.35 + rad['advance']
         
-        return _MInline([index, rad], width, rad_asc + rfs*0.2, rad_desc, self._draw_radix)
+        return _MInline(NL, width, rad_asc + rfs*0.2, rad_desc, self._draw_radix)
         
     def __len__(self):
         return 8

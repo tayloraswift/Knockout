@@ -56,7 +56,6 @@ def load(name):
     DATA = literal_eval(doc[doc.find('<!-- #############') + 18 : doc.find('############# -->')])
 
     # unpack styles
-    styles.daydream()
     styles.faith(DATA)
     Node.MSL = modulestyles.MS_Library(modules)
     

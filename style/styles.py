@@ -23,7 +23,7 @@ class _DB(object):
 
     def _copy(self, name):
         return type(self)(self.polaroid(), name)
-
+        
 class Tag(_DB):
     def __init__(self, library, name, groups, is_group = False):
         _DB.__init__(self, name, library)
@@ -62,7 +62,6 @@ class T_Library(dict):
     
     def delete_slot(self, key):
         del self[key]
-
 
 FTAGS = T_Library()
 PTAGS = T_Library()
@@ -122,7 +121,8 @@ class P_Library(_Active_list):
         self.update_f = self._font_projections.clear
     
     def populate(self, active_i, D):
-        _Active_list.__init__(self, active_i, (cast_parastyle(P.copy(), count) for P, count in D))
+        C = Paragraph_style.from_attrs
+        _Active_list.__init__(self, active_i, (C(P.copy(), count) for P, count in D))
     
     def project_p(self, PP):
         if PP.I_ is None:
@@ -263,6 +263,10 @@ class DB_Fontstyle(_DB, _Harry):
     def polaroid(self):
         return self.attrs.copy()
 
+    @classmethod
+    def TREES(cls, tree):
+        return {name: cls(O, name) for name, O in tree.items()}
+    
 class _F_container(object):
     def __init__(self, F=None, count=Counter()):
         self.F = F
@@ -289,14 +293,6 @@ class _F_layers(_Active_list):
         except ValueError:
             i = None
         return _F_layers(i, (c.copy() for c in self))
-
-def cast_parastyle(attrs, count={}):
-    if 'fontclasses' in attrs:
-        i, E = attrs.pop('fontclasses')
-        content = _F_layers(i, (_F_container(FONTSTYLES.get(F, None), Counter({FTAGS[T]:V for T, V in tags.items()})) for F, tags in E))
-    else:
-        content = _F_layers()
-    return Paragraph_style(attrs, content, Counter({PTAGS[T]: V for T, V in count.items()}))
 
 class Paragraph_style(_Harry):
     ADNA = {'hyphenate':      (False      , 'bool'),
@@ -328,7 +324,16 @@ class Paragraph_style(_Harry):
         else:
             self.attrs = attrs
         dict.__init__(self, self._attributes())
-    
+
+    @classmethod
+    def from_attrs(cls, attrs, count={}):
+        if 'fontclasses' in attrs:
+            i, E = attrs.pop('fontclasses')
+            content = _F_layers(i, (_F_container(FONTSTYLES.get(F, None), Counter({FTAGS[T]:V for T, V in tags.items()})) for F, tags in E))
+        else:
+            content = _F_layers()
+        return cls(attrs, content, Counter({PTAGS[T]: V for T, V in count.items()}))
+        
     def polaroid(self):
         attrs = self.attrs.copy()
         if self.content:
@@ -351,12 +356,11 @@ class Paragraph_style(_Harry):
 FONTSTYLES = {}
 PARASTYLES = P_Library()
 
-ISTYLES = {}
+DB_Fontstyle.default()
+Paragraph_style.default()
 
-# interface styles
 def _create_interface():
-    font_projections = {}
-    FD = TREES(DB_Fontstyle, constants.interface_fstyles)
+    FD = DB_Fontstyle.TREES(constants.interface_fstyles)
     P = [_F_container(FD[F], Counter(tags)) for F, tags in constants.interface_pstyle]
     ui_styles = ((), ('title',), ('strong',), ('label',), ('mono',))
     for U in ui_styles:
@@ -368,19 +372,12 @@ def _create_interface():
             projection.update(C.attrs)
 
         # set up fonts
-        try:
-            projection['fontmetrics'] = fonts.Memo_I_font(projection['path'])
-            projection['font'] = fonts.get_cairo_font(projection['path'])
-        except ft_errors.FT_Exception:
-            path = F_UNDEFINED.u_path
-            projection['fontmetrics'] = fonts.Memo_I_font(path)
-            projection['font'] = fonts.get_cairo_font(path)
+        projection['fontmetrics'] = fonts.Memo_I_font(projection['path'])
+        projection['font'] = fonts.get_cairo_font(projection['path'])
         
-        font_projections[U] = projection
-    return font_projections
+        yield U, projection
 
-def TREES(DB_TYPE, tree):
-    return {name: DB_TYPE(v, name) for name, v in tree.items()}
+ISTYLES = dict(_create_interface())
 
 def faith(woods):
     FTAGS.populate(woods['FTAGLIST'])
@@ -388,13 +385,5 @@ def faith(woods):
     FONTSTYLES.clear()
     PARASTYLES.clear()
 
-    FONTSTYLES.update(TREES(DB_Fontstyle, woods['FONTSTYLES']))
-    
+    FONTSTYLES.update(DB_Fontstyle.TREES(woods['FONTSTYLES']))
     PARASTYLES.populate( * woods['PARASTYLES'])
-
-def daydream():
-    # set up emergency undefined classes
-    DB_Fontstyle.default()
-    Paragraph_style.default()
-
-    ISTYLES.update(_create_interface())

@@ -1,6 +1,6 @@
 from ast import literal_eval
 
-from style.styles import Paragraph_style, cast_parastyle, PTAGS
+from style.styles import Paragraph_style, PTAGS
 from bulletholes.counter import TCounter as Counter
 from IO.xml import count_styles, print_attrs, print_styles
 from elements.node import Inline_element, Block_element
@@ -21,7 +21,7 @@ class Paragraph(object):
         else:
             ptags = Counter({PTAGS['body']: 1})
         if 'style' in attrs:
-            EP = cast_parastyle(literal_eval(attrs['style']))
+            EP = Paragraph_style.from_attrs(literal_eval(attrs['style']))
         else:
             EP = None
         return cls(ptags, EP)

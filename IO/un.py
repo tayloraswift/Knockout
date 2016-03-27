@@ -1,7 +1,8 @@
 from style import styles
 from model import meredith
-from IO import kevin
+from IO.kevin import miniserialize, deserialize
 from edit import cursor, caramel
+import time
 
 class UN(object):
     def __init__(self):
@@ -14,14 +15,15 @@ class UN(object):
         if len(self._history) > 989:
             del self._history[:89]
             self._i -= 89
-        
-        kitty = kevin.serialize([F.NODE for F in meredith.mipsy], indent=-1)
+
+        if len(self._history) > self._i:
+            del self._history[self._i:]
+                
+        kitty = miniserialize([F.NODE for F in meredith.mipsy])
         page_xy = (meredith.page.WIDTH, meredith.page.HEIGHT)
         
         textcontexts = cursor.fcursor.polaroid()
         channelcontexts = caramel.delight.polaroid()
-        if len(self._history) > self._i:
-            del self._history[self._i:]
         
         # save styles
         PPP = styles.PARASTYLES.polaroid()
@@ -32,7 +34,7 @@ class UN(object):
 
         self._history.append({'kitty': kitty, 'contexts': {'text': textcontexts, 'channels': channelcontexts}, 'styles': {'PARASTYLES': PPP, 'FONTSTYLES': FFF, 'PTAGLIST': PTT, 'FTAGLIST': FTT}, 'page': page_xy})
         self._i = len(self._history)
-        
+
     def pop(self):
         del self._history[-1]
         self._i = len(self._history)
@@ -42,7 +44,7 @@ class UN(object):
         styles.faith(image['styles'])
         
         meredith.page.WIDTH, meredith.page.HEIGHT = image['page']
-        meredith.mipsy.__init__(kevin.deserialize(image['kitty']))
+        meredith.mipsy.__init__(deserialize(image['kitty']))
         
         cursor.fcursor.__init__(image['contexts']['text'])
         caramel.delight.__init__(image['contexts']['channels'])

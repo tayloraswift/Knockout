@@ -50,7 +50,7 @@ class PieChart(Block_element):
         self._KEY.draw(cr)
         
     def pie_annot(self, cr):
-        t = self._slices_t[self.active - 1]
+        t = self._slices_t[self.active - 1] + self['rotate']
         percent, arc, color = self._slices[self.active]
         cr.set_source_rgba( * color )
         cr.set_line_width(2)
@@ -60,16 +60,16 @@ class PieChart(Block_element):
 
     def regions(self, x, y):
         if x**2 + y**2 <= (self['radius'] + 13)**2:
-            t = atan2(y, x)
+            t = atan2(y, x) - self['rotate']
             if t < 0:
                 t += 2*pi
             self.active = bisect(self._slices_t, t)
         else:
-            self.active = self._KEY.target(y) - 2
+            self.active = self._KEY.target(y)
         return self.active
 
     def typeset(self, bounds, c, y, overlay):
-        P_slice, = self.styles(overlay, 'slice')
+        P_slice, P_right = self.styles(overlay, 'slice', '_right')
         r = self['radius']
         top = y
         left, right = bounds.bounds(y + r)
@@ -79,7 +79,7 @@ class PieChart(Block_element):
         for PL in self._pieslices:
             PL.freeze(right - px, 0)
         # key
-        self._KEY = Plot_key(self._keys, Subcell(bounds, 0.5, 1), c, top, py, P_slice)
+        self._KEY = Plot_key(self._keys, Subcell(bounds, 0.5, 1), c, top, py, P_slice + P_right)
         
         bottom = max(py + r, self._FLOW[-1].y)
         

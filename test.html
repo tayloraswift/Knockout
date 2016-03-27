@@ -21,7 +21,8 @@
     420,100 420,910 ; 700,100 700,910 ; 1 |
     80,100 80,910 ; 360,100 360,910 ; 2 |
     420,100 420,910 ; 700,100 700,910 ; 2 |
-    80,100 80,910 ; 360,100 360,910 ; 3">
+    80,100 80,910 ; 360,100 360,910 ; 3 |
+    420,100 420,910 ; 700,100 700,910 ; 3">
 <p class="h1">Multiline Heading</p>
 
 <p class="h2">Text typesetting</p>
@@ -201,7 +202,7 @@
     </tr>
 </table>
 
-<p class="caption&h3">Gross domestic product by nation.</p>
+<p class="caption&h4">Gross domestic product by nation.</p>
 
 <p class="h2">Counting tests</p>
 
@@ -229,7 +230,7 @@
 
 <p class="h2">Movie Script recipe</p>
 
-<p class="Catastrophe&body">Why did you take the plans for the Heisenberg device? You knew The Elector would use it for evil.</p>
+<p class="Catastrophe&body">Why did you take the plans for the Heisenberg device? You knew Lord Roy would use it for evil.</p>
 
 <p class="Arsyn&body">I’m not just another member of your squad, Cat. </p>
 
@@ -239,13 +240,31 @@
 
 <p class="Catastrophe&body">That was Welvin’s decision, not mine.</p>
 
-<p class="Arsyn&body">I don’t like The Elector any more than you do. But I will never work for Welvin Da Great again.</p>
+<p class="Arsyn&body">I don’t like Lord Roy any more than you do. But I will never work for Welvin Da Great again.</p>
 
-<p class="Catastrophe&body">The Elector will destroy London!</p>
+<p class="Catastrophe&body">Roy will destroy London!</p>
 
 <p class="Arsyn&body">Don’t you think I know that? She sent me to patrol the city as it burns. I have my own squad now.</p>
 
 <p class="Catastrophe&body">But we had … Squad Goals, Arsyn. <em>Squad Goals</em>.</p>
+
+<p class="h2">Numbered List</p>
+
+<p class="h3">Level 3 Heading</p>
+
+<p class="body&firstchild">These are some list items:</p>
+
+<p class="body&firstchild&list">Item one.</p>
+
+<p class="body&list">Item two</p>
+
+<p class="body&list">Multiline list item (item 3) la la la, la la la. This is, my SNL monologue.</p>
+
+<p class="body&list">Item four.</p>
+
+<p class="body&firstchild&list">The list can restart using the firstchild style.</p>
+
+<p class="body&list">And recount.</p>
 
 <p class="h2">Histogram testing</p>
 
@@ -266,7 +285,7 @@
     </mod:hist>
 </mod:plot>
 
-<p class="caption&h3">Standard cumulative histogram.</p>
+<p class="caption&h4">Standard cumulative histogram.</p>
 
 <mod:plot class="figure" height="80" round="3">
     <mod:plot:axis major="200" minor="100" number="400" start="0" stop="2800">
@@ -285,7 +304,7 @@
     </mod:hist>
 </mod:plot>
 
-<p class="caption&h3">Logarithmic histogram.</p>
+<p class="caption&h4">Logarithmic histogram.</p>
 
 <mod:plot class="figure" height="90" round="3">
     <mod:plot:axis major="4" minor="1" number="8" start="1968" stop="2016">
@@ -308,7 +327,7 @@
     </mod:hist>
 </mod:plot>
 
-<p class="caption&h3">Signed histogram.</p>
+<p class="caption&h4">Signed histogram.</p>
 
 <mod:plot class="figure" height="90" round="3">
     <mod:plot:axis major="4" minor="1" number="8" start="1968" stop="2016">
@@ -326,7 +345,7 @@
     </mod:hist>
 </mod:plot>
 
-<p class="caption&h3">Double-sided histogram</p>
+<p class="caption&h4">Double-sided histogram</p>
 
 <mod:plot class="figure" height="120">
     <mod:plot:axis major="4" minor="2" number="8" start="0" stop="80">
@@ -344,7 +363,7 @@
     </mod:scatter>
 </mod:plot>
 
-<p class="caption&h3">Standard scatterplot</p>
+<p class="caption&h4">Standard scatterplot</p>
 
 <mod:plot class="figure" height="120">
     <mod:plot:axis major="4" minor="2" number="8" start="-10" stop="78">
@@ -362,7 +381,7 @@
     </mod:scatter>
 </mod:plot>
 
-<p class="caption&h3">Logarithmic scatterplot</p>
+<p class="caption&h4">Logarithmic scatterplot</p>
 
 <mod:plot class="figure" height="120">
     <mod:plot:logaxis base="10" major="10" minor="10" number="100" start="0.01" stop="1000000">
@@ -380,7 +399,7 @@
     </mod:scatter>
 </mod:plot>
 
-<p class="caption&h3">Bi-logarithmic scatterplot with negative flooring</p>
+<p class="caption&h4">Bi-logarithmic scatterplot with negative flooring</p>
 
 <mod:plot class="figure" height="120">
     <mod:plot:axis major="4" minor="2" number="8" start="-8" stop="78">
@@ -404,7 +423,7 @@
     </mod:fx>
 </mod:plot>
 
-<p class="body&caption&h3">Logarithmic scatterplot with floored curve overlays</p>
+<p class="caption&h4">Logarithmic scatterplot with floored curve overlays</p>
 
 <mod:plot class="figure" height="90" round="3">
     <mod:plot:axis major="1" minor="0.5" number="2" start="-2" stop="14">
@@ -448,7 +467,7 @@
     </mod:hist>
 </mod:plot>
 
-<p class="caption&h3">Riemann sums.</p>
+<p class="caption&h4">Riemann sums.</p>
 
 <mod:plot class="figure" height="135">
     <mod:plot:axis major="2" minor="1" number="4" start="-12" stop="12">
@@ -475,7 +494,7 @@
     </mod:fx>
 </mod:plot>
 
-<p class="body&caption&h3">functional/parametric plot</p>
+<p class="caption&h4">functional/parametric plot</p>
 
 <mod:plot class="figure" height="120">
     <mod:plot:axis major="4" minor="2" number="8" start="0" stop="80">
@@ -493,7 +512,7 @@
     </mod:bubble>
 </mod:plot>
 
-<p class="caption&h3">Bubble plot</p>
+<p class="caption&h4">Bubble plot</p>
 
 <mod:plot alt="0.6" azm="6" class="figure" height="280" rot="1">
     <mod:plot:axis major="2" minor="1" number="4" start="-12" stop="12">
@@ -516,7 +535,7 @@
     </mod:scatter>
 </mod:plot>
 
-<p class="body&caption&h3"></p>
+<p class="caption&h4"></p>
 
 <mod:pie center="0.3" class="h2" radius="80" rotate="-pi/2">
     <mod:pie:slice color="#7080ff" prop="39.19">
@@ -536,11 +555,11 @@
     </mod:pie:slice>
 </mod:pie>
 
-<p class="body&caption&h3">US energy consumption by type</p>
+<p class="caption&h4">US energy consumption by type</p>
 
 <p class="figure" style="{'leading': 120}"><image src="plantcell.svg" width="200"/></p>
 
-<p class="caption&h3">SVG rendering</p>
+<p class="caption&h4">SVG rendering</p>
 
 <p class="caption">A plant cell in the process of cell division.</p>
 
@@ -548,7 +567,7 @@
 
 <p class="figure" style="{'leading': 140}"><image src="meredith.png" width="140"/><image src="olivia.jpg" width="140"/></p>
 
-<p class="caption&h3">Bitmap (PNG, JPEG) tests 1, 2: Meredith and Olivia</p>
+<p class="caption&h4">Bitmap (PNG, JPEG) tests 1, 2: Meredith and Olivia</p>
 
 <p class="caption">Photographs of Meredith and Olivia from Taylor’s instagram. Olivia has since grown and accordingly soured in demeanor.</p>
 
@@ -582,7 +601,7 @@
                 'subscript': {'shift': -2},
                 'superscript': {'shift': 5}},
  'FTAGLIST': [('big', []), ('emphasis', []), ('link', []), ('reference', []), ('sc', []), ('strong', []), ('sub', ['small']), ('sup', ['small'])],
- 'PARASTYLES': (3,
+ 'PARASTYLES': (4,
                 [({'fontclasses': (2, [('Black', {}), ('subscript', {'sub': 1}), ('superscript', {'sup': 1})])}, {}),
                  ({'fontclasses': (2,
                                    [('Body regular', {}),
@@ -600,8 +619,8 @@
                   {'body': 1}),
                  ({'indent': '0', 'indent_range': '', 'margin_left': 40, 'show_count': "'Catastrophe:'"}, {'Catastrophe': 1, 'body': 1}),
                  ({'indent': '0', 'indent_range': '', 'margin_left': 40, 'show_count': "'Arsyn:'"}, {'Arsyn': 1, 'body': 1}),
-                 ({'indent': '0'}, {'body': 1, 'firstchild': 1}),
-                 ({'indent': '-5K', 'margin_left': 20}, {'list': 1}),
+                 ({'incr_assign': 'n + 1', 'incr_place_value': -1, 'indent': '0', 'margin_left': 40, 'show_count': "str(A[-1]) + '.'"}, {'list': 1}),
+                 ({}, {'body': 1, 'firstchild': 1}),
                  ({'align': 0.5, 'fontclasses': (0, [('Big', {'big': 1})]), 'indent': '0', 'margin_bottom': 20, 'margin_top': 20}, {'math': 1}),
                  ({'fontclasses': (0, [('h1', {})]), 'hyphenate': True, 'leading': 40, 'margin_bottom': 20}, {'h1': 1}),
                  ({'fontclasses': (0, [('Sans serif light', {}), ('h2', {})]),
@@ -623,9 +642,9 @@
                  ({'fontclasses': (1, [('h4', {}), ('Sans serif book italic', {})]), 'incr_assign': 'n + 1', 'incr_place_value': 3, 'show_count': "'.'.join(str(i) for i in A[1:4])"},
                   {'h4': 1}),
                  ({'align': 0.5, 'fontclasses': (0, [('Sans serif book', {}), ('Table', {'small': 1})]), 'margin_bottom': 10, 'margin_top': 10}, {'figure': 1}),
-                 ({'align': 0.5, 'fontclasses': (0, [('h4', {})]), 'indent': '0', 'leading': 20, 'margin_bottom': 0, 'margin_top': 8}, {'figure': 1, 'h3': 1}),
+                 ({'align': 0.5, 'fontclasses': (0, [('h4', {})]), 'indent': '0', 'leading': 20, 'margin_bottom': 0, 'margin_top': 8}, {'figure': 1, 'h4': 1}),
                  ({'fontclasses': (1, [('Sans serif book italic', {}), ('Caption', {})]), 'hyphenate': True, 'leading': 16, 'margin_bottom': 12}, {'caption': 1}),
-                 ({'fontclasses': (0, [('Sans serif semi', {})]), 'indent': '0', 'margin_bottom': 2, 'margin_top': 0}, {'caption': 1, 'h3': 1}),
+                 ({'fontclasses': (0, [('Sans serif semi', {})]), 'incr_assign': '', 'indent': '0', 'margin_bottom': 2, 'margin_top': 0, 'show_count': ''}, {'caption': 1, 'h4': 1}),
                  ({'margin_left': 10, 'margin_right': 10}, {'key': 1}),
                  ({'align': 0.5, 'align_to': '.:', 'fontclasses': (0, [('Sans serif book', {}), ('Table', {})]), 'indent': '0', 'leading': 18, 'margin_left': 4, 'margin_right': 4},
                   {'tablecell': 1}),
@@ -633,6 +652,7 @@
                  ({'align': 0.5, 'align_to': '', 'fontclasses': (0, [('Sans serif semi', {})])}, {'emphasis': 1, 'tablecell': 1}),
                  ({'align': 1, 'align_to': ''}, {'firstchild': 1, 'tablecell': 1}),
                  ({'fontclasses': (0, [('Table units', {})]), 'leading': 14}, {'tablecell': 1, 'units': 1}),
+                 ({'incr_assign': '1', 'indent': '0'}, {'firstchild': 1}),
                  ({'align': 0}, {'_left': 1}),
                  ({'align': 0.5}, {'_center': 1}),
                  ({'align': 1}, {'_right': 1})]),
@@ -655,8 +675,8 @@
               ('math', []),
               ('tablecell', []),
               ('units', [])],
- 'contexts': {'channels': {'c': 6, 'p': 3, 't': 1}, 'text': {'i': 1231, 'j': 1231, 'p': 0, 't': 1}},
+ 'contexts': {'channels': {'c': 7, 'p': 3, 't': 1}, 'text': {'i': 1388, 'j': 1388, 'p': 0, 't': 1}},
  'grid': [[80, 360, 420, 700], [100, 130, 910]],
  'page': {'dimensions': (765, 990), 'dual': True},
- 'view': {'H': -523, 'Hc': 618, 'K': -254, 'Kc': 529, 'Zoom': 11, 'mode': 'text'}}
+ 'view': {'H': 6, 'Hc': 436, 'K': -1035, 'Kc': 312, 'Zoom': 11, 'mode': 'text'}}
 ############# -->

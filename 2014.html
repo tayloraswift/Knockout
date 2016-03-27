@@ -3,7 +3,7 @@
 
 <body>
 <section outlines="90,100 90,910 ; 370,100 370,910 ; 0 |
-    410,100 410,910 ; 690,100 690,910 ; 0 ">
+    410,100 410,910 ; 690,100 690,910 ; 0">
 <p class="h1">Moody’s Mega Math Challenge 2014</p>
 
 <p class="body&firstchild">Along with educating children on proper nutrition, schools are also responsible for providing healthy daily lunches to students. Eating properly has been shown not only to improve health but also to enhance classroom performance and reduce incidences of disease. Recent legislative acts such as the Healthy, Hunger-Free Kids Act of 2010 have been instrumental in pushing schools to offer more nutritious menu options. However, there have been many obstacles in the implementation and success of the program. Students have shied away from the new school lunches, arguing that the healthier options are not as tasty. School districts also struggle to cover the rising expense of more nutritious foods with stretched budgets.</p>
@@ -15,16 +15,16 @@
 <p>Finally, we established an ideal lunch meal for schools to offer students based upon the recommendations of the <fo class="sc"/>Usda<fc class="sc"/>’s <em>MyPlate</em> and what we observed to be the optimal number of calories to consume in order to satisfy the maximum percentage of students. Using data on foods available to a school and survey results showing how well students accept various foods, we were able to create an algorithm that generates meals that meet the <fo class="sc"/>Usda<fc class="sc"/> <em>MyPlate</em> requirement, have the necessary number of calories, and fit the available school budget. We then ranked these meals based on student acceptance to find the best meal choices, which would be well received by students while still meeting dietary and budget requirements. Using localized survey results allows our model to be customized for schools in different geographical and socioeconomic situations.</p>
 </section>
 
-<section outlines="90,130 90,910 ; 690,130 690,910 ; 1 ">
+<section outlines="90,130 90,910 ; 690,130 690,910 ; 1">
 <p class="firstchild&h2" style="{'margin_left': 40}">Table of contents</p>
 
-<table cellbottom="5" celltop="5" distr="3, 1" hrules="0" style="{'margin_right': 40, 'margin_left': 40, 'margin_top': 10}">
+<table cellbottom="5" celltop="5" distr="3, 1" hrules="0" style="{'margin_right': 40, 'margin_top': 10, 'margin_left': 40}">
     <tr>
         <td>
             <p class="body&h2">Introduction</p>
         </td>
         <td>
-            <p class="body&h2&table emphasis">Page 3</p>
+            <p class="body&emphasis&h2">Page 3</p>
         </td>
     </tr>
     <tr>
@@ -32,7 +32,7 @@
             <p class="body&h2">Part 1: Calculating lunchtime caloric need</p>
         </td>
         <td>
-            <p class="body&h2&table emphasis">Page 3</p>
+            <p class="body&emphasis&h2">Page 3</p>
         </td>
     </tr>
     <tr>
@@ -40,7 +40,7 @@
             <p class="body&h2">Part 2: The average lunch meal</p>
         </td>
         <td>
-            <p class="body&h2&table emphasis">Page 9</p>
+            <p class="body&emphasis&h2">Page 9</p>
         </td>
     </tr>
     <tr>
@@ -48,7 +48,7 @@
             <p class="body&h2">Part 3: Cafeteria meal planning</p>
         </td>
         <td>
-            <p class="body&h2&table emphasis">Page 12</p>
+            <p class="body&emphasis&h2">Page 12</p>
         </td>
     </tr>
     <tr>
@@ -56,7 +56,7 @@
             <p class="body&h2">Strengths and weaknesses</p>
         </td>
         <td>
-            <p class="body&h2&table emphasis">Page 17</p>
+            <p class="body&emphasis&h2">Page 17</p>
         </td>
     </tr>
     <tr>
@@ -64,7 +64,7 @@
             <p class="body&h2">Conclusions</p>
         </td>
         <td>
-            <p class="body&h2&table emphasis">Page 18</p>
+            <p class="body&emphasis&h2">Page 18</p>
         </td>
     </tr>
     <tr>
@@ -72,7 +72,7 @@
             <p class="body&h2">Algorithms</p>
         </td>
         <td>
-            <p class="body&h2&table emphasis">Page 19</p>
+            <p class="body&emphasis&h2">Page 19</p>
         </td>
     </tr>
     <tr>
@@ -80,7 +80,7 @@
             <p class="body&h2">References</p>
         </td>
         <td>
-            <p class="body&h2&table emphasis">Page 20</p>
+            <p class="body&emphasis&h2">Page 20</p>
         </td>
     </tr>
 </table>
@@ -91,7 +91,7 @@
 <section outlines="90,130 90,910 ; 370,130 370,910 ; 2 |
     410,130 410,910 ; 690,130 690,910 ; 2 |
     90,130 90,910 ; 370,130 370,910 ; 3 |
-    410,130 410,890 ; 690,130 690,890 ; 3 |
+    410,130 410,910 ; 690,130 690,910 ; 3 |
     90,130 90,910 ; 370,130 370,910 ; 4 |
     410,130 410,910 ; 690,130 690,910 ; 4 |
     90,130 90,910 ; 370,130 370,910 ; 5 |
@@ -103,52 +103,52 @@
     90,130 90,910 ; 370,130 370,910 ; 8 |
     410,130 410,910 ; 690,130 690,910 ; 8 |
     90,510 90,910 ; 370,510 370,910 ; 9 |
-    410,510 410,910 ; 690,510 690,910 ; 9 ">
-<p class="h2">1  Introduction</p>
+    410,510 410,910 ; 690,510 690,910 ; 9">
+<p class="h2">Introduction</p>
 
 <p class="body&firstchild">Schools across the United States are tasked with providing nutritious school lunches to students. A nutritious school lunch enables students to improve academic performance by allowing them to pay attention and stay focused in class. Additionally, a nutritious school lunch can promote healthier eating habits through the entire lifetime of many students. Finally, with lunch being such a large part of a student’s daily caloric intake, a healthy school lunch goes a long way in terms of fighting the country’s current obesity problem.</p>
 
 <p>However providing a nutritious school lunch is not always easy. Schools must operate on a budget, and students often to not share the same dietary goals as the school district or federal government. Namely, students often tend to choose their meals based on taste and quantity. As such, in providing an optimal school lunch, schools must balance three factors: affordability, taste, and nutrition.</p>
 
-<p class="h3">1.1 Problem restatement</p>
+<p class="h3">Problem restatement</p>
 
 <p class="body&firstchild" style="{'margin_bottom': 10}">Given the importance of providing healthy yet satisfying lunches to students and compliance with the Healthy, Hunger-Free Kids Act of 2010, we have responded to the <fo class="sc"/>Usda<fc class="sc"/>’s request to develop a mathematical model to solve the following problems:</p>
 
-<p class="body&list"><strong>1</strong>  Determine the number of calories a student needs at lunch based on certain physical attributes and lifestyle choices—for example, height, weight, gender, activity level, amount of sleep, etc.</p>
+<p class="body&firstchild&list">Determine the number of calories a student needs at lunch based on certain physical attributes and lifestyle choices—for example, height, weight, gender, activity level, amount of sleep, etc.</p>
 
-<p class="body&list"><strong>2</strong>  If the cafeteria serves a “standard school lunch” to each student, how many students will be left with their caloric needs unmet after lunch?</p>
+<p class="body&list">If the cafeteria serves a “standard school lunch” to each student, how many students will be left with their caloric needs unmet after lunch?</p>
 
-<p class="body&list"><strong>3</strong>  Given a school with a weekly budget of $6 per student to spend solely on food procurement, what lunch options would meet budget constraints and provide maximum satisfaction to students in terms of taste and caloric needs? How would options expand if the weekly budget were to increase $1?</p>
+<p class="body&list">Given a school with a weekly budget of $6 per student to spend solely on food procurement, what lunch options would meet budget constraints and provide maximum satisfaction to students in terms of taste and caloric needs? How would options expand if the weekly budget were to increase $1?</p>
 
-<p class="h2">2  Part 1: Calculating lunchtime caloric need</p>
+<p class="h2">Part 1: Calculating lunchtime caloric need</p>
 
-<p class="h3">2.1 Analysis of the problem</p>
+<p class="h3">Analysis of the problem</p>
 
 <p class="body&firstchild">Although there are a number of different methods for calculating total daily caloric burn (and consequently, caloric input), such as the Institute of Medicine Estimated Energy Requirement (EER), which is the current standard for use in the United States, these methods address only calculation of total daily caloric burn/intake. However, we are instead interested in evaluating specifically the caloric intake necessary at lunchtime, which must be some fraction of the total daily caloric input. Therefore, instead of calculating the total caloric input over a whole day, for example by using the EER, we must instead determine how many calories should be consumed just at lunchtime, based on some number of determinable factors. Since the calories consumed at lunchtime should be a fraction of the total calories consumed over an entire day, we can consider factors that affect each part separately. Such factors that could affect the overall daily calorie burn include height, weight, age, gender, and activity level, while factors affecting lunchtime caloric proportions could include factors such as meal schedules, snacking patterns, and the like.</p>
 
-<p class="h3">2.2 Assumptions</p>
+<p class="h3">Assumptions</p>
 
-<p class="body&list"><strong>1</strong>  Since this problem concerns meal plans for students in school, we assume that refers to elementary through high schoolers; thus we are restricting our input ages from 6–18 years.</p>
+<p class="body&firstchild&list">Since this problem concerns meal plans for students in school, we assume that refers to elementary through high schoolers; thus we are restricting our input ages from 6–18 years.</p>
 
-<p class="body&list"><strong>2</strong>  To calculate how different activities affect caloric requirements, we assume that during physical activity or sleep, the rate of caloric burn holds constant over the entire period of activity.</p>
+<p class="body&list">To calculate how different activities affect caloric requirements, we assume that during physical activity or sleep, the rate of caloric burn holds constant over the entire period of activity.</p>
 
-<p class="body&list"><strong>3</strong>  Survey responses reflect daily habits that hold true on average. While daily patterns are likely to vary, we assume that these variations negate over time and our model seeks to provide a solution that is optimum over the long term.</p>
+<p class="body&list">Survey responses reflect daily habits that hold true on average. While daily patterns are likely to vary, we assume that these variations negate over time and our model seeks to provide a solution that is optimum over the long term.</p>
 
-<p class="body&list"><strong>4</strong>  At each meal, an individual eats until he or she is fully satiated or until the food runs out.</p>
+<p class="body&list">At each meal, an individual eats until he or she is fully satiated or until the food runs out.</p>
 
-<p class="body&list"><strong>5</strong>  We assume that the calories consumed at a meal are equivalent to the calories burned since the last full meal (minus any snacks consumed in the interim period). This is logical because, if we assume that at each meal an individual eats the amount necessary to bring them to a “full” status, the amount necessary at the following meal to return to the “full” status would be equivalent to that which was burned in the time since the last meal consumed.</p>
+<p class="body&list">We assume that the calories consumed at a meal are equivalent to the calories burned since the last full meal (minus any snacks consumed in the interim period). This is logical because, if we assume that at each meal an individual eats the amount necessary to bring them to a “full” status, the amount necessary at the following meal to return to the “full” status would be equivalent to that which was burned in the time since the last meal consumed.</p>
 
-<p class="body&list"><strong>6</strong>  The caloric consumption of an individual is equivalent to the number of calories burned per day. Although this is not strictly true (gaining weight = net positive caloric input, losing weight = net caloric deficit), the significance of this factor is relatively low; at the age of highest growth rate (approximately 12 years old), a student’s net caloric excess should be less than 100 calories/day to maintain a healthy growth rate (<fo class="reference"/>“Age-Weight Chart: Girls Age 2–20 Years”<fc class="reference"/>).</p>
+<p class="body&list">The caloric consumption of an individual is equivalent to the number of calories burned per day. Although this is not strictly true (gaining weight = net positive caloric input, losing weight = net caloric deficit), the significance of this factor is relatively low; at the age of highest growth rate (approximately 12 years old), a student’s net caloric excess should be less than 100 calories/day to maintain a healthy growth rate (<fo class="reference"/>“Age-Weight Chart: Girls Age 2–20 Years”<fc class="reference"/>).</p>
 
-<p class="h3">2.3 Design of the model</p>
+<p class="h3">Design of the model</p>
 
 <p class="body&firstchild">Using assumptions 5 and 6 above, we can determine the number of calories that an individual must consume at each meal based on their previous meals and the number of calories burned since their last meal. To determine the number of calories burned over a certain time interval, we must consider the activity level of the individual, as this directly correlates to the calories burned. Using data from the Harvard Medical School, we find that the calories burned for a specific activity is proportional to the body weight of the individual, the time spent doing the activity, and some activity rate constant (<fo class="reference"/>“Calories burned in 30 minutes of leisure and routine activities” 2004<fc class="reference"/>). Given this data for various activities such as sleeping, sitting in class, and exercising, and information about the daily schedule of an individual, we can develop a graph of the function <mi char="R"/>(<mi char="t"/>) showing the rate of calories burned over an average day, shown in <fo class="reference"/>Figure 1<fc class="reference"/> below.</p>
 
-<p class="figure&figure title&h3">Rate of calories burned <em>vs</em> Time of day</p>
+<p class="figure&h4">Rate of calories burned <em>vs</em> Time of day</p>
 
 <p class="figure" style="{'leading': 142}"><image src="r:2014-1.png" width="260"/></p>
 
-<p class="caption&h3">Figure 2: Relation of survey questions to mathematical model</p>
+<p class="caption&h4">Figure 2: Relation of survey questions to mathematical model</p>
 
 <p class="caption">This diagram shows how the questions in the survey influence the graph; for example, survey question 1 determines where the sleeping activity level ends, question 3 determines the length of morning exercise, etc. Question 9 (“What is your weight?”) influences the graph because the rates of caloric burn are proportional to weight.</p>
 
@@ -162,7 +162,7 @@
 
 <p class="body&firstchild">Since our rate equation <mi char="R"/>(<mi char="t"/>) is piecewise with constant values, the integral is equivalent to the area of the rectangles that can be drawn under the curve:</p>
 
-<p class="body&math" style="{'align_to': '+', 'align': 0.45, 'margin_left': -10}">Total calories burned =	 (<mi char="λ" correct="0"/><sub><mi char="S"/></sub>(<mi char="Q"/><sub>1</sub>) + <mi char="λ" correct="0"/><sub><mi char="LA"/></sub>(<mi char="Q"/><sub>3<mi char="i"/></sub> − <mi char="Q"/><sub>1</sub>) <br/>+ <mi char="λ" correct="0"/><sub><mi char="A"/></sub>(<mi char="Q"/><sub>3<mi char="f"/></sub> − <mi char="Q"/><sub>3<mi char="i"/></sub>) + <mi char="λ" correct="0"/><sub><mi char="LA"/></sub>(<mi char="Q"/><sub>5<mi char="i"/></sub> − <mi char="Q"/><sub>3<mi char="f"/></sub>) <br/>+ <mi char="λ" correct="0"/><sub><mi char="A"/></sub> + <mi char="λ" correct="0"/><sub><mi char="LA"/></sub>(<mi char="Q"/><sub>7</sub> − <mi char="Q"/><sub>5<mi char="f"/></sub>) <br/>+ <mi char="λ" correct="0"/><sub><mi char="S"/></sub>(24 − <mi char="Q"/><sub>7</sub>)) · weight ,</p>
+<p class="body&math" style="{'align': 0.45, 'align_to': '+', 'margin_left': -10}">Total calories burned =	 (<mi char="λ" correct="0"/><sub><mi char="S"/></sub>(<mi char="Q"/><sub>1</sub>) + <mi char="λ" correct="0"/><sub><mi char="LA"/></sub>(<mi char="Q"/><sub>3<mi char="i"/></sub> − <mi char="Q"/><sub>1</sub>) <br/>+ <mi char="λ" correct="0"/><sub><mi char="A"/></sub>(<mi char="Q"/><sub>3<mi char="f"/></sub> − <mi char="Q"/><sub>3<mi char="i"/></sub>) + <mi char="λ" correct="0"/><sub><mi char="LA"/></sub>(<mi char="Q"/><sub>5<mi char="i"/></sub> − <mi char="Q"/><sub>3<mi char="f"/></sub>) <br/>+ <mi char="λ" correct="0"/><sub><mi char="A"/></sub> + <mi char="λ" correct="0"/><sub><mi char="LA"/></sub>(<mi char="Q"/><sub>7</sub> − <mi char="Q"/><sub>5<mi char="f"/></sub>) <br/>+ <mi char="λ" correct="0"/><sub><mi char="S"/></sub>(24 − <mi char="Q"/><sub>7</sub>)) · weight ,</p>
 
 <p class="body&firstchild">where <mi char="λ" correct="0"/><sub><mi char="S"/></sub> represents the rate of calorie burn while sleeping, <mi char="λ" correct="0"/><sub><mi char="LA"/></sub> represents the rate while in a low activity state (sitting in class, playing video games, working on the computer, etc.), and <mi char="λ" correct="0"/><sub><mi char="A"/></sub> represents the rate of calorie burn while doing physical activity (running, playing a sport, etc.). Of course, different physical activities can have different rates of calorie burn, but for simplicity we will only consider an average rate for a variety of physical activities. To determine the rate at which calories are burned by an individual during various activities, data from the Harvard Medical School was used. On average, an individual burns 0.2 cal/hr/lb while sleeping, 0.83 cal/hr/lb during a low activity state, and 3.36 cal/hr/lb during a high activity state.</p>
 
@@ -172,29 +172,29 @@
 
 <p>If a student eats breakfast, the calories that they must consume at lunchtime are given by</p>
 
-<p class="body&math" style="{'align_to': '+', 'align': 0.32}">Lunch calories =	 (<mi char="λ" correct="0"/><sub><mi char="S"/></sub>(<mi char="Q"/><sub>1</sub>) + <mi char="λ" correct="0"/><sub><mi char="LA"/></sub>(<mi char="Q"/><sub>3<mi char="i"/></sub> − <mi char="Q"/><sub>1</sub>) <br/>+ <mi char="λ" correct="0"/><sub><mi char="A"/></sub>(<mi char="Q"/><sub>3<mi char="f"/></sub> − <mi char="Q"/><sub>3<mi char="i"/></sub>) <br/>+ <mi char="λ" correct="0"/><sub><mi char="LA"/></sub>(<mi char="Q"/><sub>4</sub> − <mi char="Q"/><sub>3<mi char="f"/></sub>)) · weight − snacks .</p>
+<p class="body&math" style="{'align': 0.32, 'align_to': '+'}">Lunch calories =	 (<mi char="λ" correct="0"/><sub><mi char="S"/></sub>(<mi char="Q"/><sub>1</sub>) + <mi char="λ" correct="0"/><sub><mi char="LA"/></sub>(<mi char="Q"/><sub>3<mi char="i"/></sub> − <mi char="Q"/><sub>1</sub>) <br/>+ <mi char="λ" correct="0"/><sub><mi char="A"/></sub>(<mi char="Q"/><sub>3<mi char="f"/></sub> − <mi char="Q"/><sub>3<mi char="i"/></sub>) <br/>+ <mi char="λ" correct="0"/><sub><mi char="LA"/></sub>(<mi char="Q"/><sub>4</sub> − <mi char="Q"/><sub>3<mi char="f"/></sub>)) · weight − snacks .</p>
 
 <p class="body&firstchild">However, if the student did not eat breakfast, they must consume a greater number of calories at lunchtime to make up for this deficit:</p>
 
-<p class="body&math" style="{'align_to': '+', 'align': 0.32}">Lunch calories =	 (<mi char="λ" correct="0"/><sub><mi char="S"/></sub>(<mi char="Q"/><sub>1</sub>) + <mi char="λ" correct="0"/><sub><mi char="LA"/></sub>(<mi char="Q"/><sub>3<mi char="i"/></sub> − <mi char="Q"/><sub>1</sub>) <br/>+ <mi char="λ" correct="0"/><sub><mi char="A"/></sub>(<mi char="Q"/><sub>3<mi char="f"/></sub> − <mi char="Q"/><sub>3<mi char="i"/></sub>) + <mi char="λ" correct="0"/><sub><mi char="LA"/></sub>(<mi char="Q"/><sub>4</sub> − <mi char="Q"/><sub>3<mi char="f"/></sub>) <br/>+ <mi char="λ" correct="0"/><sub><mi char="LA"/></sub>(<mi char="Q"/><sub>7</sub> − <mi char="Q"/><sub>6</sub>) <br/>+ <mi char="λ" correct="0"/><sub><mi char="S"/></sub>(24 − <mi char="Q"/><sub>7</sub>)) · weight − snacks .</p>
+<p class="body&math" style="{'align': 0.32, 'align_to': '+'}">Lunch calories =	 (<mi char="λ" correct="0"/><sub><mi char="S"/></sub>(<mi char="Q"/><sub>1</sub>) + <mi char="λ" correct="0"/><sub><mi char="LA"/></sub>(<mi char="Q"/><sub>3<mi char="i"/></sub> − <mi char="Q"/><sub>1</sub>) <br/>+ <mi char="λ" correct="0"/><sub><mi char="A"/></sub>(<mi char="Q"/><sub>3<mi char="f"/></sub> − <mi char="Q"/><sub>3<mi char="i"/></sub>) + <mi char="λ" correct="0"/><sub><mi char="LA"/></sub>(<mi char="Q"/><sub>4</sub> − <mi char="Q"/><sub>3<mi char="f"/></sub>) <br/>+ <mi char="λ" correct="0"/><sub><mi char="LA"/></sub>(<mi char="Q"/><sub>7</sub> − <mi char="Q"/><sub>6</sub>) <br/>+ <mi char="λ" correct="0"/><sub><mi char="S"/></sub>(24 − <mi char="Q"/><sub>7</sub>)) · weight − snacks .</p>
 
 <p class="body&firstchild">Since snacks partially make up the deficit of calories burned since the last meal, we subtract the number of calories of snacks eaten from the last meal to calculate the number of calories that must be consumed at lunch.</p>
 
-<p class="h3">2.4 Justification and testing of the model</p>
+<p class="h3">Justification and testing of the model</p>
 
 <p class="body&firstchild">In order to test and verify our method of calculating caloric need, we compared the results of our <mi char="R"/>(<mi char="t"/>) function integrated over the entire day (giving total calories burned) to the EER method of calculating calories (which is the method supported by the <fo class="sc"/>Usda<fc class="sc"/>). Since out method utilizes only data on activity levels throughout the day and weight, while the EER method uses minimal activity level data, opting to instead look at age, height, gender, and weight, we expect there to be some difference between these two methods. However, if the methods are relatively similar, that is a good indicator that our method is relatively accurate at calculating total daily caloric need.</p>
 
 <p>The EER method for students 9–18 years old (age = <mi char="a"/>) can be evaluated as follows:</p>
 
-<p style="{'align_to': '=', 'align': 0.2, 'indent': (0, 1, 0)}"><strong>Boys</strong>: <mi char="EER"/> = 88.5 − 61.9<mi char="a"/> + <mi char="PA" correct="0"/> · (26.7<mi char="w"/> + 903<mi char="h"/>) ,</p>
+<p style="{'align': 0.2, 'indent': (0, 1, 0), 'align_to': '='}"><strong>Boys</strong>: <mi char="EER"/> = 88.5 − 61.9<mi char="a"/> + <mi char="PA" correct="0"/> · (26.7<mi char="w"/> + 903<mi char="h"/>) ,</p>
 
-<p style="{'align_to': '=', 'align': 0.2, 'indent': (0, 1, 0)}"><strong>Girls</strong>: <mi char="EER"/> = 153.3 − 30.8<mi char="a"/> + <mi char="PA" correct="0"/> · (10<mi char="w"/> + 903<mi char="h"/>) ,</p>
+<p style="{'align': 0.2, 'indent': (0, 1, 0), 'align_to': '='}"><strong>Girls</strong>: <mi char="EER"/> = 153.3 − 30.8<mi char="a"/> + <mi char="PA" correct="0"/> · (10<mi char="w"/> + 903<mi char="h"/>) ,</p>
 
 <p class="body&firstchild">where <mi char="PA" correct="0"/> is a physical activity indicator, weight (<mi char="w"/>) is measured in kilograms, and height (<mi char="h"/>) is measured in meters.</p>
 
 <p>The results of our comparison for a few random samples from our data set can be seen in <fo class="reference"/>Table 1<fc class="reference"/> below.</p>
 
-<table cellbottom="4" class="figure" distr="1.2, 3, 3, 2" hrules="1" rulemargin="1">
+<table cellbottom="4" class="figure" distr="1.2, 3, 2.5, 2" hrules="1" rulemargin="1">
     <tr>
         <td>
             <p>Subj.</p>
@@ -215,7 +215,7 @@
     </tr>
     <tr>
         <td>
-            <p class="body&table emphasis">1</p>
+            <p class="body&emphasis">1</p>
         </td>
         <td>
             <p>3686.835</p>
@@ -229,7 +229,7 @@
     </tr>
     <tr>
         <td>
-            <p class="body&table emphasis">2</p>
+            <p class="body&emphasis">2</p>
         </td>
         <td>
             <p>1222.931</p>
@@ -243,7 +243,7 @@
     </tr>
     <tr>
         <td>
-            <p class="body&table emphasis">3</p>
+            <p class="body&emphasis">3</p>
         </td>
         <td>
             <p>1380.474</p>
@@ -257,7 +257,7 @@
     </tr>
     <tr>
         <td>
-            <p class="body&table emphasis">4</p>
+            <p class="body&emphasis">4</p>
         </td>
         <td>
             <p>2218.507</p>
@@ -271,7 +271,7 @@
     </tr>
 </table>
 
-<p class="caption&h3">Table 1: Sample of Data Set Analyzed</p>
+<p class="caption&h4">Table 1: Sample of Data Set Analyzed</p>
 
 <p class="caption">Comparison of our suggested model to the EER in use currently with percent errors (using EER values as the “real” values)</p>
 
@@ -283,25 +283,25 @@
 
 <p class="body&firstchild">Our model demonstrated highest sensitivity to breakfast behavior. Consider the example in bold. Students who ate breakfast required less than half the amount to eat for lunch, though the breakfast behavior was independent of total calories burned. Our model was partially sensitive to weight, wake-up time, and bedtime. A 10% increase in weight led to a 10% increase in calories burned, and a 10% decrease in weight led to a 10% decrease in calories burned. Increasing the time awake by 2 hours increased the calories burned by 8.17%. Our model was least sensitive to the amount of exercise. A 33.33% increase in exercise per week only increased the total calories burned by 2.557%. However, since the original workout time was low and the increase of workout time is spread out throughout the week, there is a very small increase in workout time per day, which explains the small increase in total calories burned.</p>
 
-<p class="h2">3  Part 2: The average lunch meal</p>
+<p class="h2">Part 2: The average lunch meal</p>
 
-<p class="h3">3.1 Analysis of the problem</p>
+<p class="h3">Analysis of the problem</p>
 
 <p class="body&firstchild">Although lunchtime meals are standardized to average caloric needs for students, there does not yet exist a single meal that can meet the requirements for every individual student. The caloric needs of students range widely. If meals are standardized to the “average” student, then three groups of students emerge, resembling a Goldilocks scenario: one group of students does not obtain enough calories from the meal, one group consumes too many calories, and the final group has the appropriate caloric intake. We are interested in determining how many students will fall into each of these categories.</p>
 
-<p class="h3">3.2 Assumptions</p>
+<p class="h3">Assumptions</p>
 
-<p class="body&list"><strong>1</strong>  A student eating the standard school meal consumes the entire meal which contains the maximum caloric content as regulated by federal guidelines. The maximum caloric content of a high school lunch is 850 calories (<fo class="reference"/>Yee 2012<fc class="reference"/>).</p>
+<p class="body&firstchild&list">A student eating the standard school meal consumes the entire meal which contains the maximum caloric content as regulated by federal guidelines. The maximum caloric content of a high school lunch is 850 calories (<fo class="reference"/>Yee 2012<fc class="reference"/>).</p>
 
-<p class="body&list"><strong>2</strong>  As long as the caloric consumption of a student is within 15% of their calculated need, their dietary needs will be considered to be satisfied. This is justified by the face that a 15% variance in caloric intake from calculated need is sufficient to maintain current weight (<fo class="reference"/>“Institute of Medicine—Estimated Energy Requirement”<fc class="reference"/>). It is undesirable to provide meals that underfeed or overfeed students.</p>
+<p class="body&list">As long as the caloric consumption of a student is within 15% of their calculated need, their dietary needs will be considered to be satisfied. This is justified by the face that a 15% variance in caloric intake from calculated need is sufficient to maintain current weight (<fo class="reference"/>“Institute of Medicine—Estimated Energy Requirement”<fc class="reference"/>). It is undesirable to provide meals that underfeed or overfeed students.</p>
 
-<p class="h3">3.3 Design of the Model</p>
+<p class="h3">Design of the Model</p>
 
 <p class="body&firstchild">Based on the lunchtime-calorie calculator we designed in Part 1, we can find the distribution of lunchtime caloric needs of high schoolers given a data set containing attributes that result from answers to our survey. Since we have not yet given out our survey and therefore do not yet have results of our own to analyze, we instead pulled data from the National Youth Physical Activity and Nutrition Study (<fo class="reference"/>“Adolescent and School Health—National Youth Physical Activity and Nutrition Study”<fc class="reference"/>) that collected data from 11,458 participants from grades 9–12 across the nation about their physical attributes (height, weight, age, gender), the frequency at which they ate breakfast, and the rigor of their physical activity. Additionally, the distribution of sleep times for high school students was found and incorporated into the data set using probability distributions (<fo class="reference"/>Kalenkoski, Ribar, Stratton 2011<fc class="reference"/>). <fo class="reference"/>Table 3<fc class="reference"/> contains a subset of the sample data that we based our calculations of lunchtime caloric need on.</p>
 
 <p>With this data, we were able to generate a frequency distribution of the lunchtime caloric needs of high schoolers in the United States. To determine the percentage of satisfied high schoolers, we find the frequency of high schoolers whose lunchtime caloric requirement fall between 723 and 978 calories (850 calories ± 15%) using Excel histogram functions.</p>
 
-<p class="figure&h3">Calories needed at lunch</p>
+<p class="figure&h4">Calories needed at lunch</p>
 
 <mod:plot class="figure" height="160" round="3">
     <mod:plot:axis major="200" minor="100" number="400" start="-100" stop="3000">
@@ -320,11 +320,11 @@
     </mod:hist>
 </mod:plot>
 
-<p class="caption&h3">Figure 3</p>
+<p class="caption&h4">Figure 3</p>
 
 <p class="caption">The above graph displays the frequency at which certain lunchtime caloric needs occur. The graph is split into populations of students who eat or skip breakfast in the morning. The population average is 1049.7 calories, and only 37.3% of students will be satisfied by an 850 calorie lunch.</p>
 
-<p class="h3">3.4 Justification and testing of the model</p>
+<p class="h3">Justification and testing of the model</p>
 
 <p class="body&firstchild">Given the large sample size of this survey and its geographic scope, we can safely extrapolate our results from this dataset to the general student population. After implementing our model, we found that the variable of whether or not a student has had breakfast in the morning was one of the biggest determinants of a student’s lunchtime calorie need. For the overall student population, only 37.3% of all students will be satisfied by the current standard lunch. If we split the population into those who consumed breakfast and those who didn’t, we find that breakfast eaters have a much higher satisfaction rate from their school lunch (68%) than those who didn’t (0.07%). This is due to how in our model, if a student skipped their morning meal, their lunch will have to satisfy the extra calorie deficit from when they woke up in the morning. Since only about a third of students normally eat breakfast, not considering these effects is a serious shortfall of current meal plans. If instead we have schools serve meals containing up to 1049 calories (the mean lunchtime need of all students, including those who do not eat breakfast), we will be able to satisfy 49% of all students using the 15% margin guideline.</p>
 
@@ -366,8 +366,8 @@
 <p class="body&firstchild"></p>
 </section>
 
-<section repeat="1:9" outlines="90,70 90,100 ; 370,70 370,100 ; 1 |
-    410,70 410,100 ; 690,70 690,100 ; 1 ">
+<section outlines="90,70 90,100 ; 370,70 370,100 ; 1 |
+    410,70 410,100 ; 690,70 690,100 ; 1" repeat="1:9">
 <p class="body&firstchild">Team {} </p>
 
 <p class="body&firstchild" style="{'align': 1}"><pn/></p>
@@ -377,9 +377,9 @@
 <table cellbottom="4" class="figure" distr="1, 1.4, 2, 1.3, 1, 1, 1.2" hrules="1" rulemargin="1">
     <tr>
         <td>
-            <p>Weight</p>
+            <p class="_center&body">Weight</p>
             
-            <p class="body&units">lbs</p>
+            <p class="_center&body&units">lbs</p>
         </td>
         <td>
             <p>workout 60 min</p>
@@ -500,13 +500,13 @@
     </tr>
 </table>
 
-<p class="caption&h3">Table 3: Sample of data set analyzed</p>
+<p class="caption&h4">Table 3: Sample of data set analyzed</p>
 </section>
 
 <section outlines="90,130 90,370 ; 360,130 360,370 ; 9 |
     420,130 420,370 ; 690,130 690,370 ; 9 |
-    90,390 90,500 ; 690,390 690,500 ; 9 ">
-<p class="caption&h3">Figure 4</p>
+    90,390 90,500 ; 690,390 690,500 ; 9">
+<p class="caption&h4">Figure 4</p>
 
 <p class="caption">The charts show their respective graphs of lunchtime caloric need frequency distribution for students who skip (average: 1538.3 calories, standard deviation: 454.3 calories) or eat (average: 646.4 calories, standard deviation: 247.6 calories) breakfast. For breakfast skippers, only 0.07% will be satisfied by an offering of 850 calories at lunch, while 68% of breakfast eaters will be content.</p>
 </section>
@@ -515,9 +515,9 @@
 <table cellbottom="4" class="figure" distr="1.5, 1.6, 2, 1.5, 2, 2, 3" hrules="1" rulemargin="1">
     <tr>
         <td>
-            <p>Weight</p>
+            <p class="_center&body">Weight</p>
             
-            <p class="body&units">lbs</p>
+            <p class="_center&body&units">lbs</p>
         </td>
         <td>
             <p>Workout</p>
@@ -546,7 +546,7 @@
     </tr>
     <tr>
         <td>
-            <p class="body&table emphasis">88</p>
+            <p class="body&emphasis">88</p>
         </td>
         <td>
             <p class="body&table emphasis">180</p>
@@ -730,7 +730,7 @@
     </tr>
 </table>
 
-<p class="caption&h3">Table 2: Sensitivity analysis of model</p>
+<p class="caption&h4">Table 2: Sensitivity analysis of model</p>
 </section>
 </body>
 
@@ -738,80 +738,99 @@
 {'FONTSTYLES': {'Big': {'fontsize': 20, 'path': '/home/kelvin/.fonts/Proforma-Book.otf', 'shift': -1},
                 'Black': {'color': (0, 0, 0, 1)},
                 'Body bold': {'path': '/home/kelvin/.fonts/Proforma-Bold.otf'},
-                'Body italic': {'path': 'r:Proforma-MediumItalic-patched.otf'},
-                'Body regular': {'fontsize': 14.5, 'path': 'r:Proforma-Medium-patched.otf'},
+                'Body bold italic': {'path': '/home/kelvin/.fonts/Proforma-BoldItalic.otf'},
+                'Body italic': {'path': '/home/kelvin/.fonts/Proforma-BookItalic.otf'},
+                'Body regular': {'fontsize': 13, 'path': '/home/kelvin/.fonts/Proforma-Book.otf'},
                 'Body small': {'fontsize': 9, 'path': '/home/kelvin/.fonts/Proforma-Semibold.otf'},
                 'Body small italic': {'fontsize': 9, 'path': '/home/kelvin/.fonts/Proforma-SemiboldItalic.otf'},
-                'Caption': {'capitals': False, 'fontsize': 13, 'tracking': 0},
+                'Caption': {'capitals': False, 'fontsize': 12, 'tracking': 0},
                 'Sans serif book': {'path': '/home/kelvin/.fonts/FiraSans-Book.otf'},
                 'Sans serif book italic': {'path': '/home/kelvin/.fonts/FiraSans-BookItalic.otf'},
                 'Sans serif light': {'path': '/home/kelvin/.fonts/FiraSans-Light.otf'},
                 'Sans serif semi': {'path': '/home/kelvin/.fonts/FiraSans-SemiBold.otf'},
                 'Smallcaps': {'capitals': False, 'path': '/home/kelvin/.fonts/Proforma_MediumSC.ttf'},
-                'Table': {'fontsize': 12},
+                'Table': {'fontsize': 11},
                 'Table heading': {'capitals': True, 'tracking': 1},
-                'Table units': {'fontsize': 9.5, 'path': '/home/kelvin/.fonts/FiraSans-Medium.otf'},
+                'Table units': {'fontsize': 9, 'path': '/home/kelvin/.fonts/FiraSans-Medium.otf'},
                 'h1': {'fontsize': 36, 'path': '/home/kelvin/.fonts/Kabel.otf'},
                 'h2': {'capitals': True, 'fontsize': 22, 'tracking': 1},
-                'h3': {'capitals': True, 'fontsize': 16, 'tracking': 2},
+                'h3': {'capitals': True, 'fontsize': 14, 'tracking': 2},
                 'h4': {'capitals': True, 'fontsize': 14.5, 'tracking': 2},
+                'lowercase': {'capitals': False},
                 'subscript': {'shift': -2},
                 'superscript': {'shift': 5}},
- 'FTAGLIST': [('sub', ['small']), ('strong', []), ('reference', []), ('sup', ['small']), ('emphasis', []), ('sc', []), ('caption', []), ('big', [])],
- 'PARASTYLES': (6,
+ 'FTAGLIST': [('big', []), ('caption', []), ('emphasis', []), ('reference', []), ('sc', []), ('strong', []), ('sub', ['small']), ('sup', ['small'])],
+ 'PARASTYLES': (10,
                 [({'fontclasses': (2, [('Black', {}), ('subscript', {'sub': 1}), ('superscript', {'sup': 1})])}, {}),
-                 ({'fontclasses': (0,
+                 ({'fontclasses': (2,
                                    [('Body regular', {}),
                                     ('Smallcaps', {'sc': 1}),
                                     ('Body italic', {'emphasis': 1}),
                                     ('Body bold', {'strong': 1}),
+                                    ('Body bold italic', {'emphasis': 1, 'strong': 1}),
                                     ('Body small', {'small': 1}),
                                     ('Smallcaps', {'reference': 1}),
                                     ('Body small italic', {'emphasis': 1, 'small': 1})]),
                    'hyphenate': True,
-                   'indent': (15, 1, 0),
+                   'indent': '15',
+                   'indent_range': '0',
                    'leading': 20},
                   {'body': 1}),
-                 ({'indent': (0, -1, 5), 'margin_left': 20}, {'list': 1}),
-                 ({'fontclasses': (0, [('h1', {})]), 'hyphenate': True, 'leading': 40, 'margin_bottom': 20}, {'h1': 1}),
-                 ({'fontclasses': (0, [('Sans serif light', {}), ('h2', {})]), 'indent': (0, -1, 3), 'leading': 24, 'margin_bottom': 12, 'margin_top': 24}, {'h2': 1}),
+                 ({'incr_assign': 'n + 1', 'incr_place_value': -1, 'indent': '0', 'margin_left': 20, 'show_count': "str(A[-1]) + '.'"}, {'list': 1}),
+                 ({'fontclasses': (0, [('h1', {})]), 'hyphenate': True, 'incr_assign': 'n + 1', 'leading': 40, 'margin_bottom': 20}, {'h1': 1}),
+                 ({'fontclasses': (0, [('Sans serif light', {}), ('h2', {})]),
+                   'incr_assign': 'n + 1',
+                   'incr_place_value': 1,
+                   'leading': 24,
+                   'margin_bottom': 12,
+                   'margin_top': 24,
+                   'show_count': 'str(A[1])'},
+                  {'h2': 1}),
                  ({'fontclasses': (2, [('Sans serif book', {}), ('Sans serif book italic', {'emphasis': 1}), ('h3', {})]),
-                   'indent': (0, -1, 4),
+                   'incr_assign': 'n + 1',
+                   'incr_place_value': 2,
                    'leading': 24,
                    'margin_bottom': 4,
-                   'margin_top': 12},
+                   'margin_top': 12,
+                   'show_count': "'.'.join(str(i) for i in A[1:3])"},
                   {'h3': 1}),
                  ({'align': 0.5, 'fontclasses': (0, [('Sans serif book', {}), ('Table', {'small': 1})]), 'margin_bottom': 10, 'margin_top': 10}, {'figure': 1}),
-                 ({'align': 0.5, 'fontclasses': (0, [('h4', {})]), 'indent': (0, 0, 0), 'leading': 20, 'margin_bottom': 0, 'margin_top': 8}, {'figure': 1, 'h3': 1}),
-                 ({'align': 1, 'margin_right': 10}, {'key': 1}),
-                 ({'align': 0.5, 'fontclasses': (0, [('Big', {'big': 1})]), 'indent': (0, 1, 0), 'margin_bottom': 20, 'margin_top': 20}, {'math': 1}),
-                 ({'align': 0.5, 'align_to': '.:', 'fontclasses': (1, [('Sans serif book', {}), ('Table', {})]), 'indent': (0, 1, 0), 'leading': 18}, {'tablecell': 1}),
-                 ({'align_to': '', 'fontclasses': (1, [('Sans serif semi', {}), ('Table heading', {})])}, {'tablehead': 1}),
-                 ({'align': 0, 'align_to': '', 'fontclasses': (0, [('Sans serif book italic', {})])}, {'h2': 1, 'tablecell': 1}),
-                 ({'fontclasses': (0, [('Sans serif semi', {})])}, {'table emphasis': 1}),
-                 ({}, {'units': 1}),
-                 ({'fontclasses': (0, [('Table units', {})]), 'leading': 14}, {'tablehead': 1, 'units': 1}),
-                 ({'fontclasses': (1, [('Sans serif book italic', {}), ('Caption', {})]), 'hyphenate': True, 'leading': 20, 'margin_bottom': 12}, {'caption': 1}),
-                 ({'fontclasses': (0, [('Sans serif semi', {})]), 'indent': (0, 1, 0), 'margin_bottom': 2, 'margin_top': 0}, {'caption': 1, 'h3': 1}),
-                 ({'indent': (0, 1, 0)}, {'firstchild': 1})]),
- 'PTAGLIST': [('figure', []),
-              ('h1', []),
-              ('tableleft', []),
-              ('figure title', []),
-              ('tablecell', []),
-              ('math', []),
-              ('key', []),
-              ('caption', []),
-              ('firstchild', []),
-              ('h2', []),
-              ('table emphasis', []),
-              ('units', []),
+                 ({'align': 0.5, 'fontclasses': (0, [('h4', {})]), 'indent': '0', 'leading': 20, 'margin_bottom': 0, 'margin_top': 8}, {'figure': 1, 'h4': 1}),
+                 ({'margin_right': 10}, {'key': 1}),
+                 ({'align': 0.5, 'fontclasses': (0, [('Big', {'big': 1})]), 'indent': '0', 'margin_bottom': 20, 'margin_top': 20}, {'math': 1}),
+                 ({'align': 0.5, 'align_to': '.:', 'fontclasses': (1, [('Sans serif book', {}), ('Table', {})]), 'indent': '0', 'leading': 18, 'margin_left': 4, 'margin_right': 4},
+                  {'tablecell': 1}),
+                 ({'align_to': '', 'fontclasses': (1, [('Sans serif semi', {}), ('Table heading', {})]), 'margin_bottom': 0}, {'h1': 1, 'tablecell': 1}),
+                 ({'align': 0, 'align_to': '', 'fontclasses': (0, [('Sans serif book italic', {})]), 'show_count': ''}, {'h2': 1, 'tablecell': 1}),
+                 ({'align': 0.5, 'align_to': '', 'fontclasses': (0, [('Sans serif semi', {})])}, {'emphasis': 1}),
+                 ({'align': 1, 'align_to': ''}, {'firstchild': 1, 'tablecell': 1}),
+                 ({'fontclasses': (0, [('Table units', {})]), 'leading': 14}, {'h1': 1, 'tablecell': 1, 'units': 1}),
+                 ({'fontclasses': (1, [('Sans serif book italic', {}), ('Caption', {})]), 'hyphenate': True, 'leading': 16, 'margin_bottom': 12}, {'caption': 1}),
+                 ({'fontclasses': (0, [('Sans serif semi', {})]), 'incr_assign': '', 'indent': '0', 'margin_bottom': 2, 'margin_top': 0, 'show_count': ''}, {'caption': 1, 'h4': 1}),
+                 ({'incr_assign': '1', 'indent': '0'}, {'firstchild': 1}),
+                 ({'align': 0.5}, {'_center': 1}),
+                 ({'align': 1}, {'_right': 1})]),
+ 'PTAGLIST': [('_center', []),
+              ('_left', []),
+              ('_right', []),
               ('body', []),
+              ('caption', []),
+              ('emphasis', []),
+              ('figure', []),
+              ('figure title', []),
+              ('firstchild', []),
+              ('h1', []),
+              ('h2', []),
               ('h3', []),
-              ('tablehead', []),
-              ('list', [])],
- 'contexts': {'channels': {'c': 12, 'p': 8, 't': 2}, 'text': {'i': 15757, 'j': 15757, 'p': 8, 't': 2}},
+              ('h4', []),
+              ('key', []),
+              ('list', []),
+              ('math', []),
+              ('table emphasis', []),
+              ('tablecell', []),
+              ('units', [])],
+ 'contexts': {'channels': {'c': 3, 'p': 3, 't': 2}, 'text': {'i': 0, 'j': 0, 'p': 6, 't': 6}},
  'grid': [[90, 370, 410, 690], [100, 130, 910]],
  'page': {'dimensions': (765, 990), 'dual': True},
- 'view': {'H': -669, 'Hc': 484, 'K': -4267, 'Kc': 335, 'Zoom': 11, 'mode': 'text'}}
+ 'view': {'H': -294, 'Hc': 484, 'K': -3237, 'Kc': 335, 'Zoom': 11, 'mode': 'text'}}
 ############# -->

@@ -90,15 +90,18 @@ class _Margined_LContainer(Swimming_pool):
 class Wheels(list):
     def __init__(self, dense = [0 for _ in range(13)], iso = {}):
         list.__init__(self, dense)
-        self._iso = iso
+        self._iso = iso.copy()
     
     def increment(self, position, f):
-        W = self.copy()
-        if position < len(W):
-            W[position] = f(W[position])
-            if position >= 0:
-                W[position + 1:] = (0 for _ in range(len(W) - position - 1))
-        return W
+        if f is None:
+            return self
+        else:
+            W = self.copy()
+            if position < len(W):
+                W[position] = f(W[position])
+                if position >= 0:
+                    W[position + 1:] = (0 for _ in range(len(W) - position - 1))
+            return W
     
     def __getitem__(self, i):
         if type(i) is not slice and i < 0:

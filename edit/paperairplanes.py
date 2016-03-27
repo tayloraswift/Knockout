@@ -115,7 +115,7 @@ from data.userfunctions import *
 import parser
 
 def f(expression, template):
-    if expression == 'None':
+    if not expression or expression == 'None':
         return None
     elif callable(expression):
         return expression

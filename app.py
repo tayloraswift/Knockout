@@ -3,19 +3,18 @@ from gi.repository import Gtk, Gdk, GObject
 
 from state import noticeboard, constants
 from IO import do
-from state import errors
 from edit import cursor
 from typing import compose
 from interface import karlie, taylor, menu
 
 _dead_keys = set(('dead_tilde', 'dead_acute', 'dead_grave', 'dead_circumflex', 'dead_abovering', 'dead_macron', 'dead_breve', 'dead_abovedot', 'dead_diaeresis', 'dead_doubleacute', 'dead_caron', 'dead_cedilla', 'dead_ogonek', 'dead_iota', 'Multi_key'))
-_special_keys = set(('Shift_L', 'Shift_R', 'Control_L', 'Control_R', 'Caps_Lock', 'Escape', 'Alt_L', 'Alt_R', 'Super_L')) | _dead_keys
+_special_keys = compose.compose_keys | _dead_keys
 
 def strike_menu(event, e):
     if menu.menu.menu():
         if event == 2: # scroll
             if menu.menu.in_bounds(e.x, abs(e.y)):
-                menu.menu.scroll(e.y)
+                menu.menu.scroll(e.direction)
                 menu.menu.test_change()
                 return False
             
@@ -56,6 +55,7 @@ class Display(Gtk.Window):
         box.pack_start(self.KLOSSY, False, False, 0)    
         
         self._REGIONS = [taylor.becky, karlie.klossy]
+        self._region_draw = {taylor.becky: self.BECKY.queue_draw, karlie.klossy: self.KLOSSY.queue_draw}
         self._active = self._REGIONS[0]
         self._active_hover = self._REGIONS[0]
         self._active_pane = None
@@ -68,7 +68,7 @@ class Display(Gtk.Window):
 
         self.errorpanel = None
         
-        self._compose = False
+        self._compositor = compose.Compositor()
         
         self.SCREEN.connect("button-press-event", self._press_sort)
         self.SCREEN.connect("button-release-event", self._release_sort)
@@ -111,26 +111,9 @@ class Display(Gtk.Window):
         cr.set_font_options(self._HINTS)
         karlie.klossy.render(cr, self._h, self._k)
         
-    def on_draw(self, wid, cr):
+    def on_draw(self, w, cr):
+        self._compositor.draw(cr)
         menu.menu.render(cr)
-
-    def _draw_errors(self):
-        if errors.styleerrors.new_error():
-            
-            if errors.styleerrors.first != ():
-                self.errorpanel = errors.ErrorPanel(1)
-                self.errorpanel.update_message('Undefined class', ', '.join(errors.styleerrors.first[0]), ', '.join([str(e + 1) for e in errors.styleerrors.first[1]]))
-                GObject.timeout_add(4, self.transition_errorpanel)
-            else:
-                self.errorpanel = None
-    
-    def transition_errorpanel(self):
-        self.BECKY.queue_draw()
-
-        self.errorpanel.increment()
-        if self.errorpanel.phase >= 20:
-            return False
-        return True
     
     def on_resize(self, w):
         h_old = self._h
@@ -254,8 +237,6 @@ class Display(Gtk.Window):
         self.KLOSSY.queue_draw()
         self.SCREEN.queue_draw()
         
-        self._draw_errors()
-        
     def _scroll_sort(self, w, e):
         if strike_menu(2, e):
             x, y = self._convert(e.x, e.y)
@@ -314,26 +295,19 @@ class Display(Gtk.Window):
         
         elif name in _special_keys:
             if name in _dead_keys:
-                self._compose = True
-                # build compositor
-                self._compositor = compose.Composition(name)
+                self._compositor.compose(name)
+                self.SCREEN.queue_draw()
         
-        elif self._compose:
-            composite = self._compositor.key_input(name, chr(Gdk.keyval_to_unicode(e.keyval)))
-            if composite:
-                # destroy compositor
-                del self._compositor
-                self._compose = False
-                self._active.key_input(composite[0], composite[1])
-                
+        elif self._compositor:
+            self._compositor.key_input(name, chr(Gdk.keyval_to_unicode(e.keyval)), self._active.key_input)
+            self.SCREEN.queue_draw()
+        
         else:
             self._active.key_input(name, chr(Gdk.keyval_to_unicode(e.keyval)))
         
-        self.BECKY.queue_draw()
-        self.KLOSSY.queue_draw()
-        self.SCREEN.queue_draw()
-        
-        self._draw_errors()
+        self._region_draw[self._active]()
+        if noticeboard.redraw_overlay.should_refresh():
+            self.SCREEN.queue_draw()
 
     def quit(self, w, e):
         GObject.source_remove(self._periodic)

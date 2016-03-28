@@ -53,11 +53,11 @@ class Menu(object):
     def hover(self, y):
         self._hovered = self._menu.hover(y - self._dy)
     
-    def scroll(self, y):
-        if y < 0:
-            self._dy += 22
-        else:
+    def scroll(self, direction):
+        if direction:
             self._dy -= 22
+        else:
+            self._dy += 22
         noticeboard.redraw_overlay.push_change()
     
     def test_change(self, hist=[None]):

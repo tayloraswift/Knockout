@@ -30,7 +30,19 @@ def _draw_broken_bar(cr, x1, y1, x2, color_rgba, top):
     cr.stroke()
     
     cr.set_dash([], 0)
-        
+
+def overflow(cr, channels, Tx, Ty):
+    if channels.overflow:
+        channel = channels[-1]
+        cr.set_source_rgba(1, 0, 0.1, 0.8)
+        cr.set_line_width(2)
+        x = round((Tx(channel.railings[0][-1][0] , channel.page) + Tx(channel.railings[1][-1][0], channel.page))*0.5)
+        y = round(Ty(channel.railings[0][-1][1] , channel.page))
+        cr.move_to(x - 10, y + 10)
+        cr.rel_line_to(10, 10)
+        cr.rel_line_to(10, -10)
+        cr.stroke()
+
 class Channels_controls(object):
     def __init__(self, ctx, grid=None):
         self._mode = 'outlines'
@@ -323,7 +335,9 @@ class Channels_controls(object):
                 cr.close_path()
                 cr.set_line_width(1)
                 cr.stroke()
-
+            
+            overflow(cr, self._CHANNELS, Tx, Ty)
+            
         else:
             for c, channel in enumerate(cursor.fcursor.R_FTX.channels):
                 page = channel.page
@@ -346,16 +360,7 @@ class Channels_controls(object):
                         color,
                         top = 0
                         )
-        if cursor.fcursor.R_FTX.channels.overflow:
-            channel = cursor.fcursor.R_FTX.channels[-1]
-            cr.set_source_rgba(1, 0, 0.1, 0.8)
-            cr.set_line_width(2)
-            x = round((Tx(channel.railings[0][-1][0] , channel.page) + Tx(channel.railings[1][-1][0], channel.page))*0.5)
-            y = round(Ty(channel.railings[0][-1][1] , channel.page))
-            cr.move_to(x - 10, y + 10)
-            cr.rel_line_to(10, 10)
-            cr.rel_line_to(10, -10)
-            cr.stroke()
+            overflow(cr, cursor.fcursor.R_FTX.channels, Tx, Ty)
 
     def render_grid(self, cr, px, py, p_h, p_k, A):
         self._grid_controls.render(cr, px, py, p_h, p_k, A)

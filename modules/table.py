@@ -5,6 +5,7 @@ from model.olivia import Flowing_text, Block
 from model.george import Subcell
 from interface.base import accent
 from elements.node import Block_element, Node
+from state.exceptions import LineOverflow
 
 class Matrix(list):
     def __str__(self):
@@ -103,7 +104,7 @@ class Table(Block_element):
         except (IndexError, ValueError):
             return None
     
-    def typeset(self, bounds, c, y, overlay):
+    def typeset(self, bounds, c, y, y2, overlay):
         P_table, P_head, P_left = self.styles(overlay, 'table', 'thead', 'tleft')
         head = P_table + P_head
         left = P_table + P_left
@@ -138,6 +139,8 @@ class Table(Block_element):
             width = x2 - x1
             grid.append([(x1 + width*factor, y) for factor in part])
         
+        if grid[-1][-1][1] > y2:
+            raise LineOverflow
         return _MBlock(self._FLOW, grid, table, self.regions, self.PP)
 
 members = [Table, Table_tr, Table_td]

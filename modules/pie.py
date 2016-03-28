@@ -8,6 +8,7 @@ from elements.node import Block_element
 
 from modules.plot import Plot_key, GraphBlock
 from modules.plot.data import Data
+from state.exceptions import LineOverflow
 
 _namespace = 'mod:pie'
 
@@ -68,13 +69,15 @@ class PieChart(Block_element):
             self.active = self._KEY.target(y)
         return self.active
 
-    def typeset(self, bounds, c, y, overlay):
+    def typeset(self, bounds, c, y, y2, overlay):
         P_slice, P_right = self.styles(overlay, 'slice', '_right')
         r = self['radius']
         top = y
         left, right = bounds.bounds(y + r)
         px = left + (right - left)*self['center']
         py = y + r
+        if py + r > y2:
+            raise LineOverflow
         
         for PL in self._pieslices:
             PL.freeze(right - px, 0)

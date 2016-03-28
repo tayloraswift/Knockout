@@ -6,6 +6,7 @@ from bulletholes.counter import TCounter as Counter
 from model.george import Swimming_pool
 from style import styles
 from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Block_element
+from state.exceptions import LineOverflow
 pyphen.language_fallback('en_US')
 hy = pyphen.Pyphen(lang='en_US')
 
@@ -189,11 +190,8 @@ def typeset_liquid(channel, LIQUID, i, y, c, root=False, INIT=_dummyline, overla
                     y += PSTYLE['margin_top']
                 
                 try:
-                    MOD = container.typeset(_Margined_LContainer(channel, PSTYLE['margin_left'], PSTYLE['margin_right']), c, y, overlay)
-                    # see if the lines have overrun the portal
-                    if MOD['y'] > channel.railings[1][-1][1]:
-                        raise RuntimeError
-                except RuntimeError:
+                    MOD = container.typeset(_Margined_LContainer(channel, PSTYLE['margin_left'], PSTYLE['margin_right']), c, y, channel.railings[1][-1][1], overlay)
+                except LineOverflow:
                     break
 
                 MOD['i'] = i
@@ -214,7 +212,7 @@ def typeset_liquid(channel, LIQUID, i, y, c, root=False, INIT=_dummyline, overla
         # see if the lines have overrun the portal
         if y > channel.railings[1][-1][1]:
             if not root:
-                raise RuntimeError
+                raise LineOverflow
             break
             
         x1, x2 = channel.bounds(y)

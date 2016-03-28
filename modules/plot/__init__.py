@@ -6,6 +6,7 @@ from elements.elements import Block_element
 from model.george import Subcell
 from .cartesian import namespace, Axis, axismembers, Cartesian
 from .data import Data
+from state.exceptions import LineOverflow
 
 from . import scatterplot, f, histogram
 
@@ -76,7 +77,7 @@ class Plot(Block_element):
         else:
             return len(self._CS) + self._KEY.target(y)
     
-    def typeset(self, bounds, c, y, overlay):
+    def typeset(self, bounds, c, y, y2, overlay):
         P_axis, P_key, P_right = self.styles(overlay, 'axis', 'key', '_right')
         F_num, = self.styles(None, 'num')
 
@@ -91,6 +92,8 @@ class Plot(Block_element):
         
         px = left
         py = int(y + self['height']) + 10
+        if py > y2:
+            raise LineOverflow
         
         hk = (width, -self['height'])
         system = self._CS

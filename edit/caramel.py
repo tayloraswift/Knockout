@@ -62,7 +62,7 @@ class Channels_controls(object):
             self.HPG = p
             xp, yp = meredith.page.normalize_XY(x, y, p)
             if r is None:
-                ptype, dpx, dpy = self._CHANNELS.channels[c].target_portal(xp, yp, radius=5)
+                ptype, dpx, dpy = self._CHANNELS[c].target_portal(xp, yp, radius=5)
                 self._hover_portal = (c, ptype)
         self._hover_point = c, r, i
 
@@ -73,7 +73,7 @@ class Channels_controls(object):
             self.PG = p
             xp, yp = meredith.page.normalize_XY(x, y, p)
             if r is None:
-                self._selected_portal = self._CHANNELS.channels[c].target_portal(xp, yp, radius=5)
+                self._selected_portal = self._CHANNELS[c].target_portal(xp, yp, radius=5)
             else:
                 self._selected_portal = (None, 0, 0)
             return xp, yp
@@ -129,16 +129,16 @@ class Channels_controls(object):
                 self._CHANNELS.make_selected(c, 0, -1, name)
                 self._CHANNELS.make_selected(c, 1, -1, name)
                 r = 1
-                i = len(self._CHANNELS.channels[c].railings[1]) - 1
+                i = len(self._CHANNELS[c].railings[1]) - 1
             
             elif r is not None:
                 # insert point if one was not found
-                i = self._CHANNELS.channels[c].insert_point(r, yn)
+                i = self._CHANNELS[c].insert_point(r, yn)
                 self._CHANNELS.make_selected(c, r, i, name)
                 self._selected_point[2] = i
 
             if i is not None:
-                self._sel_locale = tuple(self._CHANNELS.channels[c].railings[r][i][:2])
+                self._sel_locale = tuple(self._CHANNELS[c].railings[r][i][:2])
                 self._release_locale = self._sel_locale
 
             return True
@@ -151,22 +151,22 @@ class Channels_controls(object):
             
             if i is not None or portal is not None:
                 if i is not None:
-                    xo, yo = self._CHANNELS.channels[c].railings[r][i][:2]
+                    xo, yo = self._CHANNELS[c].railings[r][i][:2]
                     self._CHANNELS.translate_selection(x, y, xo, yo)
                     
-                    anchor = tuple(self._CHANNELS.channels[c].railings[r][i][:2])
+                    anchor = tuple(self._CHANNELS[c].railings[r][i][:2])
 
                 elif portal == 'entrance':
-                    xo, yo = self._CHANNELS.channels[c].railings[0][0][:2]
+                    xo, yo = self._CHANNELS[c].railings[0][0][:2]
                     self._CHANNELS.translate_selection(x - px, y - py, xo, yo)
                     
-                    anchor = tuple(self._CHANNELS.channels[c].railings[0][0][:2])
+                    anchor = tuple(self._CHANNELS[c].railings[0][0][:2])
 
                 elif portal == 'portal':
-                    xo, yo = self._CHANNELS.channels[c].railings[1][-1][:2]
+                    xo, yo = self._CHANNELS[c].railings[1][-1][:2]
                     self._CHANNELS.translate_selection(x - px, y - py, xo, yo)
                 
-                    anchor = tuple(self._CHANNELS.channels[c].railings[1][-1][:2])
+                    anchor = tuple(self._CHANNELS[c].railings[1][-1][:2])
                 
                 if self._sel_locale != anchor:
                         self._sel_locale = anchor
@@ -183,17 +183,17 @@ class Channels_controls(object):
         portal, px, py = self._selected_portal
 
         if i is not None or portal is not None:
-            self._CHANNELS.channels[c].fix(0)
-            self._CHANNELS.channels[c].fix(1)
+            self._CHANNELS[c].fix(0)
+            self._CHANNELS[c].fix(1)
             
             if i is not None:
-                anchor = tuple(self._CHANNELS.channels[c].railings[r][i][:2])
+                anchor = tuple(self._CHANNELS[c].railings[r][i][:2])
 
             if portal == 'entrance':
-                anchor = tuple(self._CHANNELS.channels[c].railings[0][0][:2])
+                anchor = tuple(self._CHANNELS[c].railings[0][0][:2])
 
             elif portal == 'portal':
-                anchor = tuple(self._CHANNELS.channels[c].railings[1][-1][:2])
+                anchor = tuple(self._CHANNELS[c].railings[1][-1][:2])
 
             if self._release_locale != anchor:
                 self._release_locale = anchor
@@ -212,9 +212,9 @@ class Channels_controls(object):
                     un.history.undo_save(3)
                     
                     # delete channel
-                    del self._CHANNELS.channels[c]
+                    del self._CHANNELS[c]
                     # wipe out entire tract if it's the last one
-                    if not self._CHANNELS.channels:
+                    if not self._CHANNELS:
                         old_tract = self.R_FTX
                         meredith.mipsy.delete_tract(old_tract)
                         self.R_FTX = meredith.mipsy[0]
@@ -249,7 +249,7 @@ class Channels_controls(object):
     def render(self, cr, Tx, Ty, show_rails=False):            
             
         if show_rails:
-            for c, channel in enumerate(self._CHANNELS.channels):
+            for c, channel in enumerate(self._CHANNELS):
                 page = channel.page
                 
                 color = (0.3, 0.3, 0.3, 0.5)
@@ -310,7 +310,7 @@ class Channels_controls(object):
                             cr.set_line_width(1)
                             cr.stroke()
     
-            for channel in chain.from_iterable(tract.channels.channels for tract in meredith.mipsy if tract is not self.R_FTX):
+            for channel in chain.from_iterable(tract.channels for tract in meredith.mipsy if tract is not self.R_FTX):
                 page = channel.page
                 
                 cr.set_source_rgba(0.3, 0.3, 0.3, 0.3)
@@ -325,7 +325,7 @@ class Channels_controls(object):
                 cr.stroke()
 
         else:
-            for c, channel in enumerate(cursor.fcursor.R_FTX.channels.channels):
+            for c, channel in enumerate(cursor.fcursor.R_FTX.channels):
                 page = channel.page
                 
                 color = (0.3, 0.3, 0.3, 0.5)
@@ -346,6 +346,16 @@ class Channels_controls(object):
                         color,
                         top = 0
                         )
+        if cursor.fcursor.R_FTX.channels.overflow:
+            channel = cursor.fcursor.R_FTX.channels[-1]
+            cr.set_source_rgba(1, 0, 0.1, 0.8)
+            cr.set_line_width(2)
+            x = round((Tx(channel.railings[0][-1][0] , channel.page) + Tx(channel.railings[1][-1][0], channel.page))*0.5)
+            y = round(Ty(channel.railings[0][-1][1] , channel.page))
+            cr.move_to(x - 10, y + 10)
+            cr.rel_line_to(10, 10)
+            cr.rel_line_to(10, -10)
+            cr.stroke()
 
     def render_grid(self, cr, px, py, p_h, p_k, A):
         self._grid_controls.render(cr, px, py, p_h, p_k, A)

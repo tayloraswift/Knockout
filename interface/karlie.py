@@ -455,8 +455,8 @@ class Properties(_Properties_panel):
             self._heading = 'Channel ' + str(c)
             if c is not None:
                 self._items.append(kookies.Blank_space( 15, y, KW, 
-                        read = lambda: caramel.delight.R_FTX.channels.channels[c].page,
-                        assign = lambda V: (caramel.delight.R_FTX.channels.channels[c].set_page(datatypes['int'](V)), caramel.delight.R_FTX.layout()), 
+                        read = lambda: caramel.delight.R_FTX.channels[c].page,
+                        assign = lambda V: (caramel.delight.R_FTX.channels[c].set_page(datatypes['int'](V)), caramel.delight.R_FTX.layout()), 
                         name = 'PAGE' ))
                 y += 30
             

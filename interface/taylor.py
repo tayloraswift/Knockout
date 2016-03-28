@@ -5,7 +5,7 @@ import cairo
 
 from state import noticeboard, constants
 from state.contexts import Text as CText
-from style import styles
+from style.styles import ISTYLES
 from model import meredith, wonder
 from edit import cursor, caramel
 from IO import un, do
@@ -686,7 +686,7 @@ class Document_view(ui.Cell):
 
     def _draw_annotations(self, cr, annot, page):
 
-        font = styles.ISTYLES[('strong',)]
+        font = ISTYLES[('strong',)]
         afs = int(6 * sqrt(self._A))
         uscore = 1 + (self._A > 0.5)
         cr.set_font_size(afs)
@@ -852,14 +852,10 @@ class Document_view(ui.Cell):
         
         # draw stats
         cr.set_source_rgba(0, 0, 0, 0.8)
-        font = styles.ISTYLES[('strong',)]
+        font = ISTYLES[('strong',)]
         
         cr.set_font_size(font['fontsize'])
         cr.set_font_face(font['font'])
-
-        if noticeboard.composition_sequence:
-            cr.move_to(130, 40)
-            cr.show_text(' '.join(noticeboard.composition_sequence))
         
         cr.move_to(130, k - 20)
         cr.show_text('{0:g}'.format(self._A*100) + '%')

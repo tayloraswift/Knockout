@@ -1,4 +1,6 @@
-from state import noticeboard
+from style.styles import ISTYLES
+
+compose_keys = set(('Shift_L', 'Shift_R', 'Control_L', 'Control_R', 'Caps_Lock', 'Escape', 'Alt_L', 'Alt_R', 'Super_L'))
 
 sequences = {}
 
@@ -25,17 +27,23 @@ with open('libraries/XCompose/Compose.txt', 'rb') as F:
 with open('data/compose/add.txt', 'rb') as F:
     sequences.update(_read_xcompose(F))
 
-class Composition(object):
-    def __init__(self, compose):
-        self._sequence = [compose]
-        self._char_sequence = ['X composition: ']
-        noticeboard.composition_sequence = self._char_sequence[:]
+class Compositor(object):
+    def __init__(self):
+        self._sequence = []
+        self._char_sequence = []
+        self._b = False
     
-    def key_input(self, name, char):
+    def compose(self, compose):
+        self._sequence = [compose]
+        self._char_sequence = []
+        self._b = True
+    
+    def __bool__(self):
+        return self._b
+    
+    def key_input(self, name, char, key_input):
         self._sequence.append(name)
         self._char_sequence.append(char)
-        
-        noticeboard.composition_sequence = []
         
         # check if it matches a sequence
         current = tuple(self._sequence)
@@ -52,6 +60,15 @@ class Composition(object):
                 if current == key[:len(current)]:
                     composition = False
                     
-                    noticeboard.composition_sequence = self._char_sequence[:]
-                    
-        return composition
+        if composition:
+            self.__init__()
+            key_input( * composition )
+
+    def draw(self, cr):
+        if self._b:
+            cr.set_source_rgba(0, 0, 0, 0.8)
+            font = ISTYLES[('strong',)]
+            cr.set_font_size(font['fontsize'])
+            cr.set_font_face(font['font'])
+            cr.move_to(130, 40)
+            cr.show_text('X Composition: ' + ' '.join(self._char_sequence))

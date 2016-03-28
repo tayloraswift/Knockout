@@ -80,18 +80,19 @@ class Swimming_pool(object):
     def __repr__(self):
         return ' ; '.join(chain((' '.join(str(point[0]) + ',' + str(point[1]) for point in railing) for railing in self.railings), (str(self.page),)))
     
-class Washington(object):
+class Washington(list):
     def __init__(self, ic):
-        self.channels = ic
+        self.overflow = False
+        list.__init__(self, ic)
     
     @classmethod
     def from_list(cls, C):
-        return cls([Swimming_pool( * c ) for c in C])
+        return cls(Swimming_pool( * c ) for c in C)
     
  #####################   
     def target_channel(self, xo, yo, radius):
         norm = meredith.page.normalize_XY
-        for c, channel in enumerate(self.channels):
+        for c, channel in enumerate(self):
             x, y = norm(xo, yo, channel.page)
             if channel.inside(x, y, radius):
                 return c, channel.page
@@ -100,7 +101,7 @@ class Washington(object):
     def target_point(self, xo, yo, radius):
         P, C, R = None, None, None
         norm = meredith.page.normalize_XY
-        for c, channel in enumerate(self.channels):
+        for c, channel in enumerate(self):
             x, y = norm(xo, yo, channel.page)
             for r in range(len(channel.railings)):
                 for i, point in enumerate(channel.railings[r]):
@@ -118,50 +119,45 @@ class Washington(object):
     
     def is_selected(self, c, r, i):
         try:
-            return self.channels[c].railings[r][i][2]
+            return self[c].railings[r][i][2]
         except TypeError:
             return False
     
     def make_selected(self, c, r, i, mod):
         if mod == 'ctrl':
-            self.channels[c].railings[r][i][2] = not self.channels[c].railings[r][i][2]
+            self[c].railings[r][i][2] = not self[c].railings[r][i][2]
         else:
-            self.channels[c].railings[r][i][2] = True
+            self[c].railings[r][i][2] = True
         
     def clear_selection(self):
-        for c in range(len(self.channels)):
-            for r in range(len(self.channels[c].railings)):
-                for point in self.channels[c].railings[r]:
-                    point[2] = False
+        cfi = chain.from_iterable
+        for point in cfi(cfi(railing for railing in channel.railings) for channel in self):
+            point[2] = False
 
     def expand_selection(self, c):
         if c is None:
             self._select_all()
         else:
             touched = False
-            for r in range(len(self.channels[c].railings)):
-                for point in self.channels[c].railings[r]:
-                    if not point[2]:
-                        point[2] = True
-                        touched = True
+            for point in chain.from_iterable(railing for railing in self[c].railings):
+                if not point[2]:
+                    point[2] = True
+                    touched = True
             if not touched:
                 self._select_all()
     
     def _select_all(self):
-        for c in range(len(self.channels)):
-            for r in range(len(self.channels[c].railings)):
-                for point in self.channels[c].railings[r]:
-                    point[2] = True
+        cfi = chain.from_iterable
+        for point in cfi(cfi(railing for railing in channel.railings) for channel in self):
+            point[2] = True
 
     def delete_selection(self):
         changed = False
-        for c in range(len(self.channels)):
-            for r, railing in enumerate(self.channels[c].railings):
-                remain = [point for i, point in enumerate(railing) if not point[2] or (i == 0 or i == len(railing) - 1)]
-                if len(remain) != len(railing):
-                    railing[:] = remain
-                    if not changed:
-                        changed = True
+        for r, railing in chain.from_iterable(enumerate(channel.railings) for channel in self):
+            remain = [point for i, point in enumerate(railing) if not point[2] or (i == 0 or i == len(railing) - 1)]
+            if len(remain) != len(railing):
+                railing[:] = remain
+                changed = True
         return changed
 
     def translate_selection(self, x, y, xo, yo):
@@ -170,45 +166,46 @@ class Washington(object):
         safe = True
         
         # survey conditions
-        for c in range(len(self.channels)):
-            for r in range(len(self.channels[c].railings)):
-                for i, point in enumerate(self.channels[c].railings[r]):
-                    if point[2]:
-                        # do any of the points fall on another point?
-                        if not self.channels[c].can_fall(x = point[0] + x - xo, y = point[1] + y - yo):
-                            safe = False
+        for channel in self:
+            for point in chain(channel.railings[0], channel.railings[1]):
+                if point[2]:
+                    # do any of the points fall on another point?
+                    if not channel.can_fall(x = point[0] + x - xo, y = point[1] + y - yo):
+                        safe = False
 
         if safe:
-            for c in range(len(self.channels)):
-                for r in range(len(self.channels[c].railings)):
-                    for i, point in enumerate(self.channels[c].railings[r]):
-                        if point[2]:
-                            self.channels[c].railings[r][i] = [point[0] + x - xo, point[1] + y - yo, True]
+            for channel in self:
+                for point in chain(channel.railings[0], channel.railings[1]):
+                    if point[2]:
+                        point[:2] = [point[0] + x - xo, point[1] + y - yo]
 
                 # check y alignment
-                if self.channels[c].railings[0][0] [1] != self.channels[c].railings[1][0] [1]:
+                if channel.railings[0][0] [1] != channel.railings[1][0] [1]:
                     # determine which should move
-                    if self.channels[c].railings[0][0][2]:
+                    if channel.railings[0][0][2]:
                         flip = 1
                     else:
                         flip = 0
-                    self.channels[c].railings[flip][0] [1] = self.channels[c].railings[not flip][0] [1]
+                    channel.railings[flip][0] [1] = channel.railings[not flip][0] [1]
 
-                if self.channels[c].railings[0][-1] [1] != self.channels[c].railings[1][-1] [1]:
+                if channel.railings[0][-1] [1] != channel.railings[1][-1] [1]:
                     # determine which should move
-                    if self.channels[c].railings[0][-1][2]:
+                    if channel.railings[0][-1][2]:
                         flip = 1
                     else:
                         flip = 0
-                    self.channels[c].railings[flip][-1] [1] = self.channels[c].railings[not flip][-1] [1]
+                    channel.railings[flip][-1] [1] = channel.railings[not flip][-1] [1]
 
     def generate_channel(self):
-        x1, y1, x2 = self.channels[-1].railings[0][-1][0], self.channels[-1].railings[0][-1][1] + 40, self.channels[-1].railings[1][-1][0]
-        return Swimming_pool( [[[x1, y1, False], [x1, y1 + 40, False]], [[x2, y1, False], [x2, y1 + 40, False]]], self.channels[-1].page )
+        x1, y1, x2 = self[-1].railings[0][-1][0], self[-1].railings[0][-1][1] + 40, self[-1].railings[1][-1][0]
+        return Swimming_pool( [[[x1, y1, False], [x1, y1 + 40, False]], [[x2, y1, False], [x2, y1 + 40, False]]], self[-1].page )
     
     def add_channel(self):
-        self.channels.append(self.generate_channel())
+        self.append(self.generate_channel())
 
+    def page_copy(self, k):
+        return self.__class__(C.shallow_copy_to_page(k) for C in self)
+    
 class Subcell(Swimming_pool):
     def __init__(self, bounds, i, j):
         Swimming_pool.__init__(self, bounds.railings, bounds.page)

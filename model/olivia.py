@@ -248,11 +248,11 @@ class Chained_flowing_text(Flowing_text):
     
     def partial_layout(self, i):
         self._sorted_pages.clear()
-        self.pack_partial(self.channels.channels, self.text, i)
+        self.pack_partial(self.channels, self.text, i)
 
     def layout(self):
         self._sorted_pages.clear()
-        self.pack(self.channels.channels, self.text)
+        self.pack(self.channels, self.text)
 
     def paint_misspellings(self):
         return chain.from_iterable(FTX.paint_underscores() for FTX in self.collect_text())
@@ -274,11 +274,11 @@ class Repeat_flowing_text(Chained_flowing_text):
         self.rrange = node.repeat
                 
         # correct channels
-        for channel in self.channels.channels:
+        for channel in self.channels:
             channel.set_page(node.repeat[0])
 
         self.repeats, self.channel_repeats = zip( * ((Chained_flowing_text(node),
-                        [C.shallow_copy_to_page(k) for C in self.channels.channels]) 
+                        self.channels.page_copy(k)) 
                         for k in range(node.repeat[0], node.repeat[1] + 1)) )
         # set representatives
         self.LINES = self.repeats[0].LINES
@@ -337,7 +337,7 @@ class Section(Block_element):
             return Chained_flowing_text(self)
 
     def print_A(self):
-        attrs = {'outlines': ' |\n    '.join(repr(C) for C in self.CC.channels)}
+        attrs = {'outlines': ' |\n    '.join(repr(C) for C in self.CC)}
         if self.repeat:
             attrs['repeat'] = ':'.join(str(i) for i in self.repeat)
         return print_attrs(self.name, attrs)

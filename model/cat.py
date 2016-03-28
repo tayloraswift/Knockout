@@ -122,26 +122,26 @@ _dummyline = {'j': 0, 'l': -1, 'wheels': Wheels(), 'P_BREAK': True}
 
 def typeset_chained(channels, LIQUID, c=0, y=None, LASTLINE = _dummyline):
     SLUGS = []
-    rchannels = channels[c:]
-    rlen = len(rchannels) - 1
-    c_leak = False
-    for c_number, channel in enumerate(_LContainer(rc) for rc in rchannels):
+    I = len(LIQUID) - 1
+    for c_number, channel in enumerate(_LContainer(rc) for rc in channels[c:]):
         i = LASTLINE['j']
-        if i >= len(LIQUID):
+        if i > I:
             break
         if y is None:
             y = channel.railings[0][0][1]
-        if c_number == rlen:
-            c_leak = True
-        SLUGS += typeset_liquid(channel, LIQUID, i, y, c_number + c, c_leak, INIT=LASTLINE, root=True)
+        SLUGS += typeset_liquid(channel, LIQUID, i, y, c_number + c, INIT=LASTLINE, root=True)
         y = None
         
         if SLUGS:
             LASTLINE = SLUGS[-1]
 
+    if LASTLINE['j'] > I:
+        channels.overflow = False
+    else:
+        channels.overflow = True
     return SLUGS
 
-def typeset_liquid(channel, LIQUID, i, y, c, c_leak=False, root=False, INIT=_dummyline, overlay=None):
+def typeset_liquid(channel, LIQUID, i, y, c, root=False, INIT=_dummyline, overlay=None):
     SLUGS = []
     l = INIT['l'] + 1
     WHEELS = INIT['wheels']
@@ -191,7 +191,7 @@ def typeset_liquid(channel, LIQUID, i, y, c, c_leak=False, root=False, INIT=_dum
                 try:
                     MOD = container.typeset(_Margined_LContainer(channel, PSTYLE['margin_left'], PSTYLE['margin_right']), c, y, overlay)
                     # see if the lines have overrun the portal
-                    if MOD['y'] > channel.railings[1][-1][1] and not c_leak:
+                    if MOD['y'] > channel.railings[1][-1][1]:
                         raise RuntimeError
                 except RuntimeError:
                     break
@@ -212,7 +212,7 @@ def typeset_liquid(channel, LIQUID, i, y, c, c_leak=False, root=False, INIT=_dum
             y += PSTYLE['leading']
         
         # see if the lines have overrun the portal
-        if y > channel.railings[1][-1][1] and not c_leak:
+        if y > channel.railings[1][-1][1]:
             if not root:
                 raise RuntimeError
             break

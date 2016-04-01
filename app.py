@@ -55,7 +55,6 @@ class Display(Gtk.Window):
         box.pack_start(self.KLOSSY, False, False, 0)    
         
         self._REGIONS = [taylor.becky, karlie.klossy]
-        self._region_draw = {taylor.becky: self.BECKY.queue_draw, karlie.klossy: self.KLOSSY.queue_draw}
         self._active = self._REGIONS[0]
         self._active_hover = self._REGIONS[0]
         self._active_pane = None
@@ -305,10 +304,10 @@ class Display(Gtk.Window):
         else:
             self._active.key_input(name, chr(Gdk.keyval_to_unicode(e.keyval)))
         
-        self._region_draw[self._active]()
-        if noticeboard.redraw_overlay.should_refresh():
-            self.SCREEN.queue_draw()
-
+        self.SCREEN.queue_draw()
+        self.KLOSSY.queue_draw()
+        self.BECKY.queue_draw()
+        
     def quit(self, w, e):
         GObject.source_remove(self._periodic)
         Gtk.main_quit()

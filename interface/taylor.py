@@ -564,7 +564,7 @@ class Document_view(ui.Cell):
                     for name, font, glyphs in ((key, * L) for key, L in sorted_glyphs.items() if L and (isinstance(key, int))):
                         classed_pages[page].setdefault(name, (font, []))[1].extend(glyphs)
                 else:
-                    classed_pages[page] = {name: L for name, L in sorted_glyphs.items() if isinstance(name, int)}
+                    classed_pages[page] = {name: (L[0], L[1].copy()) for name, L in sorted_glyphs.items() if isinstance(name, int)}
                     classed_pages[page]['_images'] = sorted_glyphs['_images'].copy()
                     classed_pages[page]['_paint'] = sorted_glyphs['_paint'].copy()
         

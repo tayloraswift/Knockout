@@ -11,7 +11,10 @@ from state.exceptions import IO_Error
 inlinecontainers = {'p'} | textfacing
 
 def write_node(node, indent=0):
-    return [[indent, '<' + node.print_A() + '>']] + write_html(node.content, indent + 1) + [[indent, '</' + node.name + '>']]
+    if node.content is not None:
+        return [[indent, '<' + node.print_A() + '>']] + write_html(node.content, indent + 1) + [[indent, '</' + node.name + '>']]
+    else:
+        return [[indent, '<' + node.print_A() + '/>']]
 
 def write_inline_node(node, indent=0):
     if node.content is not None:
@@ -115,16 +118,22 @@ class Minion(parser.HTMLParser):
             self._C.append(M)
 
     def _se(self, tag, attrs):
-        attrs = dict(attrs)
         O = self.append_to()
         if tag == 'br':
             O.append('<br/>')
         elif tag in inlinetags:
             O.append(modules[tag](attrs))
     
+    def _bse(self, tag, attrs):
+        O = self.append_to()
+        O.append(modules[tag](attrs, PP=Paragraph.from_attrs(attrs)))
+            
     def handle_startendtag(self, tag, attrs):
         if self._breadcrumbs[-1] in inlinecontainers:
-            self._se(tag, attrs)
+            self._se(tag, dict(attrs))
+        elif tag in blocktags:
+            self._first = False
+            self._bse(tag, dict(attrs))
 
     def handle_endtag(self, tag):
         O = self.append_to()
@@ -164,6 +173,9 @@ class Kevin_from_TN(Minion): # to capture the first and last blobs
     def handle_startendtag(self, tag, attrs):
         if self._breadcrumbs[-1] in inlinecontainers:
             self._se(tag, attrs)
+        elif tag in blocktags:
+            self._first = False
+            self._bse(tag, dict(attrs))
         elif self._first: # register the first blob
             self._first = False
             self._breadcrumbs.append('p') # virtual paragraph container

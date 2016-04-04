@@ -155,9 +155,9 @@ class FCursor(object):
                 if isinstance(segment[0], (Paragraph, Block_element)):
                     segment.insert(0, '</p>')
                 if segment[-1] == '</p>' or isinstance(segment[-1], Block_element):
-                    P = next(c.P for c in self.text[self.i::-1] if type(c) is Paragraph)
+                    P = next(c.P.copy() for c in self.text[self.i::-1] if type(c) is Paragraph)
                     segment.append(Paragraph(P))
-
+        
         s = len(segment)
         m += s
         if s or d:

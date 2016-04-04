@@ -345,6 +345,12 @@ class Rose_garden(Base_kookie):
                     L = [next(e for e in E if type(e) is type(self._element))]
                     success = True
                 except StopIteration:
+                    # if the object type changed
+                    try:
+                        L = [next(e for e in E if isinstance(e, Mod_element))]
+                        success = True
+                    except StopIteration:
+                        pass
                     pass
 
             except (IO_Error, IndexError):
@@ -361,7 +367,10 @@ class Rose_garden(Base_kookie):
             self._invalid = True
             return
         i = cursor.fcursor.i
-        cursor.fcursor.text[i:i + 1] = L
+        cursor.fcursor.j = i + 1
+        cursor.fcursor.insert(L)
+        cursor.fcursor.i = i
+        cursor.fcursor.j = i
         self._SYNCHRONIZE()
         self._AFTER()
         

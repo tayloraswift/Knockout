@@ -764,7 +764,7 @@ class Object_menu(Blank_space):
                 return
             elif J == 4:
                 # unlink
-                self._value_push(None, * self._params)
+                self._value_push(None)
             
             self._AFTER()
         

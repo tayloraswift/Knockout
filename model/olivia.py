@@ -49,6 +49,9 @@ class Block(dict):
         cr.close_path()
     
     # search functions
+    def target(self, x, y):
+        return None
+        
     def deep_search(self, x, y):
         i = self.target(x, y)
         if i is not None:

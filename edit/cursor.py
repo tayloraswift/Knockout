@@ -140,7 +140,7 @@ class FCursor(object):
             m = 0
 
         if segment:
-            if isinstance(self.text[self.i], (Paragraph, Block_element)): # outside
+            if not self.text or isinstance(self.text[self.i], (Paragraph, Block_element)): # outside
                 # crop off chars
                 try:
                     l = next(i for i, e in enumerate(segment) if isinstance(e, (Paragraph, Block_element)))

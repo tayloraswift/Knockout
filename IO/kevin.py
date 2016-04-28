@@ -172,14 +172,14 @@ class Kevin_from_TN(Minion): # to capture the first and last blobs
     
     def handle_startendtag(self, tag, attrs):
         if self._breadcrumbs[-1] in inlinecontainers:
-            self._se(tag, attrs)
+            self._se(tag, dict(attrs))
         elif tag in blocktags:
             self._first = False
             self._bse(tag, dict(attrs))
         elif self._first: # register the first blob
             self._first = False
             self._breadcrumbs.append('p') # virtual paragraph container
-            self._se(tag, attrs)
+            self._se(tag, dict(attrs))
             
     def handle_data(self, data):
         if self._breadcrumbs[-1] in inlinecontainers:

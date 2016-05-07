@@ -1,13 +1,26 @@
+import os
+
 from libraries import freetype
 
 from style import fontloader
 
 _type_registry = {}
 
-def get_cairo_font(path):
-    if path not in _type_registry:
-        _type_registry[path] = fontloader.create_cairo_font_face_for_file(path)
-    
+def get_font(path, overwrite=False):
+    if path not in _type_registry or overwrite:
+        # check if is sfd or binary
+        fontname, ext = os.path.splitext(path)
+        if ext == '.sfd':
+            print('Warning: implicit OTF build triggered')
+            os.system('fontforge -script IO/sfd2otf.pe ' + path)
+            #raise freetype.ft_errors.FT_Exception('SFD not supported')
+            filepath = fontname + '.otf'
+        else:
+            filepath = path
+        FT_font = Memo_font(filepath)
+        CR_font = fontloader.create_cairo_font_face_for_file(filepath)
+        _type_registry[path] = FT_font, CR_font
+        
     return _type_registry[path]
 
 # extended fontface class

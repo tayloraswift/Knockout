@@ -977,6 +977,15 @@ class Face( object ):
             error = FT_New_Memory_Face( library, filebody, len(filebody),
                                         index, byref(face) )
             self._filebodys.append(filebody)  # prevent gc
+        ############# FROM MEMORY #############
+        
+        except AttributeError:
+            filebody = filename
+            error = FT_New_Memory_Face( library, filebody, len(filebody),
+                                        index, byref(face) )
+            self._filebodys.append(filebody)  # prevent gc
+        
+        #############             #############
         if error: raise FT_Exception( error )
         self._filename = filename
         self._index = index

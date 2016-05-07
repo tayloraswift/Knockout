@@ -175,14 +175,15 @@ class P_Library(_Active_list):
                     projection.members.append(C.F)
 
             # set up fonts
+            
+            # fonts.get_font(projection['path'], True)
+            
             try:
-                projection['fontmetrics'] = fonts.Memo_font(projection['path'])
-                projection['font'] = fonts.get_cairo_font(projection['path'])
+                projection['fontmetrics'], projection['font'] = fonts.get_font(projection['path'])
             except ft_errors.FT_Exception:
                 path = DB_Fontstyle.DNA['path']
                 projection['color'] = DB_Fontstyle.DNA['color']
-                projection['fontmetrics'] = fonts.Memo_font(path)
-                projection['font'] = fonts.get_cairo_font(path)
+                projection['fontmetrics'], projection['font'] = fonts.get_font(path)
             
             projection['hash'] = H
             
@@ -372,8 +373,7 @@ def _create_interface():
             projection.update(C.attrs)
 
         # set up fonts
-        projection['fontmetrics'] = fonts.Memo_I_font(projection['path'])
-        projection['font'] = fonts.get_cairo_font(projection['path'])
+        projection['fontmetrics'], projection['font'] = fonts.get_font(projection['path'])
         
         yield U, projection
 

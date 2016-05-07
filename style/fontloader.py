@@ -70,7 +70,6 @@ def create_cairo_font_face_for_file (filename, faceindex=0, loadoptions=0):
     face = cairo_ctx.get_font_face ()
     del cairo_ctx
     del cairo_t
-    del u_filename
     del ft_face
     del _surface
     print( '\033[92mFont loaded from\033[0m: ' + filename)

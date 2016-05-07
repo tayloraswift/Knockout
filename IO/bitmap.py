@@ -1,3 +1,5 @@
+import gi
+gi.require_version('Gtk', '3.0')
 from gi.repository import Gdk, GdkPixbuf
 from gi.repository.GLib import Error as GLibError
 

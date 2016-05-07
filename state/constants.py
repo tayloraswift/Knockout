@@ -8,7 +8,7 @@ def default_hints():
 def default_antialias():
     return [(0, 'Default'), (1, 'None'), (2, 'Grayscale'), (3, 'Subpixel')]
 
-default_hint = default_hints()[1]
+default_hint = default_hints()[0]
 HINTS.set_hint_style(default_hint[0])
 
 filename = ''

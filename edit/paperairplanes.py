@@ -158,12 +158,12 @@ def interpret_rgba(C):
 def interpret_bool(b):
     t = type(b)
     if t in {bool, int}:
-        return b
+        return bool(b)
     elif t is str:
         if b in {'True', '1'}:
             return True
         else:
-            return interpret_int(b)
+            return bool(interpret_int(b))
     else:
         return False
 
@@ -172,6 +172,26 @@ def fonttag(f):
         return FTAGS[f]
     else:
         return f
+
+# attribute types #
+# stored as literals            : bool, int, float
+# stored as reformatted string  : binomial, int set
+# stored as string              : str, float tuple, rgba, 1_D, multi_D, fx, fn, fA, ftag, ptags
+
+literal  = {'bool': interpret_bool,
+            'int': interpret_int,
+            'float': interpret_float}
+reformat = {'binomial': (pack_binomial, read_binomial),
+            'int set': (interpret_enumeration, lambda S: ', '.join(str(i) for i in sorted(S)))}
+standard = {'str': str,
+            'float tuple': interpret_float_tuple, 
+            'rgba': interpret_rgba, 
+            '1D': interpret_haylor,
+            'multi_D': interpret_tsquared,
+            'fx': function_x,
+            'farray': function_array,
+            'fn': function_int,
+            'ftag': fonttag}
 
 datatypes = {'null': lambda x: x,
             'int': interpret_int,

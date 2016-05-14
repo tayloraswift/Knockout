@@ -2,6 +2,8 @@ from itertools import chain
 
 from edit.paperairplanes import literal, reformat, standard
 
+from elements.datablocks import Texttags_D, Blocktags_D
+
 class Null(object):
     name = '_nullbox'
     textfacing = False
@@ -82,6 +84,10 @@ _tagDNA = [('name', 'str', '_undef')]
     
 class Texttags(Box):
     name = 'texttags'
+    
+    def __init__(self, * II, ** KII ):
+        Box.__init__(self, * II, ** KII )
+        Texttags_D.update_datablocks(self)
 
 class Texttag(Box):
     name = 'texttag'
@@ -89,6 +95,10 @@ class Texttag(Box):
 
 class Blocktags(Box):
     name = 'blocktags'
+    
+    def __init__(self, * II, ** KII ):
+        Box.__init__(self, * II, ** KII )
+        Blocktags_D.update_datablocks(self)
 
 class Blocktag(Box):
     name = 'blocktag'

@@ -22,10 +22,10 @@ class Text(list):
             self.word_count = words(self)
 
 # boxes
-from elements import box
+from elements import box, style
 from model import meredith
 
-boxes = {B.name: B for B in chain.from_iterable(M.members for M in (box, meredith))}
+boxes = {B.name: B for B in chain.from_iterable(M.members for M in (box, style, meredith))}
 
 class Paine(parser.HTMLParser):
 
@@ -39,7 +39,7 @@ class Paine(parser.HTMLParser):
         self.rawdata = data
         self.goahead(0)
         
-        print([type(_) for _ in self._O[-1].content])
+        print([type(_) for _ in self._O])
         return self._O
 
     def _breadcrumb_error(self):
@@ -48,28 +48,28 @@ class Paine(parser.HTMLParser):
     def append_to(self):
         return self._C[-1][1]
     
-    def handle_starttag(self, tag, attrs):
-        if tag in boxes:
-            self._breadcrumbs.append(tag)
-            if tag in {'p'}:
+    def handle_starttag(self, name, attrs):
+        if name in boxes:
+            self._breadcrumbs.append(name)
+            if name in {'p'}:
                 M = dict(attrs), Text()
             else:
                 M = dict(attrs), []
             self._C.append(M)
 
-    def handle_endtag(self, tag):
-        if tag in boxes:
-            if self._breadcrumbs[-1] == tag:
+    def handle_endtag(self, name):
+        if name in boxes:
+            if self._breadcrumbs[-1] == name:
                 self._breadcrumbs.pop()
             else:
                 self._breadcrumb_error()
             
-            B = boxes[tag]( * self._C.pop() )
+            B = boxes[name]( * self._C.pop() )
             self.append_to().append(B)
             
-    def handle_startendtag(self, tag, attrs):
-        if tag in boxes:
-            self.append_to().append(boxes[tag]( dict(attrs) ))
+    def handle_startendtag(self, name, attrs):
+        if name in boxes:
+            self.append_to().append(boxes[name]( dict(attrs) ))
 
     def handle_data(self, data):
         if boxes[self._breadcrumbs[-1]].textfacing:

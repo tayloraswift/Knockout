@@ -39,7 +39,7 @@ class Paine(parser.HTMLParser):
         self.rawdata = data
         self.goahead(0)
         
-        print([type(_) for _ in self._O])
+        print(self._O[4])
         return self._O
 
     def _breadcrumb_error(self):

@@ -26,9 +26,8 @@ class Blockstyles(Box):
 
 class Blockstyle(Box):
     name = 'blockstyle'
-    textfacing = False
     
-    DNA  = [('class',           'paracounter',  'body'),
+    DNA  = [('class',           'blocktc',  'body'),
     
             ('hyphenate',       'bool'),
             ('indent',          'binomial'),
@@ -45,4 +44,9 @@ class Blockstyle(Box):
             ('incr_assign',     'fn'),
             ('show_count',      'farray')]
 
-members = (Textstyles, Textstyle, Blockstyles, Blockstyle)
+class Memberstyle(Box):
+    name = 'memberstyle'
+    DNA  = [('class',           'texttc',  ''),
+            ('textstyle',       'textstyle', None)]
+
+members = (Textstyles, Textstyle, Blockstyles, Blockstyle, Memberstyle)

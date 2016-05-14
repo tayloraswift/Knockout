@@ -1,6 +1,6 @@
 from itertools import chain
 
-from edit.paperairplanes import literal, reformat, standard
+from elements.datatypes import literal, reformat, standard
 
 from elements.datablocks import Texttags_D, Blocktags_D
 
@@ -76,32 +76,37 @@ class Box(dict):
     
     def __repr__(self):
         if self.content:
-            return ''.join(chain((repr(self.attrs), ' ', '<'), (c if type(c) is str else repr(c) for c in self.content), ('>',)))
+            return ''.join(chain((' <', self.name, '> ', repr(self.attrs), ' ', '['), (c if type(c) is str else repr(c) for c in self.content), ('] ',)))
         else:
-            return repr(self.attrs)
+            return ''.join((' <', self.name, '> ', repr(self.attrs), ' '))
 
-_tagDNA = [('name', 'str', '_undef')]
-    
-class Texttags(Box):
-    name = 'texttags'
-    
+class _Tags(Box):
+    name = '_abstract_taglist'
+
     def __init__(self, * II, ** KII ):
         Box.__init__(self, * II, ** KII )
-        Texttags_D.update_datablocks(self)
+        self.__class__.dblibrary.update_datablocks(self)
 
-class Texttag(Box):
+class _Tag(Box):
+    name = '_abstract_tag'
+    DNA = [('name', 'str', '_undef')]
+    
+    def __hash__(self):
+        return id(self)
+
+class Texttags(_Tags):
+    name = 'texttags'
+    dblibrary = Texttags_D
+
+class Texttag(_Tag):
     name = 'texttag'
-    DNA = _tagDNA
 
-class Blocktags(Box):
+class Blocktags(_Tags):
     name = 'blocktags'
     
-    def __init__(self, * II, ** KII ):
-        Box.__init__(self, * II, ** KII )
-        Blocktags_D.update_datablocks(self)
+    dblibrary = Blocktags_D
 
-class Blocktag(Box):
+class Blocktag(_Tag):
     name = 'blocktag'
-    DNA = _tagDNA
 
 members = (Null, Texttags, Texttag, Blocktags, Blocktag)

@@ -1,8 +1,11 @@
-from itertools import groupby
+from itertools import groupby, chain
 
 from bulletholes.counter import TCounter as Counter
 
 from edit.arithmetic import NumericStringParser, ParseException
+
+from elements.datablocks import Texttags_D, Blocktags_D, Textstyles_D
+from elements.frames import Frames
 
 nsp = NumericStringParser()
 
@@ -52,39 +55,50 @@ def interpret_float_tuple(value):
     L = (interpret_float(val, fail=None) for val in value.split(','))
     return (v for v in L if v is not None)
 
+def interpret_frame(S):
+    _ = ((c for c in C.split(';') if c) for C in S.split('|') if C)
+    F = Frames([[ [int(k) for k in P.split(',')] + ['False'] for P in R1.split()], 
+            [ [int(k) for k in P.split(',')] + ['False'] for P in R2.split()], int(page)] for R1, R2, page in _)
+    return F
+
 # special named datatypes
 
 class _Tagcounter(Counter):
     def __repr__(self):
-        return '&'.join(chain.from_iterable((T.name for i in range(V)) if V > 0 else 
-                ('~' + T.name for i in range(abs(V))) for T, V in sorted(self.items(), key=lambda k: k[0].name)))
+        return '^'.join(chain.from_iterable((T['name'] for i in range(V)) if V > 0 else 
+                ('~' + T['name'] for i in range(abs(V))) for T, V in sorted(self.items(), key=lambda k: k[0]['name'])))
 
 def _tagcounter(S, LIB):
     if S:
-        C = _Tagcounter(T for T in S.split('&') if T[0] != '~')
-        C -= _Tagcounter(T[1:] for T in S.split('&') if T[0] == '~')
+        C = Counter(T for T in S.split('^') if T[0] != '~')
+        C -= Counter(T[1:] for T in S.split('^') if T[0] == '~')
         
-        return _Tagcounter({LIB[T]: V for T, V in C})
+        return _Tagcounter({LIB[T]: V for T, V in C.items()})
     else:
         return _Tagcounter()
 
-def paracounter(S):
-    return _tagcounter(S, PTAGS)
+def blocktagcounter(S):
+    return _tagcounter(S, Blocktags_D)
 
-def fontcounter(S):
-    return _tagcounter(S, FTAGS)
+def texttagcounter(S):
+    return _tagcounter(S, Texttags_D)
 
-def fontdblock(S):
-    return FBLOCKS[S]
+def textstyle(S):
+    try:
+        return Textstyles_D[S]
+    except KeyError:
+        return None
 
 literal  = {'bool': interpret_bool,
             'int': interpret_int,
             'float': interpret_float,
             'float tuple': interpret_float_tuple,
             
-            'paracounter': paracounter,
-            'fontcounter': fontcounter,
-            'fontstyle': fonttag}
+            'frames': interpret_frame,
+            
+            'blocktc': blocktagcounter,
+            'texttc': texttagcounter,
+            'textstyle': textstyle}
 
 def read_binomial(S):
     C, SIGN, K = S

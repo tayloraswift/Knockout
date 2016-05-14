@@ -7,8 +7,8 @@ class Meredith(Box):
 class Section(Box):
     name = 'section'
     
-#    DNA  = [('repeat',      'int range',    ''),
-#            ('outlines',    '',             '')]
+    DNA  = [('repeat',      'int set',    ''),
+            ('frames',    'frames',     '')]
 
 class Paragraph_block(Blockstyle):
     name = 'p'

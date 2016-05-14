@@ -1,29 +1,37 @@
-from IO import kevin
+from elements.box import Box
 
-class Meredith(list):
-    def __init__(self, KT, grid=None):
-        list.__init__(self, (section.create_wrapper() for section in KT))
-        if grid is not None:
-            self.page_grid = grid
+class Meredith(Box):
+    name = 'body'
+
+class Section(Box):
+    name = 'section'
     
-    def recalculate_all(self):
-        for tract in self:
-            tract.layout()
+#    DNA  = [('repeat',      'int range',    ''),
+#            ('outlines',    '',             '')]
 
-    def _gen_tract(self, S):
-        self.append(kevin.deserialize(S)[0].create_wrapper())
-        self[-1].layout()
+class Paragraph_block(Box):
+    name = 'p'
+    textfacing = True
+    
+    DNA  = [('class',           'paracounter',  'body'),
+    
+            ('hyphenate',       'bool'),
+            ('indent',          'binomial'),
+            ('indent_range',    'int set'),
+            ('leading',         'float'),
+            ('margin_bottom',   'float'),
+            ('margin_left',     'float'),
+            ('margin_right',    'float'),
+            ('margin_top',      'float'),
+            ('align',           'float'),
+            ('align_to',        'str'),
+            
+            ('incr_place_value','int'),
+            ('incr_assign',     'fn'),
+            ('show_count',      'farray')]
 
-    def add_tract(self):
-        self._gen_tract('''<section outlines="10,10 10,30 ; 30,10 30,30 ; 0">
-    <p>{new}</p>
-</section>''')
+class Block_style(Paragraph_block):
+    name = 'blockstyle'
+    textfacing = False
 
-    def add_repeat_tract(self):
-        self._gen_tract('''<section repeat="0:1" outlines="10,10 10,30 ; 30,10 30,30 ; 0">
-    <p>{new}</p>
-</section>''')
-        
-    def delete_tract(self, tract):
-        t = self.index(tract)
-        del self[t]
+members = (Meredith, Section, Paragraph_block, Block_style)

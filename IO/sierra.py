@@ -6,7 +6,7 @@ from state import constants, noticeboard
 from state.contexts import Text
 from model import meredith, page
 from edit import cursor, caramel
-from IO import kevin, un, xml
+from IO import tree, un, xml
 from typing import typing
 from interface import karlie, taylor, poptarts
 from modules import modulestyles
@@ -52,16 +52,17 @@ def load(name):
         constants.filename = name
         doc = fi.read()
 
-    BODY = doc[doc.find('<body>') + 6 : doc.find('</body>')]
     DATA = literal_eval(doc[doc.find('<!-- #############') + 18 : doc.find('############# -->')])
 
     # unpack styles
-    styles.faith(DATA)
-    Node.MSL = modulestyles.MS_Library(modules)
+#    styles.faith(DATA)
+#    Node.MSL = modulestyles.MS_Library(modules)
     
     # set up page, tract model, page grid objects
     meredith.page = page.Page(DATA['page'])
-    meredith.mipsy = meredith.Meredith(kevin.deserialize(BODY), grid=DATA['grid'])
+    
+    tree.deserialize(doc)
+#    meredith.mipsy = meredith.Meredith(kevin.deserialize(BODY), grid=DATA['grid'])
     
     # aim editor objects
     cursor.fcursor = cursor.FCursor(DATA['contexts']['text'])

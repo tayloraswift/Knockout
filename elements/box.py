@@ -1,4 +1,10 @@
+from itertools import chain
+
 from edit.paperairplanes import literal, reformat, standard
+
+class Null(object):
+    name = '_nullbox'
+    textfacing = False
 
 class Box(dict):
     name = '_box'
@@ -17,23 +23,28 @@ class Box(dict):
                 if A in attrs:
                     v = literal[TYPE](attrs[A])
                     self.attrs[A] = v
-                    yield v
+                    yield A, v
+                
                 elif default:
-                    yield literal[TYPE](default[0])
+                    yield A, literal[TYPE](default[0])
+            
             elif TYPE in standard:
                 if A in attrs:
                     self.attrs[A] = attrs[A]
-                    yield standard[TYPE](attrs[A])
+                    yield A, standard[TYPE](attrs[A])
+                
                 elif default:
-                    yield standard[TYPE](default[0])
+                    yield A, standard[TYPE](default[0])
+            
             elif TYPE in reformat:
                 up, down = reformat[TYPE]
                 if A in attrs:
                     v = up(attrs[A])
                     self.attrs[A] = down(v)
-                    yield v
+                    yield A, v
+                
                 elif default:
-                    yield up(default[0])
+                    yield A, up(default[0])
 
     def assign(self, A, S):
         try:
@@ -60,28 +71,27 @@ class Box(dict):
     def deassign(self, A):
         del self.attrs[A]
         del self[A]
-
-class Paragraph_block(Box):
-    name = 'p'
-    textfacing = True
     
-    DNA  = [('class',           'paracounter',  'body'),
-    
-            ('hyphenate',       'bool'),
-            ('indent',          'binomial'),
-            ('indent_range',    'int set'),
-            ('leading',         'float'),
-            ('margin_bottom',   'float'),
-            ('margin_left',     'float'),
-            ('margin_right',    'float'),
-            ('margin_top',      'float'),
-            ('align',           'float'),
-            ('align_to',        'str'),
-            
-            ('incr_place_value','int'),
-            ('incr_assign',     'fn'),
-            ('show_count',      'farray')]
+    def __repr__(self):
+        if self.content:
+            return ''.join(chain((repr(self.attrs), ' ', '<'), (c if type(c) is str else repr(c) for c in self.content), ('>',)))
+        else:
+            return repr(self.attrs)
 
-class Block_style(Paragraph_block):
-    name = 'blockstyle'
-    textfacing = False
+_tagDNA = [('name', 'str', '_undef')]
+    
+class Texttags(Box):
+    name = 'texttags'
+
+class Texttag(Box):
+    name = 'texttag'
+    DNA = _tagDNA
+
+class Blocktags(Box):
+    name = 'blocktags'
+
+class Blocktag(Box):
+    name = 'blocktag'
+    DNA = _tagDNA
+
+members = (Null, Texttags, Texttag, Blocktags, Blocktag)

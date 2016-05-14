@@ -1,6 +1,71 @@
 <head><meta charset="UTF-8"></head>
 <title>/home/kelvin/catastrophe/WPtest.html</title>
 
+<texttags>
+    <texttag name="big"/>
+    <texttag name="emphasis"/>
+    <texttag name="strong"/>
+    <texttag name="sub"/>
+    <texttag name="sup"/>
+</texttags>
+
+<blocktags>
+    <blocktag name="_center"/>
+    <blocktag name="_left"/>
+    <blocktag name="_right"/>
+    <blocktag name="body"/>
+    <blocktag name="caption"/>
+    <blocktag name="disambiguation"/>
+    <blocktag name="divider"/>
+    <blocktag name="firstchild"/>
+    <blocktag name="graph"/>
+    <blocktag name="h1"/>
+    <blocktag name="h2"/>
+    <blocktag name="h3"/>
+    <blocktag name="key"/>
+</blocktags>
+              
+<textstyles>
+    <textstyle name="Black" color="0.145, 0.145, 0.145"/>
+    <textstyle name="Body text" fontsize="14"/>
+    <textstyle name="Body text super" fontsize="13.33333" shift="5"/>
+    <textstyle name="Caption" fontsize="13.33333"/>
+    <textstyle name="Catastrophe" path="/home/kelvin/catastrophe/Catastrophe.sfd"/>
+    <textstyle name="Catastrophe italic" path="/home/kelvin/catastrophe/Catastrophe-Italic.sfd"/>
+    <textstyle name="Title text" fontsize="30"/>
+    <textstyle name="h2" fontsize="22"/>
+    <textstyle name="h3" fontsize="20"/>
+</textstyles>
+
+<blockstyles>
+    <blockstyle class="" hyphenate="True">
+        <memberstyle class="" textstyle="Black"/>
+    </blockstyle>
+
+    <blockstyle class="body" leading="22" margin_bottom="10">
+        <memberstyle class="" textstyle="Body text"/>
+        <memberstyle class="" textstyle="Catastrophe"/>
+        <memberstyle class="emphasis" textstyle="Catastrophe italic"/>
+        <memberstyle class="sup" textstyle="Body text super"/>
+    </blockstyle>
+
+    <blockstyle class="body^firstchild" indent="0"/>
+
+    <blockstyle class="caption">
+        <memberstyle class="" textstyle="Caption"/>
+    </blockstyle>
+
+    <blockstyle class="h1">
+        <memberstyle class="" textstyle="Title text"/>
+        <memberstyle class="" textstyle="Catastrophe"/>
+    </blockstyle>
+
+    <blockstyle class="h2" hyphenate="False" leading="28" margin_bottom="10" margin_top="10">
+        <memberstyle class="" textstyle="h2"/>
+        <memberstyle class="" textstyle="Catastrophe"/>
+    </blockstyle>
+</blockstyles>
+
 <body>
 <section outlines="100,50 100,120 ; 720,50 720,120 ; 0">
 <p class="h1">Saturn</p>
@@ -44,83 +109,6 @@
 <p class="body^caption">Saturn in natural color, photographed by <em>Cassini</em> in July 2008, approaching equinox.</p>
 </section>
 </body>
-
-<texttags>
-    <texttag name="big"/>
-    <texttag name="emphasis"/>
-    <texttag name="strong"/>
-    <texttag name="sub"/>
-    <texttag name="sup"/>
-</texttags>
-
-<blocktags>
-    <blocktag name="_center"/>
-    <blocktag name="_left"/>
-    <blocktag name="_right"/>
-    <blocktag name="body"/>
-    <blocktag name="caption"/>
-    <blocktag name="disambiguation"/>
-    <blocktag name="divider"/>
-    <blocktag name="firstchild"/>
-    <blocktag name="graph"/>
-    <blocktag name="h1"/>
-    <blocktag name="h2"/>
-    <blocktag name="h3"/>
-    <blocktag name="key"/>
-</blocktags>
-              
-<textstyles>
-
-    <textstyle name="Black" color="0.145, 0.145, 0.145"/>
-
-    <textstyle name="Body text" fontsize="14"/>
-
-    <textstyle name="Body text super" fontsize="13.33333" shift="5"/>
-
-    <textstyle name="Caption" fontsize="13.33333"/>
-
-    <textstyle name="Catastrophe" path="/home/kelvin/catastrophe/Catastrophe.sfd"/>
-
-    <textstyle name="Catastrophe italic" path="/home/kelvin/catastrophe/Catastrophe-Italic.sfd"/>
-
-    <textstyle name="Title text" fontsize="30"/>
-
-    <textstyle name="h2" fontsize="22"/>
-
-    <textstyle name="h3" fontsize="20"/>
-
-</textstyles>
-
-<blockstyles>
-
-    <blockstyle class="" hyphenate="True">
-        <memberstyle class="" textstyle="Black"/>
-    </blockstyle>
-
-    <blockstyle class="body" leading="22" margin_bottom="10">
-        <memberstyle class="" textstyle="Body text"/>
-        <memberstyle class="" textstyle="Catastrophe"/>
-        <memberstyle class="emphasis" textstyle="Catastrophe italic"/>
-        <memberstyle class="sup" textstyle="Body text super"/>
-    </blockstyle>
-
-    <blockstyle class="body^firstchild" indent="0"/>
-
-    <blockstyle class="caption">
-        <memberstyle class="" textstyle="Caption"/>
-    </blockstyle>
-
-    <blockstyle class="h1">
-        <memberstyle class="" textstyle="Title text"/>
-        <memberstyle class="" textstyle="Catastrophe"/>
-    </blockstyle>
-
-    <blockstyle class="h2" hyphenate="False" leading="28" margin_bottom="10" margin_top="10">
-        <memberstyle class="" textstyle="h2"/>
-        <memberstyle class="" textstyle="Catastrophe"/>
-    </blockstyle>
-
-</blockstyles>
 
 <!-- #############
 {'contexts': {'channels': {'c': 2, 'p': 2, 't': 1}, 'text': {'i': 96, 'j': 96, 'p': 0, 't': 1}},

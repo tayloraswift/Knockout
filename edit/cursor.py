@@ -1,7 +1,19 @@
 from model.wonder import words
-from model import meredith, olivia
+from model import meredith
 # from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Block_element
 from edit.text import expand_cursors_word
+
+def address(box, path):
+    for i in path:
+        box = box.content[i]
+    if not type(box).plane:
+        raise IndexError('Selected box is not a plane')
+    return box
+
+class PlaneCursor(object):
+    def __init__(self, plane, i, j):
+        self.PLANE = address(meredith.DOCUMENT, plane)
+        self.text = self.PLANE.content[0].content # stopgap
 
 class FCursor(object):
     def __init__(self, ctx):

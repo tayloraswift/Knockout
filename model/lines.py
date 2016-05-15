@@ -39,7 +39,6 @@ class Glyphs_line(dict):
     def deposit(self, repository, x=0, y=0):
         x += self['x']
         y += self['y']
-        PP = self['PP']
 
         if self['observer'] is not None:
             glyphs = chain(self['GLYPHS'], self['observer'])
@@ -49,11 +48,11 @@ class Glyphs_line(dict):
         for glyph in glyphs:
             if glyph[0] < 0:
                 if glyph[0] == -6:
-                    repository['_annot'].append( (glyph[0], x, y + self['leading'], PP, glyph[3]))
+                    repository['_annot'].append( (glyph[0], x, y + self['leading'], glyph[3]))
                 elif glyph[0] == -89:
                     glyph[6].deposit_glyphs(repository, x, y)
                 else:
-                    repository['_annot'].append((glyph[0], glyph[1] + x, glyph[2] + y, PP, glyph[3]))
+                    repository['_annot'].append((glyph[0], glyph[1] + x, glyph[2] + y, glyph[3]))
             else:
                 K = (glyph[0], glyph[1] + x, glyph[2] + y)
                 N = glyph[3]['hash']

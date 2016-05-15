@@ -7,10 +7,12 @@ from elements.datablocks import Texttags_D, Blocktags_D
 class Null(object):
     name = '_nullbox'
     textfacing = False
+    plane = False
 
 class Box(dict):
     name = '_box'
     textfacing = False
+    plane = False
     
     DNA = []
     

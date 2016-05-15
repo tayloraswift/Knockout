@@ -1,19 +1,42 @@
+from itertools import groupby
+
 from elements.box import Box
 from elements.style import Blockstyle
 from elements import datablocks
 from elements.datatypes import Tagcounter
 
 from model.lines import Glyphs_line, cast_liquid_line
+from model.page import Page
+
+class Sorted_pages(dict):
+    def __missing__(self, key):
+        self[key] = {'_annot': [], '_images': [], '_paint': [], '_paint_annot': []}
+        return self[key]
 
 class Meredith(Box):
     name = 'body'
+    DNA  = [('width',   'int',  816),
+            ('height',  'int',  1056),
+            ('dual',    'bool', False)]
+    
+    def __init__(self, * II, ** KII ):
+        Box.__init__(self, * II, ** KII )
+        self._sorted_pages = Sorted_pages()
     
     def layout_all(self):
+        self.medium = Page(self['width'], self['height'], self['dual'])
         for section in self.content:
             section.layout()
 
+    def transfer(self):
+        if not self._sorted_pages:
+            for section in self.content:
+                section.transfer(self._sorted_pages)
+        return self._sorted_pages
+    
 class Section(Box):
     name = 'section'
+    plane = True
     
     DNA  = [('repeat',      'int set',    ''),
             ('frames',    'frames',     '')]
@@ -22,9 +45,11 @@ class Section(Box):
         frames = self['frames']
         frames.start(0)
         for B in self.content:
-            SLUGS = B.layout(frames)
-            for line in SLUGS:
-                print(line['u'], line['x'], line['y'], line['l'])
+            B.layout(frames)
+    
+    def transfer(self, S):
+        for B in self.content:
+            B.transfer(S)
 
 class Paragraph_block(Blockstyle):
     name = 'p'
@@ -35,6 +60,10 @@ class Paragraph_block(Blockstyle):
         self.implicit_ = None
     
     def layout(self, frames):
+        self._LINES = self._typeset(frames)
+        self._UU = [line['u'] for line in self._LINES]
+    
+    def _typeset(self, frames):
         BSTYLE = datablocks.BSTYLES.project_b(self)
         F = Tagcounter()
         leading = BSTYLE['leading']
@@ -121,5 +150,11 @@ class Paragraph_block(Blockstyle):
             F = LINE['F']
 
         return SLUGS
+
+    def transfer(self, S):
+        for page, lines in ((p, list(ps)) for p, ps in groupby((line for line in self._LINES), key=lambda line: line['page'])):
+            sorted_page = S[page]
+            for line in lines:
+                line.deposit(sorted_page)
 
 members = (Meredith, Section, Paragraph_block)

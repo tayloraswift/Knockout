@@ -4,11 +4,10 @@ from ast import literal_eval
 from style import fonts, styles
 from state import constants, noticeboard
 from state.contexts import Text
-from model import meredith, page
+from model import meredith
 from edit import cursor, caramel
 from IO import tree, un, xml
 from typing import typing
-from interface import karlie, taylor, poptarts
 #from modules import modulestyles
 #from elements import modules
 from elements.node import Node
@@ -60,25 +59,26 @@ def load(name):
 #    styles.faith(DATA)
 #    Node.MSL = modulestyles.MS_Library(modules)
     
-    # set up page, tract model, page grid objects
-    meredith.page = page.Page(DATA['page'])
-    
-    datablocks.TTAGS, datablocks.BTAGS, datablocks.DOCUMENT, datablocks.TSTYLES, datablocks.BSTYLES = tree.deserialize(doc)
-    
+    # set up tract model, page grid objects
+    datablocks.TTAGS, datablocks.BTAGS, meredith.DOCUMENT, datablocks.TSTYLES, datablocks.BSTYLES = tree.deserialize(doc)
     
     # aim editor objects
 #    cursor.fcursor = cursor.FCursor(DATA['contexts']['text'])
 #    caramel.delight = caramel.Channels_controls(DATA['contexts']['channels'], poptarts.Sprinkles())
 #    typing.keyboard = typing.Keyboard(constants.shortcuts)
-    
-    datablocks.DOCUMENT.layout_all()
-    Text.update()
+    cursor.fcursor = cursor.PlaneCursor( * DATA['contexts']['text'] )
+    typing.keyboard = None
+    meredith.DOCUMENT.layout_all()
+#    Text.update()
 
     # start undo tracking
-    un.history = un.UN() 
+#    un.history = un.UN() 
+
+    from interface import karlie, taylor, poptarts
 
     taylor.becky = taylor.Document_view(save, DATA['view'])
     noticeboard.refresh_properties_type.push_change(DATA['view']['mode'])
-    karlie.klossy = karlie.Properties(DATA['view']['mode'], partition=1 )
+#    karlie.klossy = karlie.Properties(DATA['view']['mode'], partition=1 )
+    karlie.klossy = None
 
-    un.history.save()
+#    un.history.save()

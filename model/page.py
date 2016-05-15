@@ -1,13 +1,12 @@
 class Page(object):
-    def __init__(self, prop):
-        self.WIDTH = prop['dimensions'][0]
-        self.HEIGHT = prop['dimensions'][1]
+    def __init__(self, h, k, dual):
+        self.WIDTH = h
+        self.HEIGHT = k
+        self.dual = dual
         
         self._GAP = 100
         
         self._recalc()
-        
-        self.dual = prop['dual']
     
     def toggle_dual(self, dual):
         self.dual = dual

@@ -6,7 +6,8 @@ import cairo
 from state import noticeboard, constants
 from state.contexts import Text as CText
 from style.styles import ISTYLES
-from model import meredith, wonder
+from model.meredith import DOCUMENT
+from model import wonder
 from edit import cursor, caramel
 from IO import un, do
 from typing import typing
@@ -169,10 +170,10 @@ class Document_toolbar(object):
         
         y += 40
         self._items.append(kookies.Button(5, y, 90, 30, callback=_add_channel, string='Add portal'))
-        y += 30
-        self._items.append(kookies.Button(5, y, 90, 30, callback=meredith.mipsy.add_tract, string='Add tract'))
-        y += 30
-        self._items.append(kookies.Button(5, y, 90, 30, callback=meredith.mipsy.add_repeat_tract, string='Add repeat'))
+#        y += 30
+#        self._items.append(kookies.Button(5, y, 90, 30, callback=meredith.mipsy.add_tract, string='Add tract'))
+#        y += 30
+#        self._items.append(kookies.Button(5, y, 90, 30, callback=meredith.mipsy.add_repeat_tract, string='Add repeat'))
         
         y += 50
         self._items.append(kookies.Button(5, y, 90, 30, callback=_place_tags, string='Emphasis', params=('Ctrl i',) ))
@@ -184,8 +185,8 @@ class Document_toolbar(object):
         y += 30
         self._items.append(kookies.Button(5, y, 90, 30, callback=_punch_tags, string='x Strong', params=('Ctrl B',) ))
 
-        y += 50
-        self._items.append(kookies.Checkbox(15, y, 80, read=lambda: meredith.page.dual, assign=meredith.page.toggle_dual, name='Dual'.upper()))
+#        y += 50
+#        self._items.append(kookies.Checkbox(15, y, 80, read=lambda: DOCUMENT.page['dual'], assign=meredith.page.toggle_dual, name='Dual'.upper()))
         
         y += 50
         self._items.append(kookies.Selection_menu(5, y, 90, 30, menu_callback=constants.HINTS.set_hint_style, options_acquire=constants.default_hints, value_acquire=constants.HINTS.get_hint_style, source=0))
@@ -584,45 +585,46 @@ class Document_view(ui.Cell):
         self._mode = m
             
     def _draw_by_page(self, cr, mx_cx, my_cy, cx, cy, A=1):
-        PHEIGHT = meredith.page.HEIGHT
-        PWIDTH = meredith.page.WIDTH
+        medium = DOCUMENT.medium
+        PHEIGHT = medium.HEIGHT
+        PWIDTH = medium.WIDTH
         
-        max_page = 0
-        for tract in meredith.mipsy:            
-            for page, sorted_glyphs in tract.extract_glyphs().items():
-                max_page = max(max_page, page)
+        max_page = 0         
+        for page, sorted_glyphs in DOCUMENT.transfer().items():
+            max_page = max(max_page, page)
+            
+            # Transform goes
+            # x' = A (x + m - c) + c
+            # x' = Ax + (Am - Ac + c)
+            
+            # Scale first (on bottom) is significantly faster in cairo
+            cr.save()
+            cr.translate(A*medium.map_X(mx_cx, page) + cx, A*medium.map_Y(my_cy, page) + cy)
+            cr.scale(A, A)
 
-                # Transform goes
-                # x' = A (x + m - c) + c
-                # x' = Ax + (Am - Ac + c)
-                
-                # Scale first (on bottom) is significantly faster in cairo
+            self._draw_images(cr, sorted_glyphs['_images'])
+            for operation, x, y in sorted_glyphs['_paint']:
                 cr.save()
-                cr.translate(A*meredith.page.map_X(mx_cx, page) + cx, A*meredith.page.map_Y(my_cy, page) + cy)
-                cr.scale(A, A)
+                cr.translate(x, y)
+                operation(cr)
+                cr.restore()
+            self._print_sorted(cr, sorted_glyphs)
 
-                self._draw_images(cr, sorted_glyphs['_images'])
-                for operation, x, y in sorted_glyphs['_paint']:
+            # only annotate active tract
+            """
+            if tract is self.fcursor.R_FTX and self._mode == 'text':
+                for operation, x, y in sorted_glyphs['_paint_annot']:
                     cr.save()
                     cr.translate(x, y)
-                    operation(cr)
+                    operation(cr, self.fcursor.FTX)
                     cr.restore()
-                self._print_sorted(cr, sorted_glyphs)
-
-                # only annotate active tract
-                if tract is self.fcursor.R_FTX and self._mode == 'text':
-                    for operation, x, y in sorted_glyphs['_paint_annot']:
-                        cr.save()
-                        cr.translate(x, y)
-                        operation(cr, self.fcursor.FTX)
-                        cr.restore()
-                    cr.restore()
-                    self._draw_annotations(cr, sorted_glyphs['_annot'], page)
-                else:
-                    cr.restore()
-                
-            if self._mode == 'text':
-                self._draw_spelling(cr, tract.paint_misspellings())
+                cr.restore()
+                self._draw_annotations(cr, sorted_glyphs['_annot'], page)
+            else:
+                cr.restore()
+            """
+        #if self._mode == 'text':
+        #    self._draw_spelling(cr, tract.paint_misspellings())
         
         if self._mode == 'text':
             selections, signs = self.fcursor.paint_current_selection()

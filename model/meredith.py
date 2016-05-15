@@ -42,14 +42,22 @@ class Section(Box):
             ('frames',    'frames',     '')]
     
     def layout(self):
+        calc_bstyle = datablocks.BSTYLES.project_b
         frames = self['frames']
         frames.start(0)
-        for B in self.content:
-            B.layout(frames)
+        first = True
+        for block in self.content:
+            BSTYLE = calc_bstyle(block)
+            if first:
+                first = False
+            else:
+                frames.space(gap + BSTYLE['margin_top'])
+            block.layout(frames, BSTYLE)
+            gap = BSTYLE['margin_bottom']
     
     def transfer(self, S):
-        for B in self.content:
-            B.transfer(S)
+        for block in self.content:
+            block.transfer(S)
 
 class Paragraph_block(Blockstyle):
     name = 'p'
@@ -59,12 +67,7 @@ class Paragraph_block(Blockstyle):
         Blockstyle.__init__(self, * II, ** KII )
         self.implicit_ = None
     
-    def layout(self, frames):
-        self._LINES = self._typeset(frames)
-        self._UU = [line['u'] for line in self._LINES]
-    
-    def _typeset(self, frames):
-        BSTYLE = datablocks.BSTYLES.project_b(self)
+    def layout(self, frames, BSTYLE):
         F = Tagcounter()
         leading = BSTYLE['leading']
         indent_range = BSTYLE['indent_range']
@@ -75,11 +78,11 @@ class Paragraph_block(Blockstyle):
         i = 0
         l = 0
         
-        SLUGS = []
+        LINES = []
         LIQUID = self.content
         total = len(self.content)
         while True:
-            u, x1, x2, y, c = frames.fit(0, leading)
+            u, x1, x2, y, c = frames.fit(leading)
             
             # calculate indentation
             if l in indent_range:
@@ -142,14 +145,15 @@ class Paragraph_block(Blockstyle):
                 LINE.merge(wheelprint)
             
             l += 1
-            SLUGS.append(LINE)
+            LINES.append(LINE)
             
             i = LINE['j']
             if i == total:
                 break
             F = LINE['F']
 
-        return SLUGS
+        self._LINES = LINES
+        self._UU = [line['u'] for line in LINES]
 
     def transfer(self, S):
         for page, lines in ((p, list(ps)) for p, ps in groupby((line for line in self._LINES), key=lambda line: line['page'])):

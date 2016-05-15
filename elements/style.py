@@ -88,8 +88,8 @@ class Blockstyles(Box):
         except KeyError:
             # iterate through stack
             projection = _FLayer(Textstyle.BASE)
-            for B in (b for b in self.content if b.content is not None and b['class'] <= P):
-                for TS in (c['textstyle'] for c in B.content if c['class'] <= F and c['textstyle'] is not None):
+            for memberstyles in (b.content for b in self.content if b.content is not None and b['class'] <= P):
+                for TS in (c['textstyle'] for c in memberstyles if c['class'] <= F and c['textstyle'] is not None):
                     projection.overlay(TS)
             
             try:

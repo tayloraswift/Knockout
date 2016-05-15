@@ -618,11 +618,10 @@ class Document_view(ui.Cell):
                     cr.translate(x, y)
                     operation(cr, self.fcursor.FTX)
                     cr.restore()
-                cr.restore()
                 self._draw_annotations(cr, sorted_glyphs['_annot'], page)
-            else:
-                cr.restore()
+                
             """
+            cr.restore()
         #if self._mode == 'text':
         #    self._draw_spelling(cr, tract.paint_misspellings())
         

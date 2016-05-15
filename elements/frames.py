@@ -48,14 +48,24 @@ class Frames(list):
         self._top, self._limit = self._segments[self._c : self._c + 2]
         self._y0 = self[self._c][0][0][1]
     
-    def fit(self, gap, du):
-        u = self._u + gap + du
+    def _next_frame(self):
+        self._c += 1
+        self._u = self._limit
+        self._top, self._limit = self._segments[self._c : self._c + 2]
+        self._y0 = self[self._c][0][0][1]
+    
+    def space(self, du):
+        u = self._u + du
         if u > self._limit:
-            self._c += 1
-            self._u = self._limit
-            self._top, self._limit = self._segments[self._c : self._c + 2]
-            self._y0 = self[self._c][0][0][1]
-            return self.fit(gap, du)
+            self._next_frame()
+        else:
+            self._u = u
+        
+    def fit(self, du):
+        u = self._u + du
+        if u > self._limit:
+            self._next_frame()
+            return self.fit(du)
         else:
             x1 = piecewise(self._run[0][self._c], u)
             x2 = piecewise(self._run[1][self._c], u)

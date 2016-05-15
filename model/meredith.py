@@ -30,6 +30,7 @@ class Meredith(Box):
 
     def transfer(self):
         if not self._sorted_pages:
+            self._sorted_pages.annot = []
             for section in self.content:
                 section.transfer(self._sorted_pages)
         return self._sorted_pages
@@ -58,6 +59,13 @@ class Section(Box):
     def transfer(self, S):
         for block in self.content:
             block.transfer(S)
+        annot = {}
+        for page, P in S.items():
+            annot[page] = (P.pop('_annot'), P.pop('_paint_annot'))
+            P['_annot'] = []
+            P['_paint_annot'] = []
+        S.annot.append(annot)
+        
 
 class Paragraph_block(Blockstyle):
     name = 'p'

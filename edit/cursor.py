@@ -13,7 +13,10 @@ def address(box, path):
 class PlaneCursor(object):
     def __init__(self, plane, i, j):
         self.PLANE = address(meredith.DOCUMENT, plane)
+        self.plane_address = plane
         self.text = self.PLANE.content[0].content # stopgap
+        
+        self.PG = 0 # stopgap
 
 class FCursor(object):
     def __init__(self, ctx):

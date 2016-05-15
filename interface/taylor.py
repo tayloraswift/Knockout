@@ -277,7 +277,7 @@ class Document_view(ui.Cell):
         self._toolbar = Document_toolbar(save)
         self._mode_switcher = Mode_switcher(self.change_mode, default= self._mode)
         self.keyboard = typing.keyboard
-        self.fcursor = cursor.fcursor
+        self.planecursor = cursor.fcursor
         
         self._stake = None
         
@@ -305,10 +305,10 @@ class Document_view(ui.Cell):
     
     # TRANSFORMATION FUNCTIONS
     def _X_to_screen(self, x, pp):
-        return int(self._A * (meredith.page.map_X(x, pp) + self._H - self._Hc) + self._Hc)
+        return int(self._A * (DOCUMENT.medium.map_X(x, pp) + self._H - self._Hc) + self._Hc)
 
     def _Y_to_screen(self, y, pp):
-        return int(self._A * (meredith.page.map_Y(y, pp) + self._K - self._Kc) + self._Kc)
+        return int(self._A * (DOCUMENT.medium.map_Y(y, pp) + self._K - self._Kc) + self._Kc)
     
     def _T_1(self, x, y):
         x = (x - self._Hc) / self._A - self._H + self._Hc
@@ -589,8 +589,10 @@ class Document_view(ui.Cell):
         PHEIGHT = medium.HEIGHT
         PWIDTH = medium.WIDTH
         
-        max_page = 0         
-        for page, sorted_glyphs in DOCUMENT.transfer().items():
+        max_page = 0
+        sorted_glyphs = DOCUMENT.transfer()
+        section = self.planecursor.plane_address[0]
+        for page, P in sorted_glyphs.items():
             max_page = max(max_page, page)
             
             # Transform goes
@@ -602,34 +604,36 @@ class Document_view(ui.Cell):
             cr.translate(A*medium.map_X(mx_cx, page) + cx, A*medium.map_Y(my_cy, page) + cy)
             cr.scale(A, A)
 
-            self._draw_images(cr, sorted_glyphs['_images'])
-            for operation, x, y in sorted_glyphs['_paint']:
+            self._draw_images(cr, P['_images'])
+            for operation, x, y in P['_paint']:
                 cr.save()
                 cr.translate(x, y)
                 operation(cr)
                 cr.restore()
-            self._print_sorted(cr, sorted_glyphs)
+            self._print_sorted(cr, P)
 
             # only annotate active tract
-            """
-            if tract is self.fcursor.R_FTX and self._mode == 'text':
-                for operation, x, y in sorted_glyphs['_paint_annot']:
+            if self._mode == 'text':
+                annot, paint_annot = sorted_glyphs.annot[section][page]
+                for operation, x, y in paint_annot:
                     cr.save()
                     cr.translate(x, y)
                     operation(cr, self.fcursor.FTX)
                     cr.restore()
-                self._draw_annotations(cr, sorted_glyphs['_annot'], page)
-                
-            """
-            cr.restore()
-        #if self._mode == 'text':
-        #    self._draw_spelling(cr, tract.paint_misspellings())
-        
-        if self._mode == 'text':
-            selections, signs = self.fcursor.paint_current_selection()
-            self._draw_selection_highlight(cr, selections, signs)
+                cr.restore()
+                self._draw_annotations(cr, annot, page)
             
-            page_highlight = self.fcursor.PG
+            else:
+                cr.restore()
+        """
+        if self._mode == 'text':
+            self._draw_spelling(cr, tract.paint_misspellings())
+        """
+        if self._mode == 'text':
+            #selections, signs = self.planecursor.paint_current_selection()
+            #self._draw_selection_highlight(cr, selections, signs)
+            
+            page_highlight = self.planecursor.PG
         
         elif self._mode == 'channels':
             page_highlight = caramel.delight.PG
@@ -701,10 +705,11 @@ class Document_view(ui.Cell):
             
             fontsize = F['fontsize'] * self._A
 
-            if PP is self.fcursor.pp_at():
-                cr.set_source_rgba( * accent_light, 0.7)
-            else:
-                cr.set_source_rgba(0, 0, 0, 0.4)
+            cr.set_source_rgba( * accent_light, 0.7)
+#            if PP is self.fcursor.pp_at():
+#                cr.set_source_rgba( * accent_light, 0.7)
+#            else:
+#                cr.set_source_rgba(0, 0, 0, 0.4)
             
             #         '<p>'
             if a == -2:

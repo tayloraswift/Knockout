@@ -1,6 +1,6 @@
 from model.wonder import words
 from model import meredith, olivia
-from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Block_element
+# from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Block_element
 from edit.text import expand_cursors_word
 
 class FCursor(object):

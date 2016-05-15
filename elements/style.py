@@ -1,3 +1,5 @@
+from itertools import chain
+
 from elements.box import Box
 
 from elements.datablocks import Textstyles_D
@@ -52,7 +54,7 @@ class Blockstyles(Box):
         
         self.update_ts = self._text_projections.clear
 
-    def project_p(self, BLOCK):
+    def project_b(self, BLOCK):
         if BLOCK.implicit_ is None:
             P = BLOCK['class']
         else:
@@ -67,13 +69,13 @@ class Blockstyles(Box):
         except KeyError:
             # iterate through stack
             projection = _Layer(Blockstyle.BASE)
-            for B in chain((b for b in self if b['class'] <= P), [BLOCK]):
+            for B in chain((b for b in self.content if b['class'] <= P), [BLOCK]):
                 projection.overlay(B)
             
             self._block_projections[H] = projection
             return projection
 
-    def project_f(self, BLOCK, F):
+    def project_t(self, BLOCK, F):
         if BLOCK.implicit_ is None:
             P = BLOCK['class']
         else:
@@ -86,7 +88,7 @@ class Blockstyles(Box):
         except KeyError:
             # iterate through stack
             projection = _FLayer(Textstyle.BASE)
-            for B in (b for b in self if b['class'] <= P):
+            for B in (b for b in self.content if b.content is not None and b['class'] <= P):
                 for TS in (c['textstyle'] for c in B.content if c['class'] <= F and c['textstyle'] is not None):
                     projection.overlay(TS)
             
@@ -103,8 +105,8 @@ class Blockstyles(Box):
             return projection
 
 _block_DNA = [('hyphenate',       'bool',   False),
-            ('indent',          'binomial', 0),
-            ('indent_range',    'int set',  0),
+            ('indent',          'binomial', (0, 0, 0)),
+            ('indent_range',    'int set',  {0}),
             ('leading',         'float',    22),
             ('margin_bottom',   'float',    0),
             ('margin_left',     'float',    0),

@@ -22,10 +22,10 @@ class Text(list):
             self.word_count = words(self)
 
 # boxes
-from elements import box, style
+from elements import box, style, elements
 from model import meredith
 
-boxes = {B.name: B for B in chain.from_iterable(M.members for M in (box, style, meredith))}
+boxes = {B.name: B for B in chain.from_iterable(M.members for M in (box, style, elements, meredith))}
 
 class Paine(parser.HTMLParser):
 
@@ -39,7 +39,6 @@ class Paine(parser.HTMLParser):
         self.rawdata = data
         self.goahead(0)
         
-        print(self._O[4])
         return self._O
 
     def _breadcrumb_error(self):

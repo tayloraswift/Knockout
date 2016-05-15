@@ -63,7 +63,7 @@ def interpret_frame(S):
 
 # special named datatypes
 
-class _Tagcounter(Counter):
+class Tagcounter(Counter):
     def __repr__(self):
         return '^'.join(chain.from_iterable((T['name'] for i in range(V)) if V > 0 else 
                 ('~' + T['name'] for i in range(abs(V))) for T, V in sorted(self.items(), key=lambda k: k[0]['name'])))
@@ -73,9 +73,9 @@ def _tagcounter(S, LIB):
         C = Counter(T for T in S.split('^') if T[0] != '~')
         C -= Counter(T[1:] for T in S.split('^') if T[0] == '~')
         
-        return _Tagcounter({LIB[T]: V for T, V in C.items()})
+        return Tagcounter({LIB[T]: V for T, V in C.items()})
     else:
-        return _Tagcounter()
+        return Tagcounter()
 
 def blocktagcounter(S):
     return _tagcounter(S, Blocktags_D)

@@ -3,12 +3,12 @@ from itertools import chain
 import re
 
 from model.wonder import words
-from elements.elements import Paragraph
+#from elements.elements import Paragraph
 from elements.node import Inline_element, Block_element, Node
-from elements import modules, inlinetags, blocktags, textfacing
+#from elements import modules, inlinetags, blocktags, textfacing
 from state.exceptions import IO_Error
 
-inlinecontainers = {'p'} | textfacing
+#inlinecontainers = {'p'} | textfacing
 
 def write_node(node, indent=0):
     if node.content is not None:

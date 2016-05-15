@@ -9,9 +9,11 @@ from edit import cursor, caramel
 from IO import tree, un, xml
 from typing import typing
 from interface import karlie, taylor, poptarts
-from modules import modulestyles
-from elements import modules
+#from modules import modulestyles
+#from elements import modules
 from elements.node import Node
+
+from elements import datablocks
 
 def save():
     FI = ('<head><meta charset="UTF-8"></head>\n<title>', constants.filename, '</title>\n\n',
@@ -61,15 +63,15 @@ def load(name):
     # set up page, tract model, page grid objects
     meredith.page = page.Page(DATA['page'])
     
-    tree.deserialize(doc)
-#    meredith.mipsy = meredith.Meredith(kevin.deserialize(BODY), grid=DATA['grid'])
+    datablocks.TTAGS, datablocks.BTAGS, datablocks.DOCUMENT, datablocks.TSTYLES, datablocks.BSTYLES = tree.deserialize(doc)
+    
     
     # aim editor objects
-    cursor.fcursor = cursor.FCursor(DATA['contexts']['text'])
-    caramel.delight = caramel.Channels_controls(DATA['contexts']['channels'], poptarts.Sprinkles())
-    typing.keyboard = typing.Keyboard(constants.shortcuts)
+#    cursor.fcursor = cursor.FCursor(DATA['contexts']['text'])
+#    caramel.delight = caramel.Channels_controls(DATA['contexts']['channels'], poptarts.Sprinkles())
+#    typing.keyboard = typing.Keyboard(constants.shortcuts)
     
-    meredith.mipsy.recalculate_all()
+    datablocks.DOCUMENT.layout_all()
     Text.update()
 
     # start undo tracking

@@ -5,7 +5,7 @@ from libraries.pyphen import pyphen
 from bulletholes.counter import TCounter as Counter
 from model.george import Swimming_pool
 from style import styles
-from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Block_element
+
 from state.exceptions import LineOverflow
 pyphen.language_fallback('en_US')
 hy = pyphen.Pyphen(lang='en_US')

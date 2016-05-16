@@ -40,14 +40,6 @@ class Plane(Box):
     name = '_plane_'
     plane = True
 
-    def where(self, address):
-        i, * address = address
-        O = self.content[i]
-        if address:
-            return O.where(address)
-        else:
-            return O.cursor_whole
-
 class Section(Plane):
     name = 'section'
     
@@ -86,12 +78,6 @@ class Paragraph_block(Blockstyle):
     def __init__(self, * II, ** KII ):
         Blockstyle.__init__(self, * II, ** KII )
         self.implicit_ = None
-    
-    def where(self, i):
-        l = bisect(self._search_j, i)
-        line = self._LINES[l]
-        glyph = line['GLYPHS'][i - line['i']]
-        return l, line, glyph[1] + line['x']
     
     def layout(self, frames, BSTYLE):
         F = Tagcounter()
@@ -181,8 +167,13 @@ class Paragraph_block(Blockstyle):
         self._LINES = LINES
         self._UU = [line['u'] for line in LINES]
         self._search_j = [line['j'] for line in LINES]
-        self.cursor_whole = 0, LINES[0]['left'] - leading, LINES[0]['y'], leading, LINES[0]['page']
 
+    def _where(self, i):
+        l = bisect(self._search_j, i)
+        line = self._LINES[l]
+        glyph = line['GLYPHS'][i - line['i']]
+        return l, line, glyph[1] + line['x']
+    
     def highlight(self, a=None, b=None):
         select = []
         if a is not None and b is not None:
@@ -195,7 +186,7 @@ class Paragraph_block(Blockstyle):
             x1 = first['left'] - leading
             
         else:
-            l1, first, x1 = self.where(a)
+            l1, first, x1 = self._where(a)
             leading = first['leading']
         
         if b is None:
@@ -204,7 +195,7 @@ class Paragraph_block(Blockstyle):
             x2 = last['start'] + last['width']
 
         else:
-            l2, last, x2 = self.where(b)
+            l2, last, x2 = self._where(b)
 
         y2 = last['y']
         pn2 = last['page']
@@ -218,6 +209,9 @@ class Paragraph_block(Blockstyle):
             select.append((last['y'],   last['start'],  x2,                                 leading, last['page']))
 
         return select
+
+    def run_stats(self, spell):
+        self.content.stats(spell)
 
     def transfer(self, S):
         for page, lines in ((p, list(ps)) for p, ps in groupby((line for line in self._LINES), key=lambda line: line['page'])):

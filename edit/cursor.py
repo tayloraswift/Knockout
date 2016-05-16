@@ -12,40 +12,51 @@ def address(box, path):
         raise IndexError('Selected box is not a plane')
     return box
 
+_zeros = {'<fc/>', '<fo/>', '\t'}
+
 class PlaneCursor(object):
     def __init__(self, plane, i, j):
         self.PLANE = address(meredith.DOCUMENT, plane)
         self.plane_address = plane
         self.i = i
         self.j = j
-        self.text = self.PLANE.content[0].content # stopgap
+        self.blocks = self.PLANE.content # stopgap
         
         self.PG = 0 # stopgap
-        
+    
+    def _char(self, i, offset=0):
+        return self.blocks[i[0]].content[i[1] + offset]
+    
     def paint_current_selection(self):
-        zeros = {'<fc/>', '<fo/>', '\t'}
-        signs = False, (False, False), (True, True)
-#        signs = (self.j < self.i,
-#                (str(self.text[self.i - 1]) in zeros, str(self.text[self.i]) in zeros) , 
-#                (str(self.text[self.j - 1]) in zeros, str(self.text[self.j]) in zeros))
+        double = len(self.i) == 2
+        if double:
+            signs = (self.j < self.i,
+                (str(self._char(self.i, -1)) in _zeros, str(self._char(self.i)) in _zeros) , 
+                (str(self._char(self.j, -1)) in _zeros, str(self._char(self.j)) in _zeros))
+        else:
+            signs = False, (False, False), (False, False)
 
         middle = self.PLANE.content[self.i[0]: self.j[0] + 1]
         additional = ()
         if len(middle) == 1:
-            if len(self.i) == 2:
+            if double:
                 return middle[0].highlight(self.i[1], self.j[1]), signs
         
         else:
-            if len(self.i) == 2:
+            if double:
                 begin, * middle, end = middle
                 additional = (begin.highlight(a=self.i[1]), end.highlight(b=self.j[1]))
         
         if additional:
             select = chain.from_iterable(chain((block.highlight() for block in middle), additional))
         else:
-            select = chain.from_iterable(block.highlight() for block in middle)
+            select = chain.from_iterable(block.highlight() for block in middle[:-1])
 
         return list(select), signs
+
+    def run_stats(self, spell=False):
+        for block in self.blocks:
+            block.run_stats(spell)
 
 class FCursor(object):
     def __init__(self, ctx):

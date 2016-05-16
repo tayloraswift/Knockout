@@ -94,7 +94,7 @@ class Display(Gtk.Window):
         self._on_periodic()
     
     def _on_periodic(self):
-        cursor.fcursor.text.stats(spell=True)
+        cursor.fcursor.run_stats(spell=True)
         self.BECKY.queue_draw()
         self.KLOSSY.queue_draw()
         self.SCREEN.queue_draw()

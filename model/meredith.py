@@ -1,3 +1,4 @@
+from bisect import bisect
 from itertools import groupby
 
 from elements.box import Box
@@ -34,10 +35,21 @@ class Meredith(Box):
             for section in self.content:
                 section.transfer(self._sorted_pages)
         return self._sorted_pages
-    
-class Section(Box):
-    name = 'section'
+
+class Plane(Box):
+    name = '_plane_'
     plane = True
+
+    def where(self, address):
+        i, * address = address
+        O = self.content[i]
+        if address:
+            return O.where(address)
+        else:
+            return O.cursor_whole
+
+class Section(Plane):
+    name = 'section'
     
     DNA  = [('repeat',      'int set',    ''),
             ('frames',    'frames',     '')]
@@ -75,6 +87,12 @@ class Paragraph_block(Blockstyle):
         Blockstyle.__init__(self, * II, ** KII )
         self.implicit_ = None
     
+    def where(self, i):
+        l = bisect(self._search_j, i)
+        line = self._LINES[l]
+        glyph = line['GLYPHS'][i - line['i']]
+        return l, line, glyph[1] + line['x']
+    
     def layout(self, frames, BSTYLE):
         F = Tagcounter()
         leading = BSTYLE['leading']
@@ -90,12 +108,12 @@ class Paragraph_block(Blockstyle):
         LIQUID = self.content
         total = len(self.content)
         while True:
-            u, x1, x2, y, c = frames.fit(leading)
+            u, left, right, y, pn = frames.fit(leading)
             
             # calculate indentation
             if l in indent_range:
                 if K:
-                    INDLINE = cast_mono_line({'l': l, 'c': c, 'page': frames[c].page},
+                    INDLINE = cast_mono_line({'l': l, 'page': pn},
                         LIQUID[i : i + K + (not bool(l))], 
                         0,
                         PP,
@@ -108,12 +126,12 @@ class Paragraph_block(Blockstyle):
                 L_indent = BSTYLE['margin_left']
 
             # generate line objects
-            x1 += L_indent
-            x2 -= R_indent
+            x1 = left + L_indent
+            x2 = right - R_indent
             if x1 > x2:
                 x1, x2 = x2, x1
             # initialize line
-            LINE = Glyphs_line({'observer': None, 'left': x1, 'y': y, 'u': u, 'l': l, 'c': c, 'page': frames[c].page, 'wheels': None}) # restore wheels later
+            LINE = Glyphs_line({'observer': None, 'left': left, 'start': x1, 'y': y, 'u': u, 'l': l, 'page': pn, 'wheels': None}) # restore wheels later
             cast_liquid_line(LINE,
                     LIQUID[i : i + 1989], 
                     i, 
@@ -147,7 +165,7 @@ class Paragraph_block(Blockstyle):
 
             # print counters
             if not l and BSTYLE['show_count'] is not None:
-                wheelprint = cast_mono_line({'l': l, 'c': c, 'page': frames[c].page}, 
+                wheelprint = cast_mono_line({'l': l, 'page': pn}, 
                                     BSTYLE['show_count'](WHEELS), 0, PP, F.copy())
                 wheelprint['x'] = LINE['x'] - wheelprint['advance'] - BSTYLE['leading']*0.5
                 LINE.merge(wheelprint)
@@ -162,6 +180,44 @@ class Paragraph_block(Blockstyle):
 
         self._LINES = LINES
         self._UU = [line['u'] for line in LINES]
+        self._search_j = [line['j'] for line in LINES]
+        self.cursor_whole = 0, LINES[0]['left'] - leading, LINES[0]['y'], leading, LINES[0]['page']
+
+    def highlight(self, a=None, b=None):
+        select = []
+        if a is not None and b is not None:
+            a, b = sorted((a, b))
+        
+        if a is None:
+            l1 = 0
+            first = self._LINES[0]
+            leading = first['leading']
+            x1 = first['left'] - leading
+            
+        else:
+            l1, first, x1 = self.where(a)
+            leading = first['leading']
+        
+        if b is None:
+            l2 = len(self._LINES) - 1
+            last = self._LINES[-1]
+            x2 = last['start'] + last['width']
+
+        else:
+            l2, last, x2 = self.where(b)
+
+        y2 = last['y']
+        pn2 = last['page']
+                
+        if l1 == l2:
+            select.append((first['y'], x1, x2, leading, first['page']))
+        
+        else:
+            select.append((first['y'],  x1,             first['start'] + first['width'],    leading, first['page']))
+            select.extend((line['y'],   line['start'],  line['start'] + line['width'],      leading, line['page']) for line in (self._LINES[l] for l in range(l1 + 1, l2)))
+            select.append((last['y'],   last['start'],  x2,                                 leading, last['page']))
+
+        return select
 
     def transfer(self, S):
         for page, lines in ((p, list(ps)) for p, ps in groupby((line for line in self._LINES), key=lambda line: line['page'])):

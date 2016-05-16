@@ -1,3 +1,5 @@
+from itertools import chain
+
 from model.wonder import words
 from model import meredith
 # from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Block_element
@@ -14,9 +16,36 @@ class PlaneCursor(object):
     def __init__(self, plane, i, j):
         self.PLANE = address(meredith.DOCUMENT, plane)
         self.plane_address = plane
+        self.i = i
+        self.j = j
         self.text = self.PLANE.content[0].content # stopgap
         
         self.PG = 0 # stopgap
+        
+    def paint_current_selection(self):
+        zeros = {'<fc/>', '<fo/>', '\t'}
+        signs = False, (False, False), (True, True)
+#        signs = (self.j < self.i,
+#                (str(self.text[self.i - 1]) in zeros, str(self.text[self.i]) in zeros) , 
+#                (str(self.text[self.j - 1]) in zeros, str(self.text[self.j]) in zeros))
+
+        middle = self.PLANE.content[self.i[0]: self.j[0] + 1]
+        additional = ()
+        if len(middle) == 1:
+            if len(self.i) == 2:
+                return middle[0].highlight(self.i[1], self.j[1]), signs
+        
+        else:
+            if len(self.i) == 2:
+                begin, * middle, end = middle
+                additional = (begin.highlight(a=self.i[1]), end.highlight(b=self.j[1]))
+        
+        if additional:
+            select = chain.from_iterable(chain((block.highlight() for block in middle), additional))
+        else:
+            select = chain.from_iterable(block.highlight() for block in middle)
+
+        return list(select), signs
 
 class FCursor(object):
     def __init__(self, ctx):

@@ -71,7 +71,7 @@ class Frames(list):
             x2 = piecewise(self._run[1][self._c], u)
             y = self._y0 + u - self._top
             self._u = u
-            return u, x1, x2, y, self._c
+            return u, x1, x2, y, self[self._c].page
     
     def __repr__(self):
         return ' |\n    '.join(repr(F) for F in self)

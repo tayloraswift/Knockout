@@ -40,6 +40,11 @@ class Plane(Box):
     name = '_plane_'
     plane = True
 
+    def which(self, x, u):
+        b = max(0, bisect(self._UU, u) - 1)
+        block = self.content[b]
+        return ((b, block), * block.which(x, u))
+
 class Section(Plane):
     name = 'section'
     
@@ -51,6 +56,7 @@ class Section(Plane):
         frames = self['frames']
         frames.start(0)
         first = True
+        UU = []
         for block in self.content:
             BSTYLE = calc_bstyle(block)
             if first:
@@ -58,7 +64,9 @@ class Section(Plane):
             else:
                 frames.space(gap + BSTYLE['margin_top'])
             block.layout(frames, BSTYLE)
+            UU.append(block.u)
             gap = BSTYLE['margin_bottom']
+        self._UU = UU
     
     def transfer(self, S):
         for block in self.content:
@@ -167,7 +175,12 @@ class Paragraph_block(Blockstyle):
         self._LINES = LINES
         self._UU = [line['u'] for line in LINES]
         self._search_j = [line['j'] for line in LINES]
+        self.u = LINES[0]['u'] - leading
 
+    def which(self, x, u):
+        line = self._LINES[bisect(self._UU, u)]
+        return ((line.I(x), None),)
+    
     def _where(self, i):
         l = bisect(self._search_j, i)
         line = self._LINES[l]
@@ -212,6 +225,7 @@ class Paragraph_block(Blockstyle):
 
     def run_stats(self, spell):
         self.content.stats(spell)
+        return self.content.word_count
 
     def transfer(self, S):
         for page, lines in ((p, list(ps)) for p, ps in groupby((line for line in self._LINES), key=lambda line: line['page'])):

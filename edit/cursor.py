@@ -1,7 +1,7 @@
 from itertools import chain
 
 from model.wonder import words
-from model import meredith
+from elements import datablocks
 # from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Block_element
 from edit.text import expand_cursors_word
 
@@ -16,16 +16,18 @@ _zeros = {'<fc/>', '<fo/>', '\t'}
 
 class PlaneCursor(object):
     def __init__(self, plane, i, j):
-        self.PLANE = address(meredith.DOCUMENT, plane)
+        self.PLANE = address(datablocks.DOCUMENT, plane)
         self.plane_address = plane
         self.i = i
         self.j = j
-        self.blocks = self.PLANE.content # stopgap
+        self._blocks = self.PLANE.content
+        self._doc = datablocks.DOCUMENT
+        self._section = datablocks.DOCUMENT.content[plane[0]]
         
         self.PG = 0 # stopgap
     
     def _char(self, i, offset=0):
-        return self.blocks[i[0]].content[i[1] + offset]
+        return self._blocks[i[0]].content[i[1] + offset]
     
     def paint_current_selection(self):
         double = len(self.i) == 2
@@ -36,16 +38,17 @@ class PlaneCursor(object):
         else:
             signs = False, (False, False), (False, False)
 
-        middle = self.PLANE.content[self.i[0]: self.j[0] + 1]
+        i, j = sorted((self.i, self.j))
+        middle = self._blocks[i[0]: j[0] + 1]
         additional = ()
         if len(middle) == 1:
             if double:
-                return middle[0].highlight(self.i[1], self.j[1]), signs
+                return middle[0].highlight(i[1], j[1]), signs
         
         else:
             if double:
                 begin, * middle, end = middle
-                additional = (begin.highlight(a=self.i[1]), end.highlight(b=self.j[1]))
+                additional = (begin.highlight(a=i[1]), end.highlight(b=j[1]))
         
         if additional:
             select = chain.from_iterable(chain((block.highlight() for block in middle), additional))
@@ -54,9 +57,55 @@ class PlaneCursor(object):
 
         return list(select), signs
 
+    # TARGETING SYSTEM
+    def _to_c_global(self, x, y):
+        c, p = self._section['frames'].which(x, y, 20)
+        if c is None:
+            # try other tracts
+            for chained_composition in meredith.mipsy: 
+                c, p = chained_composition.channels.target_channel(x, y, 20)
+                if c is not None:
+                    self.R_FTX = chained_composition
+                    self.PG = p
+                    return meredith.page.normalize_XY(x, y, p), c
+        else:
+            self.PG = p
+            x, y = self._doc.medium.normalize_XY(x, y, p)
+            
+            return x, self._section['frames'].y2u(y, c)
+        return self._doc.medium.normalize_XY(x, y, self.PG), self.FTX.line_at(self.i)['c']
+
+    def _to_c_local(self, x, y):
+        c, p = self.R_FTX.channels.target_channel(x, y, 20)
+        if c is None:
+            return meredith.page.normalize_XY(x, y, self.PG), self.FTX.line_at(self.j)['c']
+        else:
+            self.PG = p
+            return meredith.page.normalize_XY(x, y, p), c
+            
+    def target(self, x, y):
+        x, u = self._to_c_global(x, y)
+        
+        address, stack = zip( * self._section.which(x, u) )
+        ## fix plane
+        
+        if stack[-1] is None:
+            self.i = address[-2:]
+        else:
+            self.i = (address[-1],)
+
+    def target_select(self, x, y):
+        (x, y), c = self._to_c_local(x, y)
+        j = self.FTX.shallow_search(x, y, c)
+        self.j = j
+    
+    #############
+
     def run_stats(self, spell=False):
-        for block in self.blocks:
-            block.run_stats(spell)
+        word_total = 0
+        for block in self._blocks:
+            word_total += block.run_stats(spell)
+        self.word_total = word_total
 
 class FCursor(object):
     def __init__(self, ctx):
@@ -86,44 +135,6 @@ class FCursor(object):
         self.FTX = ftext
         self.text = ftext.text
 
-    # TARGETING SYSTEM
-    def _to_c_global(self, x, y):
-        c, p = self.R_FTX.channels.target_channel(x, y, 20)
-        if c is None:
-            # try other tracts
-            for chained_composition in meredith.mipsy: 
-                c, p = chained_composition.channels.target_channel(x, y, 20)
-                if c is not None:
-                    self.R_FTX = chained_composition
-                    self.PG = p
-                    return meredith.page.normalize_XY(x, y, p), c
-        else:
-            self.PG = p
-            return meredith.page.normalize_XY(x, y, p), c
-        return meredith.page.normalize_XY(x, y, self.PG), self.FTX.line_at(self.i)['c']
-
-    def _to_c_local(self, x, y):
-        c, p = self.R_FTX.channels.target_channel(x, y, 20)
-        if c is None:
-            return meredith.page.normalize_XY(x, y, self.PG), self.FTX.line_at(self.j)['c']
-        else:
-            self.PG = p
-            return meredith.page.normalize_XY(x, y, p), c
-            
-    def target(self, x, y):
-        (x, y), c = self._to_c_global(x, y)
-        composition, * breadcrumbs = self.R_FTX.deep_search(x, y, c)
-        self.assign_text(composition)
-        self.i = breadcrumbs[0]
-        self.j = breadcrumbs[0]
-        self.si = breadcrumbs[-1]
-
-    def target_select(self, x, y):
-        (x, y), c = self._to_c_local(x, y)
-        j = self.FTX.shallow_search(x, y, c)
-        self.j = j
-    
-    #############
 
     def paint_current_selection(self):
         zeros = {'<fc/>', '<fo/>', '\t'}

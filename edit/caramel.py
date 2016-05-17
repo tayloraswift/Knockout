@@ -44,7 +44,7 @@ def overflow(cr, channels, Tx, Ty):
         cr.stroke()
 
 class Channels_controls(object):
-    def __init__(self, ctx, grid=None):
+    def __init__(self, address, grid=None):
         self._mode = 'outlines'
         
         if grid is not None:

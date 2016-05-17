@@ -6,7 +6,7 @@ import cairo
 from state import noticeboard, constants
 from state.contexts import Text as CText
 from style.styles import ISTYLES
-from model.meredith import DOCUMENT
+from elements.datablocks import DOCUMENT
 from model import wonder
 from edit import cursor, caramel
 from IO import un, do
@@ -367,16 +367,16 @@ class Document_view(ui.Cell):
             if self._mode == 'text':
 
                 un.history.undo_save(0)
-                self.fcursor.target(x, y)
+                self.planecursor.target(x, y)
                 
                 # used to keep track of ui redraws
-                self._sel_cursor = self.fcursor.j
+                self._sel_cursor = self.planecursor.j
                 
                 # check if paragraph context changed
                 CText.update()
                 
                 # count words
-                self.fcursor.text.stats()
+                self.planecursor.text.stats()
             
             # CHANNEL EDITING MODE
             elif self._mode == 'channels':
@@ -392,7 +392,7 @@ class Document_view(ui.Cell):
         if self._region_active == 'view':
             # TEXT EDITING MODE
             if self._mode == 'text':
-                self.fcursor.expand_cursors_word()
+                self.planecursor.expand_cursors_word()
     
     def press_right(self, x, y):
         if self._region_active == 'view':
@@ -402,20 +402,20 @@ class Document_view(ui.Cell):
             # TEXT EDITING MODE
             if self._mode == 'text':
                 try:
-                    self.fcursor.target(xo, yo)
-                    i = self.fcursor.i
+                    self.planecursor.target(xo, yo)
+                    i = self.planecursor.i
                     
-                    ms = self.fcursor.text.misspellings
+                    ms = self.planecursor.text.misspellings
                     pair_i = bisect.bisect([pair[0] for pair in ms], i) - 1
 
                     if ms[pair_i][0] <= i <= ms[pair_i][1]:
 
                         if i == ms[pair_i][1]:
-                            self.fcursor.i -= 1
+                            self.planecursor.i -= 1
                         
                         # used to keep track of ui redraws
-                        self._sel_cursor = self.fcursor.j
-                        self.fcursor.expand_cursors_word()
+                        self._sel_cursor = self.planecursor.j
+                        self.planecursor.expand_cursors_word()
                         suggestions = ['“' + ms[pair_i][2] + '”'] + [w.decode("utf-8") for w in wonder.struck.suggest(ms[pair_i][2].encode('latin-1', 'ignore'))]
                         suggestions = list(zip(suggestions, [str(v) for v in suggestions]))
                         menu.menu.create(x, y, 200, suggestions, _replace_misspelled, () )
@@ -439,9 +439,9 @@ class Document_view(ui.Cell):
             x, y = self._T_1(x, y)
 
             if self._mode == 'text':
-                self.fcursor.target_select(x, y)
-                if self.fcursor.j != self._sel_cursor:
-                    self._sel_cursor = self.fcursor.j
+                self.planecursor.target_select(x, y)
+                if self.planecursor.j != self._sel_cursor:
+                    self._sel_cursor = self.planecursor.j
                     noticeboard.redraw_becky.push_change()
 
             elif self._mode == 'channels':
@@ -618,7 +618,7 @@ class Document_view(ui.Cell):
                 for operation, x, y in paint_annot:
                     cr.save()
                     cr.translate(x, y)
-                    operation(cr, self.fcursor.FTX)
+                    operation(cr, self.planecursor.FTX)
                     cr.restore()
                 cr.restore()
                 self._draw_annotations(cr, annot, page)
@@ -706,7 +706,7 @@ class Document_view(ui.Cell):
             fontsize = F['fontsize'] * self._A
 
             cr.set_source_rgba( * accent_light, 0.7)
-#            if PP is self.fcursor.pp_at():
+#            if PP is self.planecursor.pp_at():
 #                cr.set_source_rgba( * accent_light, 0.7)
 #            else:
 #                cr.set_source_rgba(0, 0, 0, 0.4)
@@ -839,7 +839,8 @@ class Document_view(ui.Cell):
         
         # channels
         if self._mode == 'text':
-            caramel.delight.render(cr, self._X_to_screen, self._Y_to_screen)
+#            caramel.delight.render(cr, self._X_to_screen, self._Y_to_screen)
+            pass
         elif self._mode == 'channels':
             caramel.delight.render(cr, self._X_to_screen, self._Y_to_screen, show_rails=True)
         
@@ -867,6 +868,6 @@ class Document_view(ui.Cell):
         cr.show_text('{0:g}'.format(self._A*100) + '%')
         
         cr.move_to(constants.UI[1] - 150, k - 20)
-        cr.show_text(str(self.fcursor.text.word_count) + ' words · page ' + str(self.fcursor.PG))
+        cr.show_text(str(self.planecursor.word_total) + ' words · page ' + str(self.planecursor.PG))
         
         cr.reset_clip()

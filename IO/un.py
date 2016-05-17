@@ -1,9 +1,7 @@
-"""
-
-from style import styles
-from model import meredith
-from IO.kevin import miniserialize, deserialize
-from edit import cursor, caramel
+#from style import styles
+#from model import meredith
+#from IO.kevin import miniserialize, deserialize
+#from edit import cursor, caramel
 import time
 
 class UN(object):
@@ -14,6 +12,7 @@ class UN(object):
         self._state = None
     
     def save(self):
+        """
         if len(self._history) > 989:
             del self._history[:89]
             self._i -= 89
@@ -36,7 +35,7 @@ class UN(object):
 
         self._history.append({'kitty': kitty, 'contexts': {'text': textcontexts, 'channels': channelcontexts}, 'styles': {'PARASTYLES': PPP, 'FONTSTYLES': FFF, 'PTAGLIST': PTT, 'FTAGLIST': FTT}, 'page': page_xy})
         self._i = len(self._history)
-
+        """
     def pop(self):
         del self._history[-1]
         self._i = len(self._history)
@@ -83,4 +82,4 @@ class UN(object):
             if self._state != 0:
                 self.save()
             self._state = state
-"""
+

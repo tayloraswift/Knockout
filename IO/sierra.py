@@ -60,25 +60,29 @@ def load(name):
 #    Node.MSL = modulestyles.MS_Library(modules)
     
     # set up tract model, page grid objects
-    datablocks.TTAGS, datablocks.BTAGS, meredith.DOCUMENT, datablocks.TSTYLES, datablocks.BSTYLES = tree.deserialize(doc)
+    datablocks.TTAGS, datablocks.BTAGS, datablocks.DOCUMENT, datablocks.TSTYLES, datablocks.BSTYLES = tree.deserialize(doc)
     
     # aim editor objects
-#    cursor.fcursor = cursor.FCursor(DATA['contexts']['text'])
 #    caramel.delight = caramel.Channels_controls(DATA['contexts']['channels'], poptarts.Sprinkles())
 #    typing.keyboard = typing.Keyboard(constants.shortcuts)
     cursor.fcursor = cursor.PlaneCursor( * DATA['contexts']['text'] )
+#    caramel.delight = caramel.Channels_controls(DATA['contexts']['channels'], None)
     typing.keyboard = None
-    meredith.DOCUMENT.layout_all()
+    datablocks.DOCUMENT.layout_all()
 #    Text.update()
 
     # start undo tracking
-#    un.history = un.UN() 
+    un.history = un.UN() 
 
     from interface import karlie, taylor, poptarts
 
     taylor.becky = taylor.Document_view(save, DATA['view'])
     noticeboard.refresh_properties_type.push_change(DATA['view']['mode'])
 #    karlie.klossy = karlie.Properties(DATA['view']['mode'], partition=1 )
-    karlie.klossy = None
+    class KK(object):
+        render = lambda *k: None
+        hover = lambda *k: None
+    
+    karlie.klossy = KK()
 
 #    un.history.save()

@@ -21,9 +21,8 @@ _BREAK_P = _BREAK | set(('</p>',))
 _APOSTROPHES = set("'’")
 
 class Glyphs_line(dict):
-    def I(self, x, y):
+    def I(self, x):
         x -= self['x']
-        y -= self['y']
         i = bisect(self['_X_'], x)
         if i:
             try:

@@ -7,6 +7,8 @@ from edit.arithmetic import NumericStringParser, ParseException
 from elements.datablocks import Texttags_D, Blocktags_D, Textstyles_D
 from elements.frames import Frames
 
+from interface.poptarts import Sprinkles
+
 nsp = NumericStringParser()
 
 # attribute types #
@@ -56,10 +58,16 @@ def interpret_float_tuple(value):
     return (v for v in L if v is not None)
 
 def interpret_frame(S):
-    _ = ((c for c in C.split(';') if c) for C in S.split('|') if C)
+    frames = ((c for c in C.split(';') if c) for C in S.split('|') if C)
     F = Frames([[ [int(k) for k in P.split(',')] + ['False'] for P in R1.split()], 
-            [ [int(k) for k in P.split(',')] + ['False'] for P in R2.split()], int(page)] for R1, R2, page in _)
+            [ [int(k) for k in P.split(',')] + ['False'] for P in R2.split()], int(page)] for R1, R2, page in frames)
     return F
+
+def interpret_grid(S):
+    if not S:
+        S = ';'
+    xx, yy, *_ = (list(map(interpret_int, g.split(' '))) for g in S.split(';'))
+    return Sprinkles(xx, yy)
 
 # special named datatypes
 
@@ -95,6 +103,7 @@ literal  = {'bool': interpret_bool,
             'float tuple': interpret_float_tuple,
             
             'frames': interpret_frame,
+            'pagegrid': interpret_grid,
             
             'blocktc': blocktagcounter,
             'texttc': texttagcounter,

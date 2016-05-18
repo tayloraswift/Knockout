@@ -18,7 +18,8 @@ class Meredith(Box):
     name = 'body'
     DNA  = [('width',   'int',  816),
             ('height',  'int',  1056),
-            ('dual',    'bool', False)]
+            ('dual',    'bool', False),
+            ('grid',    'pagegrid', '')]
     
     def __init__(self, * II, ** KII ):
         Box.__init__(self, * II, ** KII )

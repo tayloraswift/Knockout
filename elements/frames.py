@@ -4,6 +4,8 @@ from itertools import chain
 
 from elements import datablocks
 
+from state.exceptions import LineOverflow
+
 def accumulate_path(path):
     advance = 0
     for subpath in path:
@@ -51,6 +53,7 @@ class Frames(list):
         return min(max(0, y - self[c][0][0][1]) + self._segments[c], self._segments[c + 1] - 0.000001)
     
     def start(self, u):
+        self.overflow = False
         self._u = u
         self._c = bisect(self._segments, u) - 1
         self._top, self._limit = self._segments[self._c : self._c + 2]
@@ -58,9 +61,13 @@ class Frames(list):
     
     def _next_frame(self):
         self._c += 1
-        self._u = self._limit
-        self._top, self._limit = self._segments[self._c : self._c + 2]
-        self._y0 = self[self._c][0][0][1]
+        try:
+            self._top, self._limit = self._segments[self._c : self._c + 2]
+            self._u = self._top
+            self._y0 = self[self._c][0][0][1]
+        except ValueError:
+            self.overflow = True
+            raise LineOverflow
     
     def space(self, du):
         u = self._u + du

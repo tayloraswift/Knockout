@@ -3,11 +3,8 @@ from ast import literal_eval
 
 from style import fonts, styles
 from state import constants, noticeboard
-from state.contexts import Text
 from model import meredith
-from edit import cursor, caramel
 from IO import tree, un, xml
-from typing import typing
 #from modules import modulestyles
 #from elements import modules
 from elements.node import Node
@@ -62,19 +59,24 @@ def load(name):
     # set up tract model, page grid objects
     datablocks.TTAGS, datablocks.BTAGS, datablocks.DOCUMENT, datablocks.TSTYLES, datablocks.BSTYLES = tree.deserialize(doc)
     
+    from interface import karlie, taylor
+    from state.contexts import Text
+    from edit import cursor, caramel
+    from typing import typing
+    
     # aim editor objects
-#    caramel.delight = caramel.Channels_controls(DATA['contexts']['channels'], poptarts.Sprinkles())
+    caramel.delight = caramel.Channels_controls(DATA['contexts']['channels'])
 #    typing.keyboard = typing.Keyboard(constants.shortcuts)
     cursor.fcursor = cursor.PlaneCursor( * DATA['contexts']['text'] )
-#    caramel.delight = caramel.Channels_controls(DATA['contexts']['channels'], None)
     typing.keyboard = None
+    
     datablocks.DOCUMENT.layout_all()
 #    Text.update()
 
     # start undo tracking
     un.history = un.UN() 
 
-    from interface import karlie, taylor, poptarts
+    
 
     taylor.becky = taylor.Document_view(save, DATA['view'])
     noticeboard.refresh_properties_type.push_change(DATA['view']['mode'])

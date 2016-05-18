@@ -1,25 +1,25 @@
 import bisect
 
 from state import noticeboard
-from model import meredith
+from elements import datablocks
 
 accent = (1, 0.22, 0.55)
 
 class Sprinkles(object):
-    def __init__(self):
-        self._grid = meredith.mipsy.page_grid
+    def __init__(self, xx, yy):
+        self._grid = [xx, yy]
         self.grid_selected = (None, None)
     
     def clear_selection(self):
         self.grid_selected = (None, None)
 
     def press(self, x, y):
-        if meredith.page.gutter_horizontal(x, y):
+        if datablocks.DOCUMENT.medium.gutter_horizontal(x, y):
             if not self._target_grid('x', x):
                 self._add_grid('x', x)
             return True
             
-        elif meredith.page.gutter_vertical(x, y):
+        elif datablocks.DOCUMENT.medium.gutter_vertical(x, y):
             if not self._target_grid('y', y):
                 self._add_grid('y', y)
             return True
@@ -60,12 +60,12 @@ class Sprinkles(object):
     def move_grid(self, x, y):
         if self.grid_selected[0] is not None:
             if self.grid_selected[0] == 0:
-                if 0 < x < meredith.page.WIDTH:
+                if 0 < x < datablocks.DOCUMENT.medium.WIDTH:
                     value = x
                 else:
                     return False
             else:
-                if 0 < y < meredith.page.HEIGHT:
+                if 0 < y < datablocks.DOCUMENT.medium.HEIGHT:
                     value = y
                 else:
                     return False
@@ -145,3 +145,6 @@ class Sprinkles(object):
             cr.rel_line_to(p_h*A, 0)
             
             cr.stroke()
+
+    def __repr__(self):
+        return ';'.join(' '.join(grid) for grid in self._grid)

@@ -1,7 +1,7 @@
 from itertools import chain
 
 from model.wonder import words
-from elements import datablocks
+from elements.datablocks import DOCUMENT
 # from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Block_element
 from edit.text import expand_cursors_word
 
@@ -16,11 +16,10 @@ _zeros = {'<fc/>', '<fo/>', '\t'}
 
 class PlaneCursor(object):
     def __init__(self, plane_address, i, j):
-        self._set_plane(address(datablocks.DOCUMENT, plane_address), plane_address)
+        self._set_plane(address(DOCUMENT, plane_address), plane_address)
         self.i = i
         self.j = j
-        self._doc = datablocks.DOCUMENT
-        self._section = datablocks.DOCUMENT.content[plane_address[0]]
+        self.section = DOCUMENT.content[plane_address[0]]
         
         self.PG = 0 # stopgap
     
@@ -53,39 +52,39 @@ class PlaneCursor(object):
 
     # TARGETING SYSTEM
     def _to_c_global(self, x, y):
-        S = self._section
+        S = self.section
         c, p = S['frames'].which(x, y, 20)
         if c is None:
             # try other sections
-            for s, section in (ss for ss in enumerate(self._doc.content) if ss[0] is not S): 
+            for s, section in (ss for ss in enumerate(DOCUMENT.content) if ss[0] is not S): 
                 c, _p = section['frames'].which(x, y, 20)
                 if c is not None:
-                    self._section = section
+                    self.section = section
                     self.plane_address[0] = s
                     self.PG = _p
-                    x, y = self._doc.medium.normalize_XY(x, y, _p)
+                    x, y = DOCUMENT.medium.normalize_XY(x, y, _p)
                     return x, section['frames'].y2u(y, c)
             
             c = self.PLANE.where(self.i)[1]['c']
         else:
             self.PG = p
-        x, y = self._doc.medium.normalize_XY(x, y, self.PG)
-        return x, self._section['frames'].y2u(y, c)
+        x, y = DOCUMENT.medium.normalize_XY(x, y, self.PG)
+        return x, self.section['frames'].y2u(y, c)
 
     def _to_c_local(self, x, y):
-        c, p = self._section['frames'].which(x, y, 20)
+        c, p = self.section['frames'].which(x, y, 20)
         if c is None:
             c = self.PLANE.where(self.j)[1]['c']
         else:
             self.PG = p
-        x, y = self._doc.medium.normalize_XY(x, y, self.PG)
-        return x, self._section['frames'].y2u(y, c)
+        x, y = DOCUMENT.medium.normalize_XY(x, y, self.PG)
+        return x, self.section['frames'].y2u(y, c)
             
     def target(self, x, y):
         x, u = self._to_c_global(x, y)
         
-        address, stack = zip( * self._section.which(x, u) )
-        address_i, plane = next(enumerate(box for box in chain(reversed(stack), (self._section,)) if box is not None and type(box).plane))
+        address, stack = zip( * self.section.which(x, u) )
+        address_i, plane = next(enumerate(box for box in chain(reversed(stack), (self.section,)) if box is not None and type(box).plane))
         if plane is not self.PLANE:
             self._set_plane(plane, [self.plane_address[0]] + list(address[:address_i]))
         

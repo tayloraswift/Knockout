@@ -837,10 +837,9 @@ class Document_view(ui.Cell):
         
         # channels
         if self._mode == 'text':
-#            caramel.delight.render(cr, self._X_to_screen, self._Y_to_screen)
-            pass
+            caramel.delight.render(cr, self._X_to_screen, self._Y_to_screen, frames=self.planecursor.section['frames'])
         elif self._mode == 'channels':
-            caramel.delight.render(cr, self._X_to_screen, self._Y_to_screen, show_rails=True)
+            caramel.delight.render(cr, self._X_to_screen, self._Y_to_screen)
         
         if self._mode != 'render':
             # DRAW TOOLBAR BACKGROUND

@@ -42,13 +42,13 @@ class PlaneCursor(object):
             signs = (str(self._char(i, -1)) in _zeros, str(self._char(i)) in _zeros) , (str(self._char(j, -1)) in _zeros, str(self._char(j)) in _zeros)
         else:
             signs = (False, False), (False, False)
-        
-        lit = self._blocks[i[0]: j[0] + double]
-        bounds = [[None, None] for b in lit]
+        lit = self._blocks[i[0]: j[0] + 1]
+        bounds = [[-1, -2] for b in lit]
         if double:
             bounds[0][0] = i[1]
             bounds[-1][1] = j[1]
-        
+        else:
+            bounds[-1][1] = -1
         return list(chain.from_iterable(block.highlight( * bound ) for bound, block in zip(bounds, lit))), signs
 
     # TARGETING SYSTEM
@@ -85,7 +85,6 @@ class PlaneCursor(object):
         x, u = self._to_c_global(x, y)
         
         address, stack = zip( * self._section.which(x, u) )
-        
         address_i, plane = next(enumerate(box for box in chain(reversed(stack), (self._section,)) if box is not None and type(box).plane))
         if plane is not self.PLANE:
             self._set_plane(plane, [self.plane_address[0]] + list(address[:address_i]))

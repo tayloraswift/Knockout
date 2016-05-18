@@ -181,6 +181,7 @@ class Paragraph_block(Blockstyle):
         
         flag = (-2, -leading, 0, LINES[0]['fstyle'], LINES[0]['F'], 0)
         LINES[0]['observer'].append(flag)
+        self._left_edge = LINES[0]['left'] - leading
         self._LINES = LINES
         self._UU = [line['u'] - leading for line in LINES]
         self._search_j = [line['j'] for line in LINES]
@@ -190,9 +191,10 @@ class Paragraph_block(Blockstyle):
 
     def which(self, x, u, r):
         if r:
-            line = self._LINES[max(0, bisect(self._UU, u) - 1)]
-            return ((line.I(x), None),)
-        
+            l = max(0, bisect(self._UU, u) - 1)
+            if l or r > 0 or x > self._left_edge:
+                line = self._LINES[l]
+                return ((line.I(x), None),)
         return ()
     
     def where(self, address):
@@ -205,32 +207,27 @@ class Paragraph_block(Blockstyle):
             return self._whole_location
     
     def _cursor(self, i):
-        l, line, glyph = self.where((i,))
-        return l, line, glyph[1] + line['x']
+        if i >= 0:
+            l, line, glyph = self.where((i,))
+            return l, line, glyph[1] + line['x']
+        elif i == -1:
+            l = 0
+            line = self._LINES[0]
+            x = line['left'] - line['leading']
+        else:
+            l = len(self._LINES) - 1
+            line = self._LINES[l]
+            x = line['start'] + line['width']
+        return l, line, x
     
     def highlight(self, a, b):
         select = []
-        if a is not None and b is not None:
+        if a != -1 and b != -2:
             a, b = sorted((a, b))
         
-        if a is None:
-            l1 = 0
-            first = self._LINES[0]
-            leading = first['leading']
-            x1 = first['left'] - leading
-            
-        else:
-            l1, first, x1 = self._cursor(a)
-            leading = first['leading']
-        
-        if b is None:
-            l2 = len(self._LINES) - 1
-            last = self._LINES[-1]
-            x2 = last['start'] + last['width']
-
-        else:
-            l2, last, x2 = self._cursor(b)
-
+        l1, first, x1 = self._cursor(a)
+        l2, last, x2 = self._cursor(b)
+        leading = first['leading']
         y2 = last['y']
         pn2 = last['page']
                 

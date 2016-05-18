@@ -7,7 +7,6 @@ from elements import datablocks
 from elements.datatypes import Tagcounter
 
 from model.lines import Glyphs_line, cast_liquid_line
-from model.page import Page
 
 class Sorted_pages(dict):
     def __missing__(self, key):
@@ -26,7 +25,7 @@ class Meredith(Box):
         self._sorted_pages = Sorted_pages()
     
     def layout_all(self):
-        self.medium = Page(self['width'], self['height'], self['dual'])
+        self._recalc_page()
         for section in self.content:
             section.layout()
 
@@ -36,6 +35,56 @@ class Meredith(Box):
             for section in self.content:
                 section.transfer(self._sorted_pages)
         return self._sorted_pages
+
+    # Page functions
+    
+    def _recalc_page(self):
+        self._HALFGAP = int(50)
+        self._WIDTH_HALFGAP = self['width'] + self._HALFGAP
+        self._HEIGHT_HALFGAP = self['height'] + self._HALFGAP
+    
+    def gutter_horizontal(self, x, y):
+        if (-5 < x < self['width'] + 5) and (-20 <= y <= -10 or self['height'] + 10 <= y <= self['height'] + 20):
+            return True
+        else:
+            return False
+
+    def gutter_vertical(self, x, y):
+        if (-5 < y < self['height'] + 5) and (-20 <= x <= -10 or self['width'] + 10 <= x <= self['width'] + 20):
+            return True
+        else:
+            return False
+    
+    def XY_to_page(self, x, y):
+        if self['dual']:
+            E = int((y + self._HALFGAP) // self._HEIGHT_HALFGAP) * 2
+            if x > self._WIDTH_HALFGAP:
+                return E
+            else:
+                return E - 1
+        else:
+            return int((y + self._HALFGAP) // self._HEIGHT_HALFGAP)
+    
+    def normalize_XY(self, x, y, pp):
+        if self['dual']:
+            y -= (pp + 1)//2 * self._HEIGHT_HALFGAP
+            if pp % 2 == 0:
+                x -= self._WIDTH_HALFGAP
+            return x, y
+        else:
+            return x, y - pp * self._HEIGHT_HALFGAP
+    
+    def map_X(self, x, pp):
+        if self['dual']:
+            return x + self._WIDTH_HALFGAP * ( not (pp % 2))
+        else:
+            return x
+
+    def map_Y(self, y, pp):
+        if self['dual']:
+            return y + (pp + 1)//2 * self._HEIGHT_HALFGAP
+        else:
+            return y + pp * self._HEIGHT_HALFGAP
 
 class Plane(Box):
     name = '_plane_'
@@ -182,7 +231,7 @@ class Paragraph_block(Blockstyle):
         
         flag = (-2, -leading, 0, LINES[0]['fstyle'], LINES[0]['F'], 0)
         LINES[0]['observer'].append(flag)
-        self._left_edge = LINES[0]['left'] - leading
+        self._left_edge = LINES[0]['left'] - leading*0.5
         self._LINES = LINES
         self._UU = [line['u'] - leading for line in LINES]
         self._search_j = [line['j'] for line in LINES]

@@ -89,12 +89,31 @@ class Frames(list):
             return u, x1, x2, y, self._c, self[self._c].page
     
     def which(self, x0, y0, radius):
-        norm = datablocks.DOCUMENT.medium.normalize_XY
+        norm = datablocks.DOCUMENT.normalize_XY
         for c, frame in enumerate(self):
             x, y = norm(x0, y0, frame.page)
             if frame.inside(x, y, radius):
                 return c, frame.page
         return None, None
+    
+    def which_point(self, x0, y0, radius):
+        P, C, R = None, None, None
+        norm = datablocks.DOCUMENT.normalize_XY
+        for c, channel in enumerate(self):
+            x, y = norm(x0, y0, channel.page)
+            for r in range(len(channel.railings)):
+                for i, point in enumerate(channel.railings[r]):
+                    if abs(x - point[0]) + abs(y - point[1]) < radius:
+                        return channel.page, c, r, i
+                # if that fails, take a railing, if possible
+                if not channel._is_outside(y) and abs(x - channel.edge(r, y)[0]) <= radius:
+                    P = channel.page
+                    C = c
+                    R = r
+            if channel.inside(x, y, radius):
+                P = channel.page
+                C = c
+        return P, C, R, None
     
     def __repr__(self):
         return ' |\n    '.join(repr(F) for F in self)

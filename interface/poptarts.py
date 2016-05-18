@@ -14,12 +14,12 @@ class Sprinkles(object):
         self.grid_selected = (None, None)
 
     def press(self, x, y):
-        if datablocks.DOCUMENT.medium.gutter_horizontal(x, y):
+        if datablocks.DOCUMENT.gutter_horizontal(x, y):
             if not self._target_grid('x', x):
                 self._add_grid('x', x)
             return True
             
-        elif datablocks.DOCUMENT.medium.gutter_vertical(x, y):
+        elif datablocks.DOCUMENT.gutter_vertical(x, y):
             if not self._target_grid('y', y):
                 self._add_grid('y', y)
             return True
@@ -60,12 +60,12 @@ class Sprinkles(object):
     def move_grid(self, x, y):
         if self.grid_selected[0] is not None:
             if self.grid_selected[0] == 0:
-                if 0 < x < datablocks.DOCUMENT.medium.WIDTH:
+                if 0 < x < datablocks.DOCUMENT.WIDTH:
                     value = x
                 else:
                     return False
             else:
-                if 0 < y < datablocks.DOCUMENT.medium.HEIGHT:
+                if 0 < y < datablocks.DOCUMENT.HEIGHT:
                     value = y
                 else:
                     return False

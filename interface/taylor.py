@@ -305,10 +305,10 @@ class Document_view(ui.Cell):
     
     # TRANSFORMATION FUNCTIONS
     def _X_to_screen(self, x, pp):
-        return int(self._A * (DOCUMENT.medium.map_X(x, pp) + self._H - self._Hc) + self._Hc)
+        return int(self._A * (DOCUMENT.map_X(x, pp) + self._H - self._Hc) + self._Hc)
 
     def _Y_to_screen(self, y, pp):
-        return int(self._A * (DOCUMENT.medium.map_Y(y, pp) + self._K - self._Kc) + self._Kc)
+        return int(self._A * (DOCUMENT.map_Y(y, pp) + self._K - self._Kc) + self._Kc)
     
     def _T_1(self, x, y):
         x = (x - self._Hc) / self._A - self._H + self._Hc
@@ -585,9 +585,9 @@ class Document_view(ui.Cell):
         self._mode = m
             
     def _draw_by_page(self, cr, mx_cx, my_cy, cx, cy, A=1):
-        medium = DOCUMENT.medium
-        PHEIGHT = medium.HEIGHT
-        PWIDTH = medium.WIDTH
+        medium = DOCUMENT
+        PHEIGHT = medium['height']
+        PWIDTH = medium['width']
         
         max_page = 0
         sorted_glyphs = DOCUMENT.transfer()

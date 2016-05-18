@@ -62,13 +62,13 @@ class PlaneCursor(object):
                     self.section = section
                     self.plane_address[0] = s
                     self.PG = _p
-                    x, y = DOCUMENT.medium.normalize_XY(x, y, _p)
+                    x, y = DOCUMENT.normalize_XY(x, y, _p)
                     return x, section['frames'].y2u(y, c)
             
             c = self.PLANE.where(self.i)[1]['c']
         else:
             self.PG = p
-        x, y = DOCUMENT.medium.normalize_XY(x, y, self.PG)
+        x, y = DOCUMENT.normalize_XY(x, y, self.PG)
         return x, self.section['frames'].y2u(y, c)
 
     def _to_c_local(self, x, y):
@@ -77,7 +77,7 @@ class PlaneCursor(object):
             c = self.PLANE.where(self.j)[1]['c']
         else:
             self.PG = p
-        x, y = DOCUMENT.medium.normalize_XY(x, y, self.PG)
+        x, y = DOCUMENT.normalize_XY(x, y, self.PG)
         return x, self.section['frames'].y2u(y, c)
             
     def target(self, x, y):

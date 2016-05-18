@@ -66,6 +66,7 @@ def load(name):
     
     # aim editor objects
     caramel.delight = caramel.Channels_controls(DATA['contexts']['channels'])
+    
 #    typing.keyboard = typing.Keyboard(constants.shortcuts)
     cursor.fcursor = cursor.PlaneCursor( * DATA['contexts']['text'] )
     typing.keyboard = None

@@ -24,7 +24,7 @@ class PlaneCursor(object):
         
         self.PG = 0 # stopgap
     
-    def _char(self, i, offset=0):
+    def char(self, i, offset=0):
         try:
             return self._blocks[i[0]].content[max(0, i[1] + offset)]
         except IndexError:
@@ -39,7 +39,7 @@ class PlaneCursor(object):
         i, j = sorted((self.i, self.j))
         double = len(i) == 2
         if double:
-            signs = (str(self._char(i, -1)) in _zeros, str(self._char(i)) in _zeros) , (str(self._char(j, -1)) in _zeros, str(self._char(j)) in _zeros)
+            signs = (str(self.char(i, -1)) in _zeros, str(self.char(i)) in _zeros) , (str(self.char(j, -1)) in _zeros, str(self.char(j)) in _zeros)
         else:
             signs = (False, False), (False, False)
         lit = self._blocks[i[0]: j[0] + 1]
@@ -100,6 +100,10 @@ class PlaneCursor(object):
         self.j, *_ = zip( * self.PLANE.which(x, u, len(self.i)) )
     
     #############
+
+    def styling_at(self):
+        l, line, glyph = self.PLANE.where(self.i)
+        return line['BLOCK'], glyph[3]
 
     def run_stats(self, spell=False):
         word_total = 0

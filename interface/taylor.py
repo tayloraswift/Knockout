@@ -268,7 +268,7 @@ def _replace_misspelled(word):
             A.write(word + '\n')
     else:
         typing.keyboard.type_document('Paste', word)
-    cursor.fcursor.text.stats(spell=True)
+    cursor.fcursor.run_stats(spell=True) #probably only needs to be run on paragraph
 
 class Document_view(ui.Cell):
     def __init__(self, save, state={'mode': 'text', 'Hc': 0, 'Kc': 0, 'H': 0, 'K': 0, 'Zoom': 11}):
@@ -376,7 +376,7 @@ class Document_view(ui.Cell):
                 CText.update()
                 
                 # count words
-                self.planecursor.text.stats()
+                self.planecursor.run_stats()
             
             # CHANNEL EDITING MODE
             elif self._mode == 'channels':

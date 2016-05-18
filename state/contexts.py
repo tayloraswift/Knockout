@@ -1,12 +1,12 @@
-from style import styles
+from elements import datablocks
 from edit import cursor, caramel
 from state import noticeboard
 
 class Text_context(object):
     def __init__(self):
-        self.pp = None
-        self.p = None
-        self.f = None
+        self.bk = None
+        self.bs = None
+        self.ts = None
         self.char = None
         
         self.ct = None
@@ -19,17 +19,17 @@ class Text_context(object):
             self.changed.remove(U)
 
     def update(self):
-        PP, FSTYLE = cursor.fcursor.styling_at()
-        C = cursor.fcursor.text[cursor.fcursor.i]
+        BLOCK, TEXTSTYLE = cursor.fcursor.styling_at()
+        C = cursor.fcursor.char(cursor.fcursor.i)
         
-        if PP is not self.pp:
+        if BLOCK is not self.bk:
             self.changed.update({'paragraph'})
-            self.pp = PP
-            self.p = styles.PARASTYLES.project_p(PP)
+            self.bk = BLOCK
+            self.bs = datablocks.BSTYLES.project_b(BLOCK)
         
-        if FSTYLE != self.f:
+        if TEXTSTYLE != self.ts:
             self.changed.update({'font'})
-            self.f = FSTYLE
+            self.ts = TEXTSTYLE
         
         if C is not self.char:
             self.changed.update({'character'})
@@ -43,15 +43,15 @@ class Text_context(object):
             self.ct = ct
 
     def update_force(self):
-        PP, FSTYLE = cursor.fcursor.styling_at()
-        C = cursor.fcursor.text[cursor.fcursor.i]
+        BLOCK, TEXTSTYLE = cursor.fcursor.styling_at()
+        C = cursor.fcursor.char(cursor.fcursor.i)
         
         self.changed.update({'paragraph'})
-        self.pp = PP
-        self.p = styles.PARASTYLES.project_p(PP)
+        self.bk = BLOCK
+        self.bs = datablocks.BSTYLES.project_b(BLOCK)
     
         self.changed.update({'font'})
-        self.f = FSTYLE
+        self.ts = TEXTSTYLE
     
         self.changed.update({'character'})
         self.char = C

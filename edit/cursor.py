@@ -15,89 +15,90 @@ def address(box, path):
 _zeros = {'<fc/>', '<fo/>', '\t'}
 
 class PlaneCursor(object):
-    def __init__(self, plane, i, j):
-        self.PLANE = address(datablocks.DOCUMENT, plane)
-        self.plane_address = plane
+    def __init__(self, plane_address, i, j):
+        self._set_plane(address(datablocks.DOCUMENT, plane_address), plane_address)
         self.i = i
         self.j = j
-        self._blocks = self.PLANE.content
         self._doc = datablocks.DOCUMENT
-        self._section = datablocks.DOCUMENT.content[plane[0]]
+        self._section = datablocks.DOCUMENT.content[plane_address[0]]
         
         self.PG = 0 # stopgap
     
     def _char(self, i, offset=0):
-        return self._blocks[i[0]].content[i[1] + offset]
+        try:
+            return self._blocks[i[0]].content[max(0, i[1] + offset)]
+        except IndexError:
+            return None
+    
+    def _set_plane(self, PLANE, plane_address):
+        self.PLANE = PLANE
+        self.plane_address = plane_address
+        self._blocks = self.PLANE.content
     
     def paint_current_selection(self):
-        double = len(self.i) == 2
-        if double:
-            signs = (self.j < self.i,
-                (str(self._char(self.i, -1)) in _zeros, str(self._char(self.i)) in _zeros) , 
-                (str(self._char(self.j, -1)) in _zeros, str(self._char(self.j)) in _zeros))
-        else:
-            signs = False, (False, False), (False, False)
-
         i, j = sorted((self.i, self.j))
-        middle = self._blocks[i[0]: j[0] + 1]
-        additional = ()
-        if len(middle) == 1:
-            if double:
-                return middle[0].highlight(i[1], j[1]), signs
-        
+        double = len(i) == 2
+        if double:
+            signs = (str(self._char(i, -1)) in _zeros, str(self._char(i)) in _zeros) , (str(self._char(j, -1)) in _zeros, str(self._char(j)) in _zeros)
         else:
-            if double:
-                begin, * middle, end = middle
-                additional = (begin.highlight(a=i[1]), end.highlight(b=j[1]))
+            signs = (False, False), (False, False)
         
-        if additional:
-            select = chain.from_iterable(chain((block.highlight() for block in middle), additional))
-        else:
-            select = chain.from_iterable(block.highlight() for block in middle[:-1])
-
-        return list(select), signs
+        lit = self._blocks[i[0]: j[0] + double]
+        bounds = [[None, None] for b in lit]
+        if double:
+            bounds[0][0] = i[1]
+            bounds[-1][1] = j[1]
+        
+        return list(chain.from_iterable(block.highlight( * bound ) for bound, block in zip(bounds, lit))), signs
 
     # TARGETING SYSTEM
     def _to_c_global(self, x, y):
-        c, p = self._section['frames'].which(x, y, 20)
+        S = self._section
+        c, p = S['frames'].which(x, y, 20)
         if c is None:
-            # try other tracts
-            for chained_composition in meredith.mipsy: 
-                c, p = chained_composition.channels.target_channel(x, y, 20)
+            # try other sections
+            for s, section in (ss for ss in enumerate(self._doc.content) if ss[0] is not S): 
+                c, _p = section['frames'].which(x, y, 20)
                 if c is not None:
-                    self.R_FTX = chained_composition
-                    self.PG = p
-                    return meredith.page.normalize_XY(x, y, p), c
+                    self._section = section
+                    self.plane_address[0] = s
+                    self.PG = _p
+                    x, y = self._doc.medium.normalize_XY(x, y, _p)
+                    return x, section['frames'].y2u(y, c)
+            
+            c = self.PLANE.where(self.i)[1]['c']
         else:
             self.PG = p
-            x, y = self._doc.medium.normalize_XY(x, y, p)
-            
-            return x, self._section['frames'].y2u(y, c)
-        return self._doc.medium.normalize_XY(x, y, self.PG), self.FTX.line_at(self.i)['c']
+        x, y = self._doc.medium.normalize_XY(x, y, self.PG)
+        return x, self._section['frames'].y2u(y, c)
 
     def _to_c_local(self, x, y):
-        c, p = self.R_FTX.channels.target_channel(x, y, 20)
+        c, p = self._section['frames'].which(x, y, 20)
         if c is None:
-            return meredith.page.normalize_XY(x, y, self.PG), self.FTX.line_at(self.j)['c']
+            c = self.PLANE.where(self.j)[1]['c']
         else:
             self.PG = p
-            return meredith.page.normalize_XY(x, y, p), c
+        x, y = self._doc.medium.normalize_XY(x, y, self.PG)
+        return x, self._section['frames'].y2u(y, c)
             
     def target(self, x, y):
         x, u = self._to_c_global(x, y)
         
         address, stack = zip( * self._section.which(x, u) )
-        ## fix plane
+        
+        address_i, plane = next(enumerate(box for box in chain(reversed(stack), (self._section,)) if box is not None and type(box).plane))
+        if plane is not self.PLANE:
+            self._set_plane(plane, [self.plane_address[0]] + list(address[:address_i]))
         
         if stack[-1] is None:
             self.i = address[-2:]
         else:
             self.i = (address[-1],)
+        self.j = self.i
 
     def target_select(self, x, y):
-        (x, y), c = self._to_c_local(x, y)
-        j = self.FTX.shallow_search(x, y, c)
-        self.j = j
+        x, u = self._to_c_local(x, y)
+        self.j, *_ = zip( * self.PLANE.which(x, u, len(self.i)) )
     
     #############
 

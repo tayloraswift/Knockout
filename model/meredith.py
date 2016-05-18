@@ -40,10 +40,17 @@ class Plane(Box):
     name = '_plane_'
     plane = True
 
-    def which(self, x, u):
-        b = max(0, bisect(self._UU, u) - 1)
-        block = self.content[b]
-        return ((b, block), * block.which(x, u))
+    def which(self, x, u, r=-1):
+        if r:
+            b = max(0, bisect(self._UU, u) - 1)
+            block = self.content[b]
+            return ((b, block), * block.which(x, u, r - 1))
+        else:
+            return ()
+
+    def where(self, address):
+        i, * address = address
+        return self.content[i].where(address)
 
 class Section(Plane):
     name = 'section'
@@ -100,9 +107,9 @@ class Paragraph_block(Blockstyle):
         
         LINES = []
         LIQUID = self.content
-        total = len(self.content)
+        total = len(LIQUID) + 1 # for imaginary </p> cap
         while True:
-            u, left, right, y, pn = frames.fit(leading)
+            u, left, right, y, c, pn = frames.fit(leading)
             
             # calculate indentation
             if l in indent_range:
@@ -125,7 +132,7 @@ class Paragraph_block(Blockstyle):
             if x1 > x2:
                 x1, x2 = x2, x1
             # initialize line
-            LINE = Glyphs_line({'observer': None, 'left': left, 'start': x1, 'y': y, 'u': u, 'l': l, 'page': pn, 'wheels': None}) # restore wheels later
+            LINE = Glyphs_line({'observer': [], 'left': left, 'start': x1, 'y': y, 'c': c, 'u': u, 'l': l, 'page': pn, 'wheels': None}) # restore wheels later
             cast_liquid_line(LINE,
                     LIQUID[i : i + 1989], 
                     i, 
@@ -171,23 +178,37 @@ class Paragraph_block(Blockstyle):
             if i == total:
                 break
             F = LINE['F']
-
+        
+        flag = (-2, -leading, 0, LINES[0]['fstyle'], LINES[0]['F'], 0)
+        LINES[0]['observer'].append(flag)
         self._LINES = LINES
-        self._UU = [line['u'] for line in LINES]
+        self._UU = [line['u'] - leading for line in LINES]
         self._search_j = [line['j'] for line in LINES]
-        self.u = LINES[0]['u'] - leading
+        self.u = self._UU[0]
+        
+        self._whole_location = -1, self._LINES[0], flag
 
-    def which(self, x, u):
-        line = self._LINES[bisect(self._UU, u)]
-        return ((line.I(x), None),)
+    def which(self, x, u, r):
+        if r:
+            line = self._LINES[max(0, bisect(self._UU, u) - 1)]
+            return ((line.I(x), None),)
+        
+        return ()
     
-    def _where(self, i):
-        l = bisect(self._search_j, i)
-        line = self._LINES[l]
-        glyph = line['GLYPHS'][i - line['i']]
+    def where(self, address):
+        if address:
+            l = bisect(self._search_j, address[0])
+            line = self._LINES[l]
+            glyph = line['GLYPHS'][address[0] - line['i']]
+            return l, line, glyph
+        else:
+            return self._whole_location
+    
+    def _cursor(self, i):
+        l, line, glyph = self.where((i,))
         return l, line, glyph[1] + line['x']
     
-    def highlight(self, a=None, b=None):
+    def highlight(self, a, b):
         select = []
         if a is not None and b is not None:
             a, b = sorted((a, b))
@@ -199,7 +220,7 @@ class Paragraph_block(Blockstyle):
             x1 = first['left'] - leading
             
         else:
-            l1, first, x1 = self._where(a)
+            l1, first, x1 = self._cursor(a)
             leading = first['leading']
         
         if b is None:
@@ -208,7 +229,7 @@ class Paragraph_block(Blockstyle):
             x2 = last['start'] + last['width']
 
         else:
-            l2, last, x2 = self._where(b)
+            l2, last, x2 = self._cursor(b)
 
         y2 = last['y']
         pn2 = last['page']

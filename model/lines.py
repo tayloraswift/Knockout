@@ -40,7 +40,7 @@ class Glyphs_line(dict):
         y += self['y']
         BLOCK = self['BLOCK']
 
-        if self['observer'] is not None:
+        if self['observer']:
             glyphs = chain(self['GLYPHS'], self['observer'])
         else:
             glyphs = self['GLYPHS']
@@ -63,12 +63,8 @@ class Glyphs_line(dict):
 
     def merge(self, other):
         dx = other['x'] - self['x']
-        if self['observer'] is None:
-            self['observer'] = [(g, x + dx, * e) for g, x, * e in other['GLYPHS']]
-        else:
-            self['observer'].extend((g, x + dx, * e) for g, x, * e in other['GLYPHS'])
-        if other['observer'] is not None:
-            self['observer'].extend((g, x + dx, * e) for g, x, * e in other['observer'])
+        self['observer'].extend((g, x + dx, * e) for g, x, * e in other['GLYPHS'])
+        self['observer'].extend((g, x + dx, * e) for g, x, * e in other['observer'])
 
 def cast_liquid_line(LINE, letters, startindex, width, leading, BLOCK, F, hyphenate=False):
     LINE['i'] = startindex
@@ -94,6 +90,7 @@ def cast_liquid_line(LINE, letters, startindex, width, leading, BLOCK, F, hyphen
     caps = FSTYLE['capitals']
     glyphwidth = 0
     GI = -1
+    cap = True
 
     for letter in letters:
         CT = type(letter)
@@ -227,19 +224,23 @@ def cast_liquid_line(LINE, letters, startindex, width, leading, BLOCK, F, hyphen
                 ####################
                 if i:
                     del GLYPHS[i:]
+            cap = False
             break
             
         else:
             x += FSTYLE['tracking']
-
-    LINE['j'] = startindex + len(GLYPHS)
-    LINE['GLYPHS'] = GLYPHS
+    
     LINE['fstyle'] = FSTYLE
-    # cache x's
-    LINE['_X_'] = [g[1] for g in GLYPHS]
-
     try:
         LINE['F'] = GLYPHS[-1][4]
         LINE['advance'] = GLYPHS[-1][5]
     except IndexError:
         LINE['advance'] = 0
+    
+    if cap:
+        GLYPHS.append((-3, x, y, FSTYLE, fstat, x))
+    
+    LINE['j'] = startindex + len(GLYPHS)
+    LINE['GLYPHS'] = GLYPHS
+    LINE['_X_'] = [g[1] for g in GLYPHS]
+

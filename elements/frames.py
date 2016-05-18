@@ -17,10 +17,10 @@ def piecewise(points, y):
     try:
         x2, y2, *_ = points[i]
     except IndexError:
-        if y == points[-1][1]:
+        if y >= points[-1][1]:
             return points[-1][0]
         else:
-            raise ValueError('math domain error')
+            return points[0][0]
         
     x1, y1, *_ = points[i - 1]
     return (x2 - x1)*(y - y1)/(y2 - y1) + x1
@@ -48,7 +48,7 @@ class Frames(list):
         self._segments = (0,) + tuple(F[-1][1] for F in self._run[0])
     
     def y2u(self, y, c):
-        return y - self[c][0][0][1] + self._segments[c]
+        return min(max(0, y - self[c][0][0][1]) + self._segments[c], self._segments[c + 1] - 0.000001)
     
     def start(self, u):
         self._u = u
@@ -79,7 +79,7 @@ class Frames(list):
             x2 = piecewise(self._run[1][self._c], u)
             y = self._y0 + u - self._top
             self._u = u
-            return u, x1, x2, y, self[self._c].page
+            return u, x1, x2, y, self._c, self[self._c].page
     
     def which(self, x0, y0, radius):
         norm = datablocks.DOCUMENT.medium.normalize_XY

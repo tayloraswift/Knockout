@@ -614,7 +614,7 @@ class Document_view(ui.Cell):
 
             # only annotate active tract
             if self._mode == 'text':
-                annot, paint_annot = sorted_glyphs.annot[section][page]
+                annot, paint_annot = sorted_glyphs.annot[section].get(page, ((), ()))
                 for operation, x, y in paint_annot:
                     cr.save()
                     cr.translate(x, y)
@@ -781,9 +781,7 @@ class Document_view(ui.Cell):
                     int(leading * self._A))
         cr.fill()
         # print cursor
-        reverse, isign, jsign = signs
-        if reverse:
-            isign, jsign = jsign, isign
+        isign, jsign = signs
         
         # first
         y1, x11, x21, leading1, page1 = selections[0]

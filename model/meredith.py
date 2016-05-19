@@ -112,28 +112,38 @@ class Section(Plane):
     
     DNA  = [('repeat',      'int set',    ''),
             ('frames',    'frames',     '')]
+
+    def __init__(self, * II, ** KII ):
+        Plane.__init__(self, * II, ** KII )
+        self._UU = []
     
-    def layout(self):
+    def layout(self, b=0, cascade=False):
         calc_bstyle = datablocks.BSTYLES.project_b
         frames = self['frames']
-        frames.start(0)
-        first = True
-        UU = []
-        for b, block in enumerate(self.content):
-            BSTYLE = calc_bstyle(block)
-            try:
-                if first:
-                    first = False
-                else:
-                    frames.space(gap + BSTYLE['margin_top'])
-                block.layout(frames, BSTYLE)
-            except LineOverflow:
-                for block in self.content[b:]:
-                    block.erase()
-                break
+        if b:
+            frames.start(self.content[b].u)
+        else:
+            frames.start(0)
+        BSTYLE = calc_bstyle(self.content[b])
+        self.content[b].layout(frames, BSTYLE)
+        gap = BSTYLE['margin_bottom']
+        
+        UU = self._UU
+        del UU[b:]
+        UU.append(self.content[b].u)
+        halt = False
+        for db, block in enumerate(self.content[b + 1:]):
+            if not halt:
+                BSTYLE = calc_bstyle(block)
+                frames.space(gap + BSTYLE['margin_top'])
+                gap = BSTYLE['margin_bottom']
+                halt = block.layout(frames, BSTYLE, cascade)
+                if halt == -1:
+                    UU.append(block.u)
+                    for blk in self.content[b + 2 + db:]:
+                        blk.erase()
+                    break
             UU.append(block.u)
-            gap = BSTYLE['margin_bottom']
-        self._UU = UU
         self.rebuilt = True
     
     def transfer(self, S):
@@ -157,8 +167,14 @@ class Paragraph_block(Blockstyle):
     def __init__(self, * II, ** KII ):
         Blockstyle.__init__(self, * II, ** KII )
         self.implicit_ = None
+        self.u = infinity
     
-    def layout(self, frames, BSTYLE):
+    def insert(self, text, at):
+        self.content[at:at] = text
+        n = len(text)
+        self.content.misspellings = [pair if pair[1] < at else (pair[0] + n, pair[1] + n, pair[2]) if pair[0] > at else (pair[0], pair[1] + n, pair[2]) for pair in self.content.misspellings]
+    
+    def layout(self, frames, BSTYLE, cascade=False):
         F = Tagcounter()
         leading = BSTYLE['leading']
         indent_range = BSTYLE['indent_range']
@@ -172,8 +188,18 @@ class Paragraph_block(Blockstyle):
         LINES = []
         LIQUID = self.content
         total = len(LIQUID) + 1 # for imaginary </p> cap
-        while True:
+        
+        try:
             u, left, right, y, c, pn = frames.fit(leading)
+            if cascade and u - leading == self.u:
+                return True
+            else:
+                self.u = u - leading
+        except LineOverflow:
+            self.erase()
+            return -1
+        
+        while True:
             
             # calculate indentation
             if l in indent_range:
@@ -241,15 +267,25 @@ class Paragraph_block(Blockstyle):
             i = LINE['j']
             if i == total:
                 break
+            
+            try:
+                u, left, right, y, c, pn = frames.fit(leading)
+            except LineOverflow:
+                self._polish(LINES)
+                return -1
             F = LINE['F']
-        
+
+        self._polish(LINES)
+        return False
+
+    def _polish(self, LINES):
+        leading = LINES[0]['leading']
         flag = (-2, -leading, 0, LINES[0]['fstyle'], LINES[0]['F'], 0)
         LINES[0]['observer'].append(flag)
         self._left_edge = LINES[0]['left'] - leading*0.5
         self._LINES = LINES
         self._UU = [line['u'] - leading for line in LINES]
         self._search_j = [line['j'] for line in LINES]
-        self.u = self._UU[0]
         
         self._whole_location = -1, self._LINES[0], flag
 
@@ -292,23 +328,27 @@ class Paragraph_block(Blockstyle):
     
     def highlight(self, a, b):
         select = []
-        if self._LINES:
-            if a != -1 and b != -2:
-                a, b = sorted((a, b))
-            
+
+        if a != -1 and b != -2:
+            a, b = sorted((a, b))
+        
+        try:
             l1, first, x1 = self._cursor(a)
             l2, last, x2 = self._cursor(b)
-            leading = first['leading']
-            y2 = last['y']
-            pn2 = last['page']
-                    
-            if l1 == l2:
-                select.append((first['y'], x1, x2, leading, first['page']))
-            
-            else:
-                select.append((first['y'],  x1,             first['start'] + first['width'],    leading, first['page']))
-                select.extend((line['y'],   line['start'],  line['start'] + line['width'],      leading, line['page']) for line in (self._LINES[l] for l in range(l1 + 1, l2)))
-                select.append((last['y'],   last['start'],  x2,                                 leading, last['page']))
+        except IndexError:
+            return select
+        
+        leading = first['leading']
+        y2 = last['y']
+        pn2 = last['page']
+                
+        if l1 == l2:
+            select.append((first['y'], x1, x2, leading, first['page']))
+        
+        else:
+            select.append((first['y'],  x1,             first['start'] + first['width'],    leading, first['page']))
+            select.extend((line['y'],   line['start'],  line['start'] + line['width'],      leading, line['page']) for line in (self._LINES[l] for l in range(l1 + 1, l2)))
+            select.append((last['y'],   last['start'],  x2,                                 leading, last['page']))
 
         return select
 
@@ -316,8 +356,11 @@ class Paragraph_block(Blockstyle):
         select = []
         if self._LINES:
             for a, b, word in self.content.misspellings:
-                l1, first, x1 = self._cursor(a)
-                l2, last, x2 = self._cursor(b)
+                try:
+                    l1, first, x1 = self._cursor(a)
+                    l2, last, x2 = self._cursor(b)
+                except IndexError:
+                    continue
                 y2 = last['y']
                 pn2 = last['page']
                         

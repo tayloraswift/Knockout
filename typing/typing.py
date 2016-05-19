@@ -134,4 +134,4 @@ class Keyboard(dict):
                 cursor.fcursor.insert([F({'class': self[name]})])
         else:
             un.history.undo_save(13)
-            cursor.fcursor.insert([char])
+            cursor.fcursor.insert_chars([char])

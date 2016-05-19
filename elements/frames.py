@@ -91,8 +91,12 @@ class Frames(list):
         self.overflow = False
         self._u = u
         self._c = bisect(self._segments, u) - 1
-        self._top, self._limit = self._segments[self._c : self._c + 2]
-        self._y0 = self[self._c][0][0][1]
+        try:
+            self._top, self._limit = self._segments[self._c : self._c + 2]
+            self._y0 = self[self._c][0][0][1]
+        except ValueError:
+            self.overflow = True
+            raise LineOverflow
     
     def _next_frame(self):
         self._c += 1
@@ -107,7 +111,7 @@ class Frames(list):
     def space(self, du):
         u = self._u + du
         if u > self._limit:
-            self._next_frame()
+            self._u = self._limit
         else:
             self._u = u
         

@@ -101,6 +101,28 @@ class PlaneCursor(object):
     
     #############
 
+    def insert(self, blocks):
+        if self.i == self.j:
+            if len(blocks) > 1:
+                pass
+            else:
+                self._blocks[self.i[0]].insert(blocks[0].content, self.i[1])
+            
+            self._relayout()
+    
+    def insert_chars(self, text):
+        if self.i == self.j:
+            self._blocks[self.i[0]].insert(text, self.i[1])
+            self.i = (self.i[0], self.i[1] + len(text))
+            self.j = self.i
+            self._relayout()
+    
+    def _relayout(self):
+        if self.PLANE is self.section:
+            self.section.layout(self.i[0], True)
+        else:
+            self.section.layout(self.plane_address[1], True)
+    
     def styling_at(self):
         l, line, glyph = self.PLANE.where(self.i)
         return line['BLOCK'], glyph[3]

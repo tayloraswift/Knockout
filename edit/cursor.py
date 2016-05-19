@@ -1,8 +1,9 @@
 from itertools import chain
 
 from model.wonder import words
+
 from elements.datablocks import DOCUMENT
-# from elements.elements import Paragraph, OpenFontpost, CloseFontpost, Block_element
+
 from edit.text import expand_cursors_word
 
 def address(box, path):

@@ -631,7 +631,8 @@ class Document_view(ui.Cell):
         """
         if self._mode == 'text':
             selections, signs = self.planecursor.paint_current_selection()
-            self._draw_selection_highlight(cr, selections, signs)
+            if selections:
+                self._draw_selection_highlight(cr, selections, signs)
             
             page_highlight = self.planecursor.PG
         

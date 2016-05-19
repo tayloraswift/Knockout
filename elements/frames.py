@@ -15,7 +15,6 @@ def accumulate_path(path):
 
 def piecewise(points, y):
     i = bisect([point[1] for point in points], y)
-    
     try:
         x2, y2, *_ = points[i]
     except IndexError:
@@ -35,6 +34,42 @@ class Frame(list):
     def inside(self, x, y, radius):
         return y >= self[0][0][1] - radius and y <= self[1][-1][1] + radius and x >= piecewise(self[0], y) - radius and x <= piecewise(self[1], y) + radius
 
+    ## used by Frames object ##
+    def inside_vertical(self, y):
+        return self[0][0][1] <= y <= self[1][-1][1]
+
+    ## used by editor ##
+    def which_portal(self, x, y, radius):
+        portal = (None, 0, 0)
+        if -radius - 5 <= y - self[0][0][1] <= radius:
+            if self[0][0][0] < x < self[1][0][0]:
+                portal = ('entrance', x - self[0][0][0], y - self[0][0][1])
+
+        elif -radius <= y - self[1][-1][1] <= radius + 5:
+            if self[0][-1][0] < x < self[1][-1][0]:
+                portal = ('portal', x - self[1][-1][0], y - self[1][-1][1])
+        return portal
+
+    def insert_point(self, r, y):
+        y = 10*round(y*0.1)
+        # make sure to only insert points between the portals
+        if self.inside_vertical(y):
+            x = 10*round(piecewise(self[r], y)*0.1)
+            i = bisect([point[1] for point in self[r]], y)
+            self[r].insert(i, [x, y, False])
+            return i
+        else:
+            return None
+    
+    def can_fall(self, x, y):
+        return not (x, y) in set((p[0], p[1]) for p in chain(self[0], self[1]))
+
+    def fix_r(self, r):
+        # removes points that are outside the portals
+        self[r][:] = [point for point in self[r] if self.inside_vertical(point[1])]
+        # sort list
+        self[r].sort(key = lambda k: k[1])
+    
     def __repr__(self):
         return ' ; '.join(chain((' '.join(str(x) + ',' + str(y) for x, y, a in side) for side in self), (str(self.page),)))
 
@@ -96,24 +131,109 @@ class Frames(list):
                 return c, frame.page
         return None, None
     
+    def fix(self, c=None):
+        if c is not None:
+            self[c].fix_r(0)
+            self[c].fix_r(1)
+        self._straighten()
+    
+    ## used by editor ##
+    
     def which_point(self, x0, y0, radius):
         P, C, R = None, None, None
         norm = datablocks.DOCUMENT.normalize_XY
-        for c, channel in enumerate(self):
-            x, y = norm(x0, y0, channel.page)
-            for r in range(len(channel.railings)):
-                for i, point in enumerate(channel.railings[r]):
+        for c, frame in enumerate(self):
+            x, y = norm(x0, y0, frame.page)
+            inside = frame.inside_vertical(y)
+            for r, railing in enumerate(frame):
+                for i, point in enumerate(railing):
                     if abs(x - point[0]) + abs(y - point[1]) < radius:
-                        return channel.page, c, r, i
+                        return frame.page, c, r, i
                 # if that fails, take a railing, if possible
-                if not channel._is_outside(y) and abs(x - channel.edge(r, y)[0]) <= radius:
-                    P = channel.page
+                if inside and abs(x - piecewise(frame[r], y)) <= radius:
+                    P = frame.page
                     C = c
                     R = r
-            if channel.inside(x, y, radius):
-                P = channel.page
+            if frame.inside(x, y, radius):
+                P = frame.page
                 C = c
         return P, C, R, None
+    
+    def is_selected(self, c, r, i):
+        try:
+            return self[c][r][i][2]
+        except TypeError:
+            return False
+    
+    def make_selected(self, c, r, i, mod):
+        if mod == 'ctrl':
+            self[c][r][i][2] = not self[c][r][i][2]
+        else:
+            self[c][r][i][2] = True
+        
+    def clear_selection(self):
+        cfi = chain.from_iterable
+        for point in cfi(cfi(frame) for frame in self):
+            point[2] = False
+
+    def expand_selection(self, c):
+        if c is None:
+            self._select_all()
+        else:
+            touched = False
+            for point in chain.from_iterable(self[c]):
+                if not point[2]:
+                    point[2] = True
+                    touched = True
+            if not touched:
+                self._select_all()
+    
+    def _select_all(self):
+        cfi = chain.from_iterable
+        for point in cfi(cfi(frame) for frame in self):
+            point[2] = True
+
+    def delete_selection(self):
+        changed = False
+        for r, railing in chain.from_iterable(enumerate(frame) for frame in self):
+            remain = [point for i, point in enumerate(railing) if not point[2] or i == 0 or i == len(railing) - 1]
+            if len(remain) != len(railing):
+                railing[:] = remain
+                changed = True
+        return changed
+
+    def translate_selection(self, x, y, x0, y0):
+        x, y = 10*round(x/10), 10*round(y/10)
+        
+        # survey conditions
+        for frame in self:
+            for point in chain(frame[0], frame[1]):
+                if point[2]:
+                    # do any of the points fall on another point?
+                    if not frame.can_fall(point[0] + x - x0, point[1] + y - y0):
+                        return
+
+        for frame in self:
+            for point in chain(frame[0], frame[1]):
+                if point[2]:
+                    point[:2] = [point[0] + x - x0, point[1] + y - y0]
+
+            # check y alignment
+            if frame[0][0][1] != frame[1][0][1]:
+                # determine which should move
+                if frame[0][0][2]:
+                    flip = 1
+                else:
+                    flip = 0
+                frame[flip][0][1] = frame[not flip][0][1]
+
+            if frame[0][-1][1] != frame[1][-1][1]:
+                # determine which should move
+                if frame[0][-1][2]:
+                    flip = 1
+                else:
+                    flip = 0
+                frame[flip][-1][1] = frame[not flip][-1][1]
     
     def __repr__(self):
         return ' |\n    '.join(repr(F) for F in self)

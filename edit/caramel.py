@@ -30,13 +30,13 @@ def _draw_broken_bar(cr, x1, y1, x2, color_rgba, top):
     
     cr.set_dash([], 0)
 
-def overflow(cr, channels, Tx, Ty):
-    if channels.overflow:
-        channel = channels[-1]
+def overflow(cr, frames, Tx, Ty):
+    if frames.overflow:
+        frame = frames[-1]
         cr.set_source_rgba(1, 0, 0.1, 0.8)
         cr.set_line_width(2)
-        x = round((Tx(channel.railings[0][-1][0] , channel.page) + Tx(channel.railings[1][-1][0], channel.page))*0.5)
-        y = round(Ty(channel.railings[0][-1][1] , channel.page))
+        x = round((Tx(frame[0][-1][0] , frame.page) + Tx(frame[1][-1][0], frame.page))*0.5)
+        y = round(Ty(frame[0][-1][1] , frame.page))
         cr.move_to(x - 10, y + 10)
         cr.rel_line_to(10, 10)
         cr.rel_line_to(10, -10)
@@ -68,39 +68,39 @@ class Channels_controls(object):
         return self.section, self._selected_point[0]
 
     def target_select(self, x, y):
-        p, c, r, i = self._FRAMES.target_point(x, y, 20)
+        p, c, r, i = self._FRAMES.which_point(x, y, 20)
         if c is not None:
             self.HPG = p
-            xp, yp = meredith.page.normalize_XY(x, y, p)
+            xp, yp = DOCUMENT.normalize_XY(x, y, p)
             if r is None:
-                ptype, dpx, dpy = self._FRAMES[c].target_portal(xp, yp, radius=5)
+                ptype, dpx, dpy = self._FRAMES[c].which_portal(xp, yp, radius=5)
                 self._hover_portal = (c, ptype)
         self._hover_point = c, r, i
 
     def target(self, x, y):
-        p, c, r, i = self._FRAMES.target_point(x, y, 20)
+        p, c, r, i = self._FRAMES.which_point(x, y, 20)
         self._selected_point = [c, r, i]
         if c is not None:
             self.PG = p
-            xp, yp = meredith.page.normalize_XY(x, y, p)
+            xp, yp = DOCUMENT.normalize_XY(x, y, p)
             if r is None:
-                self._selected_portal = self._FRAMES[c].target_portal(xp, yp, radius=5)
+                self._selected_portal = self._FRAMES[c].which_portal(xp, yp, radius=5)
             else:
                 self._selected_portal = (None, 0, 0)
             return xp, yp
         
         # try different tract
-        for tract in meredith.mipsy:
-            p, c, r, i = tract.channels.target_point(x, y, 20)
+        for section in DOCUMENT.content:
+            p, c, r, i = section['frames'].which_point(x, y, 20)
             if c is not None:
                 self.PG = p
                 self._selected_point = [c, r, i]
-                self.section = tract
-                self._FRAMES = tract.channels
-                return meredith.page.normalize_XY(x, y, p)
+                self.section = section
+                self._FRAMES = section['frames']
+                return DOCUMENT.normalize_XY(x, y, p)
         
         self._selected_portal = (None, 0, 0)
-        return meredith.page.normalize_XY(x, y, self.PG)
+        return DOCUMENT.normalize_XY(x, y, self.PG)
 
     def press(self, x, y, name):
         un.history.undo_save(3)
@@ -140,7 +140,7 @@ class Channels_controls(object):
                 self._FRAMES.make_selected(c, 0, -1, name)
                 self._FRAMES.make_selected(c, 1, -1, name)
                 r = 1
-                i = len(self._FRAMES[c].railings[1]) - 1
+                i = len(self._FRAMES[c][1]) - 1
             
             elif r is not None:
                 # insert point if one was not found
@@ -149,39 +149,39 @@ class Channels_controls(object):
                 self._selected_point[2] = i
 
             if i is not None:
-                self._sel_locale = tuple(self._FRAMES[c].railings[r][i][:2])
+                self._sel_locale = tuple(self._FRAMES[c][r][i][:2])
                 self._release_locale = self._sel_locale
 
             return True
     
     def press_motion(self, x, y):
-        x, y = meredith.page.normalize_XY(x, y, self.PG)
+        x, y = DOCUMENT.normalize_XY(x, y, self.PG)
         if self._mode == 'outlines':
             c, r, i = self._selected_point
             portal, px, py = self._selected_portal
             
             if i is not None or portal is not None:
                 if i is not None:
-                    xo, yo = self._FRAMES[c].railings[r][i][:2]
-                    self._FRAMES.translate_selection(x, y, xo, yo)
+                    x0, y0 = self._FRAMES[c][r][i][:2]
+                    self._FRAMES.translate_selection(x, y, x0, y0)
                     
-                    anchor = tuple(self._FRAMES[c].railings[r][i][:2])
+                    anchor = tuple(self._FRAMES[c][r][i][:2])
 
                 elif portal == 'entrance':
-                    xo, yo = self._FRAMES[c].railings[0][0][:2]
-                    self._FRAMES.translate_selection(x - px, y - py, xo, yo)
+                    x0, y0 = self._FRAMES[c][0][0][:2]
+                    self._FRAMES.translate_selection(x - px, y - py, x0, y0)
                     
-                    anchor = tuple(self._FRAMES[c].railings[0][0][:2])
+                    anchor = tuple(self._FRAMES[c][0][0][:2])
 
                 elif portal == 'portal':
-                    xo, yo = self._FRAMES[c].railings[1][-1][:2]
-                    self._FRAMES.translate_selection(x - px, y - py, xo, yo)
+                    x0, y0 = self._FRAMES[c][1][-1][:2]
+                    self._FRAMES.translate_selection(x - px, y - py, x0, y0)
                 
-                    anchor = tuple(self._FRAMES[c].railings[1][-1][:2])
+                    anchor = tuple(self._FRAMES[c][1][-1][:2])
                 
                 if self._sel_locale != anchor:
-                        self._sel_locale = anchor
-                        noticeboard.redraw_becky.push_change()
+                    self._sel_locale = anchor
+                    noticeboard.redraw_becky.push_change()
  
         elif self._mode == 'grid':
             # translate grid lines
@@ -194,17 +194,16 @@ class Channels_controls(object):
         portal, px, py = self._selected_portal
 
         if i is not None or portal is not None:
-            self._FRAMES[c].fix(0)
-            self._FRAMES[c].fix(1)
+            self._FRAMES.fix(c)
             
             if i is not None:
-                anchor = tuple(self._FRAMES[c].railings[r][i][:2])
+                anchor = tuple(self._FRAMES[c][r][i][:2])
 
             if portal == 'entrance':
-                anchor = tuple(self._FRAMES[c].railings[0][0][:2])
+                anchor = tuple(self._FRAMES[c][0][0][:2])
 
             elif portal == 'portal':
-                anchor = tuple(self._FRAMES[c].railings[1][-1][:2])
+                anchor = tuple(self._FRAMES[c][1][-1][:2])
 
             if self._release_locale != anchor:
                 self._release_locale = anchor
@@ -227,18 +226,16 @@ class Channels_controls(object):
                     # wipe out entire tract if it's the last one
                     if not self._FRAMES:
                         old_tract = self.section
-                        meredith.mipsy.delete_tract(old_tract)
-                        self.section = meredith.mipsy[0]
-                        self._FRAMES = self.section.channels
-                        # cursor needs to be informed
-                        if cursor.fcursor.section is old_tract:
-                            cursor.fcursor.assign_text(self.section)
-                            cursor.fcursor.section = self.section
+                        DOCUMENT.content.remove(old_tract)
+                        self.section = DOCUMENT.content[-1]
+                        self._FRAMES = self.section['frames']
+                
                 else:
                     un.history.undo_save(3)
                     if not self._FRAMES.delete_selection():
                         un.history.pop()
                 
+                self._FRAMES.fix()
                 self.section.layout()
             
             elif self._mode == 'grid':

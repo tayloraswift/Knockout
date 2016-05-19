@@ -1,5 +1,6 @@
 from bisect import bisect
 from itertools import groupby
+from math import inf as infinity
 
 from elements.box import Box
 from elements.style import Blockstyle
@@ -7,6 +8,8 @@ from elements import datablocks
 from elements.datatypes import Tagcounter
 
 from model.lines import Glyphs_line, cast_liquid_line
+
+from state.exceptions import LineOverflow
 
 class Sorted_pages(dict):
     def __missing__(self, key):
@@ -26,11 +29,14 @@ class Meredith(Box):
     
     def layout_all(self):
         self._recalc_page()
+        self._sorted_pages.clear()
         for section in self.content:
             section.layout()
 
     def transfer(self):
-        if not self._sorted_pages:
+        if any(section.rebuilt for section in self.content) or not self._sorted_pages:
+            print('resend')
+            self._sorted_pages.clear()
             self._sorted_pages.annot = []
             for section in self.content:
                 section.transfer(self._sorted_pages)
@@ -114,16 +120,22 @@ class Section(Plane):
         frames.start(0)
         first = True
         UU = []
-        for block in self.content:
+        for b, block in enumerate(self.content):
             BSTYLE = calc_bstyle(block)
-            if first:
-                first = False
-            else:
-                frames.space(gap + BSTYLE['margin_top'])
-            block.layout(frames, BSTYLE)
+            try:
+                if first:
+                    first = False
+                else:
+                    frames.space(gap + BSTYLE['margin_top'])
+                block.layout(frames, BSTYLE)
+            except LineOverflow:
+                for block in self.content[b:]:
+                    block.erase()
+                break
             UU.append(block.u)
             gap = BSTYLE['margin_bottom']
         self._UU = UU
+        self.rebuilt = True
     
     def transfer(self, S):
         for block in self.content:
@@ -134,6 +146,7 @@ class Section(Plane):
             P['_annot'] = []
             P['_paint_annot'] = []
         S.annot.append(annot)
+        self.rebuilt = False
         
 
 class Paragraph_block(Blockstyle):
@@ -239,6 +252,12 @@ class Paragraph_block(Blockstyle):
         
         self._whole_location = -1, self._LINES[0], flag
 
+    def erase(self):
+        self._LINES = []
+        self._UU = []
+        self._search_j = []
+        self.u = infinity
+
     def which(self, x, u, r):
         if r:
             l = max(0, bisect(self._UU, u) - 1)
@@ -275,8 +294,11 @@ class Paragraph_block(Blockstyle):
         if a != -1 and b != -2:
             a, b = sorted((a, b))
         
-        l1, first, x1 = self._cursor(a)
-        l2, last, x2 = self._cursor(b)
+        try:
+            l1, first, x1 = self._cursor(a)
+            l2, last, x2 = self._cursor(b)
+        except IndexError:
+            return select
         leading = first['leading']
         y2 = last['y']
         pn2 = last['page']

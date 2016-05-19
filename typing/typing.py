@@ -3,9 +3,7 @@ import time
 
 from edit import cursor
 
-#from elements.elements import Paragraph, OpenFontpost, CloseFontpost
-
-#from IO import un, kevin
+from IO import un
 
 class Keyboard(dict):
     def __init__(self, shortcuts):

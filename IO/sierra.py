@@ -53,10 +53,8 @@ def load(name):
     DATA = literal_eval(doc[doc.find('<!-- #############') + 18 : doc.find('############# -->')])
 
     # unpack styles
-#    styles.faith(DATA)
 #    Node.MSL = modulestyles.MS_Library(modules)
     
-    # set up tract model, page grid objects
     datablocks.TTAGS, datablocks.BTAGS, datablocks.DOCUMENT, datablocks.TSTYLES, datablocks.BSTYLES = tree.deserialize(doc)
     
     from interface import karlie, taylor
@@ -66,19 +64,15 @@ def load(name):
     
     # aim editor objects
     caramel.delight = caramel.Channels_controls(DATA['contexts']['channels'])
-    
-#    typing.keyboard = typing.Keyboard(constants.shortcuts)
+    typing.keyboard = typing.Keyboard(constants.shortcuts)
     cursor.fcursor = cursor.PlaneCursor( * DATA['contexts']['text'] )
-    typing.keyboard = None
     
     datablocks.DOCUMENT.layout_all()
-#    Text.update()
+    Text.update()
 
     # start undo tracking
     un.history = un.UN() 
-
     
-
     taylor.becky = taylor.Document_view(save, DATA['view'])
     noticeboard.refresh_properties_type.push_change(DATA['view']['mode'])
 #    karlie.klossy = karlie.Properties(DATA['view']['mode'], partition=1 )

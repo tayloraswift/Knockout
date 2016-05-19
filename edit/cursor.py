@@ -126,27 +126,6 @@ class FCursor(object):
 
         self.PG = ctx['p']
 
-    def polaroid(self):
-        if self.FTX is self.R_FTX:
-            i = self.i
-            j = self.j
-        else:
-            i = self.si
-            j = i
-        return {'t': meredith.mipsy.index(self.R_FTX), 'i': i, 'j': j, 'p': self.PG}
-
-    def assign_text(self, ftext):
-        self.FTX = ftext
-        self.text = ftext.text
-
-
-    def paint_current_selection(self):
-        zeros = {'<fc/>', '<fo/>', '\t'}
-        signs = (self.j < self.i,
-                (str(self.text[self.i - 1]) in zeros, str(self.text[self.i]) in zeros) , 
-                (str(self.text[self.j - 1]) in zeros, str(self.text[self.j]) in zeros))
-        return self.FTX.paint_select(self.i, self.j), signs
-    
     def take_selection(self):
         self.i, self.j = sorted((self.i, self.j))
         return self.text[self.i:self.j]
@@ -378,18 +357,6 @@ class FCursor(object):
 
     def hop(self, direction): #implemented exclusively for arrow-up/down events
         self.i = self.FTX.line_jump(self.i, direction)
-
-    def pp_at(self):
-        return self.FTX.line_at(self.i)['PP']
-
-    def styling_at(self):
-        line = self.FTX.line_at(self.i)
-        try:
-            glyph = line['GLYPHS'][self.i - line['i']]
-        except IndexError:
-            glyph = line['GLYPHS'][-1]
-
-        return line['PP'], glyph[3]
 
     def front_and_back(self):
         return self.FTX.line_indices(self.i)

@@ -625,10 +625,10 @@ class Document_view(ui.Cell):
             
             else:
                 cr.restore()
-        """
+        
         if self._mode == 'text':
-            self._draw_spelling(cr, tract.paint_misspellings())
-        """
+            self._draw_spelling(cr, self.planecursor.section.highlight_spelling())
+        
         if self._mode == 'text':
             selections, signs = self.planecursor.paint_current_selection()
             if selections:

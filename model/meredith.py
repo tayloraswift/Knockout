@@ -1,5 +1,5 @@
 from bisect import bisect
-from itertools import groupby
+from itertools import groupby, chain
 from math import inf as infinity
 
 from elements.box import Box
@@ -35,7 +35,6 @@ class Meredith(Box):
 
     def transfer(self):
         if any(section.rebuilt for section in self.content) or not self._sorted_pages:
-            print('resend')
             self._sorted_pages.clear()
             self._sorted_pages.annot = []
             for section in self.content:
@@ -147,7 +146,9 @@ class Section(Plane):
             P['_paint_annot'] = []
         S.annot.append(annot)
         self.rebuilt = False
-        
+
+    def highlight_spelling(self):
+        return chain.from_iterable(block.highlight_spelling() for block in self.content)
 
 class Paragraph_block(Blockstyle):
     name = 'p'
@@ -291,28 +292,44 @@ class Paragraph_block(Blockstyle):
     
     def highlight(self, a, b):
         select = []
-        if a != -1 and b != -2:
-            a, b = sorted((a, b))
-        
-        try:
+        if self._LINES:
+            if a != -1 and b != -2:
+                a, b = sorted((a, b))
+            
             l1, first, x1 = self._cursor(a)
             l2, last, x2 = self._cursor(b)
-        except IndexError:
-            return select
-        leading = first['leading']
-        y2 = last['y']
-        pn2 = last['page']
-                
-        if l1 == l2:
-            select.append((first['y'], x1, x2, leading, first['page']))
-        
-        else:
-            select.append((first['y'],  x1,             first['start'] + first['width'],    leading, first['page']))
-            select.extend((line['y'],   line['start'],  line['start'] + line['width'],      leading, line['page']) for line in (self._LINES[l] for l in range(l1 + 1, l2)))
-            select.append((last['y'],   last['start'],  x2,                                 leading, last['page']))
+            leading = first['leading']
+            y2 = last['y']
+            pn2 = last['page']
+                    
+            if l1 == l2:
+                select.append((first['y'], x1, x2, leading, first['page']))
+            
+            else:
+                select.append((first['y'],  x1,             first['start'] + first['width'],    leading, first['page']))
+                select.extend((line['y'],   line['start'],  line['start'] + line['width'],      leading, line['page']) for line in (self._LINES[l] for l in range(l1 + 1, l2)))
+                select.append((last['y'],   last['start'],  x2,                                 leading, last['page']))
 
         return select
 
+    def highlight_spelling(self):
+        select = []
+        if self._LINES:
+            for a, b, word in self.content.misspellings:
+                l1, first, x1 = self._cursor(a)
+                l2, last, x2 = self._cursor(b)
+                y2 = last['y']
+                pn2 = last['page']
+                        
+                if l1 == l2:
+                    select.append((first['y'], x1, x2, first['page']))
+                
+                else:
+                    select.append((first['y'],  x1,             first['GLYPHS'][-1][5] + first['x'],    first['page']))
+                    select.extend((line['y'],   line['start'],  line['GLYPHS'][-1][5] + line['x'],      line['page']) for line in (self._LINES[l] for l in range(l1 + 1, l2)))
+                    select.append((last['y'],   last['start'],  x2,                                     last['page']))
+        return select
+    
     def run_stats(self, spell):
         self.content.stats(spell)
         return self.content.word_count

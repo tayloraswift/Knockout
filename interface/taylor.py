@@ -403,15 +403,16 @@ class Document_view(ui.Cell):
             if self._mode == 'text':
                 try:
                     self.planecursor.target(xo, yo)
-                    i = self.planecursor.i
+                    if len(self.planecursor.i) != 2:
+                        return
+                    ib, it = self.planecursor.i
                     
-                    ms = self.planecursor.text.misspellings
-                    pair_i = bisect.bisect([pair[0] for pair in ms], i) - 1
+                    ms = self.planecursor.PLANE.content[ib].content.misspellings
+                    pair_i = bisect.bisect([pair[0] for pair in ms], it) - 1
 
-                    if ms[pair_i][0] <= i <= ms[pair_i][1]:
-
-                        if i == ms[pair_i][1]:
-                            self.planecursor.i -= 1
+                    if ms[pair_i][0] <= it <= ms[pair_i][1]:
+                        if it == ms[pair_i][1]:
+                            self.planecursor.i = (ib, it - 1)
                         
                         # used to keep track of ui redraws
                         self._sel_cursor = self.planecursor.j

@@ -104,24 +104,33 @@ class PlaneCursor(object):
         if self.i > self.j:
             self.i, self.j = self.j, self.i
     
+    def increment_cursor(self, a, da):
+        a = list(a)
+        if len(a) == 2:
+            a[1] += da
+            if a[1] < 0:
+                if a[0] > 0:
+                    a[0] -= 1
+                    a[1] = len(self._blocks[a[0]].content)
+                else:
+                    a = [0, 0]
+
+            elif a[1] > len(self._blocks[a[0]].content):
+                if a[0] < len(self._blocks) - 1:
+                    a[0] += 1
+                    a[1] = 0
+                else:
+                    a = [len(self._blocks) - 1, len(self._blocks[a[0]].content)]
+        else:
+            a[0] = min(len(self._blocks) - 1, max(0, a[0] + da))
+        return tuple(a)
+        
     def delete(self, da=0, db=0, nolayout=False):
         self._sort_cursors()
         
-        a = list(self.i)
-        b = list(self.j)
-        a[-1] += da
-        b[-1] += db
+        a = self.increment_cursor(self.i, da)
+        b = self.increment_cursor(self.j, db)
         
-        if len(a) == 2:
-            if a[1] < 0 < a[0]:
-                a[0] -= 1
-                a[1] = len(self._blocks[a[0]].content)
-
-        if len(b) == 2:
-            if b[1] > len(self._blocks[b[0]].content) and b[0] < len(self._blocks) - 1:
-                b[0] += 1
-                b[1] = 0
-    
         if len(a) == 2:
             affected = self._blocks[a[0]:b[0] + 1]
             if len(affected) == 1:
@@ -135,7 +144,7 @@ class PlaneCursor(object):
         else:
             del self._blocks[a[0]:b[0]]
 
-        self.i = tuple(a)
+        self.i = a
         self.j = self.i
         
         if not nolayout:

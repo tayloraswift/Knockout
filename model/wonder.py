@@ -1,3 +1,5 @@
+from itertools import chain
+
 _fail = '\033[91m'
 _endc = '\033[0m'
 _bold = '\033[1m'
@@ -30,12 +32,12 @@ else:
 
 _prose = set('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789&@#$\'’-')
 # these characters get read as word-breaks in speech
-_breaking_prose = set(('</p>', '<br/>', '—', '–', '/', '(', ')', '\\', '|', '=', '+', '_', ' '))
+_breaking_prose = set(('<br/>', '—', '–', '/', '(', ')', '\\', '|', '=', '+', '_', ' '))
 
 # NOT the same as prose breaks because of '.', ':', etc. *Does not include ''' or '’' because these are found word-internal and when used as quotes, encapsulate single characters*
-_breaking_chars = set((' ', '</p>', '<p>', '<f>', '</f>', '<br/>', '—', '–', '-', ':', '.', ',', ';', '/', '!', '?', '(', ')', '[', ']', '{', '}', '\\', '|', '=', '+', '_', '"', '“', '”', '<', '>' ))
+_breaking_chars = set((' ', '<fo>', '</fc>', '<br/>', '—', '–', '-', ':', '.', ',', ';', '/', '!', '?', '(', ')', '[', ']', '{', '}', '\\', '|', '=', '+', '_', '"', '“', '”', '<', '>' ))
 
-def words(text, startindex=0, spell=False):
+def words(text, spell=False):
 
     T = list(map(str, text))
 
@@ -44,7 +46,7 @@ def words(text, startindex=0, spell=False):
         misspelled_indices = []
         
         i = 0
-        for j in (j for j, e in enumerate(T) if e in _breaking_prose):
+        for j in chain((j for j, e in enumerate(T) if e in _breaking_prose), (len(text),)):
             if j - i:
                 selection = T[i:j]
                 
@@ -56,7 +58,7 @@ def words(text, startindex=0, spell=False):
                         if ii - iprevious:
                             W = ''.join([v for v in selection[iprevious:ii] if len(v) == 1])
                             if len(W) > 1 and not check_spelling(W):
-                                misspelled_indices.append((startindex + i + iprevious, startindex + i + ii, W))
+                                misspelled_indices.append((i + iprevious, i + ii, W))
                         
                         iprevious = ii + 1
                 
@@ -67,7 +69,7 @@ def words(text, startindex=0, spell=False):
     else:
         word_count = 0
         previous = 0
-        for i in (i for i, e in enumerate(T) if type(e) is str and e in _breaking_prose):
+        for i in chain((i for i, e in enumerate(T) if type(e) is str and e in _breaking_prose), (len(text),)):
             if i - previous:
                 if any(e in _prose for e in T[previous:i]):
                     word_count += 1

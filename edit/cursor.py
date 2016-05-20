@@ -222,22 +222,7 @@ class PlaneCursor(object):
         for block in self._blocks:
             word_total += block.run_stats(spell)
         self.word_total = word_total
-
-class FCursor(object):
-    def __init__(self, ctx):
-        self.R_FTX = meredith.mipsy[ctx['t']]
-        self.assign_text(self.R_FTX)
-        if max(ctx['i'], ctx['j']) < len(self.text):
-            self.si = ctx['i']
-            self.i = ctx['i']
-            self.j = ctx['j']
-        else:
-            self.si = 0
-            self.i = 0
-            self.j = 0
-
-        self.PG = ctx['p']
-
+    """
     def bridge(self, tag, sign):
         S = self.take_selection() # also sorts cursors
         if S and '</p>' not in S:
@@ -360,9 +345,4 @@ class FCursor(object):
                 return True
             else:
                 return False
-
-    def hop(self, direction): #implemented exclusively for arrow-up/down events
-        self.i = self.FTX.line_jump(self.i, direction)
-
-    def front_and_back(self):
-        return self.FTX.line_indices(self.i)
+    """

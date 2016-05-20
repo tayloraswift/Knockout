@@ -110,8 +110,49 @@ class PlaneCursor(object):
             
             self._relayout()
     
+    def delete(self, da=0, db=0, nolayout=False):
+        if self.i > self.j:
+            self.i, self.j = self.j, self.i
+        
+        a = list(self.i)
+        b = list(self.j)
+        
+        a[-1] += da
+        b[-1] += db
+        
+        if len(a) == 2:
+            if a[1] < 0 < a[0]:
+                a[0] -= 1
+                a[1] = len(self._blocks[a[0]].content)
+
+        if len(b) == 2:
+            if b[1] > len(self._blocks[b[0]].content) and b[0] < len(self._blocks) - 1:
+                b[0] += 1
+                b[1] = 0
+    
+        if len(a) == 2:
+            affected = self._blocks[a[0]:b[0] + 1]
+            if len(affected) == 1:
+                affected[0].delete(a[1], b[1])
+            else:
+                a_end = len(self._blocks[a[0]].content)
+                affected[0].delete(a[1], a_end)
+                affected[0].insert(affected[-1].content[b[1]:], a_end)
+                self._blocks[a[0]:b[0] + 1] = affected[0:1]
+
+        else:
+            del self._blocks[a[0]:b[0]]
+
+        self.i = tuple(a)
+        self.j = self.i
+        
+        if not nolayout:
+            self._relayout()
+    
     def insert_chars(self, text):
-        if self.i == self.j:
+        if len(self.i) == 2:
+            if self.i != self.j:
+                self.delete(nolayout=True)
             self._blocks[self.i[0]].insert(text, self.i[1])
             self.i = (self.i[0], self.i[1] + len(text))
             self.j = self.i
@@ -147,98 +188,6 @@ class FCursor(object):
             self.j = 0
 
         self.PG = ctx['p']
-
-    def take_selection(self):
-        self.i, self.j = sorted((self.i, self.j))
-        return self.text[self.i:self.j]
-
-    def _recalculate(self):
-        if self.FTX is self.R_FTX:
-            self.si = self.i
-        self.R_FTX.partial_layout(self.si)
-
-    def _burn(self, i, j):
-        # filter for paragraph elements
-        ptags = [e for e in self.text[i:j] if e == '</p>' or type(e) is Paragraph]
-        
-        ash = []
-        di = 0
-        if ptags:
-            left = ptags[0]
-            if left == '</p>': 
-                ash.append(left)
-                
-            right = ptags[-1]
-            if type(right) is Paragraph:
-                ash.append(right)
-                di = 1
-        if len(ash) == 2:
-            ash = []
-            di = 0
-        
-        self.i = i + di
-        self.text[i:j] = ash
-        self.j = self.i
-        return len(ash)
-
-    def delspace(self, direction=False): # only called when i = j
-        j = self.j
-        if direction:
-            try:
-                k = self.i + next(i for i, e in enumerate(self.text[self.i + 1:]) if type(e) is not Paragraph) + 1
-            except StopIteration:
-                k = len(self.text) - 1
-        else:
-            try:
-                k = self.i - next(i for i, e in enumerate(reversed(self.text[:self.i])) if type(e) is not Paragraph) - 1
-            except StopIteration:
-                k = 1
-        
-        start, end = sorted((k , j))
-        offset = start - end + self._burn(start, end)
-        
-        # fix spelling lines
-        self.text.misspellings = [pair if pair[1] < start else (pair[0] + offset, pair[1] + offset, pair[2]) if pair[0] > end else (0, 0, None) for pair in self.text.misspellings]
-        self._recalculate()
-
-    def insert(self, segment):
-        if self.take_selection():
-            m = self.i - self.j
-            m += self._burn(self.i, self.j)
-            d = True
-        else:
-            d = False
-            m = 0
-
-        if segment:
-            if not self.text or isinstance(self.text[self.i], (Paragraph, Block_element)): # outside
-                # crop off chars
-                try:
-                    l = next(i for i, e in enumerate(segment) if isinstance(e, (Paragraph, Block_element)))
-                    r = len(segment) - next(i for i, e in enumerate(reversed(segment)) if isinstance(e, (Paragraph, Block_element)) or e == '</p>')
-                    if r > l:
-                        segment = segment[l:r]
-                    else:
-                        segment = []
-                except StopIteration:
-                    segment = []
-            else: # inside
-                if isinstance(segment[0], (Paragraph, Block_element)):
-                    segment.insert(0, '</p>')
-                if segment[-1] == '</p>' or isinstance(segment[-1], Block_element):
-                    P = next(c.P.copy() for c in self.text[self.i::-1] if type(c) is Paragraph)
-                    segment.append(Paragraph(P))
-        
-        s = len(segment)
-        m += s
-        if s or d:
-            self.text[self.i:self.j] = segment
-            self._recalculate()
-            self.i += s
-            self.j = self.i
-            
-            # fix spelling lines
-            self.text.misspellings = [pair if pair[1] < self.i else (pair[0] + m, pair[1] + m, pair[2]) if pair[0] > self.i else (pair[0], pair[1] + m, pair[2]) for pair in self.text.misspellings]
 
     def expand_cursors(self):
         # order

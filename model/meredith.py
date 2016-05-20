@@ -120,11 +120,13 @@ class Section(Plane):
     def layout(self, b=0, cascade=False):
         calc_bstyle = datablocks.BSTYLES.project_b
         frames = self['frames']
+        BSTYLE = calc_bstyle(self.content[b])
         if b:
-            frames.start(self.content[b].u)
+            frames.start(self.content[b - 1].u_bottom)
+            PREVSTYLE = calc_bstyle(self.content[b - 1])
+            frames.space(PREVSTYLE['margin_bottom'] + BSTYLE['margin_top'])
         else:
             frames.start(0)
-        BSTYLE = calc_bstyle(self.content[b])
         self.content[b].layout(frames, BSTYLE)
         gap = BSTYLE['margin_bottom']
         
@@ -173,6 +175,11 @@ class Paragraph_block(Blockstyle):
         self.content[at:at] = text
         n = len(text)
         self.content.misspellings = [pair if pair[1] < at else (pair[0] + n, pair[1] + n, pair[2]) if pair[0] > at else (pair[0], pair[1] + n, pair[2]) for pair in self.content.misspellings]
+    
+    def delete(self, a, b):
+        del self.content[a:b]
+        n = a - b
+        self.content.misspellings = [pair if pair[1] < a else (pair[0] + n, pair[1] + n, pair[2]) if pair[0] > b else (0, 0, None) for pair in self.content.misspellings]
     
     def layout(self, frames, BSTYLE, cascade=False):
         F = Tagcounter()
@@ -285,6 +292,7 @@ class Paragraph_block(Blockstyle):
         self._left_edge = LINES[0]['left'] - leading*0.5
         self._LINES = LINES
         self._UU = [line['u'] - leading for line in LINES]
+        self.u_bottom = LINES[-1]['u']
         self._search_j = [line['j'] for line in LINES]
         
         self._whole_location = -1, self._LINES[0], flag

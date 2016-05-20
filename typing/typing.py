@@ -1,5 +1,4 @@
 from itertools import chain
-import time
 
 from edit import cursor
 
@@ -13,7 +12,7 @@ class Keyboard(dict):
         
         dict.__init__(self, chain.from_iterable(((key1, name), (key2, name)) for key1, key2, name in shortcuts))
         
-    def type_document(self, name, char, lastpress=[0], direction=[0]):
+    def type_document(self, name, char):
         CURSOR = cursor.fcursor.i
         
         # Non replacing
@@ -58,32 +57,16 @@ class Keyboard(dict):
         
         # replacing
         elif name in ['BackSpace', 'Delete']:
-            if cursor.fcursor.take_selection():
+            if cursor.fcursor.i != cursor.fcursor.j:
                 un.history.undo_save(3)
-                cursor.fcursor.insert([])
+                cursor.fcursor.delete()
             elif name == 'BackSpace':            
-                # for deleting paragraphs
-                if type(cursor.fcursor.text[CURSOR - 1]) is Paragraph:
-                    # make sure that we’re not sliding the cursor
-                    if time.time() - lastpress[0] > 0.13:
-                        un.history.undo_save(-2)
-                        cursor.fcursor.delspace(False)
-                else:
-                    un.history.undo_save(-1)
-                    cursor.fcursor.delspace(False)
+                un.history.undo_save(-1)
+                cursor.fcursor.delete(da=-1)
 
             else:
-                # for deleting paragraphs (forward delete)
-                if cursor.fcursor.text[CURSOR] == '</p>':
-                    if time.time() - lastpress[0] > 0.13:
-                        un.history.undo_save(-2)
-                        cursor.fcursor.delspace(True)
-                else:
-                    un.history.undo_save(-1)
-                    cursor.fcursor.delspace(True)
-                    
-            # record time
-            lastpress[0] = time.time()
+                un.history.undo_save(-1)
+                cursor.fcursor.delete(db=1)
         
         elif name == 'paragraph':
             un.history.undo_save(2)

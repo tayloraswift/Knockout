@@ -100,10 +100,12 @@ class PlaneCursor(object):
         self.j, *_ = zip( * self.PLANE.which(x, u, len(self.i)) )
     
     #############
-    
-    def delete(self, da=0, db=0, nolayout=False):
+    def _sort_cursors(self):
         if self.i > self.j:
             self.i, self.j = self.j, self.i
+    
+    def delete(self, da=0, db=0, nolayout=False):
+        self._sort_cursors()
         
         a = list(self.i)
         b = list(self.j)
@@ -186,6 +188,31 @@ class PlaneCursor(object):
         else:
             self.section.layout(self.plane_address[1], True)
     
+    ## NON-SPATIAL SELECTION TOOLS ##
+    def expand_cursors_word(self):
+        if len(self.i) == 2:
+            a, b = expand_cursors_word(self._blocks[self.i[0]].content, self.i[1])
+            self.i = (self.i[0], a)
+            self.j = (self.i[0], b)
+        else:
+            self.j = (self.i[0] + 1,)
+
+    def expand_cursors(self):
+        self._sort_cursors()
+        
+        if len(self.i) == 2:
+            pb = len(self._blocks[self.j[0]].content)
+            if self.i[1] == 0 and self.j[1] == pb:
+                self.i = (0, 0)
+                self.j = (len(self._blocks) - 1, len(self._blocks[-1].content))
+            else:
+                self.i = (self.i[0], 0)
+                self.j = (self.j[0], pb)
+        else:
+            self.i = (0,)
+            self.j = (len(self._blocks),)
+    ##
+    
     def styling_at(self):
         l, line, glyph = self.PLANE.where(self.i)
         return line['BLOCK'], glyph[3]
@@ -210,20 +237,6 @@ class FCursor(object):
             self.j = 0
 
         self.PG = ctx['p']
-
-    def expand_cursors(self):
-        # order
-        self.i, self.j = sorted((self.i, self.j))
-        
-        if type(self.text[self.i - 1]) is Paragraph and self.text[self.j] == '</p>':
-            self.i = 1
-            self.j = len(self.text) - 1
-        else:
-            self.j += self.text[self.j:].index('</p>')
-            self.i -= next(i for i, v in enumerate(self.text[self.i::-1]) if type(v) is Paragraph) - 1
-
-    def expand_cursors_word(self):
-        self.i, self.j = expand_cursors_word(self.text, self.i)
 
     def bridge(self, tag, sign):
         S = self.take_selection() # also sorts cursors

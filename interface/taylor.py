@@ -123,10 +123,10 @@ class Mode_switcher(object):
 
 def PDF():
     name = os.path.splitext(constants.filename)[0]
-    surface = cairo.PDFSurface(name + '.pdf', meredith.page.WIDTH*0.75, meredith.page.HEIGHT*0.75)
+    surface = cairo.PDFSurface(name + '.pdf', DOCUMENT['width']*0.75, DOCUMENT['height']*0.75)
     cr = cairo.Context(surface)
     cr.scale(0.75, 0.75)
-    classes = becky.page_classes()
+    classes = DOCUMENT.transfer()
     max_page = max(classes.keys())
     for p in range(max_page + 1):
         becky.print_page(cr, p, classes)
@@ -554,24 +554,6 @@ class Document_view(ui.Cell):
             cr.set_font_face(font['font'])
             cr.show_glyphs(glyphs)
     
-    def page_classes(self):
-        classed_pages = {}
-        jumbled_pages = [tract.extract_glyphs() for tract in meredith.mipsy]
-
-        for dictionary in jumbled_pages:
-            for page, sorted_glyphs in dictionary.items():
-                if page in classed_pages:
-                    classed_pages[page]['_images'].extend(sorted_glyphs['_images'])
-                    classed_pages[page]['_paint'].extend(sorted_glyphs['_paint'])
-                    for name, font, glyphs in ((key, * L) for key, L in sorted_glyphs.items() if L and (isinstance(key, int))):
-                        classed_pages[page].setdefault(name, (font, []))[1].extend(glyphs)
-                else:
-                    classed_pages[page] = {name: (L[0], L[1].copy()) for name, L in sorted_glyphs.items() if isinstance(name, int)}
-                    classed_pages[page]['_images'] = sorted_glyphs['_images'].copy()
-                    classed_pages[page]['_paint'] = sorted_glyphs['_paint'].copy()
-        
-        return classed_pages
-    
     def print_page(self, cr, p, classed_pages):
         m = self._mode
         self._mode = 'render'
@@ -692,7 +674,6 @@ class Document_view(ui.Cell):
             cr.restore()
 
     def _draw_annotations(self, cr, annot, page):
-
         font = ISTYLES[('strong',)]
         afs = int(6 * sqrt(self._A))
         uscore = 1 + (self._A > 0.5)
@@ -700,7 +681,8 @@ class Document_view(ui.Cell):
         cr.set_font_face(font['font'])
         SN = font['fontmetrics'].spacenames
         
-        for a, x, y, PP, F in annot:
+        activeblock = self.planecursor.PLANE.content[self.planecursor.i[0]]
+        for a, x, y, BLOCK, F in annot:
             
             x = self._X_to_screen(x, page)
             y = self._Y_to_screen(y, page)
@@ -708,10 +690,10 @@ class Document_view(ui.Cell):
             fontsize = F['fontsize'] * self._A
 
             cr.set_source_rgba( * accent_light, 0.7)
-#            if PP is self.planecursor.pp_at():
-#                cr.set_source_rgba( * accent_light, 0.7)
-#            else:
-#                cr.set_source_rgba(0, 0, 0, 0.4)
+            if BLOCK is activeblock:
+                cr.set_source_rgba( * accent_light, 0.7)
+            else:
+                cr.set_source_rgba(0, 0, 0, 0.4)
             
             #         '<p>'
             if a == -2:
@@ -782,20 +764,17 @@ class Document_view(ui.Cell):
                     int((x2 - x1) * self._A), 
                     int(leading * self._A))
         cr.fill()
-        # print cursor
-        isign, jsign = signs
         
         # first
         y1, x11, x21, leading1, page1 = selections[0]
         y2, x12, x22, leading2, page2 = selections[-1]
-        self._draw_cursor(cr, isign, self._X_to_screen(x11, page1), self._Y_to_screen(y1, page1), int(leading1 * self._A))
-        self._draw_cursor(cr, jsign, self._X_to_screen(x22, page2), self._Y_to_screen(y2, page2), int(leading2 * self._A))
+        self._draw_cursor(cr, signs[0], self._X_to_screen(x11, page1), self._Y_to_screen(y1, page1), int(leading1 * self._A))
+        self._draw_cursor(cr, signs[1], self._X_to_screen(x22, page2), self._Y_to_screen(y2, page2), int(leading2 * self._A))
 
         cr.pop_group_to_source()
         cr.paint_with_alpha(0.8)
     
     def _draw_cursor(self, cr, sign, x, y, leading):
-        
         cr.set_source_rgb(1, 0, 0.5)
 
         ux = x

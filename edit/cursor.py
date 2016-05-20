@@ -100,15 +100,6 @@ class PlaneCursor(object):
         self.j, *_ = zip( * self.PLANE.which(x, u, len(self.i)) )
     
     #############
-
-    def insert(self, blocks):
-        if self.i == self.j:
-            if len(blocks) > 1:
-                pass
-            else:
-                self._blocks[self.i[0]].insert(blocks[0].content, self.i[1])
-            
-            self._relayout()
     
     def delete(self, da=0, db=0, nolayout=False):
         if self.i > self.j:
@@ -116,7 +107,6 @@ class PlaneCursor(object):
         
         a = list(self.i)
         b = list(self.j)
-        
         a[-1] += da
         b[-1] += db
         
@@ -157,6 +147,38 @@ class PlaneCursor(object):
             self.i = (self.i[0], self.i[1] + len(text))
             self.j = self.i
             self._relayout()
+    
+    def insert(self, blocks):
+        if self.i != self.j:
+            self.delete(nolayout=True)
+        
+        if len(blocks) > 1:
+            affected = [self._blocks[self.i[0]]]
+            outer_end = affected[0].content[self.i[1]:]
+            a_end = self.i[1] + len(outer_end)
+            affected[0].delete(self.i[1], a_end)
+            
+            # attach blocks
+            affected[0].insert(blocks[0].content, self.i[1])
+            affected.extend(blocks[1:])
+            i_end = len(blocks[-1].content)
+            affected[-1].insert(outer_end, 0)
+            
+            self._blocks[self.i[0] : self.i[0] + 1] = affected
+            
+            self._relayout() # relayout before cursor movement
+            
+            self.i = (self.i[0] + len(affected) - 1, i_end)
+            self.j = self.i
+        elif len(self.i) != 2:
+            self._blocks[self.i[0]:self.i[0]] = blocks
+            
+            self._relayout()
+            
+            self.i = (self.i[0] + len(blocks),)
+            self.j = self.i
+        else:
+            self.insert_chars(blocks[0].content)
     
     def _relayout(self):
         if self.PLANE is self.section:

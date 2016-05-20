@@ -4,28 +4,13 @@ from itertools import chain
 
 from state.exceptions import IO_Error
 
-from model.wonder import words
-
-class Text(list):
-    def __init__(self, * args):
-        list.__init__(self, * args)
-
-        # STATS
-        self.word_count = '—'
-        self.misspellings = []
-        self.stats(True)
-    
-    def stats(self, spell=False):
-        if spell:
-            self.word_count, self.misspellings = words(self, spell=True)
-        else:
-            self.word_count = words(self)
-
 # boxes
 from elements import box, style, elements
 from model import meredith
 
 boxes = {B.name: B for B in chain.from_iterable(M.members for M in (box, style, elements, meredith))}
+
+Text = meredith.Text
 
 class Paine(parser.HTMLParser):
 

@@ -70,15 +70,15 @@ class Keyboard(dict):
         
         elif name == 'paragraph':
             un.history.undo_save(2)
-    #        name = meredith.mipsy.paragraph_at()[0].name
-    #        if name[0] == 'h' and name[1].isdigit() and meredith.mipsy.at_absolute(CURSOR) == '</p>' and 'body' in styles.PARASTYLES:
-    #            name = 'body'
-            P = cursor.fcursor.pp_at().P.copy()
-            cursor.fcursor.insert(['</p>', Paragraph(P)])
+            P1 = cursor.fcursor.PLANE.content[CURSOR[0]].copy_empty()
+            if len(CURSOR) == 2:
+                cursor.fcursor.insert([P1, P1])
+            else:
+                cursor.fcursor.insert([P1])
             
         elif name == 'Return':
             un.history.undo_save(1)
-            cursor.fcursor.insert(['<br/>'])
+            cursor.fcursor.insert_chars(['<br/>'])
         elif name == 'Ctrl Alt':
             un.history.undo_save(1)
             cursor.fcursor.insert(kevin.deserialize('<mi char="' + char + '"/>', fragment=True))

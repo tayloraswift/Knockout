@@ -11,6 +11,23 @@ from model.lines import Glyphs_line, cast_liquid_line
 
 from state.exceptions import LineOverflow
 
+from model.wonder import words
+
+class Text(list):
+    def __init__(self, * args):
+        list.__init__(self, * args)
+
+        # STATS
+        self.word_count = '—'
+        self.misspellings = []
+        self.stats(True)
+    
+    def stats(self, spell=False):
+        if spell:
+            self.word_count, self.misspellings = words(self, spell=True)
+        else:
+            self.word_count = words(self)
+
 class Sorted_pages(dict):
     def __missing__(self, key):
         self[key] = {'_annot': [], '_images': [], '_paint': [], '_paint_annot': []}
@@ -390,5 +407,12 @@ class Paragraph_block(Blockstyle):
             sorted_page = S[page]
             for line in lines:
                 line.deposit(sorted_page)
+
+    def copy_empty(self):
+        if str(self['class']) != 'body':
+            A = {'class': self.attrs['class']}
+        else:
+            A = {}
+        return self.__class__(A, Text())
 
 members = (Meredith, Section, Paragraph_block)

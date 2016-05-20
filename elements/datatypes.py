@@ -77,7 +77,9 @@ class Tagcounter(Counter):
                 ('~' + T['name'] for i in range(abs(V))) for T, V in sorted(self.items(), key=lambda k: k[0]['name'])))
 
 def _tagcounter(S, LIB):
-    if S:
+    if type(S) is Tagcounter:
+        return S.copy()
+    elif S:
         C = Counter(T for T in S.split('^') if T[0] != '~')
         C -= Counter(T[1:] for T in S.split('^') if T[0] == '~')
         

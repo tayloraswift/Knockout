@@ -147,4 +147,4 @@ class Sprinkles(object):
             cr.stroke()
 
     def __repr__(self):
-        return ';'.join(' '.join(grid) for grid in self._grid)
+        return ';'.join(' '.join(map(str, grid)) for grid in self._grid)

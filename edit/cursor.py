@@ -6,11 +6,11 @@ from elements.datablocks import DOCUMENT
 
 from edit.text import expand_cursors_word
 
+from IO.tree import serialize, deserialize
+
 def address(box, path):
     for i in path:
         box = box.content[i]
-    if not type(box).plane:
-        raise IndexError('Selected box is not a plane')
     return box
 
 _zeros = {'<fc/>', '<fo/>', '\t'}
@@ -24,34 +24,15 @@ class PlaneCursor(object):
         
         self.PG = 0 # stopgap
     
-    def char(self, i, offset=0):
-        try:
-            return self._blocks[i[0]].content[max(0, i[1] + offset)]
-        except IndexError:
-            return None
-    
     def _set_plane(self, PLANE, plane_address):
+        if not type(PLANE).plane:
+            raise IndexError('Selected box is not a plane')
         self.PLANE = PLANE
         self.plane_address = plane_address
         self._blocks = self.PLANE.content
-    
-    def paint_current_selection(self):
-        i, j = sorted((self.i, self.j))
-        double = len(i) == 2
-        if double:
-            signs = (str(self.char(i, -1)) in _zeros, str(self.char(i)) in _zeros) , (str(self.char(j, -1)) in _zeros, str(self.char(j)) in _zeros)
-        else:
-            signs = (False, False), (False, False)
-        lit = self._blocks[i[0]: j[0] + 1]
-        bounds = [[-1, -2] for b in lit]
-        if double:
-            bounds[0][0] = i[1]
-            bounds[-1][1] = j[1]
-        else:
-            bounds[-1][1] = -1
-        return list(chain.from_iterable(block.highlight( * bound ) for bound, block in zip(bounds, lit))), signs
 
-    # TARGETING SYSTEM
+    ## TARGETING SYSTEM ##
+    
     def _to_c_global(self, x, y):
         S = self.section
         c, p = S['frames'].which(x, y, 20)
@@ -99,7 +80,8 @@ class PlaneCursor(object):
         x, u = self._to_c_local(x, y)
         self.j, *_ = zip( * self.PLANE.which(x, u, len(self.i)) )
     
-    #############
+    ## TEXT OPERATIONS ##
+    
     def _sort_cursors(self):
         if self.i > self.j:
             self.i, self.j = self.j, self.i
@@ -162,34 +144,37 @@ class PlaneCursor(object):
     def insert(self, blocks):
         if self.i != self.j:
             self.delete(nolayout=True)
-        
-        if len(blocks) > 1:
+
+        if len(self.i) == 2:
             affected = [self._blocks[self.i[0]]]
-            outer_end = affected[0].content[self.i[1]:]
-            a_end = self.i[1] + len(outer_end)
-            affected[0].delete(self.i[1], a_end)
             
-            # attach blocks
-            affected[0].insert(blocks[0].content, self.i[1])
-            affected.extend(blocks[1:])
-            i_end = len(blocks[-1].content)
-            affected[-1].insert(outer_end, 0)
+            if not type(blocks[-1]).textfacing: # if the block does not have text in .content
+                blocks += [affected[0].copy_empty()]
             
-            self._blocks[self.i[0] : self.i[0] + 1] = affected
-            
-            self._relayout() # relayout before cursor movement
-            
-            self.i = (self.i[0] + len(affected) - 1, i_end)
-            self.j = self.i
-        elif len(self.i) != 2:
+            if len(blocks) == 1 and type(blocks[0]).textfacing:
+                self.insert_chars(blocks[0].content)
+            else:
+                after_cut = affected[0].content[self.i[1]:]
+                a_end = self.i[1] + len(after_cut)
+                affected[0].delete(self.i[1], a_end)
+                
+                # attach blocks
+                affected[0].insert(blocks[0].content, self.i[1])
+                affected.extend(blocks[1:])
+                i_end = len(blocks[-1].content)
+                affected[-1].insert(after_cut, i_end)
+                
+                self._blocks[self.i[0] : self.i[0] + 1] = affected
+                
+                self._relayout() # relayout before cursor movement
+                
+                self.i = (self.i[0] + len(affected) - 1, i_end)
+                self.j = self.i
+        else:
             self._blocks[self.i[0]:self.i[0]] = blocks
-            
             self._relayout()
-            
             self.i = (self.i[0] + len(blocks),)
             self.j = self.i
-        else:
-            self.insert_chars(blocks[0].content)
     
     def _relayout(self):
         if self.PLANE is self.section:
@@ -197,7 +182,30 @@ class PlaneCursor(object):
         else:
             self.section.layout(self.plane_address[1], True)
     
+    def run_stats(self, spell=False):
+        word_total = 0
+        for block in self._blocks:
+            word_total += block.run_stats(spell)
+        self.word_total = word_total
+    
+    ## IN/OUT ##
+    
+    def copy_selection(self):
+        P = tuple(self.plane_address)
+        A = P + self.i
+        B = P + self.j
+        if A[:-1] == B[:-1]:
+            base = address(DOCUMENT, A[:-1]).content
+            return serialize(base[A[-1]:B[-1]])
+        elif A[:-2] == B[:-2]:
+            base = address(DOCUMENT, A[:-2]).content
+            return serialize(base[A[-2]:B[-2] + 1], trim=(A[-1], B[-1]))
+    
+    def paste(self, L):
+        self.insert(deserialize(L, fragment=True))
+    
     ## NON-SPATIAL SELECTION TOOLS ##
+    
     def expand_cursors_word(self):
         if len(self.i) == 2:
             a, b = expand_cursors_word(self._blocks[self.i[0]].content, self.i[1])
@@ -220,17 +228,35 @@ class PlaneCursor(object):
         else:
             self.i = (0,)
             self.j = (len(self._blocks),)
-    ##
+    
+    ## CONTEXT INDICATORS ##
+    
+    def char(self, i, offset=0):
+        try:
+            return self._blocks[i[0]].content[max(0, i[1] + offset)]
+        except IndexError:
+            return None
+    
+    def paint_current_selection(self):
+        i, j = sorted((self.i, self.j))
+        double = len(i) == 2
+        if double:
+            signs = (str(self.char(i, -1)) in _zeros, str(self.char(i)) in _zeros) , (str(self.char(j, -1)) in _zeros, str(self.char(j)) in _zeros)
+        else:
+            signs = (False, False), (False, False)
+        lit = self._blocks[i[0]: j[0] + 1]
+        bounds = [[-1, -2] for b in lit]
+        if double:
+            bounds[0][0] = i[1]
+            bounds[-1][1] = j[1]
+        else:
+            bounds[-1][1] = -1
+        return list(chain.from_iterable(block.highlight( * bound ) for bound, block in zip(bounds, lit))), signs
     
     def styling_at(self):
         l, line, glyph = self.PLANE.where(self.i)
         return line['BLOCK'], glyph[3]
 
-    def run_stats(self, spell=False):
-        word_total = 0
-        for block in self._blocks:
-            word_total += block.run_stats(spell)
-        self.word_total = word_total
     """
     def bridge(self, tag, sign):
         S = self.take_selection() # also sorts cursors

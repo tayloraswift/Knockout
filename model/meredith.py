@@ -182,6 +182,9 @@ class Section(Plane):
 class Paragraph_block(Blockstyle):
     name = 'p'
     textfacing = True
+    planelevel = True
+    
+    IMPLY = {'class': 'body'}
 
     def __init__(self, * II, ** KII ):
         Blockstyle.__init__(self, * II, ** KII )
@@ -403,7 +406,7 @@ class Paragraph_block(Blockstyle):
         return self.content.word_count
 
     def transfer(self, S):
-        for page, lines in ((p, list(ps)) for p, ps in groupby((line for line in self._LINES), key=lambda line: line['page'])):
+        for page, lines in ((p, list(ps)) for p, ps in groupby(self._LINES, key=lambda line: line['page'])):
             sorted_page = S[page]
             for line in lines:
                 line.deposit(sorted_page)

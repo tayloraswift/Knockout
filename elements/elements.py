@@ -2,7 +2,7 @@ from elements.box import Box
 
 class _Fontpost(Box):
     name = '_f_'
-    textfacing = True
+    inline = True
     DNA = [('class', 'texttc', '_undefined_')]
 
 #    def __eq__(self, other):

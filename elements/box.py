@@ -11,10 +11,15 @@ class Null(object):
 
 class Box(dict):
     name = '_box'
-    textfacing = False
-    plane = False
+    
+    textfacing = False  # whether or not contents of this object are to be written on the same line          (contains inline boxes)
+    inline = False      # whether or not this object is to be written on the same line as the preceeding one (contained by a textfacing)
+    
+    plane = False       # whether or not this object can function as a plane                                 (contains block objects)
+    planelevel = False  # whether or not this object is directly contained by a plane                        (contained by a plane)
     
     DNA = []
+    IMPLY = {}
     
     def __init__(self, attrs, content=None):
         self.content = content
@@ -75,6 +80,14 @@ class Box(dict):
     def deassign(self, A):
         del self.attrs[A]
         del self[A]
+
+    def print_A(self):
+        attrs = self.attrs
+        imply = self.__class__.IMPLY
+        if attrs:
+            E = ' '.join(''.join((a[0], '="', str(attrs[a[0]]), '"')) for a in self.DNA if a[0] in attrs and (a[0] not in imply or imply[a[0]] != attrs[a[0]]))
+            return self.name + ' ' + E
+        return self.name
     
     def __repr__(self):
         if self.content:

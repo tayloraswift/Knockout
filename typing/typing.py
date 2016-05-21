@@ -85,20 +85,19 @@ class Keyboard(dict):
         elif name == 'Paste':
             if char:
                 un.history.undo_save(3)
-                cursor.fcursor.insert(kevin.deserialize(char, fragment=True))
+                cursor.fcursor.paste(char)
         
         elif name == 'Copy':
-            sel = cursor.fcursor.take_selection()
+            sel = cursor.fcursor.copy_selection()
             if sel:
-                return kevin.serialize(sel)
+                return sel
         
         elif name == 'Cut':
-            sel = cursor.fcursor.take_selection()
+            sel = cursor.fcursor.copy_selection()
             if sel:
                 un.history.undo_save(3)
                 cursor.fcursor.insert([])
-            
-                return kevin.serialize(sel)
+                return sel
 
         elif name in self._special_names:
             if name in self._CLOSE:

@@ -697,7 +697,6 @@ class Document_view(ui.Cell):
             
             #         '<p>'
             if a == -2:
-                
                 cr.move_to(x, y)
                 cr.rel_line_to(0, -fontsize)
                 cr.rel_line_to(-3, 0)
@@ -707,11 +706,10 @@ class Document_view(ui.Cell):
                 cr.close_path()
                 cr.fill()
 
-            #        '<br>' +1
+            #        '<br>'
             elif a == -6:
-                
-                cr.rectangle(x - 6, y - fontsize, 3, fontsize)
-                cr.rectangle(x - 10, y - 3, 4, 3)
+                cr.rectangle(x + 2, y - fontsize, 2, fontsize)
+                cr.rectangle(x + 2, y - 2, fontsize - 4, 2)
                 cr.fill()
 
             #           '<f>'

@@ -62,7 +62,6 @@ class Keyboard(dict):
             elif name == 'BackSpace':            
                 un.history.undo_save(-1)
                 cursor.fcursor.delete(da=-1)
-
             else:
                 un.history.undo_save(-1)
                 cursor.fcursor.delete(db=1)
@@ -77,10 +76,11 @@ class Keyboard(dict):
             
         elif name == 'Return':
             un.history.undo_save(1)
-            cursor.fcursor.insert_chars(['<br/>'])
+            cursor.fcursor.paste('<br/>')
+        
         elif name == 'Ctrl Alt':
             un.history.undo_save(1)
-            cursor.fcursor.insert(kevin.deserialize('<mi char="' + char + '"/>', fragment=True))
+            cursor.fcursor.paste('<mi char="' + char + '"/>')
             
         elif name == 'Paste':
             if char:
@@ -96,23 +96,13 @@ class Keyboard(dict):
             sel = cursor.fcursor.copy_selection()
             if sel:
                 un.history.undo_save(3)
-                cursor.fcursor.insert([])
+                cursor.fcursor.delete()
                 return sel
 
         elif name in self._special_names:
-            if name in self._CLOSE:
-                B = False
-                F = CloseFontpost
-            else:
-                B = True
-                F = OpenFontpost
-            if cursor.fcursor.take_selection():
-                un.history.undo_save(3)
-                if not cursor.fcursor.bridge(self[name], B):
-                    un.history.pop()
-            else:
-                un.history.undo_save(1)
-                cursor.fcursor.insert([F({'class': self[name]})])
+            un.history.undo_save(3)
+            if not cursor.fcursor.bridge(self[name], name not in self._CLOSE):
+                un.history.pop()
         else:
             un.history.undo_save(13)
             cursor.fcursor.insert_chars([char])

@@ -5,8 +5,11 @@ class _Fontpost(Box):
     inline = True
     DNA = [('class', 'texttc', '_undefined_')]
 
-#    def __eq__(self, other):
-#        return type(other) is self.__class__ and other.F is self.F
+    def copy(self):
+        return self.__class__(self.attrs)
+
+    def __eq__(self, other):
+        return type(other) is self.__class__ and other['class'] == self['class']
 
 class PosFontpost(_Fontpost):
     name = 'fo'
@@ -18,4 +21,8 @@ class NegFontpost(_Fontpost):
     def __str__(self):
         return '<fc/>'
 
-members = (PosFontpost, NegFontpost)
+class Line_break(Box):
+    name = 'br'
+    inline = True
+
+members = (PosFontpost, NegFontpost, Line_break)

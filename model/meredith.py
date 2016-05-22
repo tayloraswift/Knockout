@@ -191,7 +191,7 @@ class Paragraph_block(Blockstyle):
         self.implicit_ = None
         self.u = infinity
     
-    def insert(self, text, at):
+    def insert(self, at, text):
         self.content[at:at] = text
         n = len(text)
         self.content.misspellings = [pair if pair[1] < at else (pair[0] + n, pair[1] + n, pair[2]) if pair[0] > at else (pair[0], pair[1] + n, pair[2]) for pair in self.content.misspellings]
@@ -200,6 +200,117 @@ class Paragraph_block(Blockstyle):
         del self.content[a:b]
         n = a - b
         self.content.misspellings = [pair if pair[1] < a else (pair[0] + n, pair[1] + n, pair[2]) if pair[0] > b else (0, 0, None) for pair in self.content.misspellings]
+    
+    def bridge(self, I, J, positive, negative, sign):
+        paragraph = self.content
+        S = paragraph[I:J]
+        #DA = 0
+
+        P_2 = len(paragraph)
+
+        if sign:
+            TAGS = (negative, positive)
+            paragraph.insert(0, TAGS[0].copy())
+            #DA += 1
+            
+            P_2 += 1
+            I += 1
+            J += 1
+        else:
+            TAGS = (positive, negative)
+        
+        CAP = (type(TAGS[0]), type(TAGS[1]))
+        
+        # if selection falls on top of range
+        if I > 0 and type(paragraph[I - 1]) is CAP[0]:
+            I -= next(i for i, c in enumerate(paragraph[I - 2::-1]) if type(c) is not CAP[0]) + 1
+
+        if J < P_2 and type(paragraph[J]) is CAP[1]:
+            J += next(i for i, c in enumerate(paragraph[J + 1:]) if type(c) is not CAP[1]) + 1
+
+        ftag = TAGS[0]['class']
+        ftags = [(i, type(e)) for i, e in enumerate(paragraph) if type(e) in CAP and e['class'] == ftag]
+        if sign:
+            ftags += [(P_2 + 1, CAP[1]), (None, None)]
+        else:
+            ftags += [(None, None)]
+        
+        pairs = []
+        for i in reversed(range(len(ftags) - 2)):
+            if (ftags[i][1], ftags[i + 1][1]) == CAP:
+                pairs.append((ftags[i][0], ftags[i + 1][0]))
+                del ftags[i:i + 2]
+        
+        # ERROR CHECKING
+        if ftags != [(None, None)]:
+            print ('INVALID TAG SEQUENCE, REMNANTS: ' + str(ftags))
+        
+        instructions = []
+        drift_i = 0
+        drift_j = 0
+
+        for pair in pairs:
+            if pair[1] <= I or pair[0] >= J:
+                pass
+            elif pair[0] >= I and pair[1] <= J:
+                instructions += [(pair[0], False), (pair[1], False)]
+                #DA -= 2
+                
+                drift_j += -2
+            elif I < pair[1] <= J:
+                instructions += [(pair[1], False), (I, True, TAGS[1].copy())]
+                if not sign:
+                    drift_i += 1
+            elif I <= pair[0] < J:
+                instructions += [(pair[0], False), (J, True, TAGS[0].copy())]
+                if not sign:
+                    drift_j += -1
+            elif pair[0] < I and pair[1] > J:
+                instructions += [(I, True, TAGS[1].copy()), (J, True, TAGS[0].copy())]
+                #DA += 2
+                
+                if sign:
+                    drift_j += 2
+                else:
+                    drift_i += 1
+                    drift_j += 1
+
+        if instructions:
+            activity = True
+            
+            instructions.sort(reverse=True)
+            for instruction in instructions:
+                if instruction[1]:
+                    paragraph.insert(instruction[0], instruction[2])
+                else:
+                    del paragraph[instruction[0]]
+        else:
+            activity = False
+        
+        if sign:
+            if paragraph[0] == TAGS[0].copy():
+                del paragraph[0]
+                #DA -= 1
+                
+                drift_i -= 1
+                drift_j -= 1
+
+            else:
+                paragraph.insert(0, TAGS[1].copy())
+                #DA += 1
+                
+                drift_j += 1
+
+        
+        if activity:
+            I += drift_i
+            J += drift_j
+            
+            self.u = infinity
+            paragraph.stats(spell=True)
+            return True, I, J
+        else:
+            return False, I, J
     
     def layout(self, frames, BSTYLE, cascade=False):
         F = Tagcounter()

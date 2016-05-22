@@ -4,7 +4,7 @@ from itertools import chain
 from libraries.pyphen import pyphen
 
 from elements import datablocks
-from elements.elements import PosFontpost, NegFontpost
+from elements.elements import PosFontpost, NegFontpost, Line_break
 
 pyphen.language_fallback('en_US')
 hy = pyphen.Pyphen(lang='en_US')
@@ -48,7 +48,7 @@ class Glyphs_line(dict):
         for glyph in glyphs:
             if glyph[0] < 0:
                 if glyph[0] == -6:
-                    repository['_annot'].append( (glyph[0], x, y + self['leading'], BLOCK, glyph[3]))
+                    repository['_annot'].append( (glyph[0], glyph[1] + x, glyph[2] + y, BLOCK, glyph[3]))
                 elif glyph[0] == -89:
                     glyph[6].deposit_glyphs(repository, x, y)
                 else:
@@ -95,31 +95,27 @@ def cast_liquid_line(LINE, letters, startindex, width, leading, BLOCK, F, hyphen
     for letter in letters:
         CT = type(letter)
         if CT is str:
-            if letter == '<br/>':
-                glyphappend((-6, x, y, FSTYLE, fstat, x))
-                break
-            else: # regular letter
-                if caps:
-                    letter = letter.upper()
-                glyphwidth = F_advance_width(letter) * FSTYLE['fontsize']
-                # kern
-                if GI > 0 and kern_available:
-                    new_GI = F_char_index(letter)
-                    kdx, kdy = F_kern(GI, new_GI)
-                    x += kdx
-                    y += kdy
-                    GI = new_GI
-                else:
-                    GI = F_char_index(letter)
-                glyphappend((
-                        GI,             # 0
-                        x,              # 1
-                        y,              # 2
-                        
-                        FSTYLE,         # 3
-                        fstat,          # 4
-                        x + glyphwidth  # 5
-                        ))
+            if caps:
+                letter = letter.upper()
+            glyphwidth = F_advance_width(letter) * FSTYLE['fontsize']
+            # kern
+            if GI > 0 and kern_available:
+                new_GI = F_char_index(letter)
+                kdx, kdy = F_kern(GI, new_GI)
+                x += kdx
+                y += kdy
+                GI = new_GI
+            else:
+                GI = F_char_index(letter)
+            glyphappend((
+                    GI,             # 0
+                    x,              # 1
+                    y,              # 2
+                    
+                    FSTYLE,         # 3
+                    fstat,          # 4
+                    x + glyphwidth  # 5
+                    ))
         
         elif CT is PosFontpost:            
             # increment tag count
@@ -157,12 +153,16 @@ def cast_liquid_line(LINE, letters, startindex, width, leading, BLOCK, F, hyphen
             GI = -5
             continue
         
+        elif CT is Line_break:
+            glyphappend((-6, x, y, FSTYLE, fstat, x))
+            cap = False
+            break
+        
         else:
             inline = letter.cast_inline(LINE, x, y, BLOCK, F, FSTYLE)
             glyphwidth = inline.width                               #6. object
             glyphappend((-89, x, y, FSTYLE, fstat, x + glyphwidth, inline))
             GI = -89
-
         
         x += glyphwidth
 

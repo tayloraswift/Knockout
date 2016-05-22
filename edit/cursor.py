@@ -3,6 +3,7 @@ from itertools import chain
 from model.wonder import words
 
 from elements.datablocks import DOCUMENT
+from elements.elements import PosFontpost, NegFontpost
 
 from edit.text import expand_cursors_word
 
@@ -120,7 +121,7 @@ class PlaneCursor(object):
             else:
                 a_end = len(self._blocks[a[0]].content)
                 affected[0].delete(a[1], a_end)
-                affected[0].insert(affected[-1].content[b[1]:], a_end)
+                affected[0].insert(a_end, affected[-1].content[b[1]:])
                 self._blocks[a[0]:b[0] + 1] = affected[0:1]
 
         else:
@@ -136,7 +137,7 @@ class PlaneCursor(object):
         if len(self.i) == 2:
             if self.i != self.j:
                 self.delete(nolayout=True)
-            self._blocks[self.i[0]].insert(text, self.i[1])
+            self._blocks[self.i[0]].insert(self.i[1], text)
             self.i = (self.i[0], self.i[1] + len(text))
             self.j = self.i
             self._relayout()
@@ -159,10 +160,10 @@ class PlaneCursor(object):
                 affected[0].delete(self.i[1], a_end)
                 
                 # attach blocks
-                affected[0].insert(blocks[0].content, self.i[1])
+                affected[0].insert(self.i[1], blocks[0].content)
                 affected.extend(blocks[1:])
                 i_end = len(blocks[-1].content)
-                affected[-1].insert(after_cut, i_end)
+                affected[-1].insert(i_end, after_cut)
                 
                 self._blocks[self.i[0] : self.i[0] + 1] = affected
                 
@@ -175,6 +176,40 @@ class PlaneCursor(object):
             self._relayout()
             self.i = (self.i[0] + len(blocks),)
             self.j = self.i
+    
+    def bridge(self, tag, sign):
+        if self.i == self.j and len(self.i) == 2:
+            if sign:
+                self.insert_chars([PosFontpost({'class': tag})])
+            else:
+                self.insert_chars([NegFontpost({'class': tag})])
+            return True
+        else:
+            signargs = PosFontpost({'class': tag}), NegFontpost({'class': tag}), sign
+            self._sort_cursors()
+            if len(self.i) == 2:
+                affected = self._blocks[self.i[0]:self.j[0] + 1]
+                if len(affected) == 1:
+                    activity, I, J = affected[0].bridge(self.i[1], self.j[1], * signargs )
+                else:
+                    begin, *middle, end = affected
+                    a1, I, _ = begin.bridge(self.i[1], len(begin.content), * signargs)
+                    aM = any(block.bridge(0, len(block.content), * signargs)[0] for block in middle)
+                    a2, _, J = end.bridge(0, self.j[1], * signargs)
+                    activity = a1 or aM or a2
+                if activity:
+                    self.i = (self.i[0], I)
+                    self.j = (self.j[0], J)
+
+            else:
+                middle = self._blocks[self.i[0]:self.j[0]]
+                activity = any(block.bridge(0, len(block.content), * signargs)[0] for block in middle)
+
+            if activity:
+                self._relayout()   
+                return True
+            else:
+                return False
     
     def _relayout(self):
         if self.PLANE is self.section:
@@ -233,7 +268,11 @@ class PlaneCursor(object):
     
     def char(self, i, offset=0):
         try:
-            return self._blocks[i[0]].content[max(0, i[1] + offset)]
+            ii = i[1] + offset
+            if ii < 0:
+                return None
+            else:
+                return self._blocks[i[0]].content[ii]
         except IndexError:
             return None
     
@@ -256,128 +295,3 @@ class PlaneCursor(object):
     def styling_at(self):
         l, line, glyph = self.PLANE.where(self.i)
         return line['BLOCK'], glyph[3]
-
-    """
-    def bridge(self, tag, sign):
-        S = self.take_selection() # also sorts cursors
-        if S and '</p>' not in S:
-            
-            DA = 0
-            
-            I = self.i
-            J = self.j
-
-            P_1 = I - next(i for i, c in enumerate(self.text[I - 1::-1]) if type(c) is Paragraph)
-            P_2 = J + self.text[J:].index('</p>') + 1
-
-            if sign:
-                CAP = (CloseFontpost, OpenFontpost)
-                
-                self.text.insert(P_1, CAP[0]({'class': tag}))
-                DA += 1
-                
-                P_2 += 1
-                I += 1
-                J += 1
-            else:
-                CAP = (OpenFontpost, CloseFontpost)
-            
-            paragraph = self.text[P_1:P_2]
-            
-            # if selection falls on top of range
-            if type(self.text[I - 1]) is CAP[0]:
-                I -= next(i for i, c in enumerate(self.text[I - 2::-1]) if type(c) is not CAP[0]) + 1
-
-            if type(self.text[J]) is CAP[1]:
-                J += next(i for i, c in enumerate(self.text[J + 1:]) if type(c) is not CAP[1]) + 1
-
-            ftag = OpenFontpost({'class': tag})['class']
-            if sign:
-                ftags = [(i + P_1, type(e)) for i, e in enumerate(paragraph) if type(e) in CAP and e.F is ftag] + [(P_2, CAP[1])] + [(None, None)]
-            else:
-                ftags = [(i + P_1, type(e)) for i, e in enumerate(paragraph) if type(e) in CAP and e.F is ftag] + [(None, None)]
-            
-            pairs = []
-            for i in reversed(range(len(ftags) - 2)):
-                if (ftags[i][1], ftags[i + 1][1]) == CAP:
-                    pairs.append((ftags[i][0], ftags[i + 1][0]))
-                    del ftags[i:i + 2]
-            
-            # ERROR CHECKING
-            if ftags != [(None, None)]:
-                print ('INVALID TAG SEQUENCE, REMNANTS: ' + str(ftags))
-            
-            instructions = []
-            drift_i = 0
-            drift_j = 0
-
-            for pair in pairs:
-                if pair[1] <= I or pair[0] >= J:
-                    pass
-                elif pair[0] >= I and pair[1] <= J:
-                    instructions += [(pair[0], False), (pair[1], False)]
-                    DA -= 2
-                    
-                    drift_j += -2
-                elif I < pair[1] <= J:
-                    instructions += [(pair[1], False), (I, True, CAP[1]({'class': tag}) )]
-                    if not sign:
-                        drift_i += 1
-                elif I <= pair[0] < J:
-                    instructions += [(pair[0], False), (J, True, CAP[0]({'class': tag}) )]
-                    if not sign:
-                        drift_j += -1
-                elif pair[0] < I and pair[1] > J:
-                    instructions += [(I, True, CAP[1]({'class': tag}) ), (J, True, CAP[0]({'class': tag}) )]
-                    DA += 2
-                    
-                    if sign:
-                        drift_j += 2
-                    else:
-                        drift_i += 1
-                        drift_j += 1
-
-            if instructions:
-                activity = True
-                
-                instructions.sort(reverse=True)
-                for instruction in instructions:
-                    if instruction[1]:
-                        self.text.insert(instruction[0], instruction[2])
-                    else:
-                        del self.text[instruction[0]]
-            else:
-                activity = False
-            
-            if sign:
-                if self.text[P_1] == CAP[0]({'class': tag}):
-                    del self.text[P_1]
-                    DA -= 1
-                    
-                    drift_i -= 1
-                    drift_j -= 1
-
-                else:
-                    self.text.insert(P_1, CAP[1]({'class': tag}) )
-                    DA += 1
-                    
-                    drift_j += 1
-
-            
-            if activity:
-                self.i = I + drift_i
-                self.j = J + drift_j
-                
-                self._recalculate()
-                
-                # redo spelling for this paragraph
-                self.text.misspellings = [pair if pair[1] < P_1 else
-                        (pair[0] + DA, pair[1] + DA, pair[2]) if pair[0] > P_2 else
-                        (0, 0, 0) for pair in self.text.misspellings ]
-                # paragraph has changed
-                self.text.misspellings.extend(words(self.text[P_1:P_2 + DA] + ['</p>'], startindex=P_1, spell=True)[1])
-                
-                return True
-            else:
-                return False
-    """

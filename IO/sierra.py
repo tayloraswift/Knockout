@@ -62,8 +62,6 @@ def load(name):
     from edit import cursor, caramel
     from typing import typing
     
-    print(tree.serialize([datablocks.DOCUMENT]))
-    
     # aim editor objects
     caramel.delight = caramel.Channels_controls(DATA['contexts']['channels'])
     typing.keyboard = typing.Keyboard(constants.shortcuts)

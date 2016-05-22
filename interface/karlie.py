@@ -2,12 +2,12 @@ from bisect import bisect
 from itertools import chain
 
 from state import constants, contexts, noticeboard
-from style import styles
+#from style import styles
 from interface import kookies, ui, source
 from edit import ops, caramel
-from edit.paperairplanes import datatypes
+#from edit.paperairplanes import datatypes
 from model import meredith
-from IO import un, kevin
+from IO import un
 
 def _Z_state(obj, L, A, defined):
     # test for definition

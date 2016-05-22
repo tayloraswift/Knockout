@@ -2,7 +2,7 @@ from math import floor
 import bisect
 
 from state import constants
-from style import styles
+from style.interfacefonts import ISTYLES
 
 accent = (1, 0.22, 0.50)
 
@@ -21,7 +21,7 @@ class Base_kookie(object):
         self._texts = []
         
         if font is not None:
-            self.font = styles.ISTYLES[font]
+            self.font = ISTYLES[font]
         
         self._x_right = x + width
         self.y_bottom = y + height

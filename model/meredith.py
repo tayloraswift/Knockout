@@ -3,9 +3,9 @@ from itertools import groupby, chain
 from math import inf as infinity
 
 from elements.box import Box
-from elements.style import Blockstyle
 from elements import datablocks
 from elements.datatypes import Tagcounter
+from elements.styles import Blockstyle
 
 from model.lines import Glyphs_line, cast_liquid_line
 

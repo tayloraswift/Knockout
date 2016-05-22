@@ -1,5 +1,5 @@
-from model import meredith
-from style import styles
+#from model import meredith
+#from style import styles
 
 def p_set_attribute(A, value):
     styles.PARASTYLES.active.assign(A, value)

@@ -1,8 +1,8 @@
 from IO import un
-from model import meredith
-from style import styles
+#from model import meredith
+#from style import styles
 from state import contexts
-from elements.node import Node
+#from elements.node import Node
     
 def redo():
     if un.history.forward():

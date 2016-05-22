@@ -5,10 +5,10 @@ from itertools import chain, groupby
 from state.exceptions import IO_Error
 
 # boxes
-from elements import box, style, elements
+from elements import box, elements, styles
 from model import meredith
 
-boxes = {B.name: B for B in chain.from_iterable(M.members for M in (box, style, elements, meredith))}
+boxes = {B.name: B for B in chain.from_iterable(M.members for M in (box, styles, elements, meredith))}
 
 Text = meredith.Text
 
@@ -16,9 +16,13 @@ class Paine(parser.HTMLParser):
     def _cap(self):
         pass
 
+    def _handle_implicit(self, name):
+        pass
+
     def feed(self, data):
         self.reset()
         self._first = True
+        self._implicit = False
         self._O = []
         self._C = [(None, self._O)]
         self._breadcrumbs = ['_nullbox']
@@ -37,6 +41,8 @@ class Paine(parser.HTMLParser):
     
     def handle_starttag(self, name, attrs):
         if name in boxes:
+            self._handle_implicit(name)
+            
             self._breadcrumbs.append(name)
             if boxes[name].textfacing:
                 M = dict(attrs), Text()
@@ -68,14 +74,21 @@ class Kevin(Paine): # to capture the first and last blobs
     def _cap(self):
         if self._breadcrumbs == ['_nullbox', 'p']:
             self.handle_endtag('p')
-        
+    
+    def _handle_implicit(self, name):
+        if self._implicit and not boxes[name].inline and self._breadcrumbs == ['_nullbox', 'p']: # nullify implicit paragraph if not needed
+            self._C.pop()
+            self._breadcrumbs.pop()
+            self._implicit = False
+    
     def handle_startendtag(self, name, attrs):
         if name in boxes:
             if not boxes[name].inline or boxes[self._breadcrumbs[-1]].textfacing:
-                pass
+                self._handle_implicit(name)
             elif self._first and self._breadcrumbs[-1] == '_nullbox': # register the first blob
                 self.handle_starttag('p', {}) # virtual paragraph container
                 self._first = False
+                self._implicit = True
             else:
                 return
             self.append_to().append(boxes[name]( dict(attrs) ))
@@ -86,6 +99,7 @@ class Kevin(Paine): # to capture the first and last blobs
         elif self._first and self._breadcrumbs[-1] == '_nullbox': # register the first blob
             self.handle_starttag('p', {}) # virtual paragraph container
             self._first = False
+            self._implicit = True
         else:
             return
         O = self.append_to()

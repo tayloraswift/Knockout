@@ -227,8 +227,13 @@ class PlaneCursor(object):
     
     def copy_selection(self):
         P = tuple(self.plane_address)
-        A = P + self.i
-        B = P + self.j
+        if self.i > self.j:
+            A = P + self.j
+            B = P + self.i
+        else:
+            A = P + self.i
+            B = P + self.j
+
         if A[:-1] == B[:-1]:
             base = address(DOCUMENT, A[:-1]).content
             return serialize(base[A[-1]:B[-1]])

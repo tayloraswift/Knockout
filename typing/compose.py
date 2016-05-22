@@ -1,4 +1,4 @@
-from style.styles import ISTYLES
+from style.interfacefonts import ISTYLES
 
 compose_keys = set(('Shift_L', 'Shift_R', 'Control_L', 'Control_R', 'Caps_Lock', 'Escape', 'Alt_L', 'Alt_R', 'Super_L'))
 

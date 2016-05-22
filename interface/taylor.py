@@ -5,7 +5,7 @@ import cairo
 
 from state import noticeboard, constants
 from state.contexts import Text as CText
-from style.styles import ISTYLES
+from style.interfacefonts import ISTYLES
 from elements.datablocks import DOCUMENT
 from model import wonder
 from edit import cursor, caramel

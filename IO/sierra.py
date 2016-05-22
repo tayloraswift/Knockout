@@ -1,13 +1,11 @@
 from pprint import pformat
 from ast import literal_eval
 
-from style import fonts, styles
 from state import constants, noticeboard
 from model import meredith
-from IO import tree, un, xml
+from IO import tree, un
 #from modules import modulestyles
 #from elements import modules
-from elements.node import Node
 
 from elements import datablocks
 

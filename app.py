@@ -7,7 +7,7 @@ from gi.repository import Gtk, Gdk, GObject
 from state import noticeboard, constants
 from IO import do
 from edit import cursor
-from typing import compose
+from keyboard import compose
 from interface import karlie, taylor, menu
 
 _dead_keys = set(('dead_tilde', 'dead_acute', 'dead_grave', 'dead_circumflex', 'dead_abovering', 'dead_macron', 'dead_breve', 'dead_abovedot', 'dead_diaeresis', 'dead_doubleacute', 'dead_caron', 'dead_cedilla', 'dead_ogonek', 'dead_iota', 'Multi_key'))

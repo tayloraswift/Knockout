@@ -6,7 +6,7 @@ from state import constants, contexts, noticeboard
 from interface import kookies, ui, source
 from edit import ops, caramel
 #from edit.paperairplanes import datatypes
-from model import meredith
+#from model import meredith
 from IO import un
 
 def _Z_state(obj, L, A, defined):

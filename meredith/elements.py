@@ -1,4 +1,4 @@
-from elements.box import Box
+from meredith.box import Box
 
 class _Fontpost(Box):
     name = '_f_'

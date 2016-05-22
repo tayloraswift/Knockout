@@ -1,13 +1,12 @@
 from itertools import chain
 
-from model.wonder import words
-
-from elements.datablocks import DOCUMENT
-from elements.elements import PosFontpost, NegFontpost
-
-from edit.text import expand_cursors_word
+from meredith.datablocks import DOCUMENT
+from meredith.elements import PosFontpost, NegFontpost
 
 from IO.tree import serialize, deserialize
+
+from edit.wonder import words
+from edit.text import expand_cursors_word
 
 def address(box, path):
     for i in path:

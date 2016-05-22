@@ -3,9 +3,10 @@ from itertools import chain
 
 from state import noticeboard
 
-from interface.poptarts import accent
+from olivia.poptarts import accent
 
-from elements.datablocks import DOCUMENT
+from meredith.datablocks import DOCUMENT
+
 from IO import un
 
 def _draw_broken_bar(cr, x1, y1, x2, color_rgba, top):

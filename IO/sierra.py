@@ -2,12 +2,12 @@ from pprint import pformat
 from ast import literal_eval
 
 from state import constants, noticeboard
-from model import meredith
-from IO import tree, un
 #from modules import modulestyles
 #from elements import modules
 
-from elements import datablocks
+from meredith import datablocks
+
+from IO import tree, un
 
 def save():
     FI = ('<head><meta charset="UTF-8"></head>\n<title>', constants.filename, '</title>\n\n',
@@ -54,15 +54,14 @@ def load(name):
 #    Node.MSL = modulestyles.MS_Library(modules)
     
     datablocks.TTAGS, datablocks.BTAGS, datablocks.DOCUMENT, datablocks.TSTYLES, datablocks.BSTYLES = tree.deserialize(doc)
-    
-    from interface import karlie, taylor
+
+    import keyboard
     from state.contexts import Text
     from edit import cursor, caramel
-    from typing import typing
     
     # aim editor objects
     caramel.delight = caramel.Channels_controls(DATA['contexts']['channels'])
-    typing.keyboard = typing.Keyboard(constants.shortcuts)
+    keyboard.keyboard = keyboard.Keyboard(constants.shortcuts)
     cursor.fcursor = cursor.PlaneCursor( * DATA['contexts']['text'] )
     
     datablocks.DOCUMENT.layout_all()
@@ -70,6 +69,8 @@ def load(name):
 
     # start undo tracking
     un.history = un.UN() 
+    
+    from interface import karlie, taylor
     
     taylor.becky = taylor.Document_view(save, DATA['view'])
     noticeboard.refresh_properties_type.push_change(DATA['view']['mode'])

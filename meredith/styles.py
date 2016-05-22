@@ -1,10 +1,11 @@
 from itertools import chain
 
-from elements.box import Box
+from libraries.freetype import ft_errors
 
-from elements.datablocks import Textstyles_D
+from meredith.box import Box
+from meredith.datablocks import Textstyles_D
 
-from style.fonts import get_font
+from fonts import get_font
 
 class Textstyles(Box):
     name = 'textstyles'
@@ -14,7 +15,7 @@ class Textstyles(Box):
         Textstyles_D.update_datablocks(self)
 
 _text_DNA = [('fontsize',    'float',   13),
-            ('path',        'str',      'style/Ubuntu-R.ttf'),
+            ('path',        'str',      'fonts/Ubuntu-R.ttf'),
             ('tracking',    'float',    0),
             ('shift',       'float',    0),
             ('capitals',    'bool',     False),

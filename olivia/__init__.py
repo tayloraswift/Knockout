@@ -4,10 +4,10 @@ from bulletholes.counter import TCounter as Counter
 
 from edit.arithmetic import NumericStringParser, ParseException
 
-from elements.datablocks import Texttags_D, Blocktags_D, Textstyles_D
-from elements.frames import Frames
+from meredith.datablocks import Texttags_D, Blocktags_D, Textstyles_D
 
-from interface.poptarts import Sprinkles
+from olivia.frames import Frames
+from olivia.poptarts import Sprinkles
 
 nsp = NumericStringParser()
 

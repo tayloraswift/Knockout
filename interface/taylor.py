@@ -3,14 +3,20 @@ from math import pi, sqrt
 import os
 import cairo
 
+from fonts.interfacefonts import ISTYLES
+
+from meredith.datablocks import DOCUMENT
+
+from edit import wonder
+from edit import cursor, caramel
+
+from IO import un, do
+
+from keyboard import keyboard
+
 from state import noticeboard, constants
 from state.contexts import Text as CText
-from style.interfacefonts import ISTYLES
-from elements.datablocks import DOCUMENT
-from model import wonder
-from edit import cursor, caramel
-from IO import un, do
-from typing import typing
+
 from interface import kookies, menu, ui
 from interface.base import accent
 
@@ -134,12 +140,12 @@ def PDF():
 
 def _place_tags(key):
     un.history.undo_save(3)
-    if not cursor.fcursor.bridge(typing.keyboard[key], sign=True):
+    if not cursor.fcursor.bridge(keyboard[key], sign=True):
         un.history.pop()
 
 def _punch_tags(key):
     un.history.undo_save(3)
-    if not cursor.fcursor.bridge(typing.keyboard[key], sign=False):
+    if not cursor.fcursor.bridge(keyboard[key], sign=False):
         un.history.pop()
 
 def _add_channel():
@@ -267,7 +273,7 @@ def _replace_misspelled(word):
         with open(wonder.additional_words_file, 'a') as A:
             A.write(word + '\n')
     else:
-        typing.keyboard.type_document('Paste', word)
+        keyboard.type_document('Paste', word)
     cursor.fcursor.run_stats(spell=True) #probably only needs to be run on paragraph
 
 class Document_view(ui.Cell):
@@ -276,7 +282,6 @@ class Document_view(ui.Cell):
         self._region_active, self._region_hover = 'view', 'view'
         self._toolbar = Document_toolbar(save)
         self._mode_switcher = Mode_switcher(self.change_mode, default= self._mode)
-        self.keyboard = typing.keyboard
         self.planecursor = cursor.fcursor
         
         self._stake = None
@@ -347,7 +352,7 @@ class Document_view(ui.Cell):
 
     def key_input(self, name, char):
         if self._mode == 'text':
-            clipboard = self.keyboard.type_document(name, char)
+            clipboard = keyboard.type_document(name, char)
             # check if paragraph and font context changed
             CText.update()
             

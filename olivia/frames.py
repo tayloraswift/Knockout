@@ -2,7 +2,7 @@ from bisect import bisect
 
 from itertools import chain
 
-from elements import datablocks
+from meredith import datablocks
 
 from state.exceptions import LineOverflow
 

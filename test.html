@@ -1,21 +1,55 @@
 <head><meta charset="UTF-8"></head>
 <title>test.html</title>
 
-<body>
-<section outlines="80,50 80,80 ; 700,50 700,80 ; 0" repeat="0:2">
+<texttags>
+    <texttag name="emphasis"/>
+    <texttag name="strong"/>
+    <texttag name="link"/>
+    <texttag name="reference"/>
+    <texttag name="sc"/>
+    <texttag name="big"/>
+    <texttag name="small"/>
+    <texttag name="sub"/>
+    <texttag name="sup"/>
+</texttags>
+
+<blocktags>
+    <blocktag name="_center"/>
+    <blocktag name="_left"/>
+    <blocktag name="_right"/>
+    <blocktag name="body"/>
+    <blocktag name="Catastrophe"/>
+    <blocktag name="Arsyn"/>
+    <blocktag name="caption"/>
+    <blocktag name="emphasis"/>
+    <blocktag name="figure"/>
+    <blocktag name="firstchild"/>
+    <blocktag name="h1"/>
+    <blocktag name="h2"/>
+    <blocktag name="h3"/>
+    <blocktag name="h4"/>
+    <blocktag name="key"/>
+    <blocktag name="list"/>
+    <blocktag name="math"/>
+    <blocktag name="tablecell"/>
+    <blocktag name="units"/>
+</blocktags>
+              
+<body width="765" height="990" dual="True">
+<section frames="80,50 80,80 ; 700,50 700,80 ; 0" repeat="0:2">
 <table class="">
     <tr>
         <td>
-            <p class="body&~h1&~tablecell&~tablecell&~tablecell">Typesetting modules test</p>
+            <p class="body^~h1^~tablecell^~tablecell^~tablecell">Typesetting modules test</p>
         </td>
         <td>
-            <p class="body&~h1&~tablecell&~tablecell" style="{'align': 1}"><pn/></p>
+            <p class="body^~h1^~tablecell^~tablecell" style="{'align': 1}"><pn/></p>
         </td>
     </tr>
 </table>
 </section>
 
-<section outlines="80,80 80,910 ; 360,80 360,910 ; 0 |
+<section frames="80,80 80,910 ; 360,80 360,910 ; 0 |
     420,80 420,910 ; 700,80 700,910 ; 0 |
     80,100 80,910 ; 360,100 360,910 ; 1 |
     420,100 420,910 ; 700,100 700,910 ; 1 |
@@ -27,11 +61,11 @@
 
 <p class="h2">Text typesetting</p>
 
-<p class="body&firstchild"><strong>We begin our story in New York.</strong> There once was a girl known by everyone and no one. Her heart belonged to someone who couldn’t stay. They loved each other recklessly. They paid the price. </p>
+<p class="body^firstchild"><strong>We begin our story in New York.</strong> There once was a girl known by everyone and no one. Her heart belonged to someone who couldn’t stay. They loved each other recklessly. They paid the price. </p>
 
 <p><em>She danced to forget him. He drove past her street every night. <strong>She made friends and enemies. He only saw her in his dreams.</em> Then one day he came back. Timing is a funny thing.</strong> And everyone was watching. <fo class="sc"/>She lost him but she found herself and somehow that was everything.<fc class="sc"/></p>
 
-<p class="body&math"><mod:bounded align="1">
+<p class="body^math"><mod:bounded align="1">
     <mod:bounded:sym>∫</mod:bounded:sym>
     <mod:bounded:a>13</mod:bounded:a>
     <mod:bounded:a>22 + <mod:frac>
@@ -55,7 +89,7 @@
     <mod:bounded:a>13</mod:bounded:a>
 </mod:bounded><mi char="n"/></p>
 
-<p class="body&math">√ <mod:root>
+<p class="body^math">√ <mod:root>
     <mod:root:i>3</mod:root:i>
     <mod:root:rad>U</mod:root:rad>
 </mod:root> + <mod:root>
@@ -95,7 +129,7 @@
         </mod:frac></mod:root:rad>
 </mod:root></p>
 
-<p class="body&math" style="{'margin_bottom': 50}"><mod:frac>
+<p class="body^math" style="{'margin_bottom': 50}"><mod:frac>
     <mod:frac:n><mi char="a"/> + <mod:frac>
             <mod:frac:n><mi char="e"/></mod:frac:n>
             <mod:frac:d><mi char="n"/></mod:frac:d>
@@ -140,7 +174,7 @@
     <mod:frac:d><mi char="n"/></mod:frac:d>
 </mod:frac></p>
 
-<p class="body&firstchild">“<em>I love you</em>” doesn’t count after goodbye. Won’t stop ’till it’s over.</p>
+<p class="body^firstchild">“<em>I love you</em>” doesn’t count after goodbye. Won’t stop ’till it’s over.</p>
 
 <table cellbottom="7" celltop="0" class="figure" distr="1.5, 2, 2" hrules="1" rulemargin="2" rulewidth="1">
     <tr>
@@ -150,12 +184,12 @@
         <td>
             <p>GDP</p>
             
-            <p class="body&units">Trillions USD</p>
+            <p class="body^units">Trillions USD</p>
         </td>
         <td>
             <p>Population</p>
             
-            <p class="body&units">millions</p>
+            <p class="body^units">millions</p>
         </td>
     </tr>
     <tr>
@@ -204,13 +238,13 @@
     </tr>
 </table>
 
-<p class="caption&h4">Gross domestic product by nation.</p>
+<p class="caption^h4">Gross domestic product by nation.</p>
 
 <p class="h2">Counting tests</p>
 
 <p class="h3">Level 3 heading</p>
 
-<p class="body&firstchild">Non counting paragraph</p>
+<p class="body^firstchild">Non counting paragraph</p>
 
 <p class="h3">Level 3 Heading</p>
 
@@ -232,41 +266,41 @@
 
 <p class="h2">Movie Script recipe</p>
 
-<p class="Catastrophe&body">Why did you take the plans for the Heisenberg device? You knew Lord Roy would use it for evil.</p>
+<p class="Catastrophe^body">Why did you take the plans for the Heisenberg device? You knew Lord Roy would use it for evil.</p>
 
-<p class="Arsyn&body">I’m not just another member of your squad, Cat. </p>
+<p class="Arsyn^body">I’m not just another member of your squad, Cat. </p>
 
-<p class="Catastrophe&body">And so you kick your best friend out a thirteen-story window?</p>
+<p class="Catastrophe^body">And so you kick your best friend out a thirteen-story window?</p>
 
-<p class="Arsyn&body">I am a superhero and you treated me like a sidekick.</p>
+<p class="Arsyn^body">I am a superhero and you treated me like a sidekick.</p>
 
-<p class="Catastrophe&body">That was Welvin’s decision, not mine.</p>
+<p class="Catastrophe^body">That was Welvin’s decision, not mine.</p>
 
-<p class="Arsyn&body">I don’t like Lord Roy any more than you do. But I will never work for Welvin Da Great again.</p>
+<p class="Arsyn^body">I don’t like Lord Roy any more than you do. But I will never work for Welvin Da Great again.</p>
 
-<p class="Catastrophe&body">Roy will destroy London!</p>
+<p class="Catastrophe^body">Roy will destroy London!</p>
 
-<p class="Arsyn&body">Don’t you think I know that? She sent me to patrol the city as it burns. I have my own squad now.</p>
+<p class="Arsyn^body">Don’t you think I know that? She sent me to patrol the city as it burns. I have my own squad now.</p>
 
-<p class="Catastrophe&body">But we had … Squad Goals, Arsyn. <em>Squad Goals</em>.</p>
+<p class="Catastrophe^body">But we had … Squad Goals, Arsyn. <em>Squad Goals</em>.</p>
 
 <p class="h2">Numbered List</p>
 
 <p class="h3">Level 3 Heading</p>
 
-<p class="body&firstchild">These are some list items:</p>
+<p class="body^firstchild">These are some list items:</p>
 
-<p class="body&firstchild&list">Item one.</p>
+<p class="body^firstchild^list">Item one.</p>
 
-<p class="body&list">Item two</p>
+<p class="body^list">Item two</p>
 
-<p class="body&list">Multiline list item (item 3) la la la, la la la. This is, my SNL monologue.</p>
+<p class="body^list">Multiline list item (item 3) la la la, la la la. This is, my SNL monologue.</p>
 
-<p class="body&list">Item four.</p>
+<p class="body^list">Item four.</p>
 
-<p class="body&firstchild&list">The list can restart using the firstchild style.</p>
+<p class="body^firstchild^list">The list can restart using the firstchild style.</p>
 
-<p class="body&list">And recount.</p>
+<p class="body^list">And recount.</p>
 
 <p class="h2">Histogram testing</p>
 
@@ -287,7 +321,7 @@
     </mod:hist>
 </mod:plot>
 
-<p class="caption&h4">Standard cumulative histogram.</p>
+<p class="caption^h4">Standard cumulative histogram.</p>
 
 <mod:plot class="figure" height="80" round="3">
     <mod:plot:axis major="200" minor="100" number="400" start="0" stop="2800">
@@ -306,7 +340,7 @@
     </mod:hist>
 </mod:plot>
 
-<p class="caption&h4">Logarithmic histogram.</p>
+<p class="caption^h4">Logarithmic histogram.</p>
 
 <mod:plot class="figure" height="90" round="3">
     <mod:plot:axis major="4" minor="1" number="8" start="1968" stop="2016">
@@ -315,7 +349,7 @@
     <mod:plot:axis major="2" minor="1" number="2" start="-8" stop="8">
         <p>Dollars</p>
         
-        <p class="body&units">Trillions</p>
+        <p class="body^units">Trillions</p>
     </mod:plot:axis>
     <mod:hist start="1968" step="1">
         <mod:hist:bars color="#80e080" data="0.186882 0.192807 0.187139 0.207309 0.230799 0.263224 0.27909 0.29806 0.081232 0.355559 0.399561 0.463302 0.517112 0.599272 0.617766 0.600562 0.666438 0.734037 0.769155 0.854287 0.909238 0.991104 1.031958 1.054988 1.091208 1.154334 1.258566 1.35179 1.453053 1.579232 1.721728 1.827452 2.025191 1.991082 1.853136 1.782314 1.880114 2.153611 2.406869 2.567985 2.523991 2.104989 2.162706 2.303466 2.449988 2.775103 3.021487 3.249886" step="20">
@@ -329,7 +363,7 @@
     </mod:hist>
 </mod:plot>
 
-<p class="caption&h4">Signed histogram.</p>
+<p class="caption^h4">Signed histogram.</p>
 
 <mod:plot class="figure" height="90" round="3">
     <mod:plot:axis major="4" minor="1" number="8" start="1968" stop="2016">
@@ -338,7 +372,7 @@
     <mod:plot:axis major="400" minor="200" number="400" start="-1600" stop="400">
         <p>Dollars</p>
         
-        <p class="body&units">Billions</p>
+        <p class="body^units">Billions</p>
     </mod:plot:axis>
     <mod:hist start="1968" step="1">
         <mod:hist:bars color="#80e080" colorneg="#ff6070" data="3.242 -2.842 -23.033 -23.373 -14.908 -6.135 -53.242 -73.732 -14.744 -53.659 -59.185 -40.726 -73.83 -78.968 -127.977 -207.802 -185.367 -212.308 -221.227 -149.73 -155.178 -152.639 -221.036 -269.238 -290.321 -255.051 -203.186 -163.952 -107.431 -21.884 69.27 125.61 236.241 128.236 -157.758 -377.585 -412.727 -318.346 -248.181 -160.701 -458.553 -1412.688 -1294.373 -1299.59 -1086.963 -679.544 -484.627 -438.406">
@@ -347,72 +381,72 @@
     </mod:hist>
 </mod:plot>
 
-<p class="caption&h4">Double-sided histogram</p>
+<p class="caption^h4">Double-sided histogram</p>
 
 <mod:plot class="figure" height="120">
     <mod:plot:axis major="4" minor="2" number="8" start="0" stop="80">
         <p>Minutes</p>
         
-        <p class="body&units">per day</p>
+        <p class="body^units">per day</p>
     </mod:plot:axis>
     <mod:plot:axis major="10" minor="5" number="10" round="4" start="0" stop="60">
         <p>Miles</p>
         
-        <p class="body&units">Per day</p>
+        <p class="body^units">Per day</p>
     </mod:plot:axis>
     <mod:scatter color="#ff3085" data="59.530487123405635,34.910904805725444 67.00111084979164,43.702300040082655 51.611142967430816,23.336430614087803 56.14162132898826,29.98680028588906 66.04007222274456,43.43006364525907 51.002877882541064,41.64027347970709 51.84347385780058,38.07093495960646 43.42024141221456,32.26086045288778 42.25941907921125,28.382027772524378 57.42486832170029,31.377279906310736 51.32132097300651,37.74457091407929 63.827628583591135,32.65308601236147 67.19514215139418,22.803718227990043 19.039147829537413,33.694533543836236 64.20122645391379,33.77742881299491 35.29558702125989,40.97615776447669 38.37026795074903,29.124833827600607 56.56096671737336,26.31474252880958 69.86316440147598,34.7837806970703 60.56540087384312,29.58042457876334 43.299721293648155,36.07418396460596 37.87138175440892,33.913263801629824 59.13256722945001,32.93411645053082 35.74572115846827,41.0697016680163 48.98122912014252,30.926569440214166 46.13448325602549,33.82115083242616 51.33503177995679,31.351865486685213 49.07935797533223,35.536406391280195 55.331634054595185,22.417461371994257 28.85159715029865,32.076337801291686 42.78735446776008,32.91940202243426 30.84598439198601,32.61238651789934 56.26466402506169,44.52601253735996 43.8593747035107,33.39096233770555 69.08558868331002,20.35098341031764 42.40243669346815,21.97932244277913 34.747116863727086,34.624125212304236 30.855384548369717,36.04501516670114 60.157053390355316,30.972574994252383 42.40989304169967,38.13014244154269 41.01417538306501,39.80047902642515 27.21376867300154,29.69246239165304 24.025254943398142,32.65961350495128 48.195643163427306,18.636167342862578 51.74767723532504,28.456953557418768 41.40039265088319,18.925122657794358 44.15618671182322,20.145856505685387 50.075561943315336,33.76046052773572 31.25976412320987,14.463302883829524 42.87413754018861,25.768215366405954 74.19236992765379,17.14015981588967 39.270625700268866,32.23925912484792 35.296715775127915,22.365255179965555 28.16176166324285,25.74422130210181 45.20042218966328,34.17459213544778 57.811133407931905,23.355010698243326 24.97652245643397,25.80072021386628 27.576846281281654,28.249402289062594 52.46320830821996,34.97741830917248 53.798564641011396,12.555509554753131 37.28901198945313,17.943878207698326 47.18757684370931,27.164368895419766">
         <p>Demographic (<mi char="μ"/><sub><mi char="x"/></sub>, <mi char="μ"/><sub><mi char="y"/></sub>) (gender, age, race, education, area, region)</p>
     </mod:scatter>
 </mod:plot>
 
-<p class="caption&h4">Standard scatterplot</p>
+<p class="caption^h4">Standard scatterplot</p>
 
 <mod:plot class="figure" height="120">
     <mod:plot:axis major="4" minor="2" number="8" start="-10" stop="78">
         <p>Minutes</p>
         
-        <p class="body&units">per day</p>
+        <p class="body^units">per day</p>
     </mod:plot:axis>
     <mod:plot:logaxis base="10" major="100" minor="10" number="100" round="4" start="0.01" stop="1000000">
         <p>Miles</p>
         
-        <p class="body&units">Per day</p>
+        <p class="body^units">Per day</p>
     </mod:plot:logaxis>
     <mod:scatter color="#ff3085" data="0,1000 10,0.1 59.530487123405635,34.910904805725444 67.00111084979164,43.702300040082655 51.611142967430816,23.336430614087803 56.14162132898826,29.98680028588906 66.04007222274456,43.43006364525907 51.002877882541064,41.64027347970709 51.84347385780058,38.07093495960646 43.42024141221456,32.26086045288778 42.25941907921125,28.382027772524378 57.42486832170029,31.377279906310736 51.32132097300651,37.74457091407929 63.827628583591135,32.65308601236147 67.19514215139418,22.803718227990043 19.039147829537413,33.694533543836236 64.20122645391379,33.77742881299491 35.29558702125989,40.97615776447669 38.37026795074903,29.124833827600607 56.56096671737336,26.31474252880958 69.86316440147598,34.7837806970703 60.56540087384312,29.58042457876334 43.299721293648155,36.07418396460596 37.87138175440892,33.913263801629824 59.13256722945001,32.93411645053082 35.74572115846827,41.0697016680163 48.98122912014252,30.926569440214166 46.13448325602549,33.82115083242616 51.33503177995679,31.351865486685213 49.07935797533223,35.536406391280195 55.331634054595185,22.417461371994257 28.85159715029865,32.076337801291686 42.78735446776008,32.91940202243426 30.84598439198601,32.61238651789934 56.26466402506169,44.52601253735996 43.8593747035107,33.39096233770555 69.08558868331002,20.35098341031764 42.40243669346815,21.97932244277913 34.747116863727086,34.624125212304236 30.855384548369717,36.04501516670114 60.157053390355316,30.972574994252383 42.40989304169967,38.13014244154269 41.01417538306501,39.80047902642515 27.21376867300154,29.69246239165304 24.025254943398142,32.65961350495128 48.195643163427306,18.636167342862578 51.74767723532504,28.456953557418768 41.40039265088319,18.925122657794358 44.15618671182322,20.145856505685387 50.075561943315336,33.76046052773572 31.25976412320987,14.463302883829524 42.87413754018861,25.768215366405954 74.19236992765379,17.14015981588967 39.270625700268866,32.23925912484792 35.296715775127915,22.365255179965555 28.16176166324285,25.74422130210181 45.20042218966328,34.17459213544778 57.811133407931905,23.355010698243326 24.97652245643397,25.80072021386628 27.576846281281654,28.249402289062594 52.46320830821996,34.97741830917248 53.798564641011396,12.555509554753131 37.28901198945313,17.943878207698326 47.18757684370931,27.164368895419766">
         <p>Demographic (<mi char="μ"/><sub><mi char="x"/></sub>, <mi char="μ"/><sub><mi char="y"/></sub>) (gender, age, race, education, area, region)</p>
     </mod:scatter>
 </mod:plot>
 
-<p class="caption&h4">Logarithmic scatterplot</p>
+<p class="caption^h4">Logarithmic scatterplot</p>
 
 <mod:plot class="figure" height="120">
     <mod:plot:logaxis base="10" major="10" minor="10" number="100" start="0.01" stop="1000000">
         <p>Minutes</p>
         
-        <p class="body&units">per day</p>
+        <p class="body^units">per day</p>
     </mod:plot:logaxis>
     <mod:plot:logaxis base="10" major="100" minor="10" number="100" round="4" start="0.01" stop="1000000">
         <p>Miles</p>
         
-        <p class="body&units">Per day</p>
+        <p class="body^units">Per day</p>
     </mod:plot:logaxis>
     <mod:scatter color="#ff3085" data="0,1000 10,0.1 -10,10 -20,-20, 100,-100, 1000,1000 59.530487123405635,34.910904805725444 67.00111084979164,43.702300040082655 51.611142967430816,23.336430614087803 56.14162132898826,29.98680028588906 66.04007222274456,43.43006364525907 51.002877882541064,41.64027347970709 51.84347385780058,38.07093495960646 43.42024141221456,32.26086045288778 42.25941907921125,28.382027772524378 57.42486832170029,31.377279906310736 51.32132097300651,37.74457091407929 63.827628583591135,32.65308601236147 67.19514215139418,22.803718227990043 19.039147829537413,33.694533543836236 64.20122645391379,33.77742881299491 35.29558702125989,40.97615776447669 38.37026795074903,29.124833827600607 56.56096671737336,26.31474252880958 69.86316440147598,34.7837806970703 60.56540087384312,29.58042457876334 43.299721293648155,36.07418396460596 37.87138175440892,33.913263801629824 59.13256722945001,32.93411645053082 35.74572115846827,41.0697016680163 48.98122912014252,30.926569440214166 46.13448325602549,33.82115083242616 51.33503177995679,31.351865486685213 49.07935797533223,35.536406391280195 55.331634054595185,22.417461371994257 28.85159715029865,32.076337801291686 42.78735446776008,32.91940202243426 30.84598439198601,32.61238651789934 56.26466402506169,44.52601253735996 43.8593747035107,33.39096233770555 69.08558868331002,20.35098341031764 42.40243669346815,21.97932244277913 34.747116863727086,34.624125212304236 30.855384548369717,36.04501516670114 60.157053390355316,30.972574994252383 42.40989304169967,38.13014244154269 41.01417538306501,39.80047902642515 27.21376867300154,29.69246239165304 24.025254943398142,32.65961350495128 48.195643163427306,18.636167342862578 51.74767723532504,28.456953557418768 41.40039265088319,18.925122657794358 44.15618671182322,20.145856505685387 50.075561943315336,33.76046052773572 31.25976412320987,14.463302883829524 42.87413754018861,25.768215366405954 74.19236992765379,17.14015981588967 39.270625700268866,32.23925912484792 35.296715775127915,22.365255179965555 28.16176166324285,25.74422130210181 45.20042218966328,34.17459213544778 57.811133407931905,23.355010698243326 24.97652245643397,25.80072021386628 27.576846281281654,28.249402289062594 52.46320830821996,34.97741830917248 53.798564641011396,12.555509554753131 37.28901198945313,17.943878207698326 47.18757684370931,27.164368895419766">
         <p>Demographic (<mi char="μ"/><sub><mi char="x"/></sub>, <mi char="μ"/><sub><mi char="y"/></sub>) (gender, age, race, education, area, region)</p>
     </mod:scatter>
 </mod:plot>
 
-<p class="caption&h4">Bi-logarithmic scatterplot with negative flooring</p>
+<p class="caption^h4">Bi-logarithmic scatterplot with negative flooring</p>
 
 <mod:plot class="figure" height="120">
     <mod:plot:axis major="4" minor="2" number="8" start="-8" stop="78">
         <p>Minutes</p>
         
-        <p class="body&units">per day</p>
+        <p class="body^units">per day</p>
     </mod:plot:axis>
     <mod:plot:logaxis base="10" major="100" minor="10" number="100" round="4" start="0.01" stop="1000000">
         <p>Miles</p>
         
-        <p class="body&units">Per day</p>
+        <p class="body^units">Per day</p>
     </mod:plot:logaxis>
     <mod:scatter color="#ff3085" data="0,1000 10,0.1 59.530487123405635,34.910904805725444 67.00111084979164,43.702300040082655 51.611142967430816,23.336430614087803 56.14162132898826,29.98680028588906 66.04007222274456,43.43006364525907 51.002877882541064,41.64027347970709 51.84347385780058,38.07093495960646 43.42024141221456,32.26086045288778 42.25941907921125,28.382027772524378 57.42486832170029,31.377279906310736 51.32132097300651,37.74457091407929 63.827628583591135,32.65308601236147 67.19514215139418,22.803718227990043 19.039147829537413,33.694533543836236 64.20122645391379,33.77742881299491 35.29558702125989,40.97615776447669 38.37026795074903,29.124833827600607 56.56096671737336,26.31474252880958 69.86316440147598,34.7837806970703 60.56540087384312,29.58042457876334 43.299721293648155,36.07418396460596 37.87138175440892,33.913263801629824 59.13256722945001,32.93411645053082 35.74572115846827,41.0697016680163 48.98122912014252,30.926569440214166 46.13448325602549,33.82115083242616 51.33503177995679,31.351865486685213 49.07935797533223,35.536406391280195 55.331634054595185,22.417461371994257 28.85159715029865,32.076337801291686 42.78735446776008,32.91940202243426 30.84598439198601,32.61238651789934 56.26466402506169,44.52601253735996 43.8593747035107,33.39096233770555 69.08558868331002,20.35098341031764 42.40243669346815,21.97932244277913 34.747116863727086,34.624125212304236 30.855384548369717,36.04501516670114 60.157053390355316,30.972574994252383 42.40989304169967,38.13014244154269 41.01417538306501,39.80047902642515 27.21376867300154,29.69246239165304 24.025254943398142,32.65961350495128 48.195643163427306,18.636167342862578 51.74767723532504,28.456953557418768 41.40039265088319,18.925122657794358 44.15618671182322,20.145856505685387 50.075561943315336,33.76046052773572 31.25976412320987,14.463302883829524 42.87413754018861,25.768215366405954 74.19236992765379,17.14015981588967 39.270625700268866,32.23925912484792 35.296715775127915,22.365255179965555 28.16176166324285,25.74422130210181 45.20042218966328,34.17459213544778 57.811133407931905,23.355010698243326 24.97652245643397,25.80072021386628 27.576846281281654,28.249402289062594 52.46320830821996,34.97741830917248 53.798564641011396,12.555509554753131 37.28901198945313,17.943878207698326 47.18757684370931,27.164368895419766">
         <p>Demographic (<mi char="μ"/><sub><mi char="x"/></sub>, <mi char="μ"/><sub><mi char="y"/></sub>)</p>
@@ -425,7 +459,7 @@
     </mod:fx>
 </mod:plot>
 
-<p class="caption&h4">Logarithmic scatterplot with floored curve overlays</p>
+<p class="caption^h4">Logarithmic scatterplot with floored curve overlays</p>
 
 <mod:plot class="figure" height="90" round="3">
     <mod:plot:axis major="1" minor="0.5" number="2" start="-2" stop="14">
@@ -469,18 +503,18 @@
     </mod:hist>
 </mod:plot>
 
-<p class="caption&h4">Riemann sums.</p>
+<p class="caption^h4">Riemann sums.</p>
 
 <mod:plot class="figure" height="135">
     <mod:plot:axis major="2" minor="1" number="4" start="-12" stop="12">
         <p>Minutes</p>
         
-        <p class="body&units">per day</p>
+        <p class="body^units">per day</p>
     </mod:plot:axis>
     <mod:plot:axis major="2" minor="1" number="4" start="-6" stop="6">
         <p>Miles</p>
         
-        <p class="body&units">Per day</p>
+        <p class="body^units">Per day</p>
     </mod:plot:axis>
     <mod:fx color="#ff3085" step="0.1" y="sin(x) + x/3">
         <p><mi char="f"/>(<mi char="x"/>) = sin <mi char="x"/> + <mi char="x"/>/3</p>
@@ -496,48 +530,48 @@
     </mod:fx>
 </mod:plot>
 
-<p class="caption&h4">functional/parametric plot</p>
+<p class="caption^h4">functional/parametric plot</p>
 
 <mod:plot class="figure" height="120">
     <mod:plot:axis major="4" minor="2" number="8" start="0" stop="80">
         <p>Y</p>
         
-        <p class="body&units">Units</p>
+        <p class="body^units">Units</p>
     </mod:plot:axis>
     <mod:plot:axis major="10" minor="5" number="10" round="4" start="0" stop="60">
         <p>X</p>
         
-        <p class="body&units">Units</p>
+        <p class="body^units">Units</p>
     </mod:plot:axis>
     <mod:bubble color="#ff308570" data="8,7,9 24,13,5 25,23,13 48,31,11 32,45,67 18,31,5 20,25,24 15,23,45 34,41,36 39,52,89" radius="3*sqrt(x)">
         <p>Data</p>
     </mod:bubble>
 </mod:plot>
 
-<p class="caption&h4">Bubble plot</p>
+<p class="caption^h4">Bubble plot</p>
 
 <mod:plot alt="0.6" azm="6" class="figure" height="280" rot="1">
     <mod:plot:axis major="2" minor="1" number="4" start="-12" stop="12">
         <p>X</p>
         
-        <p class="body&units">Units</p>
+        <p class="body^units">Units</p>
     </mod:plot:axis>
     <mod:plot:axis major="2" minor="1" number="4" round="4" start="-12" stop="12">
         <p>Y</p>
         
-        <p class="body&units">Units</p>
+        <p class="body^units">Units</p>
     </mod:plot:axis>
     <mod:plot:axis major="2" minor="1" number="4" round="4" start="-6" stop="6">
         <p>Z</p>
         
-        <p class="body&units">Units</p>
+        <p class="body^units">Units</p>
     </mod:plot:axis>
     <mod:scatter color="#ff3085" data="0,0 1,0, 1,1 0,1  -1,1 -1,0 -1,-1 0,-1 1,-1">
         <p>Triaxal</p>
     </mod:scatter>
 </mod:plot>
 
-<p class="caption&h4"></p>
+<p class="caption^h4"></p>
 
 <mod:pie center="0.3" class="h2" radius="80" rotate="-pi/2">
     <mod:pie:slice color="#7080ff" prop="39.19">
@@ -557,128 +591,131 @@
     </mod:pie:slice>
 </mod:pie>
 
-<p class="caption&h4">US energy consumption by type</p>
+<p class="caption^h4">US energy consumption by type</p>
 
 <p class="figure" style="{'leading': 120}"><image src="plantcell.svg" width="200"/></p>
 
-<p class="caption&h4">SVG rendering</p>
+<p class="caption^h4">SVG rendering</p>
 
 <p class="caption">A plant cell in the process of cell division. SVG rendering depends on the CairoSVG library.</p>
 
-<p class="body&firstchild"><strong>Meredith Grey Swift</strong> is the older of Taylor Swift’s two Scottish Fold cats. Her namesake is the <em>Grey’s Anatomy</em> character Meredith Grey. She has a reputation for being rather grouchy and indifferent, in some contrast to her sister of the same breed, <strong>Olivia Benson Swift</strong>, named for the detective in the television series <em>Law and Order</em>.</p>
+<p class="body^firstchild"><strong>Meredith Grey Swift</strong> is the older of Taylor Swift’s two Scottish Fold cats. Her namesake is the <em>Grey’s Anatomy</em> character Meredith Grey. She has a reputation for being rather grouchy and indifferent, in some contrast to her sister of the same breed, <strong>Olivia Benson Swift</strong>, named for the detective in the television series <em>Law and Order</em>.</p>
 
 <p class="figure" style="{'leading': 140}"><image src="meredith.png" width="140"/><image src="olivia.jpg" width="140"/></p>
 
-<p class="caption&h4">Bitmap (PNG, JPEG) tests 1, 2: Meredith and Olivia</p>
+<p class="caption^h4">Bitmap (PNG, JPEG) tests 1, 2: Meredith and Olivia</p>
 
 <p class="caption">Photographs of Meredith and Olivia from Taylor’s instagram. Olivia has since grown and accordingly soured in demeanor.</p>
 
-<p class="body&firstchild"></p>
+<p class="body^firstchild"></p>
 </section>
 </body>
 
+<textstyles>
+    <textstyle name="Sans serif semi" path="data/fonts/FiraSans-SemiBold.otf"/>
+    <textstyle name="Body bold" path="/home/kelvin/.fonts/Proforma/Proforma-Bold.otf"/>
+    <textstyle name="lowercase" capitals="False"/>
+    <textstyle name="Body italic" path="/home/kelvin/.fonts/Proforma/Proforma-MediumItalic.otf"/>
+    <textstyle fontsize="36" name="h1" path="/home/kelvin/.fonts/Kabel.otf"/>
+    <textstyle name="superscript" shift="5"/>
+    <textstyle fontsize="20" name="Big" path="/home/kelvin/.fonts/Proforma/Proforma-Book.otf" shift="-1"/>
+    <textstyle fontsize="22" name="h2" capitals="True" tracking="1"/>
+    <textstyle fontsize="11" name="Table"/>
+    <textstyle fontsize="14" name="h3" capitals="True" tracking="2"/>
+    <textstyle fontsize="9" name="Body small" path="/home/kelvin/.fonts/Proforma/Proforma-Semibold.otf"/>
+    <textstyle fontsize="12" name="Caption" capitals="False" tracking="0"/>
+    <textstyle fontsize="9" name="Table units" path="data/fonts/FiraSans-Medium.otf"/>
+    <textstyle name="Sans serif book italic" path="data/fonts/FiraSans-BookItalic.otf"/>
+    <textstyle name="Sans serif light" path="data/fonts/FiraSans-Light.otf"/>
+    <textstyle name="Smallcaps" capitals="False" path="/home/kelvin/.fonts/Proforma/Proforma_MediumSC.ttf"/>
+    <textstyle name="Body bold italic" path="/home/kelvin/.fonts/Proforma/Proforma-BoldItalic.otf"/>
+    <textstyle name="Table heading" capitals="True" tracking="1"/>
+    <textstyle name="Black" color="#000000"/>
+    <textstyle fontsize="14" name="h4" capitals="True" tracking="2"/>
+    <textstyle name="subscript" shift="-2"/>
+    <textstyle fontsize="9" name="Body small italic" path="/home/kelvin/.fonts/Proforma/Proforma-SemiboldItalic.otf"/>
+    <textstyle fontsize="13" name="Body regular" path="/home/kelvin/.fonts/Proforma/Proforma-Medium.otf"/>
+    <textstyle name="Sans serif book" path="data/fonts/FiraSans-Book.otf"/>
+</textstyles>
+
+
+<blockstyles>
+    <blockstyle class="">
+    <memberstyle class="" textstyle="Black"/>
+    <memberstyle class="sub" textstyle="subscript"/>
+    <memberstyle class="sup" textstyle="superscript"/>
+    </blockstyle>
+    <blockstyle class="body" indent_range="0, 1" hyphenate="True" indent="15" leading="20">
+    <memberstyle class="" textstyle="Body regular"/>
+    <memberstyle class="sc" textstyle="Smallcaps"/>
+    <memberstyle class="emphasis" textstyle="Body italic"/>
+    <memberstyle class="strong" textstyle="Body bold"/>
+    <memberstyle class="emphasis^strong" textstyle="Body bold italic"/>
+    <memberstyle class="small" textstyle="Body small"/>
+    <memberstyle class="reference" textstyle="Smallcaps"/>
+    <memberstyle class="emphasis^small" textstyle="Body small italic"/>
+    </blockstyle>
+    <blockstyle show_count="'Catastrophe:'" indent_range="" indent="0" margin_left="40" class="Catastrophe^body"/>
+    <blockstyle show_count="'Arsyn:'" indent_range="" indent="0" margin_left="40" class="Arsyn^body"/>
+    <blockstyle show_count="str(A[-1]) + '.'" class="list" incr_assign="n + 1" indent="0" margin_left="40" incr_place_value="-1"/>
+    <blockstyle class="body^firstchild"/>
+    <blockstyle class="math" margin_top="20" margin_bottom="20" align="0.5" indent="0">
+    <memberstyle class="big" textstyle="Big"/>
+    </blockstyle>
+    <blockstyle class="h1" hyphenate="True" leading="40" margin_bottom="20">
+    <memberstyle class="" textstyle="h1"/>
+    </blockstyle>
+    <blockstyle show_count="'.'.join(str(i) for i in A[1:2])" margin_top="12" margin_bottom="12" class="h2" incr_assign="n + 1" leading="24" incr_place_value="1">
+    <memberstyle class="" textstyle="Sans serif light"/>
+    <memberstyle class="" textstyle="h2"/>
+    </blockstyle>
+    <blockstyle show_count="'.'.join(str(i) for i in A[1:3])" margin_top="12" margin_bottom="4" class="h3" incr_assign="n + 1" leading="24" incr_place_value="2">
+    <memberstyle class="" textstyle="Sans serif book"/>
+    <memberstyle class="emphasis" textstyle="Sans serif book italic"/>
+    <memberstyle class="" textstyle="h3"/>
+    </blockstyle>
+    <blockstyle show_count="'.'.join(str(i) for i in A[1:4])" incr_assign="n + 1" class="h4" incr_place_value="3">
+    <memberstyle class="" textstyle="h4"/>
+    <memberstyle class="" textstyle="Sans serif book italic"/>
+    </blockstyle>
+    <blockstyle class="figure" align="0.5" margin_top="10" margin_bottom="10">
+    <memberstyle class="" textstyle="Sans serif book"/>
+    <memberstyle class="small" textstyle="Table"/>
+    </blockstyle>
+    <blockstyle class="figure^h4" margin_top="8" margin_bottom="0" align="0.5" indent="0" leading="20">
+    <memberstyle class="" textstyle="h4"/>
+    </blockstyle>
+    <blockstyle class="caption" hyphenate="True" leading="16" margin_bottom="12">
+    <memberstyle class="" textstyle="Sans serif book italic"/>
+    <memberstyle class="" textstyle="Caption"/>
+    </blockstyle>
+    <blockstyle show_count="" margin_top="0" margin_bottom="2" class="caption^h4" incr_assign="" indent="0">
+    <memberstyle class="" textstyle="Sans serif semi"/>
+    </blockstyle>
+    <blockstyle class="key" margin_right="10" indent="0" margin_left="10"/>
+    <blockstyle class="tablecell" align="0.5" margin_right="4" indent="0" leading="18" margin_left="4" align_to=".:">
+    <memberstyle class="" textstyle="Sans serif book"/>
+    <memberstyle class="" textstyle="Table"/>
+    </blockstyle>
+    <blockstyle class="h1^tablecell" margin_bottom="0" align_to="">
+    <memberstyle class="" textstyle="Sans serif semi"/>
+    <memberstyle class="" textstyle="Table heading"/>
+    </blockstyle>
+    <blockstyle class="emphasis^tablecell" align="0.5" align_to="">
+    <memberstyle class="" textstyle="Sans serif semi"/>
+    </blockstyle>
+    <blockstyle class="firstchild^tablecell" align="1" align_to=""/>
+    <blockstyle class="tablecell^units" leading="14">
+    <memberstyle class="" textstyle="Table units"/>
+    </blockstyle>
+    <blockstyle class="firstchild" incr_assign="1" indent="0"/>
+    <blockstyle class="_left" align="0"/>
+    <blockstyle class="_center" align="0.5"/>
+    <blockstyle class="_right" align="1"/>
+</blockstyles>
+
+
 <!-- #############
-{'FONTSTYLES': {'Big': {'fontsize': 20, 'path': '/home/kelvin/.fonts/Proforma/Proforma-Book.otf', 'shift': -1},
-                'Black': {'color': '#000000'},
-                'Body bold': {'path': '/home/kelvin/.fonts/Proforma/Proforma-Bold.otf'},
-                'Body bold italic': {'path': '/home/kelvin/.fonts/Proforma/Proforma-BoldItalic.otf'},
-                'Body italic': {'path': '/home/kelvin/.fonts/Proforma/Proforma-MediumItalic.otf'},
-                'Body regular': {'fontsize': 13, 'path': '/home/kelvin/.fonts/Proforma/Proforma-Medium.otf'},
-                'Body small': {'fontsize': 9, 'path': '/home/kelvin/.fonts/Proforma/Proforma-Semibold.otf'},
-                'Body small italic': {'fontsize': 9, 'path': '/home/kelvin/.fonts/Proforma/Proforma-SemiboldItalic.otf'},
-                'Caption': {'capitals': False, 'fontsize': 12, 'tracking': 0},
-                'Sans serif book': {'path': 'fonts/FiraSans-Book.otf'},
-                'Sans serif book italic': {'path': 'fonts/FiraSans-BookItalic.otf'},
-                'Sans serif light': {'path': 'fonts/FiraSans-Light.otf'},
-                'Sans serif semi': {'path': 'fonts/FiraSans-SemiBold.otf'},
-                'Smallcaps': {'capitals': False, 'path': '/home/kelvin/.fonts/Proforma/Proforma_MediumSC.ttf'},
-                'Table': {'fontsize': 11},
-                'Table heading': {'capitals': True, 'tracking': 1},
-                'Table units': {'fontsize': 9, 'path': 'fonts/FiraSans-Medium.otf'},
-                'h1': {'fontsize': 36, 'path': '/home/kelvin/.fonts/Kabel.otf'},
-                'h2': {'capitals': True, 'fontsize': 22, 'tracking': 1},
-                'h3': {'capitals': True, 'fontsize': 14, 'tracking': 2},
-                'h4': {'capitals': True, 'fontsize': 14, 'tracking': 2},
-                'lowercase': {'capitals': False},
-                'subscript': {'shift': -2},
-                'superscript': {'shift': 5}},
- 'FTAGLIST': [('big', []), ('emphasis', []), ('link', []), ('reference', []), ('sc', []), ('strong', []), ('sub', ['small']), ('sup', ['small'])],
- 'PARASTYLES': (6,
-                [({'fontclasses': (2, [('Black', {}), ('subscript', {'sub': 1}), ('superscript', {'sup': 1})])}, {}),
-                 ({'fontclasses': (7,
-                                   [('Body regular', {}),
-                                    ('Smallcaps', {'sc': 1}),
-                                    ('Body italic', {'emphasis': 1}),
-                                    ('Body bold', {'strong': 1}),
-                                    ('Body bold italic', {'emphasis': 1, 'strong': 1}),
-                                    ('Body small', {'small': 1}),
-                                    ('Smallcaps', {'reference': 1}),
-                                    ('Body small italic', {'emphasis': 1, 'small': 1})]),
-                   'hyphenate': True,
-                   'indent': '15',
-                   'indent_range': '0, 1',
-                   'leading': 20},
-                  {'body': 1}),
-                 ({'indent': '0', 'indent_range': '', 'margin_left': 40, 'show_count': "'Catastrophe:'"}, {'Catastrophe': 1, 'body': 1}),
-                 ({'indent': '0', 'indent_range': '', 'margin_left': 40, 'show_count': "'Arsyn:'"}, {'Arsyn': 1, 'body': 1}),
-                 ({'incr_assign': 'n + 1', 'incr_place_value': -1, 'indent': '0', 'margin_left': 40, 'show_count': "str(A[-1]) + '.'"}, {'list': 1}),
-                 ({}, {'body': 1, 'firstchild': 1}),
-                 ({'align': 0.5, 'fontclasses': (0, [('Big', {'big': 1})]), 'indent': '0', 'margin_bottom': 20, 'margin_top': 20}, {'math': 1}),
-                 ({'fontclasses': (0, [('h1', {})]), 'hyphenate': True, 'leading': 40, 'margin_bottom': 20}, {'h1': 1}),
-                 ({'fontclasses': (0, [('Sans serif light', {}), ('h2', {})]),
-                   'incr_assign': 'n + 1',
-                   'incr_place_value': 1,
-                   'leading': 24,
-                   'margin_bottom': 12,
-                   'margin_top': 12,
-                   'show_count': "'.'.join(str(i) for i in A[1:2])"},
-                  {'h2': 1}),
-                 ({'fontclasses': (0, [('Sans serif book', {}), ('Sans serif book italic', {'emphasis': 1}), ('h3', {})]),
-                   'incr_assign': 'n + 1',
-                   'incr_place_value': 2,
-                   'leading': 24,
-                   'margin_bottom': 4,
-                   'margin_top': 12,
-                   'show_count': "'.'.join(str(i) for i in A[1:3])"},
-                  {'h3': 1}),
-                 ({'fontclasses': (1, [('h4', {}), ('Sans serif book italic', {})]), 'incr_assign': 'n + 1', 'incr_place_value': 3, 'show_count': "'.'.join(str(i) for i in A[1:4])"},
-                  {'h4': 1}),
-                 ({'align': 0.5, 'fontclasses': (0, [('Sans serif book', {}), ('Table', {'small': 1})]), 'margin_bottom': 10, 'margin_top': 10}, {'figure': 1}),
-                 ({'align': 0.5, 'fontclasses': (0, [('h4', {})]), 'indent': '0', 'leading': 20, 'margin_bottom': 0, 'margin_top': 8}, {'figure': 1, 'h4': 1}),
-                 ({'fontclasses': (1, [('Sans serif book italic', {}), ('Caption', {})]), 'hyphenate': True, 'leading': 16, 'margin_bottom': 12}, {'caption': 1}),
-                 ({'fontclasses': (0, [('Sans serif semi', {})]), 'incr_assign': '', 'indent': '0', 'margin_bottom': 2, 'margin_top': 0, 'show_count': ''}, {'caption': 1, 'h4': 1}),
-                 ({'indent': '0', 'margin_left': 10, 'margin_right': 10}, {'key': 1}),
-                 ({'align': 0.5, 'align_to': '.:', 'fontclasses': (0, [('Sans serif book', {}), ('Table', {})]), 'indent': '0', 'leading': 18, 'margin_left': 4, 'margin_right': 4},
-                  {'tablecell': 1}),
-                 ({'align_to': '', 'fontclasses': (1, [('Sans serif semi', {}), ('Table heading', {})]), 'margin_bottom': 0}, {'h1': 1, 'tablecell': 1}),
-                 ({'align': 0.5, 'align_to': '', 'fontclasses': (0, [('Sans serif semi', {})])}, {'emphasis': 1, 'tablecell': 1}),
-                 ({'align': 1, 'align_to': ''}, {'firstchild': 1, 'tablecell': 1}),
-                 ({'fontclasses': (0, [('Table units', {})]), 'leading': 14}, {'tablecell': 1, 'units': 1}),
-                 ({'incr_assign': '1', 'indent': '0'}, {'firstchild': 1}),
-                 ({'align': 0}, {'_left': 1}),
-                 ({'align': 0.5}, {'_center': 1}),
-                 ({'align': 1}, {'_right': 1})]),
- 'PTAGLIST': [('Arsyn', []),
-              ('Catastrophe', []),
-              ('_center', []),
-              ('_left', []),
-              ('_right', []),
-              ('body', []),
-              ('caption', []),
-              ('emphasis', []),
-              ('figure', []),
-              ('firstchild', []),
-              ('h1', []),
-              ('h2', []),
-              ('h3', []),
-              ('h4', []),
-              ('key', []),
-              ('list', []),
-              ('math', []),
-              ('tablecell', []),
-              ('units', [])],
- 'contexts': {'channels': {'c': 7, 'p': 3, 't': 1}, 'text': {'i': 433, 'j': 433, 'p': 0, 't': 1}},
- 'grid': [[80, 360, 420, 700], [100, 130, 910]],
- 'page': {'dimensions': (765, 990), 'dual': True},
- 'view': {'H': -659, 'Hc': 735, 'K': -165, 'Kc': 382, 'Zoom': 11, 'mode': 'text'}}
+{'contexts': {'channels': (1, 2), 'text': ( [1], (2,), (2,) )},
+ 'view': {'H': -577, 'Hc': 491.0, 'K': 19, 'Kc': 218.0, 'Zoom': 11, 'mode': 'text'}}
 ############# -->

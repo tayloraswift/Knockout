@@ -5,12 +5,11 @@ from itertools import chain, groupby
 from state.exceptions import IO_Error
 
 # boxes
-from elements import box, elements, styles
-from model import meredith
+from meredith import box, elements, styles, paragraph
 
-boxes = {B.name: B for B in chain.from_iterable(M.members for M in (box, styles, elements, meredith))}
+boxes = {B.name: B for B in chain.from_iterable(M.members for M in (box, styles, elements, paragraph))}
 
-Text = meredith.Text
+Text = paragraph.Text
 
 class Paine(parser.HTMLParser):
     def _cap(self):

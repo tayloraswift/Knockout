@@ -3,8 +3,8 @@ from itertools import chain
 
 from libraries.pyphen import pyphen
 
-from elements import datablocks
-from elements.elements import PosFontpost, NegFontpost, Line_break
+from meredith import datablocks
+from meredith.elements import PosFontpost, NegFontpost, Line_break
 
 pyphen.language_fallback('en_US')
 hy = pyphen.Pyphen(lang='en_US')
@@ -244,3 +244,123 @@ def cast_liquid_line(LINE, letters, startindex, width, leading, BLOCK, F, hyphen
     LINE['GLYPHS'] = GLYPHS
     LINE['_X_'] = [g[1] for g in GLYPHS]
 
+def cast_mono_line(PARENT, letters, leading, BLOCK, F):
+    F = F.copy()
+    LINE = Glyphs_line({
+            'i': 0,
+      
+            'leading': leading,
+            
+            'F': F,
+            'BLOCK': BLOCK,
+            
+            'observer': [],
+            
+            'l': PARENT['l'], 
+            'c': PARENT['c'], 
+            'page': PARENT['page']
+            })
+    
+    # list that contains glyphs
+    GLYPHS = []
+    glyphappend = GLYPHS.append
+
+    # retrieve font style
+    fstat = F.copy()
+    FSTYLE = datablocks.BSTYLES.project_t(BLOCK, F)
+    F_advance_width = FSTYLE['fontmetrics'].advance_pixel_width
+    F_char_index = FSTYLE['fontmetrics'].character_index
+    F_kern = FSTYLE['fontmetrics'].kern
+    kern_available = FSTYLE['fontmetrics'].has_kerning
+
+    x = 0
+    y = -FSTYLE['shift']
+    caps = FSTYLE['capitals']
+    glyphwidth = 0
+    GI = -1
+
+    for letter in letters:
+        CT = type(letter)
+        if CT is str:
+            if caps:
+                letter = letter.upper()
+            glyphwidth = F_advance_width(letter) * FSTYLE['fontsize']
+            # kern
+            if GI > 0 and kern_available:
+                new_GI = F_char_index(letter)
+                kdx, kdy = F_kern(GI, new_GI)
+                x += kdx
+                y += kdy
+                GI = new_GI
+            else:
+                GI = F_char_index(letter)
+            glyphappend((
+                    GI,             # 0
+                    x,              # 1
+                    y,              # 2
+                    
+                    FSTYLE,         # 3
+                    fstat,          # 4
+                    x + glyphwidth  # 5
+                    ))
+        
+        elif CT is PosFontpost:            
+            # increment tag count
+            F += letter['class']
+            fstat = F.copy()
+            
+            FSTYLE = datablocks.BSTYLES.project_t(BLOCK, F)
+            F_advance_width = FSTYLE['fontmetrics'].advance_pixel_width
+            F_char_index = FSTYLE['fontmetrics'].character_index
+            F_kern = FSTYLE['fontmetrics'].kern
+            kern_available = FSTYLE['fontmetrics'].has_kerning
+            
+            y = -FSTYLE['shift']
+            caps = FSTYLE['capitals']
+            
+            glyphappend((-4, x, y, FSTYLE, fstat, x))
+            GI = -4
+            continue
+            
+        elif CT is NegFontpost:
+            glyphappend((-5, x, y, FSTYLE, fstat, x))
+            
+            # increment tag count
+            F -= letter['class']
+            fstat = F.copy()
+            
+            FSTYLE = datablocks.BSTYLES.project_t(BLOCK, F)
+            F_advance_width = FSTYLE['fontmetrics'].advance_pixel_width
+            F_char_index = FSTYLE['fontmetrics'].character_index
+            F_kern = FSTYLE['fontmetrics'].kern
+            kern_available = FSTYLE['fontmetrics'].has_kerning
+            
+            y = -FSTYLE['shift']
+            caps = FSTYLE['capitals']
+            GI = -5
+            continue
+        
+        elif CT is Line_break:
+            glyphappend((-6, x, y, FSTYLE, fstat, x))
+            break
+        
+        else:
+            inline = letter.cast_inline(LINE, x, y, BLOCK, F, FSTYLE)
+            glyphwidth = inline.width                               #6. object
+            glyphappend((-89, x, y, FSTYLE, fstat, x + glyphwidth, inline))
+            GI = -89
+        
+        x += glyphwidth + FSTYLE['tracking']
+    
+    LINE['fstyle'] = FSTYLE
+    try:
+        LINE['F'] = GLYPHS[-1][4]
+        LINE['advance'] = GLYPHS[-1][5]
+    except IndexError:
+        LINE['advance'] = 0
+    
+    LINE['j'] = len(GLYPHS)
+    LINE['GLYPHS'] = GLYPHS
+    LINE['_X_'] = [g[1] for g in GLYPHS]
+        
+    return LINE

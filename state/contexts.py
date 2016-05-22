@@ -1,5 +1,7 @@
-from elements import datablocks
+from meredith import datablocks
+
 from edit import cursor, caramel
+
 from state import noticeboard
 
 class Text_context(object):

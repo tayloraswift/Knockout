@@ -1,7 +1,7 @@
 import bisect
 
 from state import noticeboard
-from elements import datablocks
+from meredith import datablocks
 
 accent = (1, 0.22, 0.55)
 

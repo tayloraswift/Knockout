@@ -2,7 +2,7 @@ import os
 
 from libraries import freetype
 
-from style import fontloader
+from fonts import fontloader
 
 _type_registry = {}
 

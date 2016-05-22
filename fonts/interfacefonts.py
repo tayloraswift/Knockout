@@ -1,8 +1,8 @@
 from bulletholes.counter import TCounter as Counter
 
-from elements.styles import Textstyle
+from meredith.styles import Textstyle
 
-from style.fonts import get_font
+from fonts import get_font
 
 from state import constants
 
@@ -13,7 +13,7 @@ def _create_interface():
     for U in ui_styles:
         F = Counter(U)
         # iterate through stack
-        projection = Textstyle.BASE
+        projection = Textstyle.BASE.copy()
         
         for TS in (TS for TS, tags in P if tags <= F):
             projection.update(TS)

@@ -1,4 +1,4 @@
-from model.wonder import _breaking_chars
+from edit.wonder import _breaking_chars
 
 def lookahead(text, start, f):
     try:

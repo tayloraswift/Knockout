@@ -1,17 +1,20 @@
 from itertools import chain, accumulate, zip_longest, groupby
 from bisect import bisect
 
-from interface.base import Base_kookie, accent
-from style.interfacefonts import ISTYLES
+from pygments.lexers import html as pygments_html
+from pygments.token import Token
+
+from fonts.interfacefonts import ISTYLES
+
 from IO.tree import serialize, deserialize
+
 #from elements.node import Mod_element
 from edit import cursor
 from edit.text import expand_cursors_word
 #from edit.paperairplanes import interpret_rgba
 from state.exceptions import IO_Error
 
-from pygments.lexers import html as pygments_html
-from pygments.token import Token
+from interface.base import Base_kookie, accent
 
 xml_lexer = pygments_html.XmlLexer(stripnl=False)
 

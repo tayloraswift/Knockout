@@ -1,5 +1,7 @@
 from itertools import chain
 
+from IO import un
+
 from olivia import literal, reformat, standard
 
 from meredith.datablocks import Texttags_D, Blocktags_D
@@ -26,8 +28,10 @@ class Box(dict):
         self.attrs = {}
         dict.__init__(self, self._load_attributes(attrs))
     
-    def _load_attributes(self, attrs):
-        for A, TYPE, * default in self.DNA:
+    def _load_attributes(self, attrs, DNA=None):
+        if DNA is None:
+            DNA = self.__class__.DNA
+        for A, TYPE, * default in DNA:
             if TYPE in literal:
                 if A in attrs:
                     v = literal[TYPE](attrs[A])
@@ -55,13 +59,20 @@ class Box(dict):
                 elif default:
                     yield A, up(default[0])
 
+    def before(self):
+        un.history.save()
+    
+    def after(self):
+        pass
+
     def assign(self, A, S):
         try:
-            TYPE, * default = next(td for a, * td in self.DNA if a == A)
+            TYPE, * default = next(td for a, * td in self.__class__.DNA if a == A)
         except StopIteration:
             print('Invalid attribute: ' + A)
             return
-
+        
+        self.before()
         if TYPE in literal:
             v = literal[TYPE](S)
             self.attrs[A] = v
@@ -76,16 +87,22 @@ class Box(dict):
             v = up(S)
             self.attrs[A] = down(v)
             self[A] = v
+        else:
+            return
+        self.after()
 
     def deassign(self, A):
-        del self.attrs[A]
-        del self[A]
+        if A in self:
+            self.before()
+            del self.attrs[A]
+            self[A] = next(self._load_attributes(self.attrs, [next(k for k in self.__class__.DNA if A == k[0])]))[1]
+            self.after()
 
     def print_A(self):
         attrs = self.attrs
         imply = self.__class__.IMPLY
         if attrs:
-            E = ' '.join(''.join((a[0], '="', str(attrs[a[0]]), '"')) for a in self.DNA if a[0] in attrs and (a[0] not in imply or imply[a[0]] != attrs[a[0]]))
+            E = ' '.join(''.join((a[0], '="', str(attrs[a[0]]), '"')) for a in self.__class__.DNA if a[0] in attrs and (a[0] not in imply or imply[a[0]] != attrs[a[0]]))
             return self.name + ' ' + E
         return self.name
     

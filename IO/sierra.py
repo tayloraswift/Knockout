@@ -74,11 +74,6 @@ def load(name):
     
     taylor.becky = taylor.Document_view(save, DATA['view'])
     noticeboard.refresh_properties_type.push_change(DATA['view']['mode'])
-#    karlie.klossy = karlie.Properties(DATA['view']['mode'], partition=1 )
-    class KK(object):
-        render = lambda *k: None
-        hover = lambda *k: None
-    
-    karlie.klossy = KK()
+    karlie.klossy = karlie.Properties(DATA['view']['mode'], partition=1 )
 
 #    un.history.save()

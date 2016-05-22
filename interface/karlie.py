@@ -4,9 +4,14 @@ from itertools import chain
 from state import constants, contexts, noticeboard
 #from style import styles
 from interface import kookies, ui, source
+
+from interface import fields
+
 from edit import ops, caramel
 #from edit.paperairplanes import datatypes
-#from model import meredith
+
+from meredith.datablocks import DOCUMENT
+
 from IO import un
 
 def _Z_state(obj, L, A, defined):
@@ -309,7 +314,7 @@ class _Properties_panel(ui.Cell):
         self._HI = kookies.Heading(15, 60, self._KW, 30, self._heading, font=('title',), fontsize=18, upper=True)
 
 def _print_counter(counter):
-    items = [k.name if v == 1 else k.name + ' (' + str(v) + ')' for k, v in counter.tags.items() if v]
+    items = [k['name'] if v == 1 else k['name'] + ' (' + str(v) + ')' for k, v in counter.tags.items() if v]
     if items:
         return ', '.join(items)
     else:
@@ -360,8 +365,9 @@ class Properties(_Properties_panel):
                         y += 45*len(props)
         
         elif self._tab == 'paragraph':
-            self._heading = ', '.join(T.name if V == 1 else T.name + ' (' + str(V) + ')' for T, V in contexts.Text.pp.P.items() if V)
-
+            self._heading = ', '.join(T['name'] if V == 1 else T['name'] + ' (' + str(V) + ')' for T, V in contexts.Text.bk['class'].items() if V)
+            
+            """
             self._items.append(kookies.Counter_editor(15, y, KW, (125, 28),
                         get_counter = lambda: contexts.Text.pp.P,
                         superset = styles.PTAGS,
@@ -393,7 +399,7 @@ class Properties(_Properties_panel):
                         ]
                 self._items.extend(_stack_properties(_create_p_field, y, 45, KW, props, self._style_synchronize))
                 y += 45*len(props)
-                
+            """
         
         elif self._tab == 'tags':
             self._heading = 'Document tags'
@@ -426,15 +432,15 @@ class Properties(_Properties_panel):
         elif self._tab == 'page':
             self._heading = 'Document pages'
             
-            self._items.append(kookies.Blank_space( 15, y, KW, 
-                        read = lambda: meredith.page.WIDTH,
-                        assign = lambda V: meredith.page.set_width(datatypes['int'](V)),
+            self._items.append(fields.Blank_space( 15, y, KW, 
+                        node = DOCUMENT,
+                        A = 'width',
                         name = 'WIDTH' ))
             
             y += 45
-            self._items.append(kookies.Blank_space( 15, y, KW,
-                        read = lambda: meredith.page.HEIGHT,
-                        assign = lambda V: meredith.page.set_height(datatypes['int'](V)),
+            self._items.append(fields.Blank_space( 15, y, KW,
+                        node = DOCUMENT,
+                        A = 'height',
                         name = 'HEIGHT' ))
             y += 45
         

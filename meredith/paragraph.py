@@ -58,6 +58,8 @@ class Meredith(Box):
                 section.transfer(self._sorted_pages)
         return self._sorted_pages
 
+    def after(self):
+        self._recalc_page()
     # Page functions
     
     def _recalc_page(self):

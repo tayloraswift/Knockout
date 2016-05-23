@@ -8,8 +8,8 @@ from edit.text import expand_cursors_word
 
 from interface.base import Base_kookie, accent, xhover, plus_sign, minus_sign, downchevron, upchevron, cross
 
-z_colors = ((0.6, 0.6, 0.6), (0.7, 0.7, 0.7), accent, accent)
-z_hover_colors = ((0.4, 0.4, 0.4), (0.5, 0.5, 0.5), tuple(v + 0.2 for v in accent), tuple(v + 0.2 for v in accent))
+z_colors = ((0.6, 0.6, 0.6), (0.7, 0.7, 0.7), accent, accent, (0.55, 0.55, 0.55))
+z_hover_colors = ((0.4, 0.4, 0.4), (0.5, 0.5, 0.5), tuple(v + 0.2 for v in accent), tuple(v + 0.2 for v in accent), (0.35, 0.35, 0.35))
 
 def _draw_Z(cr, x, y, h, k, hover, state):
         cr.rectangle(x, y, h, k)
@@ -18,33 +18,51 @@ def _draw_Z(cr, x, y, h, k, hover, state):
         else:
             cr.set_source_rgb( * z_colors[state] )
         
-        if state:
-            if state == 2:
-                cr.save()
-                cr.clip()
-                cr.move_to(x, y + 2.5)
-
-                for i in range(5):
-                    
-                    cr.rel_line_to(h, -10)
-                    cr.rel_line_to(0, 3)
-                    cr.rel_line_to(-h, 10)
-                    cr.rel_move_to(0, 3)
-                
-                cr.fill()
-                cr.restore()
-                return
-        else:
+        if state <= 0:
             cr.rectangle(x + h - 2, y + 2, 4 - h, k - 4)
+        
+        if state == 2 or state == -1:
+            cr.save()
+            cr.clip()
+            cr.move_to(x, y + 2.5)
+
+            for i in range(5):
+                
+                cr.rel_line_to(h, -10)
+                cr.rel_line_to(0, 3)
+                cr.rel_line_to(-h, 10)
+                cr.rel_move_to(0, 3)
+            
+            cr.fill()
+            cr.restore()
+            return
+            
         cr.fill()
 
 def _binary_Z(N, A):
     return A in N.attrs, ''
 
-class _Attribute_field(object):
+class _Attribute_field(object): # abstract base class
+    def read(self):
+        A = self._A
+        self._status, bvalue = self._read_Z(self._node, A)
+        if self._status > 0:
+            value = self._node.attrs[A]
+        else:
+            try:
+                value = next(default[0] for a, TYPE, * default in type(self._node).DNA if a == A and default)
+            except StopIteration:
+                value = bvalue
+        
+        self._store(value)
+    
+    def _store(self, value):
+        raise NotImplementedError
+    
     def _toggle_Z(self):
-        if self._status:
+        if self._status > 0:
             self._node.deassign(self._A)
+            self._refresh()
             self.read()
         else:
             self._write(force=True)
@@ -70,17 +88,7 @@ class Checkbox(_Attribute_field, Base_kookie):
         
         self._add_static_text(self._x + 40, self.y_bottom - 10, name, align=1)
 
-    def read(self):
-        A = self._A
-        self._status, bvalue = self._read_Z(self._node, A)
-        if self._status:
-            value = self._node.attrs[A]
-        else:
-            try:
-                value = next(default[0] for a, TYPE, * default in type(self._node).DNA if a == A and default)
-            except StopIteration:
-                value = bvalue
-        
+    def _store(self, value):
         self._value = bool(value)
         self._state = self._value
 
@@ -114,7 +122,7 @@ class Checkbox(_Attribute_field, Base_kookie):
 
         cr.set_source_rgba( * color )
         cr.show_glyphs(self._texts[0])
-        if not self._state:
+        if self._state:
             cr.arc(self._x + 26, self.y_bottom - 14, 6, 0, 2*pi)
             cr.fill()
         else:
@@ -157,17 +165,7 @@ class Blank_space(_Attribute_field, Base_kookie):
         self._text_left = self._x + 20
         self._text_right = self._x_right
 
-    def read(self):
-        A = self._A
-        self._status, bvalue = self._read_Z(self._node, A)
-        if self._status:
-            value = self._node.attrs[A]
-        else:
-            try:
-                value = next(default[0] for a, TYPE, * default in type(self._node).DNA if a == A and default)
-            except StopIteration:
-                value = bvalue
-        
+    def _store(self, value):
         self._value = str(value)
         self._LIST = list(self._value) + [None]
         self._stamp_glyphs(self._LIST)

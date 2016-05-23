@@ -35,8 +35,8 @@ class Textstyle(_Causes_relayout, Box):
 class _Layer(dict):
     def __init__(self, BASE):
         dict.__init__(self, BASE)
-        self.Z = {A: None for A in BASE}
-        self.Z['class'] = None
+        BASE['class'] = None
+        self.Z = {A: BASE for A in BASE}
         self.members = []
     
     def overlay(self, B):
@@ -50,6 +50,11 @@ class _FLayer(_Layer):
         ascent, descent = self['fontmetrics'].vmetrics
         return ascent * self['fontsize'] + self['shift'], descent * self['fontsize'] + self['shift']
 
+def _cast_default(cls):
+    D = cls.BASE.copy()
+    D['class'] = {}
+    return cls(D)
+
 class Blockstyles(Box):
     name = 'blockstyles'
     def __init__(self, * II, ** KII ):
@@ -57,6 +62,9 @@ class Blockstyles(Box):
         
         self.block_projections = {}
         self.text_projections = {}
+        
+        self._block_default = _cast_default(Blockstyle)
+        self._text_default = _cast_default(Textstyle)
 
     def after(self):
         self.block_projections.clear()
@@ -77,7 +85,7 @@ class Blockstyles(Box):
             return self.block_projections[H]
         except KeyError:
             # iterate through stack
-            projection = _Layer(Blockstyle.BASE)
+            projection = _Layer(self._block_default)
             for B in chain((b for b in self.content if b['class'] <= P), [BLOCK]):
                 projection.overlay(B)
             
@@ -96,7 +104,7 @@ class Blockstyles(Box):
             return self.text_projections[H]
         except KeyError:
             # iterate through stack
-            projection = _FLayer(Textstyle.BASE)
+            projection = _FLayer(self._text_default)
             for memberstyles in (b.content for b in self.content if b.content is not None and b['class'] <= P):
                 for TS in (c['textstyle'] for c in memberstyles if c['class'] <= F and c['textstyle'] is not None):
                     projection.overlay(TS)
@@ -138,7 +146,7 @@ class Blockstyle(Box):
         datablocks.BSTYLES.block_projections.clear()
         datablocks.BSTYLES.text_projections.clear()
         datablocks.DOCUMENT.layout_all()
-    
+
 class Memberstyle(_Causes_relayout, Box):
     name = 'memberstyle'
     DNA  = [('class',           'texttc',  ''),

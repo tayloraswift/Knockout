@@ -27,7 +27,8 @@ def _Z_state(N, A, layer):
         else:   
             return 1, '' # defined, but not applicable
     else:
-        return 0, '' # undefined, unapplicable
+        last = layer.Z[A]
+        return - (last['class'] is None), last.attrs[A] # undefined, unapplicable
 
 def _create_f_field(TYPE, x, y, width, attribute, after, name=''):
     if TYPE == kookies.Checkbox:

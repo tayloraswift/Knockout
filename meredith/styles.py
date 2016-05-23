@@ -3,11 +3,16 @@ from itertools import chain
 from libraries.freetype import ft_errors
 
 from meredith.box import Box
-from meredith.datablocks import Textstyles_D
+from meredith import datablocks
+Textstyles_D = datablocks.Textstyles_D
 
 from fonts import get_font
 
-class Textstyles(Box):
+class _Causes_relayout(object):
+    def after(self):
+        datablocks.DOCUMENT.layout_all()
+
+class Textstyles(_Causes_relayout, Box):
     name = 'textstyles'
 
     def __init__(self, * II, ** KII ):
@@ -21,7 +26,7 @@ _text_DNA = [('fontsize',    'float',   13),
             ('capitals',    'bool',     False),
             ('color',       'rgba',     (1, 0.15, 0.2, 1))]
 
-class Textstyle(Box):
+class Textstyle(_Causes_relayout, Box):
     name = 'textstyle'
 
     DNA  = [('name',        'str', 'Untitled fontstyle')] + [A[:2] for A in _text_DNA]
@@ -50,11 +55,14 @@ class Blockstyles(Box):
     def __init__(self, * II, ** KII ):
         Box.__init__(self, * II, ** KII )
         
-        self._block_projections = {}
-        self._text_projections = {}
-        
-        self.update_ts = self._text_projections.clear
+        self.block_projections = {}
+        self.text_projections = {}
 
+    def after(self):
+        self.block_projections.clear()
+        self.text_projections.clear()
+        datablocks.DOCUMENT.layout_all()
+    
     def project_b(self, BLOCK):
         if BLOCK.implicit_ is None:
             P = BLOCK['class']
@@ -66,14 +74,14 @@ class Blockstyles(Box):
             H += 13 * id(BLOCK)
         
         try:
-            return self._block_projections[H]
+            return self.block_projections[H]
         except KeyError:
             # iterate through stack
             projection = _Layer(Blockstyle.BASE)
             for B in chain((b for b in self.content if b['class'] <= P), [BLOCK]):
                 projection.overlay(B)
             
-            self._block_projections[H] = projection
+            self.block_projections[H] = projection
             return projection
 
     def project_t(self, BLOCK, F):
@@ -85,7 +93,7 @@ class Blockstyles(Box):
         H = 22 * hash(frozenset(P.items())) + hash(frozenset(F.items())) # we must give paragraph a different factor if a style has the same name as a fontstyle
         
         try:
-            return self._text_projections[H]
+            return self.text_projections[H]
         except KeyError:
             # iterate through stack
             projection = _FLayer(Textstyle.BASE)
@@ -102,7 +110,7 @@ class Blockstyles(Box):
             
             projection['hash'] = H
             
-            self._text_projections[H] = projection
+            self.text_projections[H] = projection
             return projection
 
 _block_DNA = [('hyphenate',       'bool',   False),
@@ -126,9 +134,14 @@ class Blockstyle(Box):
     DNA  = [('class',           'blocktc',  'body')] + [A[:2] for A in _block_DNA]
     BASE = {A: D for A, TYPE, D in _block_DNA}
 
-class Memberstyle(Box):
+    def after(self):
+        datablocks.BSTYLES.block_projections.clear()
+        datablocks.BSTYLES.text_projections.clear()
+        datablocks.DOCUMENT.layout_all()
+    
+class Memberstyle(_Causes_relayout, Box):
     name = 'memberstyle'
     DNA  = [('class',           'texttc',  ''),
             ('textstyle',       'textstyle', None)]
-
+    
 members = (Textstyles, Textstyle, Blockstyles, Blockstyle, Memberstyle)

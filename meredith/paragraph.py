@@ -223,6 +223,9 @@ class Paragraph_block(Blockstyle):
     
     IMPLY = {'class': 'body'}
 
+    def after(self):
+        datablocks.DOCUMENT.layout_all()
+    
     def __init__(self, * II, ** KII ):
         Blockstyle.__init__(self, * II, ** KII )
         self.implicit_ = None

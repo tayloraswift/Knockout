@@ -14,6 +14,12 @@ class Text_context(object):
         self.ct = None
         self.c = None
         
+        self.kbt = None
+        self.ktt = None
+        self.kbs = None
+        self.kbm = None
+        self.kts = None
+        
         self.changed = set()
 
     def done(self, U):
@@ -60,5 +66,10 @@ class Text_context(object):
         
         self.ct, self.c = caramel.delight.at()
         self.changed.update({'channels'})
+
+    def push_active(self, A, node):
+        if A == 'kbs':
+            self.kbs = node
+            self.changed.update({'paragraph'})
 
 Text = Text_context()

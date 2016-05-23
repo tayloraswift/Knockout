@@ -17,7 +17,7 @@ from keyboard import keyboard
 from state import noticeboard, constants
 from state.contexts import Text as CText
 
-from interface import kookies, menu, ui
+from interface import kookies, fields, menu, ui
 from interface.base import accent
 
 accent_light = caramel.accent
@@ -191,8 +191,8 @@ class Document_toolbar(object):
         y += 30
         self._items.append(kookies.Button(5, y, 90, 30, callback=_punch_tags, string='x Strong', params=('Ctrl B',) ))
 
-#        y += 50
-#        self._items.append(kookies.Checkbox(15, y, 80, read=lambda: DOCUMENT.page['dual'], assign=meredith.page.toggle_dual, name='Dual'.upper()))
+        y += 50
+        self._items.append(fields.Checkbox(15, y, 80, node=DOCUMENT, A='dual', name='Dual'.upper(), no_z=True))
         
         y += 50
         self._items.append(kookies.Selection_menu(5, y, 90, 30, menu_callback=constants.HINTS.set_hint_style, options_acquire=constants.default_hints, value_acquire=constants.HINTS.get_hint_style, source=0))

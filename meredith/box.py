@@ -95,7 +95,8 @@ class Box(dict):
         if A in self:
             self.before()
             del self.attrs[A]
-            self[A] = next(self._load_attributes(self.attrs, [next(k for k in self.__class__.DNA if A == k[0])]))[1]
+            del self[A]
+            self.update(self._load_attributes(self.attrs, [next(k for k in self.__class__.DNA if A == k[0])]))
             self.after()
 
     def print_A(self):

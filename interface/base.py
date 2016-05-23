@@ -10,6 +10,35 @@ accent = (1, 0.22, 0.50)
 def xhover(self, x, y):
     return self._sdkeys[bisect.bisect(self._subdivisions, x)]
 
+# shapes
+def plus_sign(cr, x, y):
+    # w = 26
+    cr.rectangle(x + 12, y + 8, 2, 10)
+    cr.rectangle(x + 8, y + 12, 10, 2)
+
+def minus_sign(cr, x, y):
+    # w = 26
+    cr.rectangle(x + 8, y + 12, 10, 2)
+
+def downchevron(cr, x, y):
+    # w = 24
+    cr.move_to(x + 7, y + 10)
+    cr.rel_line_to(5, 5)
+    cr.rel_line_to(5, -5)
+
+def upchevron(cr, x, y):
+    # w = 24
+    cr.move_to(x + 7, y + 15)
+    cr.rel_line_to(5, -5)
+    cr.rel_line_to(5, 5)
+
+def cross(cr, x, y):
+    # w = 24
+    cr.move_to(x + 8, y + 9)
+    cr.rel_line_to(8, 8)
+    cr.rel_move_to(0, -8)
+    cr.rel_line_to(-8, 8)
+
 class Base_kookie(object):
     def __init__(self, x, y, width, height, font=()):
         self._x = x
@@ -26,9 +55,6 @@ class Base_kookie(object):
         
         self._x_right = x + width
         self.y_bottom = y + height
-
-    def _SYNCHRONIZE(self):
-        pass
 
     def _make_sd(self, subdivisions, cap):
         self._subdivisions, self._sdkeys = zip( * subdivisions)

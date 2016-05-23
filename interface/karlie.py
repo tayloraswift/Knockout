@@ -71,7 +71,7 @@ class _MULTI_COLUMN(object):
         self.y_bottom = max((B[3] for B in BB))
         
         self.draw = lambda cr: None
-        self._SYNCHRONIZE = lambda: None
+        self.read = lambda: None
 
 def _columns(columns):
     columns = list(columns)

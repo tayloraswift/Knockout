@@ -6,6 +6,8 @@ from fonts.interfacefonts import ISTYLES
 
 from edit.text import expand_cursors_word
 
+from olivia import literal
+
 from interface.base import Base_kookie, accent, xhover, plus_sign, minus_sign, downchevron, upchevron, cross
 
 z_colors = ((0.6, 0.6, 0.6), (0.7, 0.7, 0.7), accent, accent, (0.55, 0.55, 0.55))
@@ -43,21 +45,39 @@ def _binary_Z(N, A):
     return A in N.attrs, ''
 
 class _Attribute_field(object): # abstract base class
+    def _link(self, node, A, Z, name, refresh, no_z):        
+        self.is_over_hover = self.is_over
+        
+        self._node = node
+        self._A = A
+        self._read_Z = Z
+        self._refresh = refresh
+        
+        self._name = name
+
     def read(self):
         A = self._A
         self._status, bvalue = self._read_Z(self._node, A)
         if self._status > 0:
             value = self._node.attrs[A]
         else:
-            try:
-                value = next(default[0] for a, TYPE, * default in type(self._node).DNA if a == A and default)
-            except StopIteration:
+            TYPE, default = next((TYPE, default) for a, TYPE, * default in type(self._node).DNA if a == A)
+            if TYPE in literal and self._read_Z is _binary_Z:
+                value = self._node[A]
+            elif default:
+                value = default
+            else:
                 value = bvalue
         
         self._store(value)
     
     def _store(self, value):
         raise NotImplementedError
+    
+    def _assign(self, value):
+        self._node.assign(self._A, value)
+        self._refresh()
+        self.read()
     
     def _toggle_Z(self):
         if self._status > 0:
@@ -69,24 +89,15 @@ class _Attribute_field(object): # abstract base class
 
     def hover(self, x, y):
         return 1 + (x < self._x + 20)
-    
+
 class Checkbox(_Attribute_field, Base_kookie):
     def __init__(self, x, y, width, node, A, Z=_binary_Z, name='', refresh=lambda: None, no_z=False):
         Base_kookie.__init__(self, x, y, width, 36, font=('label',))
-
-        self._node = node
-        self._A = A
-        self._read_Z = Z
-        self._refresh = refresh
-        
-        self._name = name
-        
-        self.read()
-
-        # set hover function equal to press function
-        self.is_over_hover = self.is_over
+        self._link(node, A, Z, name, refresh, no_z)
         
         self._add_static_text(self._x + 40, self.y_bottom - 10, name, align=1)
+        
+        self.read()
 
     def _store(self, value):
         self._value = bool(value)
@@ -94,9 +105,7 @@ class Checkbox(_Attribute_field, Base_kookie):
 
     def _write(self, force=False):
         if self._state != self._value or force:
-            self._node.assign(self._A, self._state)
-            self._refresh()
-            self.read()
+            self._assign(self._state)
     
     def focus(self, x, y):
         J = self.hover(x, y)
@@ -133,14 +142,8 @@ class Checkbox(_Attribute_field, Base_kookie):
 class Blank_space(_Attribute_field, Base_kookie):
     def __init__(self, x, y, width, node, A, Z=_binary_Z, name='', refresh=lambda: None, no_z=False):        
         Base_kookie.__init__(self, x, y, width, 32)
-        self.is_over_hover = self.is_over
         
-        self._node = node
-        self._A = A
-        self._read_Z = Z
-        self._refresh = refresh
-        
-        self._name = name
+        self._link(node, A, Z, name, refresh, no_z)
         
         self._set_text_bounds()
         self._text_width = self._text_right - self._text_left
@@ -173,9 +176,7 @@ class Blank_space(_Attribute_field, Base_kookie):
     def _write(self, force=False):
         value = ''.join(self._LIST[:-1])
         if value != self._value or force:
-            self._node.assign(self._A, value)
-            self._refresh()
-            self.read()
+            self._assign(value)
         
     ## WIDGET FUNCTIONS ##
     
@@ -611,31 +612,22 @@ class _Table(Base_kookie):
             
             x += self._cellwidth
 
-class Counter_editor(_Table):
-    def __init__(self, x, y, width, cellsize, superset, node, A, Z=_binary_Z, refresh=lambda: None, no_z=False):
+class Counter_editor(_Attribute_field, _Table):
+    def __init__(self, x, y, width, cellsize, superset, node, A, Z=_binary_Z, name='', refresh=lambda: None, no_z=False):
+        self._link(node, A, Z, name, refresh, no_z)
         self._SUPERSET = superset
 
         _Table.__init__(self, x, y, width, cellsize, len(superset))
-
-        self._node = node
-        self._A = A
-        self._read_Z = Z
-        self._refresh = refresh
         
         self.read()
 
-    def read(self):
-        if self._A in self._node.attrs:
-            self._COUNT = self._node.attrs[self._A].copy()
-        else:
-            self._COUNT = self._node[self._A].copy()
+    def _store(self, value):
+        self._COUNT = value.copy()
         self._table = [(self._COUNT[V], str(self._COUNT[V]) + ' ' + V['name'], V) for V in self._SUPERSET]
         self._construct_table(margin = 2)
 
     def _write(self):
-        self._node.assign(self._A, self._COUNT)
-        self._refresh()
-        self.read()
+        self._assign(self._COUNT)
         
     def hover(self, x, y):
         y -= self._y

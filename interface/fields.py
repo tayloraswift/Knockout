@@ -585,124 +585,274 @@ class Object_menu(Blank_space):
         cross(cr, self._subdivisions[2], self._y + 1)
         cr.stroke()
 
-class _Table(Base_kookie):
-    def __init__(self, x, y, width, cellsize, n):
+class Kookie(object):
+    def __init__(self, x, y, width, height):
+        self._x = x
+        self._y = y
+        self._width = width
+        self._height = height
+        
+        self._active = None
+        
+        self._x_right = x + width
+        self.y_bottom = y + height
+
+    def _make_sd(self, subdivisions, cap):
+        self._subdivisions, self._sdkeys = zip( * subdivisions)
+        self._sdkeys += (cap,)
+    
+    def is_over(self, x, y):
+        return self._y <= y <= self.y_bottom and self._x <= x <= self._x_right
+    
+    def is_over_hover(self, x, y):
+        return False
+    
+    def focus(self, x, y):
+        pass
+    
+    def dpress(self):
+        pass
+    
+    def focus_drag(self, x, y):
+        pass
+    
+    def release(self, action):
+        pass
+    
+    def defocus(self):
+        pass
+    
+    def hover(self, x, y):
+        pass
+    
+    def type_box(self, name, char):
+        pass
+    
+    def bounding_box(self):
+        return self._x, self._x_right, self._y, self.y_bottom
+
+def text(x, y, text, font, fontsize=None, align=1, sub_minus=False, upper=False):
+    if upper:
+        text = text.upper()
+    if fontsize is None:
+        fontsize = font['fontsize']
+    xo = x
+    line = []
+    for character in text:
+        if sub_minus and character == '-':
+            character = '–'
+        try:
+            line.append((font['fontmetrics'].character_index(character), x, y))
+            x += (font['fontmetrics'].advance_pixel_width(character)*fontsize + font['tracking'])
+        except TypeError:
+            line.append((-1, x, y))
+
+    if align == 0:
+        dx = (xo - x)/2
+        line = [(g[0], g[1] + dx, g[2]) for g in line]
+    elif align == -1:
+        dx = xo - x
+        line = [(g[0], g[1] + dx, g[2]) for g in line]
+    
+    return font['font'], font['fontsize'], line
+
+def chunks(l, n):
+    for i in range(0, len(l), n):
+        yield l[i:i + n]
+
+def set_fonts(cr, font, fontsize):
+    cr.set_font_face(font)
+    cr.set_font_size(fontsize)
+
+class CE(object):
+    def __init__(self, width, cellsize, superset):
         min_cellwidth, self._cellheight = cellsize
         self._cellwidth = int(width / (width // min_cellwidth))
-        self._cellratio = self._cellwidth / self._cellheight
         self._per_row = int(width // self._cellwidth)
-        height = ceil(n / self._per_row) * self._cellheight
-        Base_kookie.__init__(self, x, y, width, height, font=('strong',))
-        # set hover function equal to press function
-        self.is_over_hover = self.is_over
-
-    def _construct_table(self, margin=0):
-        self._texts = []
-        self._cells = []
-        x = self._x
-        y = self._y
-        mp = self._cellwidth/2
-        for cell in self._table:
-            if x + self._cellwidth > self._x_right:
-                x = self._x
-                y += self._cellheight
-            
-            self._add_static_text(x + mp, y + 18, cell[1], align=0)
-            self._cells.append((x + margin, y + margin, self._cellwidth - 2*margin, self._cellheight - 2*margin))
-            
-            x += self._cellwidth
-
-class Counter_editor(_Attribute_field, _Table):
-    def __init__(self, x, y, width, cellsize, superset, node, A, Z=_binary_Z, name='', refresh=lambda: None, no_z=False):
-        self._link(node, A, Z, name, refresh, no_z)
-        self._SUPERSET = superset
-
-        _Table.__init__(self, x, y, width, cellsize, len(superset))
         
-        self.read()
+        self._superset = superset
+        self.k = ceil(len(superset) / self._per_row) * self._cellheight
 
-    def _store(self, value):
+    def store(self, value):
         self._COUNT = value.copy()
-        self._table = [(self._COUNT[V], str(self._COUNT[V]) + ' ' + V['name'], V) for V in self._SUPERSET]
+        self._table = [(self._COUNT[V], str(self._COUNT[V]) + ' ' + V['name'], V) for V in self._superset]
         self._construct_table(margin = 2)
-
-    def _write(self):
-        self._assign(self._COUNT)
-        
+    
+    def value(self):
+        return self._COUNT
+    
+    def _construct_table(self, margin=0):
+        cells = []
+        x = 0
+        y = 0
+        ch = self._cellwidth
+        ck = self._cellheight
+        mp = ch/2
+        font = ISTYLES[('strong',)]
+        for row in chunks(self._table, self._per_row):
+            cells.extend(((x + ch*i + margin, y + margin, ch - 2*margin, ck - 2*margin), 
+                            text(x + ch*i + mp, y + 18, cell[1], font, align=0)) for i, cell in enumerate(row))
+            y += ck
+        self._cells = cells
+    
     def hover(self, x, y):
-        y -= self._y
-        x -= self._x
-        k = (y // self._cellheight)
-        h = x // self._cellwidth
-        if h >= self._per_row:
-            h = self._per_row - 1
-
-        i = int(k * self._per_row + h)
+        r = y // self._cellheight
+        c = min(x // self._cellwidth, self._per_row - 1)
+        i = int(r * self._per_row + c)
+        
         if i >= len(self._table):
             i = None
             j = None
         else:
-            a = x - h*self._cellwidth
-            if a * 2 > self._cellwidth:
-                j = 1
-            else:
-                j = -1
+            a = x - c*self._cellwidth
+            j = a * 2 > self._cellwidth
+        
         return i, j
     
     def focus(self, x, y):
         i, j = self.hover(x, y)
         
         if i is not None:
-            self._COUNT[self._table[i][2]] += j
-            if not self._COUNT[self._table[i][2]]:
-                del self._COUNT[self._table[i][2]]
-            self._write()
-
-
-    def draw(self, cr, hover=(None, None)):
-        self._render_fonts(cr)
+            key = self._table[i][2]
+            self._COUNT[key] += j*2 - 1
+            if not self._COUNT[key]:
+                del self._COUNT[key]
+    
+    def draw(self, cr, hover=None):
+        if hover is not None:
+            HI, Hside = hover
+        else:
+            HI = None
         
-        for i, cell in enumerate(self._cells):
-            if self._table[i][0]:
-                if self._table[i][0] > 0:
-                    R = range(self._table[i][0])
+        set_fonts(cr, * self._cells[0][1][:2] )
+        for i, ((cx, cy, ch, ck), textline) in enumerate(self._cells):
+            count = self._table[i][0]
+            if count: # nonzero count
+                if count > 0:
+                    R = range(count)
                     bg = accent
                 else:
-                    R = reversed(range(0, self._table[i][0], -1))
+                    R = reversed(range(0, count, -1))
                     bg = (1, 0.3, 0.35)
                 for c in R:
                     cr.set_source_rgba(1, 1, 1, 0.5)
-                    cr.rectangle(cell[0] + 2*c - 1, cell[1] - 2*c + 1, cell[2], cell[3])
+                    cr.rectangle(cx + 2*c - 1, cy - 2*c + 1, ch, ck)
                     cr.fill()
-                    cr.set_source_rgb( * bg)
-                    cr.rectangle(cell[0] + 2*c, cell[1] - 2*c, cell[2], cell[3])
+                    cr.set_source_rgb( * bg )
+                    cr.rectangle(cx + 2*c, cy - 2*c, ch, ck)
                     cr.fill()
                 
-                offset = (self._table[i][0] - 1) * 2
-                if offset < 0:
-                    offset = 0
+                offset = max(0, (count - 1) * 2)
+                
                 cr.set_source_rgb(1, 1, 1)
-                cr.show_glyphs([(g[0], g[1] + offset, g[2] - offset) for g in self._texts[i]])
-                plus_sign(cr, cell[0] + cell[2] - 24 + offset, cell[1] - 1 - offset)
-                minus_sign(cr, cell[0] - 2 + offset, cell[1] - 1 - offset)
+                cr.show_glyphs((g[0], g[1] + offset, g[2] - offset) for g in textline[2])
+                minus_sign(cr, cx - 2 + offset, cy - 1 - offset)
+                plus_sign(cr, cx + ch - 24 + offset, cy - 1 - offset)
                 
                 cr.fill()
-                
-            elif hover[1] is not None and hover[1][0] == i:
-                plus_sign(cr, cell[0] + cell[2] - 24, cell[1])
-                if hover[1][1] == 1:
-                    cr.set_source_rgb( * accent)
+                continue
+            
+            elif HI == i:
+                minus_sign(cr, cx - 2, cy)
+                if Hside:
+                    cr.set_source_rgba(0, 0, 0, 0.7)
+                else:
+                    cr.set_source_rgb( * accent )
+                cr.fill()
+
+                plus_sign(cr, cx + ch - 24, cy)
+                if Hside:
+                    cr.set_source_rgb( * accent )
                 else:
                     cr.set_source_rgba(0, 0, 0, 0.7)
                 cr.fill()
-                minus_sign(cr, cell[0] - 2, cell[1])
-                if hover[1][1] == -1:
-                    cr.set_source_rgb( * accent)
-                else:
-                    cr.set_source_rgba(0, 0, 0, 0.7)
-                cr.fill()
-                cr.set_source_rgb( * accent)
-                cr.show_glyphs(self._texts[i])
+
+                cr.set_source_rgb( * accent )
+                cr.show_glyphs(textline[2])
+            
             else:
                 cr.set_source_rgba(0, 0, 0, 0.7)
-                cr.show_glyphs(self._texts[i])
+                cr.show_glyphs(textline[2])
+
+class _Attribute(Kookie): # abstract base class
+    def __init__(self, WI, x, y, width, node, A, Z, name, refresh, no_z):        
+        self.is_over_hover = self.is_over
+        
+        self._node = node
+        self._A = A
+        self._read_Z = Z
+        self._refresh = refresh
+        
+        self._name = name
+        
+        if no_z:
+            wwidth = width
+        else:
+            self._z_div = 20
+            self._widget_x = 30
+            wwidth = width - self._widget_x
+        self._WIDGET = self.__class__.widgetclass(wwidth, * WI[0], ** WI[1])
+        Kookie.__init__(self, x, y, width, self._WIDGET.k)
+
+        self.read()
+    
+    def read(self):
+        A = self._A
+        self._status, bvalue = self._read_Z(self._node, A)
+        if self._status > 0:
+            value = self._node.attrs[A]
+        else:
+            TYPE, default = next((TYPE, default) for a, TYPE, * default in type(self._node).DNA if a == A)
+            if TYPE in literal and self._read_Z is _binary_Z:
+                value = self._node[A]
+            elif default:
+                value = default
+            else:
+                value = bvalue
+        
+        self._WIDGET.store(value)
+
+    def _write(self, force=False):
+        self._node.assign(self._A, self._WIDGET.value())
+        self._refresh()
+        self.read()
+    
+    def _toggle_Z(self):
+        if self._status > 0:
+            self._node.deassign(self._A)
+            self._refresh()
+            self.read()
+        else:
+            self._write(force=True)
+
+    def hover(self, x, y):
+        return 1 + (x < self._z_div), self._WIDGET.hover(x - self._x, y - self._y)
+
+    def focus(self, x, y):
+        if x < self._z_div:
+            self._toggle_Z()
+            
+        else:
+            self._WIDGET.focus(x - self._x, y - self._y)
+            self._write()
+
+    def draw(self, cr, hover=(None, None)):
+        if hover[0] is not None:
+            ZH, HH = hover[1]
+        else:
+            ZH = False
+            HH = None
+        
+        _draw_Z(cr, self._x, self._y + 10, 10, 22, ZH, self._status)
+        
+        cr.save()
+        cr.translate(self._widget_x, self._y)
+        self._WIDGET.draw(cr, HH)
+        cr.restore()
+
+class Counter_editor(_Attribute):
+    
+    widgetclass = CE
+    
+    def __init__(self, x, y, width, cellsize, superset, node, A, Z=_binary_Z, name='', refresh=lambda: None, no_z=False):
+        _Attribute.__init__(self, ((cellsize, superset), {}), x, y, width, node, A, Z, name, refresh, no_z)

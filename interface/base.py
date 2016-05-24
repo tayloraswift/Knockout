@@ -7,6 +7,7 @@ from fonts.interfacefonts import ISTYLES
 
 accent = (1, 0.22, 0.50)
 
+
 def xhover(self, x, y):
     return self._sdkeys[bisect.bisect(self._subdivisions, x)]
 
@@ -59,6 +60,13 @@ class Base_kookie(object):
     def _make_sd(self, subdivisions, cap):
         self._subdivisions, self._sdkeys = zip( * subdivisions)
         self._sdkeys += (cap,)
+    
+    def _add_static_text(self, x, y, text, font=None, fontsize=None, upper=False, align=1):
+        if font is None:
+            font = self.font
+        if upper:
+            text = text.upper()
+        self._texts.append(self._build_line(x, y, text, font, fontsize=fontsize, align=align))
 
     def _build_line(self, x, y, text, font, fontsize=None, align=1, sub_minus=False):
         if fontsize is None:
@@ -82,14 +90,7 @@ class Base_kookie(object):
             line = [(g[0], g[1] + dx, g[2]) for g in line]
         
         return line
-    
-    def _add_static_text(self, x, y, text, font=None, fontsize=None, upper=False, align=1):
-        if font is None:
-            font = self.font
-        if upper:
-            text = text.upper()
-        self._texts.append(self._build_line(x, y, text, font, fontsize=fontsize, align=align))
-    
+            
     def is_over(self, x, y):
         return self._y <= y <= self.y_bottom and self._x <= x <= self._x_right
     

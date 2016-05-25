@@ -62,7 +62,7 @@ class Box(dict):
     def before(self):
         un.history.save()
     
-    def after(self):
+    def after(self, A):
         pass
 
     def assign(self, A, S):
@@ -89,7 +89,7 @@ class Box(dict):
             self[A] = v
         else:
             return
-        self.after()
+        self.after(A)
 
     def deassign(self, A):
         if A in self:
@@ -97,7 +97,7 @@ class Box(dict):
             del self.attrs[A]
             del self[A]
             self.update(self._load_attributes(self.attrs, [next(k for k in self.__class__.DNA if A == k[0])]))
-            self.after()
+            self.after(A)
 
     def print_A(self):
         attrs = self.attrs

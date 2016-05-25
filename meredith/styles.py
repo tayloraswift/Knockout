@@ -9,7 +9,7 @@ Textstyles_D = datablocks.Textstyles_D
 from fonts import get_font
 
 class _Causes_relayout(object):
-    def after(self):
+    def after(self, A):
         datablocks.DOCUMENT.layout_all()
 
 class Textstyles(_Causes_relayout, Box):
@@ -66,7 +66,7 @@ class Blockstyles(Box):
         self._block_default = _cast_default(Blockstyle)
         self._text_default = _cast_default(Textstyle)
 
-    def after(self):
+    def after(self, A):
         self.block_projections.clear()
         self.text_projections.clear()
         datablocks.DOCUMENT.layout_all()
@@ -142,7 +142,7 @@ class Blockstyle(Box):
     DNA  = [('class',           'blocktc',  'body')] + [A[:2] for A in _block_DNA]
     BASE = {A: D for A, TYPE, D in _block_DNA}
 
-    def after(self):
+    def after(self, A):
         datablocks.BSTYLES.block_projections.clear()
         datablocks.BSTYLES.text_projections.clear()
         datablocks.DOCUMENT.layout_all()

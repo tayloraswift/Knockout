@@ -8,8 +8,8 @@ from interface import kookies, ui, source
 from interface import fields, contents
 
 from edit import ops, caramel
-#from edit.paperairplanes import datatypes
 
+from meredith.styles import Blockstyle
 from meredith.datablocks import DOCUMENT, TTAGS, BTAGS, TSTYLES, BSTYLES
 
 from IO import un
@@ -302,11 +302,14 @@ class _Properties_panel(ui.Cell):
         self._HI = kookies.Heading(15, 60, self._KW, 30, self._heading, font=('title',), fontsize=18, upper=True)
 
 def _print_counter(node):
-    items = [k['name'] if v == 1 else k['name'] + ' (' + str(v) + ')' for k, v in node['class'].items() if v]
-    if items:
-        return ', '.join(items)
+    if type(node) is Blockstyle:
+        items = [k['name'] if v == 1 else k['name'] + ' (' + str(v) + ')' for k, v in node['class'].items() if v]
+        if items:
+            return ', '.join(items)
+        else:
+            return '{none}'
     else:
-        return '{none}'
+        return 'ELEMENT'
 
 class Properties(_Properties_panel):
     def _text_panel(self, y, KW):
@@ -362,7 +365,7 @@ class Properties(_Properties_panel):
                         refresh = self._synchronize))
             y = self._y_incr() + 20
             
-            self._items.append(contents.Ordered(15, y, KW, 
+            self._items.append(contents.Para_control_panel(15, y, KW, 
                     node = BSTYLES, 
                     context = contexts.Text, 
                     slot = 'kbs', 

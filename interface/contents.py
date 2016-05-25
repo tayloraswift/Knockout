@@ -4,9 +4,9 @@ from itertools import chain
 
 from fonts.interfacefonts import ISTYLES
 
-from interface.base import Base_kookie, accent, xhover, plus_sign, minus_sign, downchevron, upchevron, cross
+from interface.base import Kookie, accent, text, set_fonts, show_text, plus_sign, minus_sign, downchevron, upchevron, cross
 
-class Ordered(Base_kookie):
+class Ordered(Kookie):
     def __init__(self, x, y, width, node, context, slot, display=lambda: None, lcap=0):
         self._display = display
         
@@ -17,7 +17,8 @@ class Ordered(Base_kookie):
         self._slot = slot
         
         self._LMAX = len(node.content) + lcap
-        Base_kookie.__init__(self, x, y, width, self._itemheight * (self._LMAX + 1), font=('strong',))
+        self._font = ISTYLES[('strong',)]
+        Kookie.__init__(self, x, y, width, self._itemheight * (self._LMAX + 1))
 
         # set hover function equal to press function
         self.is_over_hover = self.is_over
@@ -27,17 +28,20 @@ class Ordered(Base_kookie):
         x2 = x + width
         self._make_sd([(x2 - 74, 1), (x2 - 50, 2), (x2 - 26, 3)], 4)
 
+    def _get_list(self):
+        return self._content
+
     def read(self):
-        self._texts = []
-        for i, node in enumerate(self._content):
-            self._add_static_text(self._x + 10, self._y + self._itemheight*i + 17, self._display(node), align=1)
+        self._fullcontent = self._get_list()
+        self._labels = [text(self._x + 10, self._y + self._itemheight*i + 17, self._display(node), self._font) for i, node in enumerate(self._get_list())]
+        
         active = getattr(self._context, self._slot)
         
-        if self._content:
-            if active in self._content:
+        if self._fullcontent:
+            if active in self._fullcontent:
                 self._active = active
             else:
-                self._active = self._content[0]
+                self._active = self._fullcontent[0]
         else:
             self._active = None
         
@@ -79,51 +83,49 @@ class Ordered(Base_kookie):
      
     def focus(self, x, y):
         F, C = self.hover(x, y)
-
-        if F == len(self._content):
+        items = self._fullcontent
+        
+        if F == len(items):
             self._BEFORE()
             self._add()
             self._SYNCHRONIZE()
             self._AFTER()
         else:
             if C == 1:
-                self._active = self._content[F]
+                self._active = items[F]
                 self._send()
                 return
+            elif F < len(self._content):
+                if C == 2:
+                    self._node.before()
+                    self._move(F, F - 1)
+                    self._send(forceread=True)
 
-            elif C == 2:
-                self._node.before()
-                self._move(F, F - 1)
-                self._send(forceread=True)
+                elif C == 3:
+                    self._node.before()
+                    self._move(F, F + 1)
+                    self._send(forceread=True)
 
-            elif C == 3:
-                self._node.before()
-                self._move(F, F + 1)
-                self._send(forceread=True)
-
-            elif C == 4:
-                self._node.before()
-                O = self._content[F]
-                del self._content[F]
-                if O is self._active:
-                    self._active = None
-                self._send(forceread=True)
-            self._node.after()
+                elif C == 4:
+                    self._node.before()
+                    O = self._content[F]
+                    del self._content[F]
+                    if O is self._active:
+                        self._active = None
+                    self._send(forceread=True)
+                self._node.after(self._node)
 
     def _colored(self, value):
         return True
     
-    def _list(self):
-        return enumerate(self._content)
-    
     def draw(self, cr, hover=(None, None)):
-        self._render_fonts(cr)
+        set_fonts(cr, * self._labels[0][:2] )
         
         cr.set_source_rgba(0, 0, 0, 0.7)
         cr.set_line_width(2)
         
         y1 = self._y
-        for i, value in self._list():
+        for i, (value, textline) in enumerate(zip(self._fullcontent, self._labels)):
 
             if value is self._active:
                 radius = 5
@@ -189,7 +191,7 @@ class Ordered(Base_kookie):
             else:
                 cr.set_source_rgba(0, 0, 0, 0.4)
                 
-            cr.show_glyphs(self._texts[i])
+            cr.show_glyphs(textline[2])
             y1 += self._itemheight
 
         if hover[1] is not None and hover[1][0] == self._LMAX:
@@ -200,54 +202,20 @@ class Ordered(Base_kookie):
         cr.fill()
 
 class Para_control_panel(Ordered):
-    def __init__(self, x, y, width, paragraph, library, display=lambda: None, before=lambda: None, after=lambda: None, refresh=lambda: None):
-        self._paragraph = paragraph
-        Ordered.__init__(self, x, y, width, library=library, display=display, before=before, after=after, refresh=refresh, lcap=1)
+    def __init__(self, x, y, width, node, context, slot, display=lambda: None):
+        self._paragraph = context.bk
+        Ordered.__init__(self, x, y, width, node, context, slot, display, lcap=1)
         
-    def _ACQUIRE_REPRESENT(self):
-        self._texts = []
-        if self._paragraph.I_ is not None:
-            self._present_tags = self._paragraph.P + self._paragraph.I_
+    def read(self):
+        if self._paragraph.implicit_ is None:
+            self._present_tags = self._paragraph['class']
         else:
-            self._present_tags = self._paragraph.P
-        for i, l in enumerate(chain((self._display(L) for L in self._LIBRARY), ['ELEMENT'])):
-            self._add_static_text(self._x + 15, self._y + self._itemheight*i + 17, l, align=1)
+            self._present_tags = self._paragraph['class'] + self._paragraph.implicit_
+        
+        super().read()
+        
+    def _get_list(self):
+        return self._content + [self._paragraph]
 
     def _colored(self, value):
-        return value.tags <= self._present_tags
-
-    def _list(self):
-        return enumerate(chain(self._LIBRARY, [self._paragraph.EP]))
-    
-    def focus(self, x, y):
-        F, C = self.hover(x, y)
-        items = self._LIBRARY + [self._paragraph.EP]
-
-        if F == len(items):
-            self._BEFORE()
-            self._add()
-            self._SYNCHRONIZE()
-            self._AFTER()
-        else:
-            if C == 1:
-                self._LIBRARY.active = items[F]
-                self._REFRESH()
-                return C
-
-            elif F < len(items) - 1:
-                if C == 2:
-                    self._BEFORE()
-                    self._move(F, F - 1)
-
-                elif C == 3:
-                    self._BEFORE()
-                    self._move(F, F + 1)
-
-                elif C == 4:
-                    self._BEFORE()
-                    del self._LIBRARY[F]
-            
-            self._SYNCHRONIZE()
-            self._AFTER()
-            return C
-
+        return value['class'] <= self._present_tags

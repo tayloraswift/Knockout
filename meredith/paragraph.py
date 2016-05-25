@@ -58,7 +58,7 @@ class Meredith(Box):
                 section.transfer(self._sorted_pages)
         return self._sorted_pages
 
-    def after(self):
+    def after(self, A):
         self._recalc_page()
     # Page functions
     
@@ -223,7 +223,10 @@ class Paragraph_block(Blockstyle):
     
     IMPLY = {'class': 'body'}
 
-    def after(self):
+    def after(self, A):
+        if A != 'class':
+            datablocks.BSTYLES.block_projections.clear()
+            datablocks.BSTYLES.text_projections.clear()
         datablocks.DOCUMENT.layout_all()
     
     def __init__(self, * II, ** KII ):

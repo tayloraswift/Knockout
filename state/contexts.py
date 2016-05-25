@@ -71,5 +71,8 @@ class Text_context(object):
         if A == 'kbs':
             self.kbs = node
             self.changed.update({'paragraph'})
-
+        elif A == 'kbm':
+            self.kbm = node
+            self.changed.update({'font'})
+        
 Text = Text_context()

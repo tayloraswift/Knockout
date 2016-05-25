@@ -302,27 +302,31 @@ class _Properties_panel(ui.Cell):
         self._HI = kookies.Heading(15, 60, self._KW, 30, self._heading, font=('title',), fontsize=18, upper=True)
 
 def _print_counter(node):
+    items = [k['name'] if v == 1 else k['name'] + ' (' + str(v) + ')' for k, v in node['class'].items() if v]
+    if items:
+        return ', '.join(items)
+    else:
+        return '{none}'
+
+def _print_bcounter(node):
     if type(node) is Blockstyle:
-        items = [k['name'] if v == 1 else k['name'] + ' (' + str(v) + ')' for k, v in node['class'].items() if v]
-        if items:
-            return ', '.join(items)
-        else:
-            return '{none}'
+        return _print_counter(node)
     else:
         return 'ELEMENT'
 
 class Properties(_Properties_panel):
     def _text_panel(self, y, KW):
         if self._tab == 'font':
-            if styles.PARASTYLES.active is not None:
-                self._heading = lambda: ', '.join(T.name for T in styles.PARASTYLES.active.tags)
+            if contexts.Text.kbs is not None:
+                self._heading = lambda: ', '.join(T['name'] for T in contexts.Text.kbs['class'])
                 
-                self._items.append(kookies.Ordered(15, y, KW,
-                            library = styles.PARASTYLES.active.content, 
-                            display = _print_counter,
-                            before = un.history.save, after = lambda: (styles.PARASTYLES.update_f(), meredith.mipsy.recalculate_all(), self._reconstruct()), refresh = self._reconstruct))
+                self._items.append(contents.Ordered(15, y, KW,
+                            node = contexts.Text.kbs, 
+                            context = contexts.Text,
+                            slot = 'kbm',
+                            display = _print_counter))
                 y = self._y_incr() + 20
-                
+                """
                 if styles.PARASTYLES.active.content.active is not None:
                     self._items.append(kookies.Counter_editor(15, y, KW, (125, 28),
                                 get_counter = lambda: styles.PARASTYLES.active.content.active.tags,
@@ -354,7 +358,7 @@ class Properties(_Properties_panel):
                                 ]
                         self._items.extend(_stack_properties(_create_f_field, y, 45, KW, props, self._style_synchronize))
                         y += 45*len(props)
-        
+                """
         elif self._tab == 'paragraph':
             self._heading = lambda: ', '.join(T['name'] if V == 1 else T['name'] + ' (' + str(V) + ')' for T, V in contexts.Text.bk['class'].items() if V)
             
@@ -369,7 +373,7 @@ class Properties(_Properties_panel):
                     node = BSTYLES, 
                     context = contexts.Text, 
                     slot = 'kbs', 
-                    display = _print_counter))
+                    display = _print_bcounter))
             y = self._y_incr() + 20
             
             if contexts.Text.kbs is not None:

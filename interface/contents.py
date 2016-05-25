@@ -119,7 +119,8 @@ class Ordered(Kookie):
         return True
     
     def draw(self, cr, hover=(None, None)):
-        set_fonts(cr, * self._labels[0][:2] )
+        if self._labels:
+            set_fonts(cr, * self._labels[0][:2] )
         
         cr.set_source_rgba(0, 0, 0, 0.7)
         cr.set_line_width(2)

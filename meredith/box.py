@@ -24,7 +24,10 @@ class Box(dict):
     IMPLY = {}
     
     def __init__(self, attrs, content=None):
-        self.content = content
+        if content is None:
+            self.content = []
+        else:
+            self.content = content
         self.attrs = {}
         dict.__init__(self, self._load_attributes(attrs))
     

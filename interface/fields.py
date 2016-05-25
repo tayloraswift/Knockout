@@ -9,6 +9,7 @@ from edit.text import expand_cursors_word
 from olivia import literal
 
 from interface.base import Kookie, accent, xhover, text, set_fonts, show_text, plus_sign, minus_sign, downchevron, upchevron, cross
+from interface.menu import menu
 
 z_colors = ((0.6, 0.6, 0.6), (0.7, 0.7, 0.7), accent, accent, (0.55, 0.55, 0.55))
 z_hover_colors = ((0.4, 0.4, 0.4), (0.5, 0.5, 0.5), tuple(v + 0.2 for v in accent), tuple(v + 0.2 for v in accent), (0.35, 0.35, 0.35))
@@ -139,6 +140,10 @@ class _Attribute(Kookie): # abstract base class
             if self._exit == 'd':
                 self._write()
     
+    def menuexit(self):
+        if self._WActive:
+            self._write()
+        
     def type_box(self, name, char):
         if self._WActive:
             self._WIDGET.type_box(name, char)
@@ -350,7 +355,7 @@ class BS(_Widget):
         self.k = 32
         
         self._set_text_bounds(width)
-        self._label = text(self._text_left, 40, name, ISTYLES[('label',)], upper=True)
+        self._label = text(self._text_left, 40, name, ISTYLES[('label',)])
         
         # cursors
         self._active = False
@@ -611,163 +616,135 @@ class Blank_space(_Attribute):
     def __init__(self, x, y, width, node, A, Z=_binary_Z, name='', refresh=lambda: None, no_z=False):        
         _Attribute.__init__(self, ((name,), {}), x, y, width, node, A, Z, name, refresh, no_z)
 
-"""
-class New_object_menu(Base_kookie):
-    hover = xhover
-    def __init__(self, x, y, width, value_push, library, TYPE, before=lambda: None, after=lambda: None, name='', source=0):
-        Base_kookie.__init__(self, x, y, width, 28, font=('strong',))
-        self._BEFORE = before
-        self._AFTER = after
-        self._library = library
-        self._value_push = value_push
-        self._TYPE = TYPE
-
+class OM(_Widget):
+    
+    exit = 'd'
+    
+    def __init__(self, width, name, supernode, mx, my, ms, minform):
+        self._mx = mx
+        self._my = my
+        self._msource = ms
+        self._minform = minform
+        
         self._dropdown_active = False
-        self.is_over_hover = self.is_over
         
-        self._source = source
+        self.k = 32
+        self._supernode = supernode
         
-        self._add_static_text(self._x + 40, self._y + self.font['fontsize'] + 5, 'NEW')
+        self._NAMEWIDGET = BS(width - 80, name)
         
-        self._SYNCHRONIZE()
-        self._make_sd([(x + 30, 2)], 3)
+        self._d1 = 30
+        self._d2 = width - 50
+        self._d3 = width - 26
+        
+        nonelabelfont = ISTYLES[('strong',)]
+        self._nonelabel = text(self._d1 + 16, nonelabelfont['fontsize'] + 5, 'NEW', nonelabelfont)
 
-    def _SYNCHRONIZE(self):
-        # scan objects
-        self._menu_options = tuple( (v, str(k)) for k, v in sorted(self._library.items()) )
-
+    def store(self, value):
+        self._value = value
+        self._O = self._value
+        
+        self._name_sto()
+    
+    def _name_sto(self):
+        self._menu_options = [(O, O['name']) for O in self._supernode.content]
+        if self._O is not None:
+            self._NAMEWIDGET.store(self._O['name'])
+    
+    def value(self):
+        return self._O, self._O is not self._value
+    
+    def hover(self, x, y):        
+        if x < self._d1:
+            return 1
+        elif self._O is None:
+            return 3
+        elif x < self._d2:
+            return 2
+        elif x < self._d3:
+            return 3
+        else:
+            return 4
+    
+    def _recieve_menu_value(self, O):
+        self._O = O
+    
     def focus(self, x, y):
         J = self.hover(x, y)
-
-        if J == 3:
-            FS = self._TYPE()
-            self._library[FS.name] = FS
-            self._value_push(self._library[FS.name])
-        elif J == 2:
-            menu.menu.create(self._x, self.y_bottom - 5, 200, self._menu_options, lambda *args: (self._BEFORE(), self._value_push(*args), self._AFTER()), (), source=self._source )
-            self._active = True
-            self._dropdown_active = True
-            print('DROPDOWN')
-        
-        self._AFTER()
-        
-    def draw(self, cr, hover=(None, None)):
-        cr.set_line_width(2)
-        if self._dropdown_active:
-            cr.set_source_rgb( * accent)
-        elif hover[1] == 2:
-            cr.set_source_rgb( * accent)
-        else:
-            cr.set_source_rgba(0, 0, 0, 0.7)
-        
-        # v
-        downchevron(cr, self._x + 3, self._y + 1)
-        cr.stroke()
-
-        # +
-        if hover[1] == 3:
-            cr.set_source_rgb( * accent)
-        else:
-            cr.set_source_rgba(0, 0, 0, 0.7)
-        plus_sign(cr, self._x_right - 26, self._y + 1)
-        cr.fill()
-        
-        self._render_fonts(cr)
-        cr.show_glyphs(self._texts[0])
-        
-class Object_menu(Blank_space):
-    hover = xhover
-    def __init__(self, x, y, width, read, value_push, library, before=lambda: None, after=lambda: None, name='', source=0):
-        self._library = library
-        self._value_push = value_push
-
-        Blank_space.__init__(self, x, y, width, read=read, assign=lambda N: self._O.rename(N), before=before, after=after, name=name)
-
-        self._dropdown_active = False
-        self._source = source
-        
-        self._make_sd([(x + 30, 2), (x + width - 50, 1), (x + width - 26, 3)], 4)
-
-    def _set_text_bounds(self):
-        self._text_left = self._x + 30
-        self._text_right = self._x_right - 50
-
-    def _ACQUIRE_REPRESENT(self):
-        # scan objects
-        self._menu_options = tuple( (v, k) for k, v in sorted(self._library.items()) )
-        
-        self._O = self._read()
-
-        self._VALUE = self._O.name
-        self._LIST = list(self._VALUE) + [None]
-        self._stamp_glyphs(self._LIST)
-
-    def focus(self, x, y):
-        J = self.hover(x, y)
+        self._dropdown_active = J == 1
         if J == 1:
+            menu.create(self._mx, self._my - 5, 200, self._menu_options, self._recieve_menu_value, inform=(self._minform,), source=self._msource )
             self._active = True
-            self._dropdown_active = False
-            self._i = self._target(x)
-            self._j = self._i
-            
-            self._center_j()
-        else:
-            self.defocus()
-            if J == 3:
-                self._value_push(self._O.clone())
-            elif J == 2:
-                menu.menu.create(self._x, self.y_bottom - 5, 200, self._menu_options, lambda *args: (self._BEFORE(), self._value_push(*args), self._AFTER()), (),  source=self._source )
-                self._active = True
-                self._dropdown_active = True
-                print('DROPDOWN')
-                return
-            elif J == 4:
-                # unlink
-                self._value_push(None)
-            
-            self._AFTER()
+        elif J == 2:
+            self._NAMEWIDGET.focus(x - self._d1, y)
+        elif J == 3:
+            self._O = self._supernode.new()
+            self._minform()
+        elif J == 4:
+            self._O = None
+            self._minform()
         
+    def focus_drag(self, x, y):
+        if self._O is not None:
+            return self._NAMEWIDGET.focus_drag(x - self._d1, y)
+    
+    def dpress(self):
+        if self._O is not None:
+            self._NAMEWIDGET.dpress()
+    
+    def type_box(self, name, char):
+        if self._O is not None:
+            self._NAMEWIDGET.type_box(name, char)
+    
     def defocus(self):
-        self._active = None
         self._dropdown_active = False
-        self._scroll = 0
-        # dump entry
-        self._VALUE = self._entry()
-        if self._VALUE != self._PREV_VALUE:
-            self._BEFORE()
-            self._assign(self._VALUE)
-            self._AFTER()
-
-        else:
-            return False
-        return True
-        
-    def _sup_draw(self, cr, hover=(None, None)):
+        if self._O is not None:
+            self._NAMEWIDGET.defocus()
+            name, changed = self._NAMEWIDGET.value()
+            if changed:
+                self._O.assign('name', name)
+                self._name_sto() # because when the name is changed, this fails to trigger a re-read() event
+    
+    def draw(self, cr, hover=None):
         cr.set_line_width(2)
-        if self._dropdown_active:
-            cr.set_source_rgb( * accent)
-        elif hover[1] == 2:
-            cr.set_source_rgb( * accent)
+        if self._dropdown_active or hover == 1:
+            colors = [accent] + [(0, 0, 0, 0.7)] * 3
         else:
-            cr.set_source_rgba(0, 0, 0, 0.7)
+            colors = [(0, 0, 0, 0.7)] * 4
+        
+        if hover is not None:
+            colors[hover - 1] = accent
         
         # v
-        downchevron(cr, self._x + 3, self._y + 1)
+        cr.set_source_rgba( * colors[0] )
+        downchevron(cr, 3, 1)
         cr.stroke()
-
-        # +
-        if hover[1] == 3:
-            cr.set_source_rgb( * accent)
+        
+        if self._O is None:
+            # +
+            cr.set_source_rgba( * colors[2] )
+            show_text(cr, self._nonelabel)
+            plus_sign(cr, self._d3, 1)
+            cr.fill()
         else:
-            cr.set_source_rgba(0, 0, 0, 0.7)
-        plus_sign(cr, self._subdivisions[1], self._y + 1)
-        cr.fill()
+            cr.save()
+            cr.translate(self._d1, 0)
+            self._NAMEWIDGET.draw(cr, hover)
+            cr.restore()
+            
+            # +
+            cr.set_source_rgba( * colors[2] )
+            plus_sign(cr, self._d2, 1)
+            cr.fill()
+            
+            # x
+            cr.set_source_rgba( * colors[3] )
+            cross(cr, self._d3, 1)
+            cr.stroke()
 
-        # x
-        if hover[1] == 4:
-            cr.set_source_rgb( * accent)
-        else:
-            cr.set_source_rgba(0, 0, 0, 0.7)
-        cross(cr, self._subdivisions[2], self._y + 1)
-        cr.stroke()
-"""
+class Object_menu(_Attribute):
+    
+    widgetclass = OM
+    
+    def __init__(self, x, y, width, supernode, partition, node, A, Z=_binary_Z, name='', refresh=lambda: None, no_z=True):        
+        _Attribute.__init__(self, ((name, supernode, x, y, partition, self.menuexit), {}), x, y, width, node, A, Z, name, refresh, no_z)

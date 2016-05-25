@@ -4,20 +4,21 @@ from libraries.freetype import ft_errors
 
 from meredith.box import Box
 from meredith import datablocks
-Textstyles_D = datablocks.Textstyles_D
 
 from fonts import get_font
 
-class _Causes_relayout(object):
-    def after(self, A):
-        datablocks.DOCUMENT.layout_all()
-
-class Textstyles(_Causes_relayout, Box):
-    name = 'textstyles'
-
-    def __init__(self, * II, ** KII ):
-        Box.__init__(self, * II, ** KII )
-        Textstyles_D.update_datablocks(self)
+def _new_name(name, namelist):
+    if name in namelist:
+        if not (len(name) > 3 and name[-4] == '.' and len([c for c in name[-3:] if c in '1234567890']) == 3):
+            name = name + '.001'
+        
+        serialnumber = int(name[-3:])
+        while True:
+            if name not in namelist:
+                break
+            serialnumber += 1
+            name = name[:-3] + str(serialnumber).zfill(3)
+    return name
 
 _text_DNA = [('fontsize',    'float',   13),
             ('path',        'str',      'fonts/Ubuntu-R.ttf'),
@@ -26,13 +27,45 @@ _text_DNA = [('fontsize',    'float',   13),
             ('capitals',    'bool',     False),
             ('color',       'rgba',     (1, 0.15, 0.2, 1))]
 
-class Textstyle(_Causes_relayout, Box):
+class Textstyle(Box):
     name = 'textstyle'
 
     DNA  = [('name',        'str', 'Untitled fontstyle')] + [A[:2] for A in _text_DNA]
     BASE = {A: D for A, TYPE, D in _text_DNA}
+    
+    def after(self, A):
+        if A == 'name':
+            datablocks.Textstyles_D.update_datablocks(datablocks.TSTYLES)
+        else:
+            datablocks.DOCUMENT.layout_all()
+    
+    def __str__(self):
+        return self['name']
 
-class Memberstyle(_Causes_relayout, Box):
+class Textstyles(Box):
+    name = 'textstyles'
+    contains = Textstyle
+    
+    def __init__(self, * II, ** KII ):
+        Box.__init__(self, * II, ** KII )
+        datablocks.Textstyles_D.update_datablocks(self)
+
+    def after(self, A):
+        datablocks.BSTYLES.text_projections.clear()
+        datablocks.DOCUMENT.layout_all()
+    
+    def sort_content(self):
+        self.content.sort(key=lambda O: O['name'])
+    
+    def new(self):
+        O = self.__class__.contains({'name': _new_name('Untitled fontstyle', datablocks.Textstyles_D)})
+        self.content.append(O)
+        self.sort_content()
+        datablocks.Textstyles_D.update_datablocks(self)
+        self.after('__content__')
+        return O
+    
+class Memberstyle(Box):
     name = 'memberstyle'
     DNA  = [('class',           'texttc',  ''),
             ('textstyle',       'textstyle', None)]

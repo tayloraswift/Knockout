@@ -341,6 +341,15 @@ class Properties(_Properties_panel):
                                 A = 'class',
                                 refresh = self._style_synchronize))
                     y = self._y_incr() + 20
+                    
+                    self._items.append(fields.Object_menu(15, y, KW,
+                                supernode = TSTYLES, 
+                                partition = self._partition, 
+                                node = contexts.Text.kbm, 
+                                A = 'textstyle', 
+                                refresh = self._style_synchronize,
+                                name = 'FONTSTYLE'))
+
                     """
                     _after_ = lambda: (styles.PARASTYLES.update_f(), meredith.mipsy.recalculate_all(), contexts.Text.update(), self._reconstruct())
                     if styles.PARASTYLES.active.content.active.F is None:

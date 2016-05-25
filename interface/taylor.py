@@ -17,7 +17,8 @@ from keyboard import keyboard
 from state import noticeboard, constants
 from state.contexts import Text as CText
 
-from interface import kookies, fields, menu, ui
+from interface import kookies, fields, ui
+from interface.menu import menu
 from interface.base import accent
 
 accent_light = caramel.accent
@@ -195,9 +196,9 @@ class Document_toolbar(object):
         self._items.append(fields.Checkbox(15, y, 80, node=DOCUMENT, A='dual', name='Dual'.upper(), no_z=True))
         
         y += 50
-        self._items.append(kookies.Selection_menu(5, y, 90, 30, menu_callback=constants.HINTS.set_hint_style, options_acquire=constants.default_hints, value_acquire=constants.HINTS.get_hint_style, source=0))
-        y += 30
-        self._items.append(kookies.Selection_menu(5, y, 90, 30, menu_callback=constants.HINTS.set_antialias, options_acquire=constants.default_antialias, value_acquire=constants.HINTS.get_antialias, source=0))
+#        self._items.append(kookies.Selection_menu(5, y, 90, 30, menu_callback=constants.HINTS.set_hint_style, options_acquire=constants.default_hints, value_acquire=constants.HINTS.get_hint_style, source=0))
+#        y += 30
+#        self._items.append(kookies.Selection_menu(5, y, 90, 30, menu_callback=constants.HINTS.set_antialias, options_acquire=constants.default_antialias, value_acquire=constants.HINTS.get_antialias, source=0))
         
         self._rows = [item.y_bottom for item in self._items]
         
@@ -424,7 +425,7 @@ class Document_view(ui.Cell):
                         self.planecursor.expand_cursors_word()
                         suggestions = ['“' + ms[pair_i][2] + '”'] + [w.decode("utf-8") for w in wonder.struck.suggest(ms[pair_i][2].encode('latin-1', 'ignore'))]
                         suggestions = list(zip(suggestions, [str(v) for v in suggestions]))
-                        menu.menu.create(x, y, 200, suggestions, _replace_misspelled, () )
+                        menu.create(x, y, 200, suggestions, _replace_misspelled)
 
                 except IndexError:
                     # occurs if an empty channel is selected

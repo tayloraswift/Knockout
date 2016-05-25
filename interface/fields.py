@@ -636,6 +636,7 @@ class OM(_Widget):
         self._d1 = 30
         self._d2 = width - 50
         self._d3 = width - 26
+        self._O = None###
         
         nonelabelfont = ISTYLES[('strong',)]
         self._nonelabel = text(self._d1 + 16, nonelabelfont['fontsize'] + 5, 'NEW', nonelabelfont)
@@ -666,15 +667,15 @@ class OM(_Widget):
         else:
             return 4
     
-    def _recieve_menu_value(self, O):
+    def _recieve_menu_value(self, O, label):
         self._O = O
+        self._dropdown_active = False
     
     def focus(self, x, y):
         J = self.hover(x, y)
         self._dropdown_active = J == 1
         if J == 1:
             menu.create(self._mx, self._my - 5, 200, self._menu_options, self._recieve_menu_value, inform=(self._minform,), source=self._msource )
-            self._active = True
         elif J == 2:
             self._NAMEWIDGET.focus(x - self._d1, y)
         elif J == 3:
@@ -748,3 +749,73 @@ class Object_menu(_Attribute):
     
     def __init__(self, x, y, width, supernode, partition, node, A, Z=_binary_Z, name='', refresh=lambda: None, no_z=True):        
         _Attribute.__init__(self, ((name, supernode, x, y, partition, self.menuexit), {}), x, y, width, node, A, Z, name, refresh, no_z)
+
+class SM(_Widget):
+    
+    exit = None
+    
+    def __init__(self, width, name, mx, my, ms, minform, menu_options):
+        self._mx = mx
+        self._my = my
+        self._msource = ms
+        self._minform = minform
+        
+        self._dropdown_active = False
+        
+        self.k = 32
+        
+        self._font = ISTYLES[('strong',)]
+        self._menu_options = menu_options
+        self._objlabel = None
+        
+        self._label = text(32, 32, name, ISTYLES[('label',)])
+
+    def store(self, value):
+        self._value = value
+        self._O = self._value
+        
+        if self._objlabel is None:
+            try:
+                self._objlabel = next(label for O, label in self._menu_options if O == value)
+            except StopIteration:
+                self._objlabel = str(value)
+        self._current = text(32, self._font['fontsize'] + 3, self._objlabel, self._font)
+    
+    def value(self):
+        return self._O, self._O != self._value
+    
+    def hover(self, x, y):
+        return 1
+    
+    def _recieve_menu_value(self, O, label):
+        self._O = O
+        self._dropdown_active = False
+        self._objlabel = label
+    
+    def focus(self, x, y):
+        self._dropdown_active = True
+        menu.create(self._mx, self._my - 5, 200, self._menu_options, self._recieve_menu_value, inform=(self._minform,), source=self._msource )
+    
+    def defocus(self):
+        self._dropdown_active = False
+    
+    def draw(self, cr, hover=None):
+        cr.set_line_width(2)
+        if self._dropdown_active or hover == 1:
+            cr.set_source_rgba( * accent )
+        else:
+            cr.set_source_rgba(0, 0, 0, 0.7)
+        
+        # v
+        downchevron(cr, 3, 1)
+        cr.stroke()
+        
+        show_text(cr, self._current)
+        show_text(cr, self._label)
+
+class Selection_menu(_Attribute):
+    
+    widgetclass = SM
+    
+    def __init__(self, x, y, width, partition, menu_options, node, A, Z=_binary_Z, name='', refresh=lambda: None, no_z=False):
+        _Attribute.__init__(self, ((name, x, y, partition, self.menuexit, menu_options), {}), x, y, width, node, A, Z, name, refresh, no_z)

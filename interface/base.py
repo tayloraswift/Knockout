@@ -237,7 +237,7 @@ class Menu(Base_kookie):
             
     def press(self, y):
         i = self._target(y)
-        return self._signals[i][0]
+        return self._signals[i]
 
     def hover(self, y):
         return self._target(y)

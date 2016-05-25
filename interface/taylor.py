@@ -17,6 +17,8 @@ from keyboard import keyboard
 from state import noticeboard, constants
 from state.contexts import Text as CText
 
+from meredith.smoothing import fontsettings
+
 from interface import kookies, fields, ui
 from interface.menu import menu
 from interface.base import accent
@@ -161,7 +163,7 @@ class Document_toolbar(object):
     def refresh_class(self):
         
         self._items = []
-        self._active_box_i = None
+        self._active_box = None
         self._hover_box_ij = (None, None)
         self._hover_memory = (None, None)
         
@@ -196,10 +198,19 @@ class Document_toolbar(object):
         self._items.append(fields.Checkbox(15, y, 80, node=DOCUMENT, A='dual', name='Dual'.upper(), no_z=True))
         
         y += 50
-#        self._items.append(kookies.Selection_menu(5, y, 90, 30, menu_callback=constants.HINTS.set_hint_style, options_acquire=constants.default_hints, value_acquire=constants.HINTS.get_hint_style, source=0))
-#        y += 30
-#        self._items.append(kookies.Selection_menu(5, y, 90, 30, menu_callback=constants.HINTS.set_antialias, options_acquire=constants.default_antialias, value_acquire=constants.HINTS.get_antialias, source=0))
         
+        self._items.append(fields.Selection_menu(5, y, 90, partition=0, 
+                                                menu_options=[(0, 'Default'), (1, 'None'), (2, 'Slight'), (3, 'Medium'), (4, 'Strong')], 
+                                                node=fontsettings, 
+                                                A='hinting',
+                                                name='HINTING', no_z=True))
+        y += 40
+        self._items.append(fields.Selection_menu(5, y, 90, partition=0, 
+                                                menu_options=[(0, 'Default'), (1, 'None'), (2, 'Grayscale'), (3, 'Subpixel')], 
+                                                node=fontsettings, 
+                                                A='antialias',
+                                                name='ANTIALIAS', no_z=True))
+                
         self._rows = [item.y_bottom for item in self._items]
         
     def render(self, cr):
@@ -209,40 +220,45 @@ class Document_toolbar(object):
             else:
                 entry.draw(cr)
     
+    def _stack_bisect(self, x, y):
+        try:
+            return self._items[bisect.bisect(self._rows, y)]
+        except IndexError:
+            return self._items[-1]
+    
     def press(self, x, y):
         b = None
-
-        inspect_i = bisect.bisect(self._rows, y)
+        
+        box = self._stack_bisect(x, y)
 
         try:
-            if self._items[inspect_i].is_over(x, y):
-                self._items[inspect_i].focus(x, y)
-                b = inspect_i
+            if box.is_over(x, y):
+                box.focus(x, y)
+                b = box
 
         except IndexError:
             pass
         # defocus the other box, if applicable
-        if b is None or b != self._active_box_i:
-            if self._active_box_i is not None:
-                if self._items[self._active_box_i].defocus():
+        if b is None or b is not self._active_box:
+            if self._active_box is not None:
+                
+                if self._active_box.defocus():
                     self.refresh_class()
-                    
-            self._active_box_i = b
-
+            
+            self._active_box = b
+    
     def release(self, x, y):
-        inspect_i = bisect.bisect(self._rows, y)
+        box = self._stack_bisect(x, y)
 
         bl = False
         try:
-            if self._items[inspect_i].is_over(x, y) and inspect_i == self._active_box_i:
+            if box.is_over(x, y) and box is self._active_box:
                 bl = True
         except IndexError:
             pass
         
-        if self._active_box_i is not None:
-            self._items[self._active_box_i].release(action = bl)
-
-        self._active_box_i = None
+        if self._active_box is not None:
+            self._active_box.release(action = bl)
 
     def hover(self, x, y):
     

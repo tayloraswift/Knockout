@@ -8,6 +8,7 @@ from state import noticeboard, constants
 from IO import do
 from edit import cursor
 from keyboard import compose
+from meredith.smoothing import fontsettings
 from interface import karlie, taylor, menu
 
 _dead_keys = set(('dead_tilde', 'dead_acute', 'dead_grave', 'dead_circumflex', 'dead_abovering', 'dead_macron', 'dead_breve', 'dead_abovedot', 'dead_diaeresis', 'dead_doubleacute', 'dead_caron', 'dead_cedilla', 'dead_ogonek', 'dead_iota', 'Multi_key'))
@@ -88,7 +89,7 @@ class Display(Gtk.Window):
         self.show_all()
         
         self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
-        self._HINTS = constants.HINTS
+        self._FO = fontsettings.fontoptions
         
         self._periodic = GObject.timeout_add(2000, self._on_periodic)
         self._on_periodic()
@@ -101,7 +102,7 @@ class Display(Gtk.Window):
         return True
 
     def DRAW_BECKY(self, w, cr):
-        cr.set_font_options(self._HINTS)
+        cr.set_font_options(self._FO)
         cr.set_source_rgb(1, 1, 1)
         cr.paint()
         taylor.becky.render(cr, self._h, self._k)
@@ -110,7 +111,7 @@ class Display(Gtk.Window):
             self.errorpanel.draw(cr, constants.UI[1])
 
     def DRAW_KLOSSY(self, w, cr):
-        cr.set_font_options(self._HINTS)
+        cr.set_font_options(self._FO)
         karlie.klossy.render(cr, self._h, self._k)
         
     def on_draw(self, w, cr):

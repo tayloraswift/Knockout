@@ -1,16 +1,3 @@
-import cairo
-
-HINTS = cairo.FontOptions()
-
-def default_hints():
-    return [(0, 'Default'), (1, 'None'), (2, 'Slight'), (3, 'Medium'), (4, 'Strong')]
-
-def default_antialias():
-    return [(0, 'Default'), (1, 'None'), (2, 'Grayscale'), (3, 'Subpixel')]
-
-default_hint = default_hints()[0]
-HINTS.set_hint_style(default_hint[0])
-
 filename = ''
 
 UI = [0, 950]

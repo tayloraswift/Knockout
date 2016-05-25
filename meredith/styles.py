@@ -35,7 +35,7 @@ class Textstyle(Box):
     
     def after(self, A):
         if A == 'name':
-            datablocks.Textstyles_D.update_datablocks(datablocks.TSTYLES)
+            Textstyles.dblibrary.update_datablocks(datablocks.TSTYLES)
         else:
             datablocks.DOCUMENT.layout_all()
     
@@ -45,10 +45,10 @@ class Textstyle(Box):
 class Textstyles(Box):
     name = 'textstyles'
     contains = Textstyle
-    
+    dblibrary = datablocks.Textstyles_D
     def __init__(self, * II, ** KII ):
         Box.__init__(self, * II, ** KII )
-        datablocks.Textstyles_D.update_datablocks(self)
+        self.__class__.dblibrary.update_datablocks(self)
 
     def after(self, A):
         datablocks.BSTYLES.text_projections.clear()
@@ -61,7 +61,7 @@ class Textstyles(Box):
         O = self.__class__.contains({'name': _new_name('Untitled fontstyle', datablocks.Textstyles_D)})
         self.content.append(O)
         self.sort_content()
-        datablocks.Textstyles_D.update_datablocks(self)
+        self.__class__.dblibrary.update_datablocks(self)
         self.after('__content__')
         return O
     

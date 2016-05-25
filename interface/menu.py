@@ -37,12 +37,12 @@ class Menu(object):
     
     # do we need x?
     def press(self, y):
-        O = self._menu.press(y - self._dy)
+        O, label = self._menu.press(y - self._dy)
         if self._extend:
-            self._callback(O)
+            self._callback(O, label)
             self._extend = False
         else:
-            self._callback(O)
+            self._callback(O, label)
             self.destroy()
         for F in self._inform:
             F()

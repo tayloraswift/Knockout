@@ -96,7 +96,7 @@ def texttagcounter(S):
 
 def textstyle(S):
     if type(S) is meredith.styles.Textstyle:
-        return S.copy()
+        return S
     try:
         return Textstyles_D[S]
     except KeyError:

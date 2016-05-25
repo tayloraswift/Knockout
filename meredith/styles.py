@@ -32,6 +32,43 @@ class Textstyle(_Causes_relayout, Box):
     DNA  = [('name',        'str', 'Untitled fontstyle')] + [A[:2] for A in _text_DNA]
     BASE = {A: D for A, TYPE, D in _text_DNA}
 
+class Memberstyle(_Causes_relayout, Box):
+    name = 'memberstyle'
+    DNA  = [('class',           'texttc',  ''),
+            ('textstyle',       'textstyle', None)]
+
+    def after(self, A):
+        datablocks.BSTYLES.text_projections.clear()
+        datablocks.DOCUMENT.layout_all()
+
+_block_DNA = [('hyphenate',       'bool',   False),
+            ('indent',          'binomial', (0, 0, 0)),
+            ('indent_range',    'int set',  {0}),
+            ('leading',         'float',    22),
+            ('margin_bottom',   'float',    0),
+            ('margin_left',     'float',    0),
+            ('margin_right',    'float',    0),
+            ('margin_top',      'float',    0),
+            ('align',           'float',    0),
+            ('align_to',        'str',      ''),
+            
+            ('incr_place_value','int',      13),
+            ('incr_assign',     'fn',       None),
+            ('show_count',      'farray',   None)]
+
+class Blockstyle(Box):
+    name = 'blockstyle'
+    
+    DNA  = [('class',           'blocktc',  'body')] + [A[:2] for A in _block_DNA]
+    BASE = {A: D for A, TYPE, D in _block_DNA}
+    
+    contains = Memberstyle
+    
+    def after(self, A):
+        datablocks.BSTYLES.block_projections.clear()
+        datablocks.BSTYLES.text_projections.clear()
+        datablocks.DOCUMENT.layout_all()
+
 class _Layer(dict):
     def __init__(self, BASE):
         dict.__init__(self, BASE)
@@ -57,6 +94,9 @@ def _cast_default(cls):
 
 class Blockstyles(Box):
     name = 'blockstyles'
+    
+    contains = Blockstyle
+    
     def __init__(self, * II, ** KII ):
         Box.__init__(self, * II, ** KII )
         
@@ -120,36 +160,5 @@ class Blockstyles(Box):
             
             self.text_projections[H] = projection
             return projection
-
-_block_DNA = [('hyphenate',       'bool',   False),
-            ('indent',          'binomial', (0, 0, 0)),
-            ('indent_range',    'int set',  {0}),
-            ('leading',         'float',    22),
-            ('margin_bottom',   'float',    0),
-            ('margin_left',     'float',    0),
-            ('margin_right',    'float',    0),
-            ('margin_top',      'float',    0),
-            ('align',           'float',    0),
-            ('align_to',        'str',      ''),
-            
-            ('incr_place_value','int',      13),
-            ('incr_assign',     'fn',       None),
-            ('show_count',      'farray',   None)]
-
-class Blockstyle(Box):
-    name = 'blockstyle'
-    
-    DNA  = [('class',           'blocktc',  'body')] + [A[:2] for A in _block_DNA]
-    BASE = {A: D for A, TYPE, D in _block_DNA}
-
-    def after(self, A):
-        datablocks.BSTYLES.block_projections.clear()
-        datablocks.BSTYLES.text_projections.clear()
-        datablocks.DOCUMENT.layout_all()
-
-class Memberstyle(_Causes_relayout, Box):
-    name = 'memberstyle'
-    DNA  = [('class',           'texttc',  ''),
-            ('textstyle',       'textstyle', None)]
     
 members = (Textstyles, Textstyle, Blockstyles, Blockstyle, Memberstyle)

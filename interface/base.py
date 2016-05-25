@@ -7,7 +7,6 @@ from fonts.interfacefonts import ISTYLES
 
 accent = (1, 0.22, 0.50)
 
-
 def xhover(self, x, y):
     return self._sdkeys[bisect.bisect(self._subdivisions, x)]
 

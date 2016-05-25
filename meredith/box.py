@@ -110,6 +110,13 @@ class Box(dict):
             return self.name + ' ' + E
         return self.name
     
+    def copy(self):
+        if self.__class__.textfacing:
+            content = type(self.content)(e if type(e) is str else e.copy() for e in self.content)
+        else:
+            content = [e.copy() for e in self.content]
+        return self.__class__(self.attrs, content)
+    
     def __repr__(self):
         if self.content:
             return ''.join(chain((' <', self.name, '> ', repr(self.attrs), ' ', '['), (c if type(c) is str else repr(c) for c in self.content), ('] ',)))

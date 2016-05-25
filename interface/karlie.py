@@ -314,6 +314,12 @@ def _print_bcounter(node):
     else:
         return 'ELEMENT'
 
+def _copy_member(node, active):
+    if active is None:
+        return type(node).contains({})
+    else:
+        return type(node).contains({'class': active['class']})
+
 class Properties(_Properties_panel):
     def _text_panel(self, y, KW):
         if self._tab == 'font':
@@ -324,16 +330,18 @@ class Properties(_Properties_panel):
                             node = contexts.Text.kbs, 
                             context = contexts.Text,
                             slot = 'kbm',
-                            display = _print_counter))
+                            display = _print_counter,
+                            copy = _copy_member))
                 y = self._y_incr() + 20
-                """
-                if styles.PARASTYLES.active.content.active is not None:
-                    self._items.append(kookies.Counter_editor(15, y, KW, (125, 28),
-                                get_counter = lambda: styles.PARASTYLES.active.content.active.tags,
-                                superset = styles.FTAGS,
-                                before = un.history.save, after = lambda: (styles.PARASTYLES.update_f(), meredith.mipsy.recalculate_all(), self._synchronize())))
+                
+                if contexts.Text.kbm is not None:
+                    self._items.append(fields.Counter_editor(15, y, KW, (125, 28),
+                                superset = TTAGS.content, 
+                                node = contexts.Text.kbm, 
+                                A = 'class',
+                                refresh = self._style_synchronize))
                     y = self._y_incr() + 20
-
+                    """
                     _after_ = lambda: (styles.PARASTYLES.update_f(), meredith.mipsy.recalculate_all(), contexts.Text.update(), self._reconstruct())
                     if styles.PARASTYLES.active.content.active.F is None:
                         self._items.append(kookies.New_object_menu(15, y, KW,
@@ -366,14 +374,15 @@ class Properties(_Properties_panel):
                         superset = BTAGS.content,
                         node = contexts.Text.bk,
                         A = 'class',
-                        refresh = self._synchronize))
+                        refresh = self._style_synchronize))
             y = self._y_incr() + 20
             
             self._items.append(contents.Para_control_panel(15, y, KW, 
                     node = BSTYLES, 
                     context = contexts.Text, 
                     slot = 'kbs', 
-                    display = _print_bcounter))
+                    display = _print_bcounter, 
+                    copy = _copy_member))
             y = self._y_incr() + 20
             
             if contexts.Text.kbs is not None:
@@ -381,7 +390,7 @@ class Properties(_Properties_panel):
                             superset = BTAGS.content,
                             node = contexts.Text.kbs,
                             A = 'class',
-                            refresh = self._synchronize))
+                            refresh = self._style_synchronize))
                 y = self._y_incr() + 20
                 
                 props = [[(0, fields.Blank_space, 'leading', 'LEADING')],
@@ -400,12 +409,15 @@ class Properties(_Properties_panel):
         elif self._tab == 'tags':
             self._heading = lambda: 'Document tags'
             
-            self._items.append(kookies.Unordered( 15, y, KW - 50,
-                        library = styles.PTAGS, 
-                        display = lambda l: l.name,
-                        before = un.history.save, after = lambda: (meredith.mipsy.recalculate_all(), self._reconstruct()), refresh = self._reconstruct))
+            self._items.append(contents.Ordered(15, y, KW - 50,
+                        node = BTAGS, 
+                        context = contexts.Text, 
+                        slot = 'kbt', 
+                        display = lambda l: l['name'],
+                        copy = lambda N, active: None))
             
             y = self._y_incr() + 20
+            """
             if styles.PTAGS.active is not None:
                 self._items.append(kookies.Blank_space(15, y, width=KW, 
                         read = lambda: styles.PTAGS.active.name,
@@ -424,7 +436,7 @@ class Properties(_Properties_panel):
                         read = lambda: styles.FTAGS.active.name,
                         assign = lambda N: styles.FTAGS.active.rename(N), 
                         before=un.history.save, after=self._synchronize, name='TAG NAME'))
-            
+            """
         elif self._tab == 'page':
             self._heading = lambda: 'Document pages'
             

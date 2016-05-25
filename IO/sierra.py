@@ -76,4 +76,4 @@ def load(name):
     noticeboard.refresh_properties_type.push_change(DATA['view']['mode'])
     karlie.klossy = karlie.Properties(DATA['view']['mode'], partition=1 )
 
-#    un.history.save()
+    un.history.save()

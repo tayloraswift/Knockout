@@ -1,11 +1,10 @@
 import bisect
-from math import pi, ceil
+from math import pi
 from itertools import chain
 
 from fonts.interfacefonts import ISTYLES
-#from edit.paperairplanes import interpret_float, interpret_int, interpret_enumeration, interpret_rgba, pack_binomial, read_binomial
-from edit.text import expand_cursors_word
-from interface.base import Base_kookie, accent, xhover, plus_sign, minus_sign, downchevron, upchevron, cross
+
+from interface.base import Base_kookie, accent, plus_sign, minus_sign, downchevron, upchevron, cross
 from interface import menu
 
 class Null(object):

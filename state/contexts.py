@@ -74,5 +74,10 @@ class Text_context(object):
         elif A == 'kbm':
             self.kbm = node
             self.changed.update({'font'})
+        elif A == 'kbt':
+            self.kbt = node
+            self.changed.update({'tags'})
+        else:
+            raise NotImplementedError
         
 Text = Text_context()

@@ -6,8 +6,11 @@ from fonts.interfacefonts import ISTYLES
 
 from interface.base import Kookie, accent, text, set_fonts, show_text, plus_sign, minus_sign, downchevron, upchevron, cross
 
+def _null_copy(node, active):
+    raise NotImplementedError
+
 class Ordered(Kookie):
-    def __init__(self, x, y, width, node, context, slot, display=lambda: None, lcap=0):
+    def __init__(self, x, y, width, node, context, slot, display=lambda: None, copy=_null_copy, lcap=0):
         self._display = display
         
         self._itemheight = 26
@@ -15,6 +18,7 @@ class Ordered(Kookie):
         self._content = node.content
         self._context = context
         self._slot = slot
+        self._copy_element = copy
         
         self._LMAX = len(node.content) + lcap
         self._font = ISTYLES[('strong',)]
@@ -61,16 +65,16 @@ class Ordered(Kookie):
             self._active = self._content[j]
     
     def _add(self):
-        if self._LIBRARY.active is not None:
-            O = self._LIBRARY.active.copy()
+        O = self._copy_element(self._node, self._active)
+        if self._active is not None:
+            try:
+                i = self._node.content.index(self._active) + 1
+            except ValueError:
+                i = 0
         else:
-            O = self._LIBRARY.template.copy()
-        try:
-            i = self._LIBRARY.index(self._LIBRARY.active) + 1
-        except ValueError:
             i = 0
-        self._LIBRARY.insert(i, O)
-        self._LIBRARY.active = O
+        self._node.content.insert(i, O)
+        self._active = O
 
     def hover(self, x, y):
         y -= self._y
@@ -86,10 +90,10 @@ class Ordered(Kookie):
         items = self._fullcontent
         
         if F == len(items):
-            self._BEFORE()
+            self._node.before()
             self._add()
-            self._SYNCHRONIZE()
-            self._AFTER()
+            self._send(forceread=True)
+            self._node.after(self._node)
         else:
             if C == 1:
                 self._active = items[F]
@@ -203,9 +207,9 @@ class Ordered(Kookie):
         cr.fill()
 
 class Para_control_panel(Ordered):
-    def __init__(self, x, y, width, node, context, slot, display=lambda: None):
+    def __init__(self, x, y, width, node, context, slot, display=lambda: None, copy=_null_copy):
         self._paragraph = context.bk
-        Ordered.__init__(self, x, y, width, node, context, slot, display, lcap=1)
+        Ordered.__init__(self, x, y, width, node, context, slot, display, copy, lcap=1)
         
     def read(self):
         if self._paragraph.implicit_ is None:

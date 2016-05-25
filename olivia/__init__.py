@@ -5,6 +5,7 @@ from bulletholes.counter import TCounter as Counter
 from edit.arithmetic import NumericStringParser, ParseException
 
 from meredith.datablocks import Texttags_D, Blocktags_D, Textstyles_D
+import meredith
 
 from olivia.frames import Frames
 from olivia.poptarts import Sprinkles
@@ -94,6 +95,8 @@ def texttagcounter(S):
     return _tagcounter(S, Texttags_D)
 
 def textstyle(S):
+    if type(S) is meredith.styles.Textstyle:
+        return S.copy()
     try:
         return Textstyles_D[S]
     except KeyError:

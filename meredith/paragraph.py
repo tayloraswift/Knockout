@@ -144,12 +144,12 @@ class Section(Plane):
             frames.start(self.content[b - 1].u_bottom)
             PREVSTYLE = calc_bstyle(self.content[b - 1])
             frames.space(PREVSTYLE['margin_bottom'] + BSTYLE['margin_top'])
-            WHEELS = self.content[b - 1].WHEELS
+            wheels = self.content[b - 1].wheels
         else:
             frames.start(0)
-            WHEELS = Wheels()
-        self.content[b].layout(frames, BSTYLE, WHEELS)
-        WHEELS = self.content[b].WHEELS
+            wheels = Wheels()
+        self.content[b].layout(frames, BSTYLE)
+        wheels = self.content[b].layout_observer(BSTYLE, wheels)
         gap = BSTYLE['margin_bottom']
         
         UU = self._UU
@@ -161,13 +161,13 @@ class Section(Plane):
                 BSTYLE = calc_bstyle(block)
                 frames.space(gap + BSTYLE['margin_top'])
                 gap = BSTYLE['margin_bottom']
-                halt = block.layout(frames, BSTYLE, WHEELS, cascade)
+                halt = block.layout(frames, BSTYLE, cascade)
                 if halt == -1:
                     UU.append(block.u)
                     for blk in self.content[b + 2 + db:]:
                         blk.erase()
                     break
-                WHEELS = block.WHEELS
+                wheels = block.layout_observer(BSTYLE, wheels)
             UU.append(block.u)
         self.rebuilt = True
     
@@ -355,7 +355,7 @@ class Paragraph_block(Blockstyle):
         else:
             return False, I, J
     
-    def layout(self, frames, BSTYLE, WHEELS, cascade=False):
+    def layout(self, frames, BSTYLE, cascade=False):
         F = Tagcounter()
         leading = BSTYLE['leading']
         indent_range = BSTYLE['indent_range']
@@ -369,8 +369,6 @@ class Paragraph_block(Blockstyle):
         LINES = []
         LIQUID = self.content
         total = len(LIQUID) + 1 # for imaginary </p> cap
-        
-        self.WHEELS = WHEELS.increment(BSTYLE['incr_place_value'], BSTYLE['incr_assign'])
         
         try:
             u, left, right, y, c, pn = frames.fit(leading)
@@ -405,7 +403,7 @@ class Paragraph_block(Blockstyle):
             if x1 > x2:
                 x1, x2 = x2, x1
             # initialize line
-            LINE = Glyphs_line({'observer': [], 'left': left, 'start': x1, 'y': y, 'c': c, 'u': u, 'l': l, 'page': pn})
+            LINE = Glyphs_line({'left': left, 'start': x1, 'y': y, 'c': c, 'u': u, 'l': l, 'page': pn})
             cast_liquid_line(LINE,
                     LIQUID[i : i + 1989], 
                     i, 
@@ -436,13 +434,6 @@ class Paragraph_block(Blockstyle):
                 else:
                     rag = LINE['width'] - LINE['advance']
                     LINE['x'] = x1 + rag * BSTYLE['align']
-
-            # print counters
-            if not l and BSTYLE['show_count'] is not None:
-                wheelprint = cast_mono_line({'l': l, 'c': c, 'page': pn}, 
-                                    BSTYLE['show_count'](self.WHEELS), 0, self, F.copy())
-                wheelprint['x'] = LINE['x'] - wheelprint['advance'] - BSTYLE['leading']*0.5
-                LINE.merge(wheelprint)
             
             l += 1
             LINES.append(LINE)
@@ -463,18 +454,38 @@ class Paragraph_block(Blockstyle):
 
     def _polish(self, LINES):
         leading = LINES[0]['leading']
-        flag = (-2, -leading, 0, LINES[0]['fstyle'], LINES[0]['F'], 0)
-        LINES[0]['observer'].append(flag)
-        self._left_edge = LINES[0]['left'] - leading*0.5
         self._LINES = LINES
         self._UU = [line['u'] - leading for line in LINES]
         self.u_bottom = LINES[-1]['u']
         self._search_j = [line['j'] for line in LINES]
+
+    def layout_observer(self, BSTYLE, wheels):
+        self._OBSERVERLINES = []
         
-        self._whole_location = -1, self._LINES[0], flag
+        wheels = wheels.increment(BSTYLE['incr_place_value'], BSTYLE['incr_assign'])
+        if self._LINES:
+            LINE = self._LINES[0]
+            # print para flag
+            flag = (-2, -LINE['leading'], 0, LINE['fstyle'], LINE['F'], 0)
+            self._OBSERVERLINES.append(Glyphs_line({'x': LINE['left'], 'y': LINE['y'], 'page': LINE['page'], 
+                                        'GLYPHS': [flag], 'BLOCK': self}))
+            # print counters
+            if BSTYLE['show_count'] is not None:
+                
+                wheelprint = cast_mono_line({'l': 0, 'c': LINE['c'], 'page': LINE['page']}, 
+                                    BSTYLE['show_count'](wheels), 0, self, LINE['F'])
+                wheelprint['x'] = LINE['x'] - wheelprint['advance'] - BSTYLE['leading']*0.5
+                wheelprint['y'] = LINE['y']
+                self._OBSERVERLINES.append(wheelprint)
+            
+            self._left_edge = LINE['left'] - LINE['leading']*0.5
+            self._whole_location = -1, LINE, flag
+        self.wheels = wheels
+        return wheels
 
     def erase(self):
         self._LINES = []
+        self._OBSERVERLINES = []
         self._UU = []
         self._search_j = []
         self.u = infinity
@@ -562,7 +573,7 @@ class Paragraph_block(Blockstyle):
         return self.content.word_count
 
     def transfer(self, S):
-        for page, lines in ((p, list(ps)) for p, ps in groupby(self._LINES, key=lambda line: line['page'])):
+        for page, lines in ((p, list(ps)) for p, ps in groupby(chain(self._OBSERVERLINES, self._LINES), key=lambda line: line['page'])):
             sorted_page = S[page]
             for line in lines:
                 line.deposit(sorted_page)

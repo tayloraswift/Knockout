@@ -39,13 +39,8 @@ class Glyphs_line(dict):
         x += self['x']
         y += self['y']
         BLOCK = self['BLOCK']
-
-        if self['observer']:
-            glyphs = chain(self['GLYPHS'], self['observer'])
-        else:
-            glyphs = self['GLYPHS']
         
-        for glyph in glyphs:
+        for glyph in self['GLYPHS']:
             if glyph[0] < 0:
                 if glyph[0] == -6:
                     repository['_annot'].append( (glyph[0], glyph[1] + x, glyph[2] + y, BLOCK, glyph[3]))
@@ -60,11 +55,6 @@ class Glyphs_line(dict):
                     repository[N][1].append(K)
                 except KeyError:
                     repository[N] = (glyph[3], [K])
-
-    def merge(self, other):
-        dx = other['x'] - self['x']
-        self['observer'].extend((g, x + dx, * e) for g, x, * e in other['GLYPHS'])
-        self['observer'].extend((g, x + dx, * e) for g, x, * e in other['observer'])
 
 def cast_liquid_line(LINE, letters, startindex, width, leading, BLOCK, F, hyphenate=False):
     LINE['i'] = startindex

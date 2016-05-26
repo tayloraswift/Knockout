@@ -30,7 +30,7 @@ class Ordered(Kookie):
         self.read()
         
         x2 = x + width
-        self._make_sd([(x2 - 74, 1), (x2 - 50, 2), (x2 - 26, 3)], 4)
+        self._subdivisions = [x2 - 74, x2 - 50, x2 - 26]
 
     def _get_list(self):
         return self._content
@@ -82,7 +82,7 @@ class Ordered(Kookie):
         if i > self._LMAX:
             i = self._LMAX
 
-        j = self._sdkeys[bisect(self._subdivisions, x)]
+        j = bisect(self._subdivisions, x)
         return i, j
      
     def focus(self, x, y):

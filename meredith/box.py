@@ -4,7 +4,7 @@ from IO import un
 
 from olivia import literal, reformat, standard
 
-from meredith.datablocks import Texttags_D, Blocktags_D
+from meredith import datablocks
 
 class Null(object):
     name = '_nullbox'
@@ -130,6 +130,10 @@ class _Tags(Box):
         Box.__init__(self, * II, ** KII )
         self.__class__.dblibrary.update_datablocks(self)
 
+    def after(self, A):
+        if A == 'name':
+            self.__class__.dblibrary.update_datablocks(self)
+    
 class _Tag(Box):
     name = '_abstract_tag'
     DNA = [('name', 'str', '_undef')]
@@ -139,17 +143,25 @@ class _Tag(Box):
 
 class Texttags(_Tags):
     name = 'texttags'
-    dblibrary = Texttags_D
+    dblibrary = datablocks.Texttags_D
 
 class Texttag(_Tag):
     name = 'texttag'
 
+    def after(self, A):
+        if A == 'name':
+            datablocks.Texttags_D.update_datablocks(datablocks.TTAGS)
+    
 class Blocktags(_Tags):
     name = 'blocktags'
     
-    dblibrary = Blocktags_D
+    dblibrary = datablocks.Blocktags_D
 
 class Blocktag(_Tag):
     name = 'blocktag'
 
+    def after(self, A):
+        if A == 'name':
+            datablocks.Blocktags_D.update_datablocks(datablocks.BTAGS)
+    
 members = (Null, Texttags, Texttag, Blocktags, Blocktag)

@@ -6,6 +6,8 @@ from meredith import datablocks
 
 from state.exceptions import LineOverflow
 
+from olivia.basictypes import interpret_int
+
 def accumulate_path(path):
     advance = 0
     for subpath in path:
@@ -29,8 +31,14 @@ def piecewise(points, y):
 class Frame(list):
     def __init__(self, sides):
         list.__init__(self, sides[:-1])
+        
         self.page = sides[-1]
-
+    
+    def assign(self, A, S):
+        if A == 'page':
+            self.page = interpret_int(S)
+            datablocks.DOCUMENT.layout_all()
+        
     def inside(self, x, y, radius):
         return y >= self[0][0][1] - radius and y <= self[1][-1][1] + radius and x >= piecewise(self[0], y) - radius and x <= piecewise(self[1], y) + radius
 

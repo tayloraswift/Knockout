@@ -25,79 +25,13 @@ from interface.base import accent
 
 accent_light = caramel.accent
 
-class Tabs_round(kookies.Tabs):
-    def __init__(self, x, y, width, height, default, callback=None, signals=(), longstrings=None):
-        kookies.Tabs.__init__(self, x, y, width, height, default=default, callback=callback, signals=signals)
-        
-        self._longstrings = longstrings
-        self._add_static_text(self._x, self.y_bottom + 20, self._longstrings[default], align=0)
-    
-    def focus(self, x):
-        self._active = self._target(x)
-        self._callback(self._signals[self._active])
-        
-        del self._texts[-1]
-        self._add_static_text(self._x, self.y_bottom + 20, self._longstrings[self._active], align=0)
-        
-    def draw(self, cr, hover=(None, None)):
-        self._render_fonts(cr)
-        
-        for i, button in enumerate(self._x_left):
-
-            if i == hover[1] or i == self._active:
-                cr.set_source_rgb( * accent)
-
-            else:
-                cr.set_source_rgb(0,0,0)
-
-            radius = self._height/2
-            x, y = button + int(round(self._button_width/2)), (self._y + self.y_bottom)//2
-            cr.arc(x, y, radius, 0, 2*pi)
-            cr.close_path()
-            cr.fill()
-                
-            if i == self._active:
-                cr.set_source_rgb(1,1,1)
-            
-            else:
-                cr.set_source_rgb(1,1,1)
-                
-                radius = self._height/2 - 1.5
-                x, y = button + int(round(self._button_width/2)), (self._y + self.y_bottom)//2
-                cr.arc(x, y, radius, 0, 2*pi)
-                cr.close_path()
-                cr.fill()
-                
-                if i == hover[1]:
-                    cr.set_source_rgb( * accent)
-
-                else:
-                    cr.set_source_rgb(0,0,0)
-            
-            cr.show_glyphs(self._texts[i])
-
-        cr.set_source_rgb(1,1,1)
-        radius = 10
-        width = self._texts[-1][-1][1] - self._texts[-1][0][1] + 20
-        y1, y2, x1, x2 = self.y_bottom + 5, self.y_bottom + 25, self._x -width//2, self._x + width//2
-        cr.arc(x1 + radius, y1 + radius, radius, 2*(pi/2), 3*(pi/2))
-        cr.arc(x2 - radius, y1 + radius, radius, 3*(pi/2), 4*(pi/2))
-        cr.arc(x2 - radius, y2 - radius, radius, 0*(pi/2), 1*(pi/2))
-        cr.arc(x1 + radius, y2 - radius, radius, 1*(pi/2), 2*(pi/2))
-        cr.close_path()
-
-        cr.fill()
-                
-        cr.set_source_rgb(0,0,0)
-        cr.show_glyphs(self._texts[-1])
 
 class Mode_switcher(object):
     def __init__(self, callback, default):
         self._hover_j = None
-        self._hover_memory = None
         signals = [('render', 'R'), ('text', 'T'), ('channels', 'C')]
         default = next(i for i, k in enumerate(signals) if k[0] == default)
-        self._switcher = Tabs_round(0, -70, 40, 30, default=default, callback=callback, signals=signals, longstrings=['View render', 'Edit text', 'Edit channels'])
+        self._switcher = kookies.Tabs_round(0, -70, 40, 30, default=default, callback=callback, signals=signals, longstrings=['View render', 'Edit text', 'Edit channels'])
 
     def is_over(self, x, y):
         return self._switcher.is_over(x - self._dx, y - self._dy)
@@ -109,24 +43,23 @@ class Mode_switcher(object):
 
     def render(self, cr, h, k):
         cr.save()
-        cr.translate( self._dx , k)
+        cr.translate(self._dx , k)
         
         self._switcher.draw(cr, hover=(None, self._hover_j))
         
         cr.restore()
     
     def press(self, x):
-        self._switcher.focus(x - self._dx)
+        self._switcher.focus(x - self._dx, 0)
     
     def hover(self, x):
-        self._hover_j = self._switcher.hover(x - self._dx, 0)
-        if self._hover_j != self._hover_memory:
+        j = self._switcher.hover(x - self._dx, 0)
+        if j != self._hover_j:
             noticeboard.redraw_becky.push_change()
-            self._hover_memory = self._hover_j
+            self._hover_j = j
     
     def clear_hover(self):
         self._hover_j = None
-        self._hover_memory = None
         noticeboard.redraw_becky.push_change()
 
 
@@ -168,31 +101,31 @@ class Document_toolbar(object):
         self._hover_memory = (None, None)
         
         y = 120
-        self._items.append(kookies.Button(5, y, 90, 30, callback=self._save, string='Save'))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=self._save, name='Save'))
         y += 30
-        self._items.append(kookies.Button(5, y, 90, 30, callback=PDF, string='PDF'))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=PDF, name='PDF'))
         
         y += 40
-        self._items.append(kookies.Button(5, y, 90, 30, callback=do.undo, string='Undo'))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=do.undo, name='Undo'))
         y += 30
-        self._items.append(kookies.Button(5, y, 90, 30, callback=do.redo, string='Redo'))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=do.redo, name='Redo'))
         
         y += 40
-        self._items.append(kookies.Button(5, y, 90, 30, callback=_add_channel, string='Add portal'))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=_add_channel, name='Add portal'))
 #        y += 30
-#        self._items.append(kookies.Button(5, y, 90, 30, callback=meredith.mipsy.add_tract, string='Add tract'))
+#        self._items.append(kookies.Button(5, y, 90, 30, callback=meredith.mipsy.add_tract, name='Add tract'))
 #        y += 30
-#        self._items.append(kookies.Button(5, y, 90, 30, callback=meredith.mipsy.add_repeat_tract, string='Add repeat'))
+#        self._items.append(kookies.Button(5, y, 90, 30, callback=meredith.mipsy.add_repeat_tract, name='Add repeat'))
         
         y += 50
-        self._items.append(kookies.Button(5, y, 90, 30, callback=_place_tags, string='Emphasis', params=('Ctrl i',) ))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=lambda: _place_tags('Ctrl i'), name='Emphasis'))
         y += 30
-        self._items.append(kookies.Button(5, y, 90, 30, callback=_punch_tags, string='x Emphasis', params=('Ctrl I',) ))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=lambda: _punch_tags('Ctrl I'), name='x Emphasis'))
 
         y += 40
-        self._items.append(kookies.Button(5, y, 90, 30, callback=_place_tags, string='Strong', params=('Ctrl b',) ))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=lambda: _place_tags('Ctrl b'), name='Strong'))
         y += 30
-        self._items.append(kookies.Button(5, y, 90, 30, callback=_punch_tags, string='x Strong', params=('Ctrl B',) ))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=lambda: _punch_tags('Ctrl B'), name='x Strong'))
 
         y += 50
         self._items.append(fields.Checkbox(15, y, 80, node=DOCUMENT, A='dual', name='Dual'.upper(), no_z=True))
@@ -283,9 +216,8 @@ class Document_toolbar(object):
         noticeboard.redraw_becky.push_change()
 
 
-def _replace_misspelled(word):
-    if word[0] == '“':
-        word = word[1:-1]
+def _replace_misspelled(word, label):
+    if label[0] == '“':
         wonder.struck.add(word)
         with open(wonder.additional_words_file, 'a') as A:
             A.write(word + '\n')
@@ -439,9 +371,10 @@ class Document_view(ui.Cell):
                         # used to keep track of ui redraws
                         self._sel_cursor = self.planecursor.j
                         self.planecursor.expand_cursors_word()
-                        suggestions = ['“' + ms[pair_i][2] + '”'] + [w.decode("utf-8") for w in wonder.struck.suggest(ms[pair_i][2].encode('latin-1', 'ignore'))]
-                        suggestions = list(zip(suggestions, [str(v) for v in suggestions]))
-                        menu.create(x, y, 200, suggestions, _replace_misspelled)
+                        suggestions = [ms[pair_i][2]] + [w.decode("utf-8") for w in wonder.struck.suggest(ms[pair_i][2].encode('latin-1', 'ignore'))]
+                        labels = suggestions[:]
+                        labels[0] = '“' + labels[0] + '”'
+                        menu.create(x, y, 200, list(zip(suggestions, labels)), _replace_misspelled)
 
                 except IndexError:
                     # occurs if an empty channel is selected
@@ -651,7 +584,7 @@ class Document_view(ui.Cell):
             
             #draw page border
             if pp == page_highlight:
-                cr.set_source_rgba( * accent_light, 0.7)
+                cr.set_source_rgba( * accent_light )
             else:
                 cr.set_source_rgba(0, 0, 0, 0.2)
 

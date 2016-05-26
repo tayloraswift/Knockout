@@ -2,12 +2,10 @@ from bisect import bisect
 from itertools import chain
 
 from state import constants, contexts, noticeboard
-#from style import styles
-from interface import kookies, ui, source
 
-from interface import fields, contents
+from interface import kookies, fields, contents, ui, source
 
-from edit import ops, caramel
+from edit import caramel
 
 from meredith.styles import Blockstyle
 from meredith.datablocks import DOCUMENT, TTAGS, BTAGS, TSTYLES, BSTYLES
@@ -28,41 +26,21 @@ def _Z_state(N, A, layer):
             return 1, '' # defined, but not applicable
     else:
         last = layer.Z[A]
-        return - (last['class'] is None), last.attrs[A] # undefined, unapplicable
+        return - (last.isbase), last.attrs[A] # undefined, unapplicable
 
-def _create_f_field(TYPE, x, y, width, attribute, after, name=''):
-    if TYPE == kookies.Checkbox:
-        z_y = y
-    else:
-        z_y = y - 7
-    
-    LIB = styles.PARASTYLES.active.content
-    read = lambda: LIB.active.F.attrs[attribute] if attribute in LIB.active.F.attrs else contexts.Text.f.Z[attribute].attrs[attribute]
-    ZI = kookies.Z_indicator(x, y, 10, height=24, 
-            read = lambda: _Z_state(lambda: LIB.active.F, contexts.Text.f, attribute, LIB.active.F.attrs),
-            copy_value = lambda: ops.f_set_attribute(attribute, read()), 
-            delete_value = lambda: LIB.active.F.remove_entry(attribute),
-            before=un.history.save, after= lambda: (styles.PARASTYLES.update_f(), meredith.mipsy.recalculate_all(), contexts.Text.update_force()))
-    return [ZI, TYPE(x + 25, z_y, width - 25,
-            read = read,
-            assign= lambda V: ops.f_set_attribute(attribute, V), 
-            before=un.history.save,
-            after=after,
-            name=name)]
-
-def _stack_row(i, row, y, gap, width, node):
+def _stack_row(i, row, y, gap, width, node, ctx):
     width += 10
     divisions = [r[0] * width for r in row]
     divisions = zip(divisions, divisions[1:] + [width], row)
     return _columns([TYPE(15 + a, y + i*gap, b - a - 10, 
                             node=node, 
                             A=A, 
-                            Z=lambda N, A: _Z_state(N, A, contexts.Text.bs),
+                            Z=lambda N, A: _Z_state(N, A, ctx()),
                             refresh=contexts.Text.update_force,
                             name=name) for a, b, (_, TYPE, A, name) in divisions])
 
-def _stack_properties(y, gap, width, node, L):
-    return chain.from_iterable(_stack_row(i, row, y, gap, width, node) for i, row in enumerate(L))
+def _stack_properties(y, gap, width, node, ctx, L):
+    return chain.from_iterable(_stack_row(i, row, y, gap, width, node, ctx) for i, row in enumerate(L))
 
 class _MULTI_COLUMN(object):
     def __init__(self, * args):
@@ -350,32 +328,19 @@ class Properties(_Properties_panel):
                                 refresh = self._style_synchronize,
                                 name = 'FONTSTYLE'))
 
-                    """
-                    _after_ = lambda: (styles.PARASTYLES.update_f(), meredith.mipsy.recalculate_all(), contexts.Text.update(), self._reconstruct())
-                    if styles.PARASTYLES.active.content.active.F is None:
-                        self._items.append(kookies.New_object_menu(15, y, KW,
-                                    value_push = ops.link_fontstyle, 
-                                    library = styles.FONTSTYLES,
-                                    TYPE = styles.DB_Fontstyle,
-                                    before = un.history.save, after = _after_, name='FONTSTYLE', source=self._partition))
-                    else:
-                        self._items.append(kookies.Object_menu(15, y, KW,
-                                    read = lambda: styles.PARASTYLES.active.content.active.F, 
-                                    value_push = ops.link_fontstyle, 
-                                    library = styles.FONTSTYLES, 
-                                    before = un.history.save, after = _after_, name='FONTSTYLE', source=self._partition))
-
+                    TS = contexts.Text.kbm['textstyle']
+                    if TS is not None:
                         y += 55
-                        props = [[(0, kookies.Blank_space, 'path', 'FONT FILE')],
-                                [(0, kookies.Blank_space, 'fontsize', 'FONT SIZE')],
-                                [(0, kookies.Blank_space, 'tracking', 'TRACKING')],
-                                [(0, kookies.Blank_space, 'shift', 'VERTICAL SHIFT')],
-                                [(0, kookies.Checkbox, 'capitals', 'CAPITALS')],
-                                [(0, kookies.Blank_space, 'color', 'COLOR')]
+                        props = [[(0, fields.Blank_space, 'path', 'FONT FILE')],
+                                [(0, fields.Blank_space, 'fontsize', 'FONT SIZE')],
+                                [(0, fields.Blank_space, 'tracking', 'TRACKING')],
+                                [(0, fields.Blank_space, 'shift', 'VERTICAL SHIFT')],
+                                [(0, fields.Checkbox, 'capitals', 'CAPITALS')],
+                                [(0, fields.Blank_space, 'color', 'COLOR')]
                                 ]
-                        self._items.extend(_stack_properties(_create_f_field, y, 45, KW, props, self._style_synchronize))
+                        self._items.extend(_stack_properties(y, 45, KW, TS, lambda: contexts.Text.ts, props))
                         y += 45*len(props)
-                """
+        
         elif self._tab == 'paragraph':
             self._heading = lambda: ', '.join(T['name'] if V == 1 else T['name'] + ' (' + str(V) + ')' for T, V in contexts.Text.bk['class'].items() if V)
             
@@ -411,7 +376,7 @@ class Properties(_Properties_panel):
                         [(0, fields.Blank_space, 'incr_place_value', 'INCREMENT'), (0.3, fields.Blank_space, 'incr_assign', 'BY')],
                         [(0, fields.Blank_space, 'show_count', 'COUNTER TEXT')],
                         ]
-                self._items.extend(_stack_properties(y, 45, KW, contexts.Text.kbs, props))
+                self._items.extend(_stack_properties(y, 45, KW, contexts.Text.kbs, lambda: contexts.Text.bs, props))
                 y += 45*len(props)
                 
         
@@ -426,36 +391,41 @@ class Properties(_Properties_panel):
                         copy = lambda N, active: None))
             
             y = self._y_incr() + 20
-            """
-            if styles.PTAGS.active is not None:
-                self._items.append(kookies.Blank_space(15, y, width=KW, 
-                        read = lambda: styles.PTAGS.active.name,
-                        assign = lambda N: styles.PTAGS.active.rename(N), 
-                        before=un.history.save, after=self._synchronize, name='TAG NAME'))
-            y += 80
             
-            self._items.append(kookies.Unordered( 15, y, KW - 50,
-                        library = styles.FTAGS, 
-                        display = lambda l: l.name,
-                        before = un.history.save, after = lambda: (meredith.mipsy.recalculate_all(), self._reconstruct()), refresh = self._reconstruct))
+            if contexts.Text.kbt is not None:
+                self._items.append(fields.Blank_space(15, y, KW, 
+                        node = contexts.Text.kbt,
+                        A = 'name', 
+                        refresh=self._synchronize, 
+                        name='TAG NAME', no_z=True))
+            y += 80
+
+            self._items.append(contents.Ordered(15, y, KW - 50,
+                        node = TTAGS, 
+                        context = contexts.Text, 
+                        slot = 'ktt', 
+                        display = lambda l: l['name'],
+                        copy = lambda N, active: None))
             
             y = self._y_incr() + 20
-            if styles.FTAGS.active is not None:
-                self._items.append(kookies.Blank_space(15, y, width=KW, 
-                        read = lambda: styles.FTAGS.active.name,
-                        assign = lambda N: styles.FTAGS.active.rename(N), 
-                        before=un.history.save, after=self._synchronize, name='TAG NAME'))
-            """
+            
+            if contexts.Text.ktt is not None:
+                self._items.append(fields.Blank_space(15, y, KW, 
+                        node = contexts.Text.ktt,
+                        A = 'name', 
+                        refresh=self._synchronize, 
+                        name='TAG NAME', no_z=True))
+            
         elif self._tab == 'page':
             self._heading = lambda: 'Document pages'
             
-            self._items.append(fields.Blank_space( 15, y, KW, 
+            self._items.append(fields.Blank_space(15, y, KW, 
                         node = DOCUMENT,
                         A = 'width',
                         name = 'WIDTH' ))
             
             y += 45
-            self._items.append(fields.Blank_space( 15, y, KW,
+            self._items.append(fields.Blank_space(15, y, KW,
                         node = DOCUMENT,
                         A = 'height',
                         name = 'HEIGHT' ))
@@ -477,10 +447,11 @@ class Properties(_Properties_panel):
         if self._tab == 'channels':
             self._heading = lambda: 'Channel ' + str(c)
             if c is not None:
-                self._items.append(kookies.Blank_space( 15, y, KW, 
-                        read = lambda: caramel.delight.R_FTX.channels[c].page,
-                        assign = lambda V: (caramel.delight.R_FTX.channels[c].set_page(datatypes['int'](V)), caramel.delight.R_FTX.layout()), 
-                        name = 'PAGE' ))
+                self._items.append(fields.Blank_space(15, y, KW, 
+                        node = caramel.delight.section['frames'][c],
+                        A = 'page', 
+                        name = 'PAGE',
+                        override_in = lambda N, A: N.page))
                 y += 30
             
         return y

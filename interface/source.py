@@ -14,7 +14,7 @@ from edit.text import expand_cursors_word
 #from edit.paperairplanes import interpret_rgba
 from state.exceptions import IO_Error
 
-from interface.base import Base_kookie, accent
+from interface.base import Kookie, accent
 
 xml_lexer = pygments_html.XmlLexer(stripnl=False)
 
@@ -56,7 +56,7 @@ def _paint_select(cl, sl, cx, sx, left, right):
         select.append((sl, left, sx))
     return select
 
-class Rose_garden(Base_kookie):
+class Rose_garden(Kookie):
     def __init__(self, x, y, width, e_acquire, before=lambda: None, after=lambda: None):
         self._BEFORE = before
         self._AFTER = after

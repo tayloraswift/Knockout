@@ -18,7 +18,6 @@ class Text_context(object):
         self.ktt = None
         self.kbs = None
         self.kbm = None
-        self.kts = None
         
         self.changed = set()
 
@@ -76,6 +75,9 @@ class Text_context(object):
             self.changed.update({'font'})
         elif A == 'kbt':
             self.kbt = node
+            self.changed.update({'tags'})
+        elif A == 'ktt':
+            self.ktt = node
             self.changed.update({'tags'})
         else:
             raise NotImplementedError

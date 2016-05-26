@@ -2,61 +2,17 @@ from itertools import groupby, chain
 
 from bulletholes.counter import TCounter as Counter
 
-from edit.arithmetic import NumericStringParser, ParseException
-
 from meredith.datablocks import Texttags_D, Blocktags_D, Textstyles_D
 import meredith
 
 from olivia.frames import Frames
 from olivia.poptarts import Sprinkles
-
-nsp = NumericStringParser()
+from olivia.basictypes import interpret_bool, interpret_int, interpret_float, interpret_float_tuple
 
 # attribute types #
 # stored as literals            : bool, int, float, float tuple
 # stored as reformatted string  : binomial, int set
 # stored as string              : str, rgba, 1_D, multi_D, fx, fn, fA, ftag, ptags
-
-def interpret_bool(b):
-    t = type(b)
-    if t in {bool, int}:
-        return bool(b)
-    elif t is str:
-        if b in {'True', '1'}:
-            return True
-        else:
-            return bool(interpret_int(b))
-    else:
-        return False
-
-def interpret_int(n, fail=0):
-    if type(n) is int:
-        return n
-    elif type(n) is float:
-        return int(n)
-    else:
-        try:
-            return int(nsp.eval(n))
-        except ParseException:
-            return fail
-    
-def interpret_float(f, fail=0):
-    if type(f) in {int, float}:
-        return f
-
-    else:
-        try:
-            v = nsp.eval(f)
-            if v.is_integer():
-                return int(v)
-            else:
-                return v
-        except ParseException:
-            return fail
-
-def interpret_float_tuple(value):
-    L = (interpret_float(val, fail=None) for val in value.split(','))
-    return (v for v in L if v is not None)
 
 def interpret_frame(S):
     frames = ((c for c in C.split(';') if c) for C in S.split('|') if C)

@@ -8,7 +8,7 @@ from edit.text import expand_cursors_word
 
 from olivia import literal
 
-from interface.base import Kookie, accent, xhover, text, set_fonts, show_text, plus_sign, minus_sign, downchevron, upchevron, cross
+from interface.base import Kookie, accent, text, set_fonts, show_text, plus_sign, minus_sign, downchevron, upchevron, cross
 from interface.menu import menu
 
 z_colors = ((0.6, 0.6, 0.6), (0.7, 0.7, 0.7), accent, accent, (0.55, 0.55, 0.55))
@@ -46,7 +46,7 @@ def _binary_Z(N, A):
     return A in N.attrs, ''
 
 class _Attribute(Kookie): # abstract base class
-    def __init__(self, WI, x, y, width, node, A, Z, name, refresh, no_z):        
+    def __init__(self, WI, x, y, width, node, A, Z, name, refresh, no_z, override_in=None):        
         self.is_over_hover = self.is_over
         
         self._node = node
@@ -55,6 +55,12 @@ class _Attribute(Kookie): # abstract base class
         self._refresh = refresh
         
         self._name = name
+        
+        if override_in is None:
+            self._in = self._attribute_read
+        else:
+            self._in = override_in
+            no_z = True
         
         if no_z:
             self._z_div = -inf
@@ -73,21 +79,22 @@ class _Attribute(Kookie): # abstract base class
         
         self.read()
     
-    def read(self):
-        A = self._A
-        self._status, bvalue = self._read_Z(self._node, A)
+    def _attribute_read(self, N, A):
+        self._status, bvalue = self._read_Z(N, A)
         if self._status > 0:
-            value = self._node.attrs[A]
+            value = N.attrs[A]
         else:
-            TYPE, default = next((TYPE, default) for a, TYPE, * default in type(self._node).DNA if a == A)
+            TYPE, default = next((TYPE, default) for a, TYPE, * default in type(N).DNA if a == A)
             if TYPE in literal and self._read_Z is _binary_Z:
-                value = self._node[A]
+                value = N[A]
             elif default:
                 value = default
             else:
                 value = bvalue
-        
-        self._WIDGET.store(value)
+        return value
+    
+    def read(self):
+        self._WIDGET.store(self._in(self._node, self._A))
 
     def _write(self, force=False):
         V, change = self._WIDGET.value()
@@ -346,8 +353,8 @@ class Checkbox(_Attribute):
     
     widgetclass = CB
     
-    def __init__(self, x, y, width, node, A, Z=_binary_Z, name='', refresh=lambda: None, no_z=False):        
-        _Attribute.__init__(self, ((name,), {}), x, y, width, node, A, Z, name, refresh, no_z)
+    def __init__(self, x, y, width, node, A, Z=_binary_Z, name='', refresh=lambda: None, no_z=False, override_in=None):        
+        _Attribute.__init__(self, ((name,), {}), x, y, width, node, A, Z, name, refresh, no_z, override_in)
 
 class BS(_Widget):
     exit = 'd'
@@ -613,8 +620,8 @@ class Blank_space(_Attribute):
     
     widgetclass = BS
     
-    def __init__(self, x, y, width, node, A, Z=_binary_Z, name='', refresh=lambda: None, no_z=False):        
-        _Attribute.__init__(self, ((name,), {}), x, y, width, node, A, Z, name, refresh, no_z)
+    def __init__(self, x, y, width, node, A, Z=_binary_Z, name='', refresh=lambda: None, no_z=False, override_in=None):        
+        _Attribute.__init__(self, ((name,), {}), x, y, width, node, A, Z, name, refresh, no_z, override_in)
 
 class OM(_Widget):
     
@@ -817,5 +824,5 @@ class Selection_menu(_Attribute):
     
     widgetclass = SM
     
-    def __init__(self, x, y, width, partition, menu_options, node, A, Z=_binary_Z, name='', refresh=lambda: None, no_z=False):
-        _Attribute.__init__(self, ((name, x, y, partition, self.menuexit, menu_options), {}), x, y, width, node, A, Z, name, refresh, no_z)
+    def __init__(self, x, y, width, partition, menu_options, node, A, Z=_binary_Z, name='', refresh=lambda: None, no_z=False, override_in=None):
+        _Attribute.__init__(self, ((name, x, y, partition, self.menuexit, menu_options), {}), x, y, width, node, A, Z, name, refresh, no_z, override_in)

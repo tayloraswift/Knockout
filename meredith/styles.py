@@ -32,11 +32,16 @@ class Textstyle(Box):
 
     DNA  = [('name',        'str', 'Untitled fontstyle')] + [A[:2] for A in _text_DNA]
     BASE = {A: D for A, TYPE, D in _text_DNA}
+
+    def __init__(self, * II, ** KII ):
+        Box.__init__(self, * II, ** KII )
+        self.isbase = False
     
     def after(self, A):
         if A == 'name':
             Textstyles.dblibrary.update_datablocks(datablocks.TSTYLES)
         else:
+            datablocks.BSTYLES.text_projections.clear()
             datablocks.DOCUMENT.layout_all()
     
     def __str__(self):
@@ -96,6 +101,10 @@ class Blockstyle(Box):
     BASE = {A: D for A, TYPE, D in _block_DNA}
     
     contains = Memberstyle
+
+    def __init__(self, * II, ** KII ):
+        Box.__init__(self, * II, ** KII )
+        self.isbase = False
     
     def after(self, A):
         datablocks.BSTYLES.block_projections.clear()
@@ -105,7 +114,7 @@ class Blockstyle(Box):
 class _Layer(dict):
     def __init__(self, BASE):
         dict.__init__(self, BASE)
-        BASE['class'] = None
+        BASE.isbase = True
         self.Z = {A: BASE for A in BASE}
         self.members = []
     

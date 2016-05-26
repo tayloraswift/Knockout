@@ -5,11 +5,8 @@ from itertools import chain, groupby
 from state.exceptions import IO_Error
 
 # boxes
-from meredith import box, elements, styles, paragraph
-
-boxes = {B.name: B for B in chain.from_iterable(M.members for M in (box, styles, elements, paragraph))}
-
-Text = paragraph.Text
+from meredith.paragraph import Text
+from meredith import boxes
 
 class Paine(parser.HTMLParser):
     def _cap(self):
@@ -17,16 +14,19 @@ class Paine(parser.HTMLParser):
 
     def _handle_implicit(self, name):
         pass
-
+    
+    def _virtual_paragraph(self):
+        pass
+    
     def feed(self, data):
         self.reset()
-        self._first = True
         self._implicit = False
         self._O = []
         self._C = [(None, self._O)]
         self._breadcrumbs = ['_nullbox']
         
         self.rawdata = data
+        self._virtual_paragraph()
         self.goahead(0)
         
         self._cap()
@@ -51,8 +51,8 @@ class Paine(parser.HTMLParser):
 
     def handle_startendtag(self, name, attrs):
         if name in boxes:
-            if not boxes[name].inline or boxes[self._breadcrumbs[-1]].textfacing:
-                self.append_to().append(boxes[name]( dict(attrs) ))
+            self._handle_implicit(name)
+            self.append_to().append(boxes[name]( dict(attrs) ))
     
     def handle_endtag(self, name):
         if name in boxes:
@@ -73,36 +73,16 @@ class Kevin(Paine): # to capture the first and last blobs
     def _cap(self):
         if self._breadcrumbs == ['_nullbox', 'p']:
             self.handle_endtag('p')
-    
+        
     def _handle_implicit(self, name):
         if self._implicit and not boxes[name].inline and self._breadcrumbs == ['_nullbox', 'p']: # nullify implicit paragraph if not needed
             self._C.pop()
             self._breadcrumbs.pop()
             self._implicit = False
     
-    def handle_startendtag(self, name, attrs):
-        if name in boxes:
-            if not boxes[name].inline or boxes[self._breadcrumbs[-1]].textfacing:
-                self._handle_implicit(name)
-            elif self._first and self._breadcrumbs[-1] == '_nullbox': # register the first blob
-                self.handle_starttag('p', {}) # virtual paragraph container
-                self._first = False
-                self._implicit = True
-            else:
-                return
-            self.append_to().append(boxes[name]( dict(attrs) ))
-    
-    def handle_data(self, data):
-        if boxes[self._breadcrumbs[-1]].textfacing:
-            pass
-        elif self._first and self._breadcrumbs[-1] == '_nullbox': # register the first blob
-            self.handle_starttag('p', {}) # virtual paragraph container
-            self._first = False
-            self._implicit = True
-        else:
-            return
-        O = self.append_to()
-        O.extend(data)
+    def _virtual_paragraph(self):
+        self.handle_starttag('p', {}) # virtual paragraph container
+        self._implicit = True
 
 Q = Paine()
 R = Kevin()
@@ -141,7 +121,6 @@ def _group_inline(L, indent=0):
             lines.append([[indent, ''.join(esc[c] if c in esc else c for c in C)]])
         else: # node
             lines += [_write_box(c, indent) for c in C]
-    
     return lines
 
 def _merge_inline(lines, expanded):
@@ -169,7 +148,7 @@ def _write_box(box, indent=0):
             A = _merge_inline(lines, expanded)
         else:
             A = [[indent, '<' + box.print_A() + '>']]
-            A.extend(chain.from_iterable(_write_L(N.content, indent + 1) for N in box.content))
+            A.extend(chain.from_iterable(_write_box(N, indent + 1) for N in box.content))
             A += [[indent, '</' + box.name + '>']]
         return A
     else:

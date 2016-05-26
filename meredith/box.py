@@ -123,6 +123,16 @@ class Box(dict):
         else:
             return ''.join((' <', self.name, '> ', repr(self.attrs), ' '))
 
+    ## FOR MODULES ##
+    
+    def find_nodes(self, * classes):
+        boxes = [e for e in self.content if type(e) is not str]
+        for cls in classes:
+            try:
+                yield boxes.pop(next(i for i, e in enumerate(boxes) if isinstance(e, cls)))
+            except StopIteration:
+                yield None
+
 class _Tags(Box):
     name = '_abstract_taglist'
 
@@ -163,5 +173,36 @@ class Blocktag(_Tag):
     def after(self, A):
         if A == 'name':
             datablocks.Blocktags_D.update_datablocks(datablocks.BTAGS)
+
+## MODULE BASE CLASSES ##
+
+class Inline(Box):
+    inline = True
+
+    def __init__(self, * args, ** kwargs):
+        Box.__init__(self, * args, ** kwargs)
+        self._load()
     
+    def _load(self):
+        raise NotImplementedError
+    
+    def layout_inline(self, * I ):
+        self._cast( * self._cast_inline( * I ) )
+    
+    def _cast(self, lines, width, A, D, paint=None, paint_annot=None):
+        self._LINES = lines
+        self.width = width
+        self.ascent = A
+        self.descent = D
+        self._paint = paint
+        self._paint_annot = paint_annot
+    
+    def deposit_glyphs(self, repository, x, y):
+        for line in self._LINES:
+            line.deposit(repository, x, y)
+        if self._paint is not None:
+            repository['_paint'].append((self._paint, x, y))
+        if self._paint_annot is not None:
+            repository['_paint_annot'].append((self._paint_annot, x, y))
+  
 members = (Null, Texttags, Texttag, Blocktags, Blocktag)

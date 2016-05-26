@@ -1,21 +1,18 @@
-from model.cat import cast_mono_line, calculate_vmetrics
-from elements.node import Inline_element, Node
-from model.olivia import Inline
+from layout.line import cast_mono_line, calculate_vmetrics
+from meredith.box import Box, Inline
 
 _namespace = 'mod:root'
 
-class Index(Node):
+class Index(Box):
     name = _namespace + ':i'
     textfacing = True
 
-class Radicand(Node):
+class Radicand(Box):
     name = _namespace + ':rad'
     textfacing = True
 
-class Root(Inline_element):
+class Root(Inline):
     name = _namespace
-    DNA = {'index': {}, 'radicand': {}}
-    documentation = [(0, name), (1, 'index'), (1, 'radicand')]
     
     def _load(self):
         self._index, self._radicand = self.find_nodes(Index, Radicand)
@@ -28,11 +25,12 @@ class Root(Inline_element):
         cr.close_path()
         cr.fill()
     
-    def cast_inline(self, LINE, x, y, PP, F, FSTYLE):
+    def _cast_inline(self, LINE, x, y, PP, F, FSTYLE):
         self._color = FSTYLE['color']
         y += FSTYLE['shift']
         
-        F_index, F_rad = self.styles(F, 'index', 'radicand')
+        #F_index, F_rad = self.styles(F, 'index', 'radicand')
+        F_index, F_rad = F, F ## stopgap
         
         rad = cast_mono_line(LINE, self._radicand.content, 13, PP, F_rad)
         rad_asc, rad_desc = calculate_vmetrics(rad)
@@ -73,20 +71,6 @@ class Root(Inline_element):
         
         width = kx - x + rfs * 0.35 + rad['advance']
         
-        return _MInline(NL, width, rad_asc + rfs*0.2, rad_desc, self._draw_radix)
-        
-    def __len__(self):
-        return 8
+        return NL, width, rad_asc + rfs*0.2, rad_desc, self._draw_radix
 
-class _MInline(Inline):
-    def __init__(self, lines, width, A, D, draw):
-        Inline.__init__(self, lines, width, A, D)
-        self._draw = draw
-
-    def deposit_glyphs(self, repository, x, y):
-        for line in self._LINES:
-            line.deposit(repository, x, y)
-        repository['_paint'].append((self._draw, x, y))
-
-members = [Root, Index, Radicand]
-inline = True
+members = (Root, Index, Radicand)

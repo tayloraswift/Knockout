@@ -222,17 +222,19 @@ class Paragraph_block(Blockstyle):
     planelevel = True
     
     IMPLY = {'class': 'body'}
+    
+    def __init__(self, * II, ** KII ):
+        Blockstyle.__init__(self, * II, ** KII )
+        self._OBSERVERLINES = []
+        
+        self.implicit_ = None
+        self.u = infinity
 
     def after(self, A):
         if A != 'class':
             datablocks.BSTYLES.block_projections.clear()
             datablocks.BSTYLES.text_projections.clear()
         datablocks.DOCUMENT.layout_all()
-    
-    def __init__(self, * II, ** KII ):
-        Blockstyle.__init__(self, * II, ** KII )
-        self.implicit_ = None
-        self.u = infinity
     
     def insert(self, at, text):
         self.content[at:at] = text

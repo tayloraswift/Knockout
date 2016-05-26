@@ -149,9 +149,9 @@ def cast_liquid_line(LINE, letters, startindex, width, leading, BLOCK, F, hyphen
             break
         
         else:
-            inline = letter.cast_inline(LINE, x, y, BLOCK, F, FSTYLE)
-            glyphwidth = inline.width                               #6. object
-            glyphappend((-89, x, y, FSTYLE, fstat, x + glyphwidth, inline))
+            letter.layout_inline(LINE, x, y, BLOCK, F, FSTYLE)
+            glyphwidth = letter.width                               #6. object
+            glyphappend((-89, x, y, FSTYLE, fstat, x + glyphwidth, letter))
             GI = -89
         
         x += glyphwidth
@@ -335,9 +335,9 @@ def cast_mono_line(PARENT, letters, leading, BLOCK, F):
             break
         
         else:
-            inline = letter.cast_inline(LINE, x, y, BLOCK, F, FSTYLE)
-            glyphwidth = inline.width                               #6. object
-            glyphappend((-89, x, y, FSTYLE, fstat, x + glyphwidth, inline))
+            letter.layout_inline(LINE, x, y, BLOCK, F, FSTYLE)
+            glyphwidth = letter.width                               #6. object
+            glyphappend((-89, x, y, FSTYLE, fstat, x + glyphwidth, letter))
             GI = -89
         
         x += glyphwidth + FSTYLE['tracking']
@@ -354,3 +354,13 @@ def cast_mono_line(PARENT, letters, leading, BLOCK, F):
     LINE['_X_'] = [g[1] for g in GLYPHS]
         
     return LINE
+
+def calculate_vmetrics(LINE):
+    ascent, descent = LINE['fstyle'].vmetrics()
+    
+    if LINE['GLYPHS']:
+        specials = [(glyph[6].ascent, glyph[6].descent) for glyph in LINE['GLYPHS'] if glyph[0] == -89]
+        if specials:
+            A, D = zip( * specials )
+            ascent, descent = max(ascent, max(A)), min(descent, min(D))
+    return ascent, descent

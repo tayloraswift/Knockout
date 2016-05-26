@@ -82,7 +82,7 @@ class Ordered(Kookie):
         if i > self._LMAX:
             i = self._LMAX
 
-        j = bisect(self._subdivisions, x)
+        j = bisect(self._subdivisions, x) + 1
         return i, j
      
     def focus(self, x, y):

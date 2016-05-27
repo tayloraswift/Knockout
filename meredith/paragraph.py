@@ -5,7 +5,7 @@ from math import inf as infinity
 from meredith.box import Box
 from meredith import datablocks
 from olivia import Tagcounter
-from meredith.styles import Blockstyle
+from meredith.styles import Blockstyle, block_styling_attrs
 
 from layout.line import Glyphs_line, cast_liquid_line, cast_mono_line
 
@@ -114,6 +114,43 @@ class Plane(Box):
     name = '_plane_'
     plane = True
 
+    def __init__(self, * II, ** KII ):
+        Box.__init__(self, * II, ** KII )
+        self._UU = []
+    
+    def layout(self, b=0, cascade=False):
+        calc_bstyle = datablocks.BSTYLES.project_b
+        frames = self['frames']
+        if b:
+            frames.start(self.content[b - 1].u_bottom)
+            gap = calc_bstyle(self.content[b - 1])['margin_bottom']
+            wheels = self.content[b - 1].wheels
+        else:
+            frames.start(0)
+            gap = -calc_bstyle(self.content[0])['margin_top']
+            wheels = Wheels()
+        
+        UU = self._UU
+        del UU[b:]
+        halt = False
+        for db, block in enumerate(self.content[b:]):
+            BSTYLE = calc_bstyle(block)
+            frames.space(gap + BSTYLE['margin_top'])
+            gap = BSTYLE['margin_bottom']
+            try:
+                if not halt:
+                    halt, wheels = block.layout(frames, BSTYLE, wheels, cascade and db)
+            except LineOverflow:
+                UU.append(block.u)
+                for blk in self.content[b + db:]:
+                    blk.erase()
+                if self.__class__ is not Section:
+                    raise LineOverflow
+                else:
+                    break
+            UU.append(block.u)
+        self.rebuilt = True
+    
     def which(self, x, u, r=-1):
         if r:
             b = max(0, bisect(self._UU, u) - 1)
@@ -126,50 +163,18 @@ class Plane(Box):
         i, * address = address
         return self.content[i].where(address)
 
+    def highlight_spelling(self):
+        return chain.from_iterable(block.highlight_spelling() for block in self.content)
+    
+    def transfer(self, S):
+        for block in self.content:
+            block.transfer(S)
+
 class Section(Plane):
     name = 'section'
     
     DNA  = [('repeat',      'int set',    ''),
             ('frames',    'frames',     '')]
-
-    def __init__(self, * II, ** KII ):
-        Plane.__init__(self, * II, ** KII )
-        self._UU = []
-    
-    def layout(self, b=0, cascade=False):
-        calc_bstyle = datablocks.BSTYLES.project_b
-        frames = self['frames']
-        BSTYLE = calc_bstyle(self.content[b])
-        if b:
-            frames.start(self.content[b - 1].u_bottom)
-            PREVSTYLE = calc_bstyle(self.content[b - 1])
-            frames.space(PREVSTYLE['margin_bottom'] + BSTYLE['margin_top'])
-            wheels = self.content[b - 1].wheels
-        else:
-            frames.start(0)
-            wheels = Wheels()
-        self.content[b].layout(frames, BSTYLE)
-        wheels = self.content[b].layout_observer(BSTYLE, wheels)
-        gap = BSTYLE['margin_bottom']
-        
-        UU = self._UU
-        del UU[b:]
-        UU.append(self.content[b].u)
-        halt = False
-        for db, block in enumerate(self.content[b + 1:]):
-            if not halt:
-                BSTYLE = calc_bstyle(block)
-                frames.space(gap + BSTYLE['margin_top'])
-                gap = BSTYLE['margin_bottom']
-                halt = block.layout(frames, BSTYLE, cascade)
-                if halt == -1:
-                    UU.append(block.u)
-                    for blk in self.content[b + 2 + db:]:
-                        blk.erase()
-                    break
-                wheels = block.layout_observer(BSTYLE, wheels)
-            UU.append(block.u)
-        self.rebuilt = True
     
     def transfer(self, S):
         for block in self.content:
@@ -181,9 +186,6 @@ class Section(Plane):
             P['_paint_annot'] = []
         S.annot.append(annot)
         self.rebuilt = False
-
-    def highlight_spelling(self):
-        return chain.from_iterable(block.highlight_spelling() for block in self.content)
 
 class Wheels(list):
     def __init__(self, dense = [0 for _ in range(13)], iso = {}):
@@ -216,25 +218,167 @@ class Wheels(list):
     def copy(self):
         return Wheels(self, self._iso)
 
-class Paragraph_block(Blockstyle):
-    name = 'p'
-    textfacing = True
+class Blockelement(Blockstyle):
     planelevel = True
     
     IMPLY = {'class': 'body'}
-    
+
     def __init__(self, * II, ** KII ):
         Blockstyle.__init__(self, * II, ** KII )
         self._OBSERVERLINES = []
+        self._LINES = []
         
         self.implicit_ = None
         self.u = infinity
 
     def after(self, A):
-        if A != 'class':
+        if A in block_styling_attrs:
             datablocks.BSTYLES.block_projections.clear()
             datablocks.BSTYLES.text_projections.clear()
         datablocks.DOCUMENT.layout_all()
+
+    def layout(self, frames, BSTYLE, wheels, cascade=False):
+        frames.save_u()
+        u, left, right, y, c, pn = frames.fit(BSTYLE['leading'])
+        
+        frames.restore_u()
+        if cascade and u - BSTYLE['leading'] == self.u:
+            self.layout_observer(BSTYLE, wheels, self.line0)
+            return True, self.wheels
+        else:
+            self.line0 = cast_mono_line({'l': 0, 'c': c, 'page': pn},
+                            [], 
+                            BSTYLE['leading'],
+                            self,
+                            Tagcounter())
+            self.line0.update({'u': u, 'left': left, 'start': left, 'x': left, 'y': y})
+            self.layout_observer(BSTYLE, wheels, self.line0)
+            self.u = u - BSTYLE['leading']
+            self.u_bottom = self._layout_block(frames, BSTYLE, cascade)
+            return False, self.wheels
+    
+    def layout_observer(self, BSTYLE, wheels, LINE):
+        self._OBSERVERLINES = []
+        
+        wheels = wheels.increment(BSTYLE['incr_place_value'], BSTYLE['incr_assign'])
+        
+        # print para flag
+        flag = (-2, -BSTYLE['leading'], 0, LINE['fstyle'], LINE['F'], 0)
+        self._OBSERVERLINES.append(Glyphs_line({'x': LINE['left'], 'y': LINE['y'], 'page': LINE['page'], 
+                                    'GLYPHS': [flag], 'BLOCK': self}))
+        # print counters
+        if BSTYLE['show_count'] is not None:
+            
+            wheelprint = cast_mono_line({'l': 0, 'c': LINE['c'], 'page': LINE['page']}, 
+                                BSTYLE['show_count'](wheels), 0, self, LINE['F'])
+            wheelprint['x'] = LINE['left'] + BSTYLE['margin_left'] - wheelprint['advance'] - BSTYLE['leading']*0.5
+            wheelprint['y'] = LINE['y']
+            self._OBSERVERLINES.append(wheelprint)
+        
+        self._left_edge = LINE['left'] - BSTYLE['leading']*0.5
+        self._whole_location = -1, LINE, flag
+        self.wheels = wheels
+
+    def erase(self):
+        self._LINES = []
+        self._OBSERVERLINES = []
+        self.u = infinity
+    
+class Paragraph_block(Blockelement):
+    name = 'p'
+    textfacing = True
+    
+    def _layout_block(self, frames, BSTYLE, cascade):
+        F = Tagcounter()
+        leading = BSTYLE['leading']
+        indent_range = BSTYLE['indent_range']
+        D, SIGN, K = BSTYLE['indent']
+        
+        R_indent = BSTYLE['margin_right']
+        
+        i = 0
+        l = 0
+        
+        LINES = []
+        LIQUID = self.content
+        total = len(LIQUID) + 1 # for imaginary </p> cap
+        while True:
+            u, left, right, y, c, pn = frames.fit(leading)
+            
+            # calculate indentation
+            if l in indent_range:
+                if K:
+                    INDLINE = cast_mono_line({'l': l, 'c': c, 'page': pn},
+                        LIQUID[i : i + K + (not bool(l))], 
+                        0,
+                        self,
+                        F.copy()
+                        )
+                    L_indent = BSTYLE['margin_left'] + D + INDLINE['advance'] * SIGN
+                else:
+                    L_indent = BSTYLE['margin_left'] + D
+            else:
+                L_indent = BSTYLE['margin_left']
+
+            # generate line objects
+            x1 = left + L_indent
+            x2 = right - R_indent
+            if x1 > x2:
+                x1, x2 = x2, x1
+            # initialize line
+            LINE = Glyphs_line({'left': left, 'start': x1, 'y': y, 'c': c, 'u': u, 'l': l, 'page': pn})
+            cast_liquid_line(LINE,
+                    LIQUID[i : i + 1989], 
+                    i, 
+                    
+                    x2 - x1, 
+                    BSTYLE['leading'],
+                    self,
+                    F.copy(), 
+                    
+                    hyphenate = BSTYLE['hyphenate']
+                    )
+
+            # alignment
+            if BSTYLE['align_to'] and LINE['GLYPHS']:
+                searchtext = LIQUID[i : i + len(LINE['GLYPHS'])]
+                ai = -1
+                for aligner in '\t' + BSTYLE['align_to']:
+                    try:
+                        ai = searchtext.index(aligner)
+                        break
+                    except ValueError:
+                        continue
+                anchor = x1 + (x2 - x1) * BSTYLE['align']
+                LINE['x'] = anchor - LINE['_X_'][ai]
+            else:
+                if not BSTYLE['align']:
+                    LINE['x'] = x1
+                else:
+                    rag = LINE['width'] - LINE['advance']
+                    LINE['x'] = x1 + rag * BSTYLE['align']
+            
+            l += 1
+            LINES.append(LINE)
+            
+            i = LINE['j']
+            if i == total:
+                break
+            
+            F = LINE['F']
+
+
+        self._LINES = LINES
+        self._UU = [line['u'] - leading for line in LINES]
+        self._search_j = [line['j'] for line in LINES]
+        return LINES[-1]['u']
+
+    def erase(self):
+        self._LINES = []
+        self._OBSERVERLINES = []
+        self._UU = []
+        self._search_j = []
+        self.u = infinity
     
     def insert(self, at, text):
         self.content[at:at] = text
@@ -356,141 +500,6 @@ class Paragraph_block(Blockstyle):
             return True, I, J
         else:
             return False, I, J
-    
-    def layout(self, frames, BSTYLE, cascade=False):
-        F = Tagcounter()
-        leading = BSTYLE['leading']
-        indent_range = BSTYLE['indent_range']
-        D, SIGN, K = BSTYLE['indent']
-        
-        R_indent = BSTYLE['margin_right']
-        
-        i = 0
-        l = 0
-        
-        LINES = []
-        LIQUID = self.content
-        total = len(LIQUID) + 1 # for imaginary </p> cap
-        
-        try:
-            u, left, right, y, c, pn = frames.fit(leading)
-            if cascade and u - leading == self.u:
-                return True
-            else:
-                self.u = u - leading
-        except LineOverflow:
-            self.erase()
-            return -1
-        
-        while True:
-            
-            # calculate indentation
-            if l in indent_range:
-                if K:
-                    INDLINE = cast_mono_line({'l': l, 'c': c, 'page': pn},
-                        LIQUID[i : i + K + (not bool(l))], 
-                        0,
-                        self,
-                        F.copy()
-                        )
-                    L_indent = BSTYLE['margin_left'] + D + INDLINE['advance'] * SIGN
-                else:
-                    L_indent = BSTYLE['margin_left'] + D
-            else:
-                L_indent = BSTYLE['margin_left']
-
-            # generate line objects
-            x1 = left + L_indent
-            x2 = right - R_indent
-            if x1 > x2:
-                x1, x2 = x2, x1
-            # initialize line
-            LINE = Glyphs_line({'left': left, 'start': x1, 'y': y, 'c': c, 'u': u, 'l': l, 'page': pn})
-            cast_liquid_line(LINE,
-                    LIQUID[i : i + 1989], 
-                    i, 
-                    
-                    x2 - x1, 
-                    BSTYLE['leading'],
-                    self,
-                    F.copy(), 
-                    
-                    hyphenate = BSTYLE['hyphenate']
-                    )
-
-            # alignment
-            if BSTYLE['align_to'] and LINE['GLYPHS']:
-                searchtext = LIQUID[i : i + len(LINE['GLYPHS'])]
-                ai = -1
-                for aligner in '\t' + BSTYLE['align_to']:
-                    try:
-                        ai = searchtext.index(aligner)
-                        break
-                    except ValueError:
-                        continue
-                anchor = x1 + (x2 - x1) * BSTYLE['align']
-                LINE['x'] = anchor - LINE['_X_'][ai]
-            else:
-                if not BSTYLE['align']:
-                    LINE['x'] = x1
-                else:
-                    rag = LINE['width'] - LINE['advance']
-                    LINE['x'] = x1 + rag * BSTYLE['align']
-            
-            l += 1
-            LINES.append(LINE)
-            
-            i = LINE['j']
-            if i == total:
-                break
-            
-            try:
-                u, left, right, y, c, pn = frames.fit(leading)
-            except LineOverflow:
-                self._polish(LINES)
-                return -1
-            F = LINE['F']
-
-        self._polish(LINES)
-        return False
-
-    def _polish(self, LINES):
-        leading = LINES[0]['leading']
-        self._LINES = LINES
-        self._UU = [line['u'] - leading for line in LINES]
-        self.u_bottom = LINES[-1]['u']
-        self._search_j = [line['j'] for line in LINES]
-
-    def layout_observer(self, BSTYLE, wheels):
-        self._OBSERVERLINES = []
-        
-        wheels = wheels.increment(BSTYLE['incr_place_value'], BSTYLE['incr_assign'])
-        if self._LINES:
-            LINE = self._LINES[0]
-            # print para flag
-            flag = (-2, -LINE['leading'], 0, LINE['fstyle'], LINE['F'], 0)
-            self._OBSERVERLINES.append(Glyphs_line({'x': LINE['left'], 'y': LINE['y'], 'page': LINE['page'], 
-                                        'GLYPHS': [flag], 'BLOCK': self}))
-            # print counters
-            if BSTYLE['show_count'] is not None:
-                
-                wheelprint = cast_mono_line({'l': 0, 'c': LINE['c'], 'page': LINE['page']}, 
-                                    BSTYLE['show_count'](wheels), 0, self, LINE['F'])
-                wheelprint['x'] = LINE['x'] - wheelprint['advance'] - BSTYLE['leading']*0.5
-                wheelprint['y'] = LINE['y']
-                self._OBSERVERLINES.append(wheelprint)
-            
-            self._left_edge = LINE['left'] - LINE['leading']*0.5
-            self._whole_location = -1, LINE, flag
-        self.wheels = wheels
-        return wheels
-
-    def erase(self):
-        self._LINES = []
-        self._OBSERVERLINES = []
-        self._UU = []
-        self._search_j = []
-        self.u = infinity
 
     def which(self, x, u, r):
         if r:

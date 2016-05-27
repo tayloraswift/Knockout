@@ -84,6 +84,7 @@ class Frame(list):
 class Frames(list):
     def __init__(self, frames):
         list.__init__(self, (Frame(F) for F in frames))
+        self._savestack = []
         self._straighten()
     
     def _straighten(self):
@@ -105,6 +106,12 @@ class Frames(list):
         except ValueError:
             self.overflow = True
             raise LineOverflow
+    
+    def save_u(self):
+        self._savestack.append((self._u, self._c, self._top, self._limit, self._y0))
+    
+    def restore_u(self):
+        self._u, self._c, self._top, self._limit, self._y0 = self._savestack.pop()
     
     def _next_frame(self):
         self._c += 1
@@ -249,3 +256,19 @@ class Frames(list):
     
     def __repr__(self):
         return ' |\n    '.join(repr(F) for F in self)
+
+class Subcell(object):
+    def __init__(self, outer, a, b):
+        self._outer = outer
+        self._a = a
+        self._b = b
+        
+        self.space = outer.space
+        self.start = outer.start
+        self.save_u = outer.save_u
+        self.restore_u = outer.restore_u
+    
+    def fit(self, du):
+        u, x1, x2, y, c, pn = self._outer.fit(du)
+        width = x2 - x1
+        return u, x1 + width*self._a, x1 + width*self._b, y, c, pn

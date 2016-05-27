@@ -1,10 +1,10 @@
 from bisect import bisect
 from itertools import chain, accumulate
 
-from model.olivia import Flowing_text, Block
-from model.george import Subcell
+from olivia.frames import Subcell
 from interface.base import accent
-from elements.node import Block_element, Node
+from meredith.box import Box
+from meredith.paragraph import Plane, Blockelement
 from state.exceptions import LineOverflow
 
 class Matrix(list):
@@ -27,12 +27,12 @@ def _build_matrix(data):
     length = 0
     for i, row in enumerate(data):
         # append rows to matrix if needed
-        height = max(r.rs for r in row)
+        height = max(r['rowspan'] for r in row)
         if i + height > len(MATRIX):
             MATRIX += [[None] for k in range(i + height - len(MATRIX))]
 
         # extend matrix to fit the width
-        length = max(length, sum(r.cs for r in row) + sum(k is not None for k in MATRIX[i]))
+        length = max(length, sum(r['colspan'] for r in row) + sum(k is not None for k in MATRIX[i]))
         empty = [None] * length
         if length > len(MATRIX[-1]):
             MATRIX[:] = [R + empty[:max(0, length - len(R))] for R in MATRIX]
@@ -48,39 +48,31 @@ def _build_matrix(data):
                 except IndexError:
                     break
                 cell.nail(i, s)
-                for rs in range(cell.rs):
-                    for cs in range(cell.cs):
+                for rs in range(cell['rowspan']):
+                    for cs in range(cell['colspan']):
                         MATRIX[i + rs][s + cs] = cell
     return MATRIX
 
-class _Table_cell(Flowing_text):
-    def __init__(self, td):
-        Flowing_text.__init__(self, td.content)
-        self.rs = td['rowspan']
-        self.cs = td['colspan']
-    
+class Table_td(Plane):
+    name = 'td'
+    DNA = [('rowspan', 'int', 1), ('colspan', 'int', 1)]
+
     def nail(self, i, j):
         self.col = j
         self.row = i
 
-class Table_td(Node):
-    name = 'td'
-    ADNA = [('rowspan', 1, 'int'), ('colspan', 1, 'int')]
-
-class Table_tr(Node):
+class Table_tr(Box):
     name = 'tr'
 
-class Table(Block_element):
+class Table(Blockelement):
     name = 'table'
-    DNA = {'table': {}, 'thead': {}, 'tleft': {}}
 
-    ADNA = [('distr', '', 'float tuple'), ('celltop', 0, 'float'), ('cellbottom', 0, 'float'), ('hrules', set(), 'int set'), ('vrules', set(), 'int set'), ('rulemargin', 0, 'int'), ('rulewidth', 1, 'float')]
-    documentation = [(0, name), (1, 'tr'), (2, 'td')]
+    DNA = [('distr', 'float tuple', ''), ('celltop', 'float', 0), ('cellbottom', 'float', 0), ('hrules', 'int set', set()), ('vrules', 'int set', set()), ('rulemargin', 'int', 0), ('rulewidth', 'float', 1)]
 
     def _load(self):
-        self._CELLS = [[_Table_cell(td) for td in tr.content] for tr in self.content]
+        self._CELLS = [tr.content for tr in self.content]
         self._MATRIX = _build_matrix(self._CELLS)
-        self._FLOW = [FTX for row in self._CELLS for FTX in row]
+        self._FLOW = list(chain.from_iterable(self._CELLS))
         
         # columns
         cl = len(self._MATRIX[0])
@@ -144,8 +136,8 @@ class Table(Block_element):
         return _MBlock(self._FLOW, grid, table, self.regions, self.PP)
 
 members = [Table, Table_tr, Table_td]
-inline = False
 
+"""
 class _MBlock(Block):
     def __init__(self, FLOW, grid, table, regions, PP):
         self._table = table
@@ -206,3 +198,4 @@ class _MBlock(Block):
         repository['_paint_annot'].append((self._print_annot, 0, 0))
         for A in self._FLOW:
             A.deposit(repository)
+"""

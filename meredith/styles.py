@@ -81,6 +81,8 @@ _block_DNA = [('hyphenate',       'bool',   False),
             ('incr_assign',     'fn',       None),
             ('show_count',      'farray',   None)]
 
+block_styling_attrs = [a[0] for a in _block_DNA]
+
 class Blockstyle(Box):
     name = 'blockstyle'
     

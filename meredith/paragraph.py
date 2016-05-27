@@ -48,7 +48,7 @@ class Meredith(Box):
         self._recalc_page()
         self._sorted_pages.clear()
         for section in self.content:
-            section.layout()
+            section.layout(section['frames'])
 
     def transfer(self):
         if any(section.rebuilt for section in self.content) or not self._sorted_pages:
@@ -118,15 +118,19 @@ class Plane(Box):
         Box.__init__(self, * II, ** KII )
         self._UU = []
     
-    def layout(self, b=0, cascade=False):
+    def layout(self, frames=None, b=0, u=0, cascade=False, overlay=None):
         calc_bstyle = datablocks.BSTYLES.project_b
-        frames = self['frames']
+        if frames is None:
+            frames = self['frames']
+        if overlay is not None:
+            for block in self.content:
+                block.implicit_ = overlay
         if b:
             frames.start(self.content[b - 1].u_bottom)
             gap = calc_bstyle(self.content[b - 1])['margin_bottom']
             wheels = self.content[b - 1].wheels
         else:
-            frames.start(0)
+            frames.start(u)
             gap = -calc_bstyle(self.content[0])['margin_top']
             wheels = Wheels()
         
@@ -139,7 +143,7 @@ class Plane(Box):
             gap = BSTYLE['margin_bottom']
             try:
                 if not halt:
-                    halt, wheels = block.layout(frames, BSTYLE, wheels, cascade and db)
+                    halt, wheels = block.layout(frames, BSTYLE, wheels, cascade and db, overlay)
             except LineOverflow:
                 UU.append(block.u)
                 for blk in self.content[b + db:]:
@@ -158,10 +162,6 @@ class Plane(Box):
             return ((b, block), * block.which(x, u, r - 1))
         else:
             return ()
-
-    def where(self, address):
-        i, * address = address
-        return self.content[i].where(address)
 
     def highlight_spelling(self):
         return chain.from_iterable(block.highlight_spelling() for block in self.content)
@@ -230,6 +230,11 @@ class Blockelement(Blockstyle):
         
         self.implicit_ = None
         self.u = infinity
+        
+        self._load()
+    
+    def _load(self):
+        pass
 
     def after(self, A):
         if A in block_styling_attrs:
@@ -237,7 +242,17 @@ class Blockelement(Blockstyle):
             datablocks.BSTYLES.text_projections.clear()
         datablocks.DOCUMENT.layout_all()
 
-    def layout(self, frames, BSTYLE, wheels, cascade=False):
+    def which(self, x, u, r):
+        return ()
+
+    def where(self, address):
+        if address:
+            i, * address = address
+            return self.content[i].where(address)
+        else:
+            return self._whole_location
+    
+    def layout(self, frames, BSTYLE, wheels, cascade, overlay):
         frames.save_u()
         u, left, right, y, c, pn = frames.fit(BSTYLE['leading'])
         
@@ -251,10 +266,10 @@ class Blockelement(Blockstyle):
                             BSTYLE['leading'],
                             self,
                             Tagcounter())
-            self.line0.update({'u': u, 'left': left, 'start': left, 'x': left, 'y': y})
+            self.line0.update({'u': u, 'left': left, 'start': left, 'width': right - left, 'x': left, 'y': y})
             self.layout_observer(BSTYLE, wheels, self.line0)
             self.u = u - BSTYLE['leading']
-            self.u_bottom = self._layout_block(frames, BSTYLE, cascade)
+            self.u_bottom = self._layout_block(frames, BSTYLE, cascade, overlay)
             return False, self.wheels
     
     def layout_observer(self, BSTYLE, wheels, LINE):
@@ -275,7 +290,7 @@ class Blockelement(Blockstyle):
             wheelprint['y'] = LINE['y']
             self._OBSERVERLINES.append(wheelprint)
         
-        self._left_edge = LINE['left'] - BSTYLE['leading']*0.5
+        self.left_edge = LINE['left'] - BSTYLE['leading']*0.5
         self._whole_location = -1, LINE, flag
         self.wheels = wheels
 
@@ -284,11 +299,32 @@ class Blockelement(Blockstyle):
         self._OBSERVERLINES = []
         self.u = infinity
     
+    def transfer(self, S):
+        raise NotImplementedError
+
+    def _cursor(self, i):
+        l = 0
+        line = self.line0
+        if i == -1:
+            x = line['left']
+        else:
+            x = line['left'] + line['width']
+        return l, line, x
+    
+    def highlight(self, a, b):
+        try:
+            l1, first, x1 = self._cursor(a)
+            l2, last, x2 = self._cursor(b)
+        except IndexError:
+            return []
+        
+        return [(first['y'] - first['leading'], x1, x2, self.u - self.u_bottom, first['page'])]
+    
 class Paragraph_block(Blockelement):
     name = 'p'
     textfacing = True
     
-    def _layout_block(self, frames, BSTYLE, cascade):
+    def _layout_block(self, frames, BSTYLE, cascade, overlay):
         F = Tagcounter()
         leading = BSTYLE['leading']
         indent_range = BSTYLE['indent_range']
@@ -504,7 +540,7 @@ class Paragraph_block(Blockelement):
     def which(self, x, u, r):
         if r:
             l = max(0, bisect(self._UU, u) - 1)
-            if l or r > 0 or x > self._left_edge:
+            if l or r > 0 or x > self.left_edge:
                 line = self._LINES[l]
                 return ((line.I(x), None),)
         return ()

@@ -113,6 +113,9 @@ class Frames(list):
     def restore_u(self):
         self._u, self._c, self._top, self._limit, self._y0 = self._savestack.pop()
     
+    def read_u(self):
+        return self._u
+    
     def _next_frame(self):
         self._c += 1
         try:
@@ -142,6 +145,10 @@ class Frames(list):
             self._u = u
             return u, x1, x2, y, self._c, self[self._c].page
     
+    def at(self, u):
+        c = bisect(self._segments, u) - 1
+        return piecewise(self._run[0][c], u), piecewise(self._run[1][c], u)
+        
     def which(self, x0, y0, radius):
         norm = datablocks.DOCUMENT.normalize_XY
         for c, frame in enumerate(self):
@@ -267,6 +274,8 @@ class Subcell(object):
         self.start = outer.start
         self.save_u = outer.save_u
         self.restore_u = outer.restore_u
+        self.read_u = outer.read_u
+        self.at = outer.at
     
     def fit(self, du):
         u, x1, x2, y, c, pn = self._outer.fit(du)

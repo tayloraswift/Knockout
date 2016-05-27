@@ -2,6 +2,8 @@ from itertools import chain
 
 from edit import cursor
 
+from meredith.paragraph import Paragraph_block
+
 from IO import un
 
 class Keyboard(dict):
@@ -68,11 +70,18 @@ class Keyboard(dict):
         
         elif name == 'paragraph':
             un.history.undo_save(2)
-            P1 = cursor.fcursor.PLANE.content[CURSOR[0]].copy_empty()
-            if len(CURSOR) == 2:
-                cursor.fcursor.insert([P1, P1])
+            P0 = cursor.fcursor.PLANE.content[max(0, CURSOR[0] - 1)]
+            P1 = cursor.fcursor.PLANE.content[CURSOR[0]]
+            if isinstance(P0, Paragraph_block):
+                P = P0.copy_empty()
+            elif isinstance(P1, Paragraph_block):
+                P = P1.copy_empty()
             else:
-                cursor.fcursor.insert([P1])
+                P = Paragraph_block({})
+            if len(CURSOR) == 2:
+                cursor.fcursor.insert([P, P])
+            else:
+                cursor.fcursor.insert([P])
             
         elif name == 'Return':
             un.history.undo_save(1)

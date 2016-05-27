@@ -136,8 +136,11 @@ class Box(dict):
         else:
             return ''.join((' <', self.name, '> ', repr(self.attrs), ' '))
 
-    ## FOR MODULES ##
     
+    def where(self, address):
+        i, * address = address
+        return self.content[i].where(address)
+    ## FOR MODULES ##
     def find_nodes(self, * classes):
         boxes = [e for e in self.content if type(e) is not str]
         for cls in classes:

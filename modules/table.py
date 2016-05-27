@@ -67,7 +67,8 @@ class Table_tr(Box):
 class Table(Blockelement):
     name = 'table'
 
-    DNA = [('distr', 'float tuple', ''), ('celltop', 'float', 0), ('cellbottom', 'float', 0), ('hrules', 'int set', set()), ('vrules', 'int set', set()), ('rulemargin', 'int', 0), ('rulewidth', 'float', 1)]
+    DNA = [('class', 'blocktc', 'body'), ('distr', 'float tuple', ''), ('celltop', 'float', 0), ('cellbottom', 'float', 0), ('hrules', 'int set', set()), ('vrules', 'int set', set()), ('rulemargin', 'int', 0), ('rulewidth', 'float', 1),
+            ('cl_table', 'blocktc', 'tablecell'), ('cl_thead', 'blocktc', 'emphasis'), ('cl_tleft', 'blocktc', 'emphasis')]
 
     def _load(self):
         self._CELLS = [tr.content for tr in self.content]
@@ -87,39 +88,54 @@ class Table(Blockelement):
                 'hrules': [i for i in self['hrules'] if 0 <= i <= r], 
                 'vrules': [i for i in self['vrules'] if 0 <= i <= cl]}
 
-    def regions(self, x, y, bounds, yy):
-        x1, x2 = bounds(y)
-        r = bisect(yy, y) - 1
-        c = max(0, bisect(self._MATRIX.partitions, (x - x1) / (x2 - x1)) - 1)
-        try:
-            return self._FLOW.index(self._MATRIX[r][c])
-        except (IndexError, ValueError):
-            return None
+    def which(self, x, u, r):
+        if (r > 1 or r < 0) and x > self.left_edge:
+            x1, x2 = self._frames.at(u)
+            R = bisect(self._row_u, u) - 1
+            C = max(0, bisect(self._MATRIX.partitions, (x - x1) / (x2 - x1)) - 1)
+            try:
+                cell = self._MATRIX[R][C]
+            except (IndexError, ValueError):
+                return ()
+            for m, tr in enumerate(self.content):
+                for n, td in enumerate(tr.content):
+                    if td is cell:
+                        return ((m, tr), (n, td), * cell.which(x, u, r - 2))
+        return ()
+
+
     
-    def typeset(self, bounds, c, y, y2, overlay):
-        P_table, P_head, P_left = self.styles(overlay, 'table', 'thead', 'tleft')
-        head = P_table + P_head
-        left = P_table + P_left
+    def _layout_block(self, frames, BSTYLE, cascade, overlay):
+        self._frames = frames
         
-        row_y = [y] * (len(self._MATRIX) + 1)
+        P_table = self['cl_table']
+        head = P_table + self['cl_thead']
+        left = P_table + self['cl_tleft']
+        
+        row_u = [0] * (len(self._MATRIX) + 1)
         part = self._MATRIX.partitions
         cellbottom = self['cellbottom']
         for r, overlay, row in ((c, P_table, b) if c else (c, head, b) for c, b in enumerate(self._CELLS)):
-            y = row_y[r] + self['celltop']
+            y = row_u[r] + self['celltop']
             for i, cell in enumerate(row):
-                # calculate percentages
-                cellbounds = Subcell(bounds, part[cell.col], part[cell.col + cell.cs])
                 if not i:
-                    ol = overlay + P_left
+                    ol = overlay + left
                 else:
                     ol = overlay
-                cell.layout(cellbounds, c, y, ol)
                 
-                bottom = cell.y + cellbottom
-                ki = r + cell.rs
-                if bottom > row_y[ki]:
-                    row_y[ki] = bottom
+                frames.save_u()
+                cell.layout(Subcell(frames, part[cell.col], part[cell.col + cell['colspan']]), 
+                            u = frames.read_u(), overlay = ol)
+                bottom = frames.read_u() + cellbottom
+                frames.restore_u()
+                
+                ki = r + cell['rowspan']
+                if bottom > row_u[ki]:
+                    row_u[ki] = bottom
+            frames.start(row_u[r + 1])
         
+        self._row_u = row_u
+        """
         table = {'_row_y': row_y, '_bounds': bounds.bounds}
         table.update(self._table)
         # calculate grid
@@ -133,8 +149,19 @@ class Table(Blockelement):
         
         if grid[-1][-1][1] > y2:
             raise LineOverflow
-        return _MBlock(self._FLOW, grid, table, self.regions, self.PP)
+        """
+        return row_u[-1]
 
+    def run_stats(self, spell):
+        return sum(block.run_stats(spell) for block in chain.from_iterable(cell.content for cell in self._FLOW))
+
+    def highlight_spelling(self):
+        return chain.from_iterable(cell.highlight_spelling() for cell in self._FLOW)
+    
+    def transfer(self, S):
+        for cell in self._FLOW:
+            cell.transfer(S)
+        
 members = [Table, Table_tr, Table_td]
 
 """

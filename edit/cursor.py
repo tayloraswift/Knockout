@@ -61,12 +61,22 @@ class PlaneCursor(object):
             self.PG = p
         x, y = DOCUMENT.normalize_XY(x, y, self.PG)
         return x, self.section['frames'].y2u(y, c)
-            
+    
+    def _next_textfacing(self, j, direction):
+        if direction:
+            i, block = next((i, block) for i, block in enumerate(self._blocks[j:]) if type(block).textfacing)
+            return j + i, 0
+        else:
+            i, block = next((i, block) for i, block in enumerate(self._blocks[j::-1]) if type(block).textfacing)
+            j2 = len(block.content)
+            return j - i, j2
+    
     def target(self, x, y):
         x, u = self._to_c_global(x, y)
         
         address, stack = zip( * self.section.which(x, u) )
-        address_i, plane = next(enumerate(box for box in chain(reversed(stack), (self.section,)) if box is not None and type(box).plane))
+        address_i, plane = next((i, box) for i, box in enumerate(chain(reversed(stack), (self.section,))) if box is not None and type(box).plane)
+        address_i = len(address) - address_i
         if plane is not self.PLANE:
             self._set_plane(plane, [self.plane_address[0]] + list(address[:address_i]))
         
@@ -78,7 +88,11 @@ class PlaneCursor(object):
 
     def target_select(self, x, y):
         x, u = self._to_c_local(x, y)
-        self.j, *_ = zip( * self.PLANE.which(x, u, len(self.i)) )
+        j, *_ = zip( * self.PLANE.which(x, u, len(self.i)) )
+        if len(j) < len(self.i):
+            self.j = self._next_textfacing(j[0], j < self.i)
+        else:
+            self.j = j
     
     ## TEXT OPERATIONS ##
     
@@ -212,15 +226,12 @@ class PlaneCursor(object):
     
     def _relayout(self):
         if self.PLANE is self.section:
-            self.section.layout(self.i[0], True)
+            self.section.layout(b=self.i[0], cascade=True)
         else:
-            self.section.layout(self.plane_address[1], True)
+            self.section.layout(b=self.plane_address[1], cascade=True)
     
     def run_stats(self, spell=False):
-        word_total = 0
-        for block in self._blocks:
-            word_total += block.run_stats(spell)
-        self.word_total = word_total
+        self.word_total = sum(block.run_stats(spell) for block in self._blocks)
     
     ## IN/OUT ##
     

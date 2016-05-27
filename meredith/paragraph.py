@@ -173,7 +173,7 @@ class Plane(Box):
 class Section(Plane):
     name = 'section'
     
-    DNA  = [('repeat',      'int set',    ''),
+    DNA  = [('repeat',      'int',    1),
             ('frames',    'frames',     '')]
     
     def transfer(self, S):

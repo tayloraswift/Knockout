@@ -10,7 +10,7 @@ from meredith.datablocks import DOCUMENT
 from edit import wonder
 from edit import cursor, caramel
 
-from IO import un, do
+from IO import un
 
 from keyboard import keyboard
 
@@ -106,9 +106,9 @@ class Document_toolbar(object):
         self._items.append(kookies.Button(5, y, 90, 30, callback=PDF, name='PDF'))
         
         y += 40
-        self._items.append(kookies.Button(5, y, 90, 30, callback=do.undo, name='Undo'))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=un.history.back, name='Undo'))
         y += 30
-        self._items.append(kookies.Button(5, y, 90, 30, callback=do.redo, name='Redo'))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=un.history.forward, name='Redo'))
         
         y += 40
         self._items.append(kookies.Button(5, y, 90, 30, callback=_add_channel, name='Add portal'))

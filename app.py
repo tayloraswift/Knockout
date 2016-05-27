@@ -5,7 +5,7 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, GObject
 
 from state import noticeboard, constants
-from IO import do
+from IO import un
 from edit import cursor
 from keyboard import compose
 from meredith.smoothing import fontsettings
@@ -274,9 +274,9 @@ class Display(Gtk.Window):
                 self._active.key_input('Ctrl Lock', chr(Gdk.keyval_to_unicode(e.keyval)))
             
             elif name == 'z':
-                do.undo()
+                un.history.back()
             elif name == 'y':
-                do.redo()
+                un.history.forward()
             
             elif name == 'v':
                 self._active.key_input('Paste', self.clipboard.wait_for_text())

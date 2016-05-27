@@ -1,7 +1,7 @@
-#from style import styles
-#from model import meredith
-#from IO.kevin import miniserialize, deserialize
-#from edit import cursor, caramel
+from meredith import datablocks
+from IO.tree import miniserialize, deserialize
+from edit import cursor, caramel
+from state import contexts
 import time
 
 class UN(object):
@@ -12,7 +12,7 @@ class UN(object):
         self._state = None
     
     def save(self):
-        """
+        
         if len(self._history) > 989:
             del self._history[:89]
             self._i -= 89
@@ -20,35 +20,45 @@ class UN(object):
         if len(self._history) > self._i:
             del self._history[self._i:]
                 
-        kitty = miniserialize([F.NODE for F in meredith.mipsy])
-        page_xy = (meredith.page.WIDTH, meredith.page.HEIGHT)
+        kitty = list(map(lambda k: miniserialize([k]), (datablocks.TTAGS, datablocks.BTAGS, datablocks.DOCUMENT, datablocks.TSTYLES, datablocks.BSTYLES)))
         
-        textcontexts = cursor.fcursor.polaroid()
-        channelcontexts = caramel.delight.polaroid()
-        
-        # save styles
-        PPP = styles.PARASTYLES.polaroid()
-        FFF = {N: F.polaroid() for N, F in styles.FONTSTYLES.items()}
+        ct, c = caramel.delight.at()
+        DATA = {'text': (cursor.fcursor.plane_address, cursor.fcursor.i, cursor.fcursor.j), 'channels': (datablocks.DOCUMENT.content.index(ct), c)}
 
-        PTT = [T.polaroid() for T in styles.PTAGS.values() if not T.is_group]
-        FTT = [T.polaroid() for T in styles.FTAGS.values() if not T.is_group]
-
-        self._history.append({'kitty': kitty, 'contexts': {'text': textcontexts, 'channels': channelcontexts}, 'styles': {'PARASTYLES': PPP, 'FONTSTYLES': FFF, 'PTAGLIST': PTT, 'FTAGLIST': FTT}, 'page': page_xy})
+        self._history.append((kitty, DATA, contexts.Text.index_k()))
         self._i = len(self._history)
-        """
+        
     def pop(self):
         del self._history[-1]
         self._i = len(self._history)
         
     def _restore(self, i):
-        image = self._history[i]
-        styles.faith(image['styles'])
+        kitty, DATA, activity = self._history[i]
         
-        meredith.page.WIDTH, meredith.page.HEIGHT = image['page']
-        meredith.mipsy.__init__(deserialize(image['kitty']))
+        kttags, kbtags, kdocument, ktstyles, kbstyles = kitty
+        TTAGS = deserialize(kttags)[0]
+        BTAGS = deserialize(kbtags)[0]
         
-        cursor.fcursor.__init__(image['contexts']['text'])
-        caramel.delight.__init__(image['contexts']['channels'])
+        datablocks.TTAGS.__init__(TTAGS.attrs, TTAGS.content)
+        datablocks.BTAGS.__init__(BTAGS.attrs, BTAGS.content)
+        
+        TSTYLES = deserialize(ktstyles)[0]
+        datablocks.TSTYLES.__init__(TSTYLES.attrs, TSTYLES.content)
+        
+        BSTYLES = deserialize(kbstyles)[0]
+        datablocks.BSTYLES.__init__(BSTYLES.attrs, BSTYLES.content)
+        
+        DOC = deserialize(kdocument)[0]
+        datablocks.DOCUMENT.__init__(DOC.attrs, DOC.content)
+        datablocks.DOCUMENT.layout_all()
+        
+        contexts.Text.__init__()
+        
+        cursor.fcursor.__init__( * DATA['text'] )
+        caramel.delight.__init__(DATA['channels'])
+        
+        contexts.Text.update_force()
+        contexts.Text.turnover_k( * activity )
     
     def back(self):
         if self._i > 0:

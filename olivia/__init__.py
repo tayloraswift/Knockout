@@ -7,7 +7,7 @@ import meredith
 
 from olivia.frames import Frames
 from olivia.poptarts import Sprinkles
-from olivia.basictypes import interpret_bool, interpret_int, interpret_float, interpret_float_tuple
+from olivia.basictypes import interpret_bool, interpret_int, interpret_float
 
 # attribute types #
 # stored as literals            : bool, int, float, float tuple
@@ -61,7 +61,6 @@ def textstyle(S):
 literal  = {'bool': interpret_bool,
             'int': interpret_int,
             'float': interpret_float,
-            'float tuple': interpret_float_tuple,
             
             'frames': interpret_frame,
             'pagegrid': interpret_grid,
@@ -133,6 +132,10 @@ def interpret_enumeration(e):
 reformat = {'binomial': (pack_binomial, read_binomial),
             'int set': (interpret_enumeration, lambda S: ', '.join(str(i) for i in sorted(S)))}
 
+def interpret_float_tuple(value):
+    L = (interpret_float(val, fail=None) for val in value.split(','))
+    return tuple(v for v in L if v is not None)
+
 def interpret_rgba(C):
     RGBA = [0, 0, 0, 1]
     if type(C) is tuple:
@@ -164,13 +167,13 @@ def interpret_haylor(value): # X X X X X : (X, X, X, X, X)
             print('1 dimensional values take only one coordinate')
             return ()
         L = (interpret_float(val, fail=None) for val in value.split())
-        return (v for v in L if v is not None)
+        return tuple(v for v in L if v is not None)
 
 def interpret_tsquared(value):
     if type(value) is tuple:
         return value
     else:
-        return (tuple(interpret_float_tuple(val)) for val in value.split())
+        return tuple(tuple(interpret_float_tuple(val)) for val in value.split())
 
 # for function plotter
 from data.userfunctions import *
@@ -196,6 +199,7 @@ def function_array(expression):
 
 
 standard = {'str': str,
+            'float tuple': interpret_float_tuple,
             'rgba': interpret_rgba, 
             '1D': interpret_haylor,
             'multi_D': interpret_tsquared,

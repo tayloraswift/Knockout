@@ -38,7 +38,3 @@ def interpret_float(f, fail=0):
                 return v
         except ParseException:
             return fail
-
-def interpret_float_tuple(value):
-    L = (interpret_float(val, fail=None) for val in value.split(','))
-    return (v for v in L if v is not None)

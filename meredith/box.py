@@ -1,7 +1,5 @@
 from itertools import chain
 
-from IO import un
-
 from olivia import literal, reformat, standard
 
 from meredith import datablocks
@@ -42,6 +40,7 @@ class Box(dict):
         else:
             self.content = content
         self.attrs = {}
+        self.clear()
         dict.__init__(self, self._load_attributes(attrs))
     
     def _load_attributes(self, attrs, DNA=None):
@@ -76,7 +75,7 @@ class Box(dict):
                     yield A, up(default[0])
 
     def before(self):
-        un.history.save()
+        raise NotImplementedError
     
     def after(self, A):
         pass

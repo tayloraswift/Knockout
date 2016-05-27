@@ -3,9 +3,9 @@ from ast import literal_eval
 
 from state import constants, noticeboard
 
-from meredith import datablocks
+from meredith import datablocks, box
 
-from IO import tree, un
+from IO import tree
 
 def save():
     FI = ('<head><meta charset="UTF-8"></head>\n<title>', constants.filename, '</title>\n\n',
@@ -19,7 +19,7 @@ def save():
 
     from interface import taylor
     
-    DATA = {'contexts': {'text': textcontexts, 'channels': channelcontexts}, 'view': taylor.becky.read_display_state()}
+    DATA = {'text': textcontexts, 'channels': channelcontexts, 'view': taylor.becky.read_display_state()}
     
     with open(constants.filename, 'w') as fi:
         fi.write(''.join(FI))
@@ -41,15 +41,17 @@ def load(name):
     from edit import cursor, caramel
     
     # aim editor objects
-    caramel.delight = caramel.Channels_controls(DATA['contexts']['channels'])
+    caramel.delight = caramel.Channels_controls(DATA['channels'])
     keyboard.keyboard = keyboard.Keyboard(constants.shortcuts)
-    cursor.fcursor = cursor.PlaneCursor( * DATA['contexts']['text'] )
+    cursor.fcursor = cursor.PlaneCursor( * DATA['text'] )
     
     datablocks.DOCUMENT.layout_all()
     Text.update()
 
     # start undo tracking
-    un.history = un.UN() 
+    from IO import un
+    un.history = un.UN()
+    box.Box.before = un.history.save
     
     from interface import karlie, taylor
     

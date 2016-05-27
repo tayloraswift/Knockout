@@ -164,6 +164,9 @@ def _write_L(L, indent=0):
     else:
         return list(chain.from_iterable(_write_box(B, indent) for B in L))
 
+def miniserialize(L):
+    return ''.join(N[1] for N in _write_L(L))
+
 def serialize(blocks, indent=0, trim=None):
     if trim is None:
         lines = _write_L(blocks, indent)

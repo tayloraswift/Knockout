@@ -189,7 +189,7 @@ def cast_liquid_line(LINE, letters, startindex, width, leading, BLOCK, F, hyphen
                     except TypeError:
                         j = i
                     
-                    word = ''.join(c if len(c) == 1 and c.isalpha() else "'" if c in _APOSTROPHES else ' ' for c in letters[i:j])
+                    word = ''.join(c if type(c) is str and c.isalpha() else "'" if c in _APOSTROPHES else ' ' for c in letters[i:j])
 
                     leading_spaces = len(word) - len(word.lstrip(' '))
 

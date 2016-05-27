@@ -301,6 +301,7 @@ def _copy_member(node, active):
 class Properties(_Properties_panel):
     def _text_panel(self, y, KW):
         if self._tab == 'font':
+            print('recon')
             if contexts.Text.kbs is not None:
                 self._heading = lambda: ', '.join(T['name'] for T in contexts.Text.kbs['class'])
                 

@@ -81,5 +81,24 @@ class Text_context(object):
             self.changed.update({'tags'})
         else:
             raise NotImplementedError
+    
+    def index_k(self):
+        try:
+            kbs = datablocks.BSTYLES.content.index(self.kbs)
+        except ValueError:
+            return None, None
+        try:
+            kbm = self.kbs.content.index(self.kbm)
+        except ValueError:
+            return kbs, None
+        return kbs, kbm
+    def turnover_k(self, kbs, kbm):
+        if kbs is not None:
+            kbs_O = datablocks.BSTYLES.content[kbs]
+            self.push_active('kbs', kbs_O)
+            
+            if kbm is not None:
+                kbm_O = kbs_O.content[kbm]
+                self.push_active('kbm', kbm_O)
         
 Text = Text_context()

@@ -31,25 +31,16 @@ class Keyboard(dict):
         elif name == 'Up':
             un.history.undo_save(0)
             
-            cursor.fcursor.hop(False)
-            cursor.fcursor.j = cursor.fcursor.i
+            cursor.fcursor.hop(-1)
             
         elif name == 'Down':
             un.history.undo_save(0)
             
-            cursor.fcursor.hop(True)
-            cursor.fcursor.j = cursor.fcursor.i
+            cursor.fcursor.hop(1)
 
         elif name in ['Home', 'End']:
             un.history.undo_save(0)
-
-            i, j = cursor.fcursor.front_and_back()
-            if name == 'Home':
-                cursor.fcursor.i = i
-                cursor.fcursor.j = i
-            else:
-                cursor.fcursor.i = j
-                cursor.fcursor.j = j
+            cursor.fcursor.home_end(name == 'End')
 
         elif name == 'All':
             un.history.undo_save(0)
@@ -87,9 +78,9 @@ class Keyboard(dict):
             un.history.undo_save(1)
             cursor.fcursor.paste('<br/>')
         
-        elif name == 'Ctrl Alt':
+        elif name == 'Ctrl Lock':
             un.history.undo_save(1)
-            cursor.fcursor.paste('<mi char="' + char + '"/>')
+            cursor.fcursor.paste('<mi>' + char + '</mi>')
             
         elif name == 'Paste':
             if char:

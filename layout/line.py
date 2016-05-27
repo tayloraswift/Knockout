@@ -40,7 +40,12 @@ class Glyphs_line(dict):
         y += self['y']
         BLOCK = self['BLOCK']
         
-        for glyph in self['GLYPHS']:
+        if self['observer']:
+            glyphs = chain(self['observer'], self['GLYPHS'])
+        else:
+            glyphs = self['GLYPHS']
+        
+        for glyph in glyphs:
             if glyph[0] < 0:
                 if glyph[0] == -6:
                     repository['_annot'].append( (glyph[0], glyph[1] + x, glyph[2] + y, BLOCK, glyph[3]))

@@ -280,7 +280,7 @@ class Blockelement(Blockstyle):
         # print para flag
         flag = (-2, -BSTYLE['leading'], 0, LINE['fstyle'], LINE['F'], 0)
         self._OBSERVERLINES.append(Glyphs_line({'x': LINE['left'], 'y': LINE['y'], 'page': LINE['page'], 
-                                    'GLYPHS': [flag], 'BLOCK': self}))
+                                    'GLYPHS': [flag], 'BLOCK': self, 'observer': []}))
         # print counters
         if BSTYLE['show_count'] is not None:
             
@@ -362,7 +362,7 @@ class Paragraph_block(Blockelement):
             if x1 > x2:
                 x1, x2 = x2, x1
             # initialize line
-            LINE = Glyphs_line({'left': left, 'start': x1, 'y': y, 'c': c, 'u': u, 'l': l, 'page': pn})
+            LINE = Glyphs_line({'observer': [], 'left': left, 'start': x1, 'y': y, 'c': c, 'u': u, 'l': l, 'page': pn})
             cast_liquid_line(LINE,
                     LIQUID[i : i + 1989], 
                     i, 
@@ -407,6 +407,8 @@ class Paragraph_block(Blockelement):
         self._LINES = LINES
         self._UU = [line['u'] - leading for line in LINES]
         self._search_j = [line['j'] for line in LINES]
+        # shift left edge
+        self.left_edge = LINES[0]['x'] - BSTYLE['leading']*0.5
         return LINES[-1]['u']
 
     def erase(self):

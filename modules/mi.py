@@ -5,13 +5,14 @@ from meredith.box import Inline
 
 class Math_italic(Inline):
     name = 'mi'
-    DNA = [('char', 'str', ''), ('correct', 'float', 1), ('cl_variable', 'texttc', 'emphasis')]
+    textfacing = True
+    DNA = [('correct', 'float', 1), ('mathvariant', 'texttc', 'emphasis')]
     
     def _load(self):
-        if self['char']:
-            self.char = self['char']
+        if self.content:
+            self.char = self.content
         else:
-            self.char = '􏿿'
+            self.char = ['?']
     
     def _draw_annot(self, cr, O):
         cr.move_to(self._cad, 0)
@@ -23,7 +24,7 @@ class Math_italic(Inline):
         cr.fill()
     
     def _cast_inline(self, LINE, x, y, PP, F, FSTYLE):
-        C = cast_mono_line(LINE, list(self.char), 13, PP, F + self['cl_variable'])
+        C = cast_mono_line(LINE, self.char, 13, PP, F + self['mathvariant'])
         C['x'] = x
         C['y'] = y + FSTYLE['shift']
         self._cad = C['advance']

@@ -147,7 +147,8 @@ class Frames(list):
     
     def at(self, u):
         c = bisect(self._segments, u) - 1
-        return piecewise(self._run[0][c], u), piecewise(self._run[1][c], u)
+        y = self[c][0][0][1] + u - self._segments[c]
+        return piecewise(self._run[0][c], u), piecewise(self._run[1][c], u), y, self[c].page
         
     def which(self, x0, y0, radius):
         norm = datablocks.DOCUMENT.normalize_XY

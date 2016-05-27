@@ -35,7 +35,7 @@ _prose = set('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789&@#$
 _breaking_prose = set(('<br/>', '—', '–', '/', '(', ')', '\\', '|', '=', '+', '_', ' '))
 
 # NOT the same as prose breaks because of '.', ':', etc. *Does not include ''' or '’' because these are found word-internal and when used as quotes, encapsulate single characters*
-_breaking_chars = set((' ', '<fo>', '</fc>', '<br/>', '—', '–', '-', ':', '.', ',', ';', '/', '!', '?', '(', ')', '[', ']', '{', '}', '\\', '|', '=', '+', '_', '"', '“', '”', '<', '>' ))
+_breaking_chars = set((' ', '<fo/>', '<fc/>', '<br/>', '—', '–', '-', ':', '.', ',', ';', '/', '!', '?', '(', ')', '[', ']', '{', '}', '\\', '|', '=', '+', '_', '"', '“', '”', '<', '>' ))
 
 def words(text, spell=False):
 

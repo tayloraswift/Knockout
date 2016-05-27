@@ -25,4 +25,7 @@ class Line_break(Box):
     name = 'br'
     inline = True
 
+    def __str__(self):
+        return '<br/>'
+
 members = (PosFontpost, NegFontpost, Line_break)

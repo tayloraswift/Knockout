@@ -1,11 +1,19 @@
 from bisect import bisect
-from itertools import chain, accumulate
+from itertools import chain, accumulate, groupby
 
 from olivia.frames import Subcell
 from interface.base import accent
 from meredith.box import Box
 from meredith.paragraph import Plane, Blockelement
-from state.exceptions import LineOverflow
+
+def _split_pages(groups, function):
+        D = {}
+        for K, G in groups:
+            if K not in D:
+                D[K] = G
+            else:
+                D[K].extend(G)
+        return [(p, lambda * args : function( * args , H)) for p, H in D.items()]
 
 class Matrix(list):
     def __str__(self):
@@ -74,6 +82,7 @@ class Table(Blockelement):
         self._CELLS = [tr.content for tr in self.content]
         self._MATRIX = _build_matrix(self._CELLS)
         self._FLOW = list(chain.from_iterable(self._CELLS))
+        self._planes = set(self._FLOW)
         
         # columns
         cl = len(self._MATRIX[0])
@@ -84,13 +93,12 @@ class Table(Blockelement):
         
         # rules
         r = len(self._MATRIX)
-        self._table = {'rulemargin': self['rulemargin'], 'rulewidth': self['rulewidth'], 
-                'hrules': [i for i in self['hrules'] if 0 <= i <= r], 
-                'vrules': [i for i in self['vrules'] if 0 <= i <= cl]}
+        self._hrules = [i for i in self['hrules'] if 0 <= i <= r]
+        self._vrules = [i for i in self['vrules'] if 0 <= i <= cl]
 
     def which(self, x, u, r):
         if (r > 1 or r < 0) and x > self.left_edge:
-            x1, x2 = self._frames.at(u)
+            x1, x2, *_ = self._frames.at(u)
             R = bisect(self._row_u, u) - 1
             C = max(0, bisect(self._MATRIX.partitions, (x - x1) / (x2 - x1)) - 1)
             try:
@@ -102,8 +110,6 @@ class Table(Blockelement):
                     if td is cell:
                         return ((m, tr), (n, td), * cell.which(x, u, r - 2))
         return ()
-
-
     
     def _layout_block(self, frames, BSTYLE, cascade, overlay):
         self._frames = frames
@@ -112,11 +118,11 @@ class Table(Blockelement):
         head = P_table + self['cl_thead']
         left = P_table + self['cl_tleft']
         
-        row_u = [0] * (len(self._MATRIX) + 1)
+        row_u = [frames.read_u()] * (len(self._MATRIX) + 1)
         part = self._MATRIX.partitions
         cellbottom = self['cellbottom']
         for r, overlay, row in ((c, P_table, b) if c else (c, head, b) for c, b in enumerate(self._CELLS)):
-            y = row_u[r] + self['celltop']
+            frames.space(self['celltop'])
             for i, cell in enumerate(row):
                 if not i:
                     ol = overlay + left
@@ -135,61 +141,46 @@ class Table(Blockelement):
             frames.start(row_u[r + 1])
         
         self._row_u = row_u
-        """
-        table = {'_row_y': row_y, '_bounds': bounds.bounds}
-        table.update(self._table)
+        
+        
         # calculate grid
         grid = []
+        pgrid = []
         cl = len(self._MATRIX[0])
-        part = self._MATRIX.partitions
-        for y in row_y:
-            x1, x2 = bounds.bounds(y)
+        for u in row_u:
+            x1, x2, y, pn = frames.at(u)
             width = x2 - x1
             grid.append([(x1 + width*factor, y) for factor in part])
-        
-        if grid[-1][-1][1] > y2:
-            raise LineOverflow
-        """
-        return row_u[-1]
-
-    def run_stats(self, spell):
-        return sum(block.run_stats(spell) for block in chain.from_iterable(cell.content for cell in self._FLOW))
-
-    def highlight_spelling(self):
-        return chain.from_iterable(cell.highlight_spelling() for cell in self._FLOW)
-    
-    def transfer(self, S):
-        for cell in self._FLOW:
-            cell.transfer(S)
-        
-members = [Table, Table_tr, Table_td]
-
-"""
-class _MBlock(Block):
-    def __init__(self, FLOW, grid, table, regions, PP):
-        self._table = table
-        Block.__init__(self, FLOW, grid[0][0][1], grid[-1][-1][1], grid[0][0][0], grid[-1][-1][0], PP)
-        
+            pgrid.append(pn)
         self._grid = grid
         self._ortho = list(zip( * grid ))
-        self._regions = regions
 
-    def _print_annot(self, cr, O):
-        if O in self._FLOW:
-            cr.set_source_rgb( * accent)
-            for x, y in chain.from_iterable(self._grid):
+        # calculate annot grid
+        self._paint_annot_functions = _split_pages(((K, list(G[1] for G in G)) for K, G in groupby(enumerate(grid), key=lambda R: pgrid[R[0]])), 
+                                                    self._paint_annot)        
+        # calculate grid
+        self._paint_functions = _split_pages(((K, list(G)) for K, G in groupby(self._hrules, key=lambda h: pgrid[h])),
+                                            self._paint_table_hrules)
+        p0 = pgrid[0]
+        if self._vrules and all(p0 == p for p in pgrid):
+            self._paint_functions.append((p0, self._paint_table_vrules))
+        
+        return row_u[-1]
+
+    def _paint_annot(self, cr, O, rows):
+        if O in self._planes:
+            cr.set_source_rgb( * accent )
+            for x, y in chain.from_iterable(rows):
                 cr.rectangle(int(x), y - 3.25, 0.5, 7)
                 cr.rectangle(int(x) - 3.25, y, 7, 0.5)
-            self._handle(cr)
             cr.fill()
 
-    def _print_table(self, cr):
-        rulewidth = self._table['rulewidth']
-        e = (rulewidth % 2) / 2
-        p = self._table['rulemargin']
-        cr.set_line_width(rulewidth)
+    def _paint_table_hrules(self, cr, hrules):
+        e = (self['rulewidth'] % 2) / 2
+        p = self['rulemargin']
+        cr.set_line_width(self['rulewidth'])
         cr.set_source_rgb(0, 0, 0)
-        for hrule in self._table['hrules']:
+        for hrule in hrules:
             if p:
                 for a, b in zip(self._grid[hrule], self._grid[hrule][1:]):
                     cr.move_to(a[0] + p, a[1] + e)
@@ -202,7 +193,12 @@ class _MBlock(Block):
                 cr.line_to(b[0], b[1] + e)
                 cr.stroke()
 
-        for vrule in self._table['vrules']:
+    def _paint_table_vrules(self, cr):
+        e = (self['rulewidth'] % 2) / 2
+        p = self['rulemargin']
+        cr.set_line_width(self['rulewidth'])
+        cr.set_source_rgb(0, 0, 0)
+        for vrule in self._vrules:
             if p:
                 for a, b in zip(self._ortho[vrule], self._ortho[vrule][1:]):
                     cr.move_to(a[0] + e, a[1] + p)
@@ -214,15 +210,19 @@ class _MBlock(Block):
                 cr.move_to(a[0] + e, a[1])
                 cr.line_to(b[0] + e, b[1])
                 cr.stroke()
+    
+    def run_stats(self, spell):
+        return sum(block.run_stats(spell) for block in chain.from_iterable(cell.content for cell in self._FLOW))
 
-    def target(self, x, y):
-        if x <= self['right']:
-            return self._regions(x, y, self._table['_bounds'], self._table['_row_y'])
-        return None
-
-    def deposit(self, repository):
-        repository['_paint'].append((self._print_table, 0, 0))
-        repository['_paint_annot'].append((self._print_annot, 0, 0))
-        for A in self._FLOW:
-            A.deposit(repository)
-"""
+    def highlight_spelling(self):
+        return chain.from_iterable(cell.highlight_spelling() for cell in self._FLOW)
+    
+    def transfer(self, S):
+        for cell in self._FLOW:
+            cell.transfer(S)
+        for page, F in self._paint_functions:
+            S[page]['_paint'].append((F, 0, 0))
+        for page, F in self._paint_annot_functions:
+            S[page]['_paint_annot'].append((F, 0, 0))
+        
+members = [Table, Table_tr, Table_td]

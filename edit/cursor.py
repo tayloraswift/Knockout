@@ -87,13 +87,35 @@ class PlaneCursor(object):
         self.j = self.i
 
     def target_select(self, x, y):
-        x, u = self._to_c_local(x, y)
+        self._target_shallow( * self._to_c_local(x, y) )
+    
+    def _target_shallow(self, x, u):
         j, *_ = zip( * self.PLANE.which(x, u, len(self.i)) )
         if len(j) < len(self.i):
             self.j = self._next_textfacing(j[0], j < self.i)
         else:
             self.j = j
     
+    def hop(self, direction):
+        if len(self.i) == 2:
+            l, line, glyph = self._blocks[self.i[0]].where((self.i[1],))
+            self._target_shallow(line['x'] + glyph[1], line['u'] + (direction - 0.5)*line['leading'])
+            self.i = self.j
+        else:
+            self.i = self.increment_cursor((self.i[0] + direction,), 0)
+            self.j = self.i
+    
+    def home_end(self, direction):
+        if len(self.i) == 2:
+            l, line, G = self._blocks[self.i[0]].where((self.i[1],))
+            if direction:
+                i = (self.i[0], line['j'] - 1)
+            else:
+                i = (self.i[0], line['i'])
+            self.i = i
+            self.j = i
+        else:
+            self.hop(2*direction - 1)
     ## TEXT OPERATIONS ##
     
     def _sort_cursors(self):

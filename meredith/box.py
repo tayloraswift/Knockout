@@ -136,6 +136,8 @@ class Box(dict):
         else:
             return ''.join((' <', self.name, '> ', repr(self.attrs), ' '))
 
+    def __hash__(self):
+        return id(self)
     
     def where(self, address):
         i, * address = address
@@ -171,9 +173,6 @@ class _Tags(Box):
 class _Tag(Box):
     name = '_abstract_tag'
     DNA = [('name', 'str', '_undef')]
-    
-    def __hash__(self):
-        return id(self)
 
 class Texttag(_Tag):
     name = 'texttag'

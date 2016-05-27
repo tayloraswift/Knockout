@@ -2,8 +2,6 @@ from pprint import pformat
 from ast import literal_eval
 
 from state import constants, noticeboard
-#from modules import modulestyles
-#from elements import modules
 
 from meredith import datablocks
 
@@ -11,47 +9,30 @@ from IO import tree, un
 
 def save():
     FI = ('<head><meta charset="UTF-8"></head>\n<title>', constants.filename, '</title>\n\n',
-            '<body>\n',
-            kevin.serialize([F.NODE for F in meredith.mipsy], indent=-1),
-            '\n</body>\n')
-
-    page = {'dimensions': (meredith.page.WIDTH, meredith.page.HEIGHT),
-            'dual': meredith.page.dual}
+            tree.serialize([datablocks.TTAGS, datablocks.BTAGS, datablocks.DOCUMENT, datablocks.TSTYLES, datablocks.BSTYLES]))
     
-    grid = meredith.mipsy.page_grid
-    textcontexts = cursor.fcursor.polaroid()
+    from edit import cursor, caramel
+    textcontexts = (cursor.fcursor.plane_address, cursor.fcursor.i, cursor.fcursor.j)
     
     ct, c = caramel.delight.at()
-    channelcontexts = {'t': meredith.mipsy.index(ct),
-                    'c': c, 
-                    'p': caramel.delight.PG
-                    }
-    
-    PPP = styles.PARASTYLES.polaroid()
-    FFF = {N: F.polaroid() for N, F in styles.FONTSTYLES.items()}
-    
-    PTT = list(sorted(T.polaroid() for T in styles.PTAGS.values() if not T.is_group))
-    FTT = list(sorted(T.polaroid() for T in styles.FTAGS.values() if not T.is_group))
+    channelcontexts = datablocks.DOCUMENT.content.index(ct), c
 
     from interface import taylor
     
-    DATA = {'grid': grid, 'contexts': {'text': textcontexts, 'channels': channelcontexts}, 'PARASTYLES': PPP, 'FONTSTYLES': FFF, 'PTAGLIST': PTT, 'FTAGLIST': FTT, 'view': taylor.becky.read_display_state(), 'page': page}
+    DATA = {'contexts': {'text': textcontexts, 'channels': channelcontexts}, 'view': taylor.becky.read_display_state()}
     
     with open(constants.filename, 'w') as fi:
         fi.write(''.join(FI))
         fi.write('\n<!-- #############\n')
         fi.write(pformat(DATA, width=189))
         fi.write('\n############# -->\n')
-    
+
 def load(name):
     with open(name, 'r') as fi:
         constants.filename = name
         doc = fi.read()
 
     DATA = literal_eval(doc[doc.find('<!-- #############') + 18 : doc.find('############# -->')])
-
-    # unpack styles
-#    Node.MSL = modulestyles.MS_Library(modules)
     
     datablocks.TTAGS, datablocks.BTAGS, datablocks.DOCUMENT, datablocks.TSTYLES, datablocks.BSTYLES = tree.deserialize(doc)
     

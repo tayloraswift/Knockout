@@ -38,21 +38,23 @@ class Paine(parser.HTMLParser):
     def append_to(self):
         return self._C[-1][1]
     
+    def _rawnode(self, name, attrs):
+        if boxes[name].textfacing:
+            return dict(attrs), Text()
+        else:
+            return dict(attrs), []
+    
     def handle_starttag(self, name, attrs):
         if name in boxes:
             self._handle_implicit(name)
             
             self._breadcrumbs.append(name)
-            if boxes[name].textfacing:
-                M = dict(attrs), Text()
-            else:
-                M = dict(attrs), []
-            self._C.append(M)
+            self._C.append(self._rawnode(name, attrs))
 
     def handle_startendtag(self, name, attrs):
         if name in boxes:
             self._handle_implicit(name)
-            self.append_to().append(boxes[name]( dict(attrs) ))
+            self.append_to().append(boxes[name]( * self._rawnode(name, attrs) ))
     
     def handle_endtag(self, name):
         if name in boxes:

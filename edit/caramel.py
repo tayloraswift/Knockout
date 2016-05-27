@@ -61,9 +61,6 @@ class Channels_controls(object):
         # these are stateful
         self._hover_point = (None, None, None)
         self._hover_portal = (None, None)
-        
-#    def polaroid(self):
-#        return {'t': meredith.mipsy.index(self.section), 'c': self._selected_point[0], 'p': self.PG}
 
     def at(self):
         return self.section, self._selected_point[0]

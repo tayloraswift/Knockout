@@ -262,6 +262,12 @@ class Frames(list):
                     flip = 0
                 frame[flip][-1][1] = frame[not flip][-1][1]
     
+    def add_frame(self):
+        x1, y1, x2 = self[-1][0][-1][0], self[-1][0][-1][1] + 40, self[-1][1][-1][0]
+        F = Frame( ([[x1, y1, False], [x1, y1 + 40, False]], [[x2, y1, False], [x2, y1 + 40, False]], self[-1].page) )
+        self.append(F)
+        datablocks.DOCUMENT.layout_all()
+        
     def __repr__(self):
         return ' |\n    '.join(repr(F) for F in self)
 

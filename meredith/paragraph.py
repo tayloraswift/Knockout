@@ -60,6 +60,10 @@ class Meredith(Box):
 
     def after(self, A):
         self._recalc_page()
+    
+    def add_section(self):
+        self.content.append(Section({}, [Paragraph_block({}, Text(list('{new}')))]))
+        self.layout_all()
     # Page functions
     
     def _recalc_page(self):
@@ -174,7 +178,13 @@ class Section(Plane):
     name = 'section'
     
     DNA  = [('repeat',      'int',    1),
-            ('frames',    'frames',     '')]
+            ('frames',    'frames',     '10,10 10,100 ; 100,10 100,100 ; 0')]
+
+    def __init__(self, * II, ** KII ):
+        Plane.__init__(self, * II, ** KII )
+        
+        if self['repeat'] > 1:
+            pass
     
     def transfer(self, S):
         for block in self.content:

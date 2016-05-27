@@ -84,10 +84,6 @@ def _punch_tags(key):
     if not cursor.fcursor.bridge(keyboard[key], sign=False):
         un.history.pop()
 
-def _add_channel():
-    caramel.delight.R_FTX.channels.add_channel()
-    caramel.delight.R_FTX.layout()
-
 class Document_toolbar(object):
     def __init__(self, save):
         self._save = save
@@ -111,11 +107,9 @@ class Document_toolbar(object):
         self._items.append(kookies.Button(5, y, 90, 30, callback=un.history.forward, name='Redo'))
         
         y += 40
-        self._items.append(kookies.Button(5, y, 90, 30, callback=_add_channel, name='Add portal'))
-#        y += 30
-#        self._items.append(kookies.Button(5, y, 90, 30, callback=meredith.mipsy.add_tract, name='Add tract'))
-#        y += 30
-#        self._items.append(kookies.Button(5, y, 90, 30, callback=meredith.mipsy.add_repeat_tract, name='Add repeat'))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=caramel.delight.section['frames'].add_frame, name='Add frame'))
+        y += 30
+        self._items.append(kookies.Button(5, y, 90, 30, callback=DOCUMENT.add_section, name='Add section'))
         
         y += 50
         self._items.append(kookies.Button(5, y, 90, 30, callback=lambda: _place_tags('Ctrl i'), name='Emphasis'))
@@ -347,6 +341,8 @@ class Document_view(ui.Cell):
             # TEXT EDITING MODE
             if self._mode == 'text':
                 self.planecursor.expand_cursors_word()
+            elif self._mode == 'channels':
+                caramel.delight.dpress()
     
     def press_right(self, x, y):
         if self._region_active == 'view':
@@ -503,7 +499,7 @@ class Document_view(ui.Cell):
         noticeboard.refresh_properties_type.push_change(mode)
     
     def _print_sorted(self, cr, classed_glyphs):
-        for font, glyphs in (L for name, L in classed_glyphs.items() if isinstance(name, int)):
+        for font, glyphs in (L for name, L in classed_glyphs.items() if type(name) is int):
             cr.set_source_rgba( * font['color'])
             cr.set_font_size(font['fontsize'])
             cr.set_font_face(font['font'])

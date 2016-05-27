@@ -107,7 +107,7 @@ class Channels_controls(object):
         xn, yn = self.target(x, y)
         c, r, i = self._selected_point
         portal = self._selected_portal
-        
+        self._add_point = None
         if c is None:
             if name != 'ctrl':
                 self._FRAMES.clear_selection()
@@ -141,16 +141,22 @@ class Channels_controls(object):
                 i = len(self._FRAMES[c][1]) - 1
             
             elif r is not None:
-                # insert point if one was not found
-                i = self._FRAMES[c].insert_point(r, yn)
-                self._FRAMES.make_selected(c, r, i, name)
-                self._selected_point[2] = i
-
+                # prepare to insert point if one was not found
+                self._add_point = c, r, yn, name
+            
             if i is not None:
                 self._sel_locale = tuple(self._FRAMES[c][r][i][:2])
                 self._release_locale = self._sel_locale
 
             return True
+    
+    def dpress(self):
+        if self._add_point is not None:
+            c, r, yn, name = self._add_point
+            i = self._FRAMES[c].insert_point(r, yn)
+            self._FRAMES.make_selected(c, r, i, name)
+            self._selected_point[2] = i
+            self._release_locale = None
     
     def press_motion(self, x, y):
         x, y = DOCUMENT.normalize_XY(x, y, self.PG)

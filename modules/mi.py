@@ -1,14 +1,11 @@
 import cairo
 
-from model.cat import cast_mono_line, calculate_vmetrics
-from elements.node import Inline_element
-from model.olivia import Inline
+from layout.line import cast_mono_line, calculate_vmetrics
+from meredith.box import Inline
 
-class Math_italic(Inline_element):
+class Math_italic(Inline):
     name = 'mi'
-    DNA = {'mi': {}}
-    ADNA = [('char', '', 'str'), ('correct', 1, 'float')]
-    documentation = [(0, name)]
+    DNA = [('char', 'str', ''), ('correct', 'float', 1), ('cl_variable', 'texttc', 'emphasis')]
     
     def _load(self):
         if self['char']:
@@ -25,10 +22,8 @@ class Math_italic(Inline_element):
         cr.set_source_rgba(0, 0.8, 1, 0.4)
         cr.fill()
     
-    def cast_inline(self, LINE, x, y, PP, F, FSTYLE):
-        F_mi, = self.styles(F, 'mi')
-        
-        C = cast_mono_line(LINE, list(self.char), 13, PP, F_mi)
+    def _cast_inline(self, LINE, x, y, PP, F, FSTYLE):
+        C = cast_mono_line(LINE, list(self.char), 13, PP, F + self['cl_variable'])
         C['x'] = x
         C['y'] = y + FSTYLE['shift']
         self._cad = C['advance']
@@ -40,21 +35,6 @@ class Math_italic(Inline_element):
         charwidth = self._cad + self._icorrection
         ascent, descent = calculate_vmetrics(C)
 
-        return _MInline(C, charwidth, ascent, descent, self._draw_annot, x, y)
-
-    def __len__(self):
-        return 11
-
-class _MInline(Inline):
-    def __init__(self, lines, width, A, D, draw, x, y):
-        Inline.__init__(self, lines, width, A, D)
-        self._draw = draw
-        self._x = x
-        self._y = y
-    
-    def deposit_glyphs(self, repository, x, y):
-        repository['_paint_annot'].append((self._draw, self._x + x, self._y + y))
-        self._LINES.deposit(repository, x, y)
+        return [C], charwidth, ascent, descent, None, (self._draw_annot, x, y)
 
 members = [Math_italic]
-inline = True

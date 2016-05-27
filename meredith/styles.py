@@ -2,23 +2,10 @@ from itertools import chain
 
 from libraries.freetype import ft_errors
 
-from meredith.box import Box
+from meredith.box import Box, new_name
 from meredith import datablocks
 
 from fonts import get_font
-
-def _new_name(name, namelist):
-    if name in namelist:
-        if not (len(name) > 3 and name[-4] == '.' and len([c for c in name[-3:] if c in '1234567890']) == 3):
-            name = name + '.001'
-        
-        serialnumber = int(name[-3:])
-        while True:
-            if name not in namelist:
-                break
-            serialnumber += 1
-            name = name[:-3] + str(serialnumber).zfill(3)
-    return name
 
 _text_DNA = [('fontsize',    'float',   13),
             ('path',        'str',      'fonts/Ubuntu-R.ttf'),
@@ -63,7 +50,7 @@ class Textstyles(Box):
         self.content.sort(key=lambda O: O['name'])
     
     def new(self):
-        O = self.__class__.contains({'name': _new_name('Untitled fontstyle', datablocks.Textstyles_D)})
+        O = self.__class__.contains({'name': new_name('Untitled fontstyle', self.__class__.dblibrary)})
         self.content.append(O)
         self.sort_content()
         self.__class__.dblibrary.update_datablocks(self)

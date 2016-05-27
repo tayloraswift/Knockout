@@ -388,7 +388,7 @@ class Properties(_Properties_panel):
                         context = contexts.Text, 
                         slot = 'kbt', 
                         display = lambda l: l['name'],
-                        copy = lambda N, active: None))
+                        copy = lambda N, active: node.new()))
             
             y = self._y_incr() + 20
             
@@ -405,7 +405,7 @@ class Properties(_Properties_panel):
                         context = contexts.Text, 
                         slot = 'ktt', 
                         display = lambda l: l['name'],
-                        copy = lambda N, active: None))
+                        copy = lambda N, active: node.new()))
             
             y = self._y_incr() + 20
             

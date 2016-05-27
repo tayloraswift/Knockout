@@ -3,6 +3,11 @@ class Datablock_lib(dict):
         self.clear()
         self.update((TT['name'], TT) for TT in box.content)
 
-Texttags_D = Datablock_lib()
-Blocktags_D = Datablock_lib()
+class Tag_lib(Datablock_lib):
+    def __missing__(self, key):
+        self.ordered.new(key)
+        return self[key]
+
+Texttags_D = Tag_lib()
+Blocktags_D = Tag_lib()
 Textstyles_D = Datablock_lib()

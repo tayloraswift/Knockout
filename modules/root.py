@@ -14,6 +14,8 @@ class Radicand(Box):
 class Root(Inline):
     name = _namespace
     
+    DNA = [('cl_radicand', 'texttc', 'small')]
+    
     def _load(self):
         self._index, self._radicand = self.find_nodes(Index, Radicand)
     
@@ -29,10 +31,7 @@ class Root(Inline):
         self._color = FSTYLE['color']
         y += FSTYLE['shift']
         
-        #F_index, F_rad = self.styles(F, 'index', 'radicand')
-        F_index, F_rad = F, F ## stopgap
-        
-        rad = cast_mono_line(LINE, self._radicand.content, 13, PP, F_rad)
+        rad = cast_mono_line(LINE, self._radicand.content, 13, PP, F)
         rad_asc, rad_desc = calculate_vmetrics(rad)
         
         rfs = FSTYLE['fontsize']
@@ -64,13 +63,13 @@ class Root(Inline):
         if self._index is None:
             NL = [rad]
         else:
-            index = cast_mono_line(LINE, self._index.content, 13, PP, F_index)
+            index = cast_mono_line(LINE, self._index.content, 13, PP, F + self['cl_radicand'])
             index['x'] = jx - index['advance']*0.5
             index['y'] = y - rfs * 0.6
             NL = [index, rad]
         
         width = kx - x + rfs * 0.35 + rad['advance']
         
-        return NL, width, rad_asc + rfs*0.2, rad_desc, self._draw_radix
+        return NL, width, rad_asc + rfs*0.2, rad_desc, (self._draw_radix, 0, 0)
 
 members = (Root, Index, Radicand)

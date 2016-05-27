@@ -556,7 +556,7 @@ class Document_view(ui.Cell):
                 for operation, x, y in paint_annot:
                     cr.save()
                     cr.translate(x, y)
-                    operation(cr, self.planecursor.FTX)
+                    operation(cr, self.planecursor.PLANE)
                     cr.restore()
                 cr.restore()
                 self._draw_annotations(cr, annot, page)

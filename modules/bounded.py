@@ -1,34 +1,32 @@
-from model.cat import cast_mono_line, calculate_vmetrics
-from elements.node import Inline_element, Node
-from model.olivia import Inline
+from layout.line import cast_mono_line, calculate_vmetrics
+from meredith.box import Box, Inline
 
 _namespace = 'mod:bounded'
 
-class Symbol(Node):
+class Symbol(Box):
     name = _namespace + ':sym'
     textfacing = True
 
-class Bound(Node):
+class Bound(Box):
     name = _namespace + ':a'
     textfacing = True
     
-class Bounded(Inline_element):
+class Bounded(Inline):
     name = _namespace
-    DNA = {'symbol': {}, 'bounds': {}}
-    ADNA = [('align', 1, 'int')]
-    documentation = [(0, name), (1, 'symbol'), (1, 'bottom'), (1, 'top')]
+    
+    DNA = [('align', 'int', 1), ('cl_symbol', 'texttc', 'big'), ('cl_bound', 'texttc', 'small')]
     
     def _load(self):
         self._symbol, self._a, self._b = self.find_nodes(Symbol, Bound, Bound)
         
         if self['align']:
-            self.cast_inline = self._cast_inline_inline
+            self._cast_inline = self._cast_inline_inline
         else:
-            self.cast_inline = self._cast_inline_display
+            self._cast_inline = self._cast_inline_display
 
     def _mono(self, LINE, PP, F):
-        F_symbol, F_small = self.styles(F, 'symbol', 'bounds')
-        symbol = cast_mono_line(LINE, self._symbol.content, 13, PP, F_symbol)
+        F_small = F + self['cl_bound']
+        symbol = cast_mono_line(LINE, self._symbol.content, 13, PP, F + self['cl_symbol'])
         a = cast_mono_line(LINE, self._a.content, 13, PP, F_small)
         b = cast_mono_line(LINE, self._b.content, 13, PP, F_small)
         return symbol, a, b
@@ -56,7 +54,7 @@ class Bounded(Inline_element):
         ascent = y - b['y'] + b_asc
         descent = y - a['y'] + a_desc
         
-        return Inline([symbol, a, b], width, ascent, descent)
+        return [symbol, a, b], width, ascent, descent
 
     def _cast_inline_display(self, LINE, x, y, PP, F, FSTYLE):
         symbol, a, b = self._mono(LINE, PP, F)
@@ -80,10 +78,6 @@ class Bounded(Inline_element):
         ascent = symbol_asc - b_desc + b_asc
         descent = symbol_desc + a_desc - a_asc
         
-        return Inline([symbol, a, b], width, ascent, descent)
-        
-    def __len__(self):
-        return 9
+        return [symbol, a, b], width, ascent, descent
 
 members = [Bounded, Symbol, Bound]
-inline = True

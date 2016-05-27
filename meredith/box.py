@@ -6,6 +6,19 @@ from olivia import literal, reformat, standard
 
 from meredith import datablocks
 
+def new_name(name, namelist):
+    if name in namelist:
+        if not (len(name) > 3 and name[-4] == '.' and len([c for c in name[-3:] if c in '1234567890']) == 3):
+            name = name + '.001'
+        
+        serialnumber = int(name[-3:])
+        while True:
+            if name not in namelist:
+                break
+            serialnumber += 1
+            name = name[:-3] + str(serialnumber).zfill(3)
+    return name
+
 class Null(object):
     name = '_nullbox'
     textfacing = False
@@ -132,17 +145,25 @@ class Box(dict):
                 yield boxes.pop(next(i for i, e in enumerate(boxes) if isinstance(e, cls)))
             except StopIteration:
                 yield None
-
+    
 class _Tags(Box):
     name = '_abstract_taglist'
 
     def __init__(self, * II, ** KII ):
         Box.__init__(self, * II, ** KII )
+        self.__class__.dblibrary.ordered = self
         self.__class__.dblibrary.update_datablocks(self)
 
     def after(self, A):
         if A == 'name':
             self.__class__.dblibrary.update_datablocks(self)
+
+    def new(self, name='Untitled tag'):
+        O = self.__class__.contains({'name': new_name(name, self.__class__.dblibrary)})
+        self.content.append(O)
+        self.__class__.dblibrary.update_datablocks(self)
+        self.after('__content__')
+        return O
     
 class _Tag(Box):
     name = '_abstract_tag'
@@ -151,21 +172,17 @@ class _Tag(Box):
     def __hash__(self):
         return id(self)
 
-class Texttags(_Tags):
-    name = 'texttags'
-    dblibrary = datablocks.Texttags_D
-
 class Texttag(_Tag):
     name = 'texttag'
 
     def after(self, A):
         if A == 'name':
             datablocks.Texttags_D.update_datablocks(datablocks.TTAGS)
-    
-class Blocktags(_Tags):
-    name = 'blocktags'
-    
-    dblibrary = datablocks.Blocktags_D
+
+class Texttags(_Tags):
+    name = 'texttags'
+    dblibrary = datablocks.Texttags_D
+    contains = Texttag
 
 class Blocktag(_Tag):
     name = 'blocktag'
@@ -173,6 +190,11 @@ class Blocktag(_Tag):
     def after(self, A):
         if A == 'name':
             datablocks.Blocktags_D.update_datablocks(datablocks.BTAGS)
+
+class Blocktags(_Tags):
+    name = 'blocktags'
+    dblibrary = datablocks.Blocktags_D
+    contains = Blocktag
 
 ## MODULE BASE CLASSES ##
 
@@ -201,8 +223,8 @@ class Inline(Box):
         for line in self._LINES:
             line.deposit(repository, x, y)
         if self._paint is not None:
-            repository['_paint'].append((self._paint, x, y))
+            repository['_paint'].append((self._paint[0], self._paint[1] + x, self._paint[2] + y))
         if self._paint_annot is not None:
-            repository['_paint_annot'].append((self._paint_annot, x, y))
+            repository['_paint_annot'].append((self._paint_annot[0], self._paint_annot[1] + x, self._paint_annot[2] + y))
   
 members = (Null, Texttags, Texttag, Blocktags, Blocktag)

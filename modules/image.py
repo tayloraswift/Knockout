@@ -1,11 +1,10 @@
 from cairo import ImageSurface, SVGSurface, Context, FORMAT_ARGB32
 from urllib.error import URLError
 
-from elements.node import Inline_element
-from model.olivia import Inline
+from meredith.box import Inline
 from IO.bitmap import make_pixbuf, paint_pixbuf
 
-from style import styles
+from fonts.interfacefonts import ISTYLES
 
 _fail = '\033[91m'
 _endc = '\033[0m'
@@ -20,7 +19,7 @@ except ImportError as message:
 
 def _paint_fail_frame(cr, h, k, msg):
     cr.set_font_size(10)
-    cr.set_font_face(styles.ISTYLES[('strong',)]['font'])
+    cr.set_font_face(ISTYLES[('strong',)]['font'])
     
     cr.set_source_rgba(1, 0, 0.1, 0.7)
     cr.rectangle(0, 0, 2 + h*0.1, 2)
@@ -39,11 +38,9 @@ def _paint_fail_frame(cr, h, k, msg):
     cr.show_text(msg)
     cr.fill()
         
-class Image(Inline_element):
+class Image(Inline):
     name = 'image'
-    DNA = {}
-    ADNA = [('src', '', 'str'), ('width', 89, 'int'), ('resolution', 0, 'int')]
-    documentation = [(0, name)]
+    DNA = [('src', 'str', ''), ('width', 'int', 89), ('resolution', 'int', 0)]
     
     def _load(self):
         self.width = self['width']
@@ -99,30 +96,19 @@ class Image(Inline_element):
         cr.set_source_surface(self._surface_cache)
         cr.paint()
     
-    def paint_PNG(self, cr, render):
+    def paint_PNG(self, cr, render=False):
         cr.scale(self.factor, self.factor)
         paint_pixbuf(cr, self._surface_cache)
     
-    def paint_Error(self, cr, render):
+    def paint_Error(self, cr, render=False):
         _paint_fail_frame(cr, self.width, self.v, self._msg)
     
-    def cast_inline(self, LINE, x, y, PP, F, FSTYLE):
-        glyphwidth = self.width
+    def _cast_inline(self, LINE, x, y, PP, F, FSTYLE):
         self.v = LINE['leading']
-        return _MInline(glyphwidth, LINE['leading'], self.k * self.factor - LINE['leading'], self.render_image, x, y)
+        self._I = (self.render_image, x, y - LINE['leading'])
+        return [], self.width, LINE['leading'], self.k * self.factor - LINE['leading']
 
-    def __len__(self):
-        return 7
-
-class _MInline(Inline):
-    def __init__(self, width, A, D, draw, x, y):
-        Inline.__init__(self, None, width, A, D)
-        self._draw = draw
-        self._x = x
-        self._y = y
-    
     def deposit_glyphs(self, repository, x, y):
-        repository['_images'].append((self._draw, x + self._x, y - self.ascent + self._y))
+        repository['_images'].append((self._I[0], self._I[1] + x, self._I[2] + y))
 
 members = [Image]
-inline = True

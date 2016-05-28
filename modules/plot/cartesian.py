@@ -1,8 +1,9 @@
 from math import log, e, cos, sin, pi, floor, ceil
 from itertools import chain
 
-from elements.node import Node
-from model.cat import cast_mono_line
+from meredith.paragraph import Plane
+
+from layout.line import cast_mono_line
 
 namespace = 'mod:plot'
 
@@ -16,9 +17,9 @@ def _soft_int(n, decimals):
             n = round(n, decimals)
     return n
 
-class Axis(Node):
+class Axis(Plane):
     def __init__(self, * args, ** kwargs):
-        Node.__init__(self, * args, ** kwargs)
+        Plane.__init__(self, * args, ** kwargs)
         self._enum()
     
     def step(self, step, start=None, stop=None):
@@ -30,7 +31,7 @@ class Axis(Node):
 
 class LinearAxis(Axis):
     name = namespace + ':axis'
-    ADNA = [('start', 0, 'float'), ('stop', 89, 'float'), ('minor', 1, 'float'), ('major', 2, 'float'), ('number', 4, 'float'), ('round', 13, 'int')]
+    DNA = [('start', 'float', 0), ('stop', 'float', 89), ('minor', 'float', 1), ('major', 'float', 2), ('number', 'float', 4), ('round', 'int', 13)]
     
     def _format(self, u):
         return (str(_soft_int(u, self['round']))).replace('-', '−')
@@ -77,7 +78,7 @@ def logbasevalid(b, number):
 
 class LogAxis(Axis):
     name = namespace + ':logaxis'
-    ADNA = [('start', 0, 'float'), ('stop', 10000, 'float'), ('minor',  10, 'float'), ('major', 10, 'float'), ('number', 100, 'float'), ('base', 0, 'float'), ('round', 13, 'int')]
+    ADNA = [('start', 'float', 0), ('stop', 'float', 10000), ('minor', 'float',  10), ('major', 'float', 10), ('number', 'float', 100), ('base', 'float', 0), ('round', 'int', 13)]
 
     def _format_reg(self, u):
         exp = _soft_int(log(u, self._expressed_base), self['round'])
@@ -123,7 +124,7 @@ class LogAxis(Axis):
 class Cartesian(list):
     def __init__(self, axes):
         self.unitaxis = ((1, 0), (0, 1))
-        list.__init__(self, axes)
+        list.__init__(self, (a for a in axes if a is not None))
 
     def fit(self, * coord ):
         return tuple(axis.U(i) / axis.R for axis, i in zip(self, coord))

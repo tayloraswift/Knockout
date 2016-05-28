@@ -153,6 +153,9 @@ class Box(dict):
                 yield None
 
 
+    def filter_nodes(self, cls):
+        return (b for b in enumerate(boxes) if isinstance(b, cls))
+
 class Datablocks(Box):
     def content_new(self, active=None, i=None):
         if active is None:

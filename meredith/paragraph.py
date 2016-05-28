@@ -258,6 +258,10 @@ class Wheels(list):
     def copy(self):
         return Wheels(self, self._iso)
 
+def _split_paint_pages(S, key, functions):
+        for page, FF in groupby(functions, lambda k: k[0]):
+            S[page][key].extend(F[1] for F in FF)
+            
 class Blockelement(Blockstyle):
     planelevel = True
     
@@ -292,26 +296,6 @@ class Blockelement(Blockstyle):
         else:
             return self._whole_location
     
-    def layout(self, frames, BSTYLE, wheels, cascade, overlay):
-        frames.save_u()
-        u, left, right, y, c, pn = frames.fit(BSTYLE['leading'])
-        
-        frames.restore_u()
-        if cascade and u - BSTYLE['leading'] == self.u:
-            self.layout_observer(BSTYLE, wheels, self.line0)
-            return True, self.wheels
-        else:
-            self.line0 = cast_mono_line({'l': 0, 'c': c, 'page': pn},
-                            [], 
-                            BSTYLE['leading'],
-                            self,
-                            Tagcounter())
-            self.line0.update({'u': u, 'left': left, 'start': left, 'width': right - left, 'x': left, 'y': y})
-            self.layout_observer(BSTYLE, wheels, self.line0)
-            self.u = u - BSTYLE['leading']
-            self.u_bottom = self._layout_block(frames, BSTYLE, cascade, overlay)
-            return False, self.wheels
-    
     def layout_observer(self, BSTYLE, wheels, LINE):
         self._OBSERVERLINES = []
         
@@ -333,14 +317,52 @@ class Blockelement(Blockstyle):
         self.left_edge = LINE['left'] - BSTYLE['leading']*0.5
         self._whole_location = -1, LINE, flag
         self.wheels = wheels
+    
+    def layout(self, frames, BSTYLE, wheels, cascade, overlay):
+        frames.save_u()
+        u, left, right, y, c, pn = frames.fit(BSTYLE['leading'])
+        
+        frames.restore_u()
+        if cascade and u - BSTYLE['leading'] == self.u:
+            self.layout_observer(BSTYLE, wheels, self.line0)
+            return True, self.wheels
+        else:
+            self.line0 = cast_mono_line({'l': 0, 'c': c, 'page': pn},
+                            [], 
+                            BSTYLE['leading'],
+                            self,
+                            Tagcounter())
+            self.line0.update({'u': u, 'left': left, 'start': left, 'width': right - left, 'x': left, 'y': y})
+            self.layout_observer(BSTYLE, wheels, self.line0)
+            self.u = u - BSTYLE['leading']
+            self._cast( * self._layout_block(frames, BSTYLE, cascade, overlay) )
+            return False, self.wheels
 
+    def _cast(self, u, lines=(), blocks=(), paint=(), paint_annot=()):
+        self.u_bottom = u
+        self._editable_lines = lines
+        self.__lines = self._OBSERVERLINES + lines
+        self.__blocklines = blocks
+        self.__paint = paint
+        self.__paint_annot = paint_annot
+    
     def erase(self):
-        self._LINES = []
-        self._OBSERVERLINES = []
         self.u = infinity
+        self._cast(infinity)
+        self.__lines = ()
+
+    def _transfer_lines(self, S):
+        for page, lines in groupby(self.__lines, key=lambda line: line['page']):
+            sorted_page = S[page]
+            for line in lines:
+                line.deposit(sorted_page)
     
     def transfer(self, S):
-        raise NotImplementedError
+        self._transfer_lines(S)
+        for cell in self.__blocklines:
+            cell.transfer(S)
+        _split_paint_pages(S, '_paint', self.__paint)
+        _split_paint_pages(S, '_paint_annot', self.__paint_annot)
 
     def _cursor(self, i):
         l = 0
@@ -359,6 +381,41 @@ class Blockelement(Blockstyle):
             return []
         
         return [(first['y'] - first['leading'], x1, x2, self.u - self.u_bottom, first['page'])]
+
+
+    def _run_stats_content(self, spell):
+        self.content.stats(spell)
+        return self.content.word_count
+
+    def run_stats(self, spell):
+        if self.__class__.textfacing:
+            return self._run_stats_content(spell)
+        else:
+            return sum(block.run_stats(spell) for block in chain.from_iterable(b.content for b in self.__blocklines))
+
+    def _highlight_spelling_lines(self):
+        select = []
+        if self._editable_lines:
+            for a, b, word in self.content.misspellings:
+                try:
+                    l1, first, x1 = self._cursor(a)
+                    l2, last, x2 = self._cursor(b)
+                except IndexError:
+                    continue
+                y2 = last['y']
+                pn2 = last['page']
+                        
+                if l1 == l2:
+                    select.append((first['y'], x1, x2, first['page']))
+                
+                else:
+                    select.append((first['y'],  x1,             first['GLYPHS'][-1][5] + first['x'],    first['page']))
+                    select.extend((line['y'],   line['start'],  line['GLYPHS'][-1][5] + line['x'],      line['page']) for line in self._editable_lines[l1 + 1:l2])
+                    select.append((last['y'],   last['start'],  x2,                                     last['page']))
+        return select
+    
+    def highlight_spelling(self):
+        return chain(self._highlight_spelling_lines(), chain.from_iterable(b.highlight_spelling() for b in self.__blocklines))
     
 class Paragraph_block(Blockelement):
     name = 'p'
@@ -444,19 +501,11 @@ class Paragraph_block(Blockelement):
             F = LINE['F']
 
 
-        self._LINES = LINES
         self._UU = [line['u'] - leading for line in LINES]
         self._search_j = [line['j'] for line in LINES]
         # shift left edge
         self.left_edge = LINES[0]['x'] - BSTYLE['leading']*0.5
-        return LINES[-1]['u']
-
-    def erase(self):
-        self._LINES = []
-        self._OBSERVERLINES = []
-        self._UU = []
-        self._search_j = []
-        self.u = infinity
+        return LINES[-1]['u'], LINES
     
     def insert(self, at, text):
         self.content[at:at] = text
@@ -583,14 +632,14 @@ class Paragraph_block(Blockelement):
         if r:
             l = max(0, bisect(self._UU, u) - 1)
             if l or r > 0 or x > self.left_edge:
-                line = self._LINES[l]
+                line = self._editable_lines[l]
                 return ((line.I(x), None),)
         return ()
     
     def where(self, address):
         if address:
             l = bisect(self._search_j, address[0])
-            line = self._LINES[l]
+            line = self._editable_lines[l]
             glyph = line['GLYPHS'][address[0] - line['i']]
             return l, line, glyph
         else:
@@ -602,11 +651,11 @@ class Paragraph_block(Blockelement):
             return l, line, glyph[1] + line['x']
         elif i == -1:
             l = 0
-            line = self._LINES[0]
+            line = self._editable_lines[0]
             x = line['left'] - line['leading']
         else:
-            l = len(self._LINES) - 1
-            line = self._LINES[l]
+            l = len(self._editable_lines) - 1
+            line = self._editable_lines[l]
             x = line['start'] + line['width']
         return l, line, x
     
@@ -631,41 +680,19 @@ class Paragraph_block(Blockelement):
         
         else:
             select.append((first['y'],  x1,             first['start'] + first['width'],    leading, first['page']))
-            select.extend((line['y'],   line['start'],  line['start'] + line['width'],      leading, line['page']) for line in (self._LINES[l] for l in range(l1 + 1, l2)))
+            select.extend((line['y'],   line['start'],  line['start'] + line['width'],      leading, line['page']) for line in self._editable_lines[l1 + 1:l2])
             select.append((last['y'],   last['start'],  x2,                                 leading, last['page']))
 
         return select
 
     def highlight_spelling(self):
-        select = []
-        if self._LINES:
-            for a, b, word in self.content.misspellings:
-                try:
-                    l1, first, x1 = self._cursor(a)
-                    l2, last, x2 = self._cursor(b)
-                except IndexError:
-                    continue
-                y2 = last['y']
-                pn2 = last['page']
-                        
-                if l1 == l2:
-                    select.append((first['y'], x1, x2, first['page']))
-                
-                else:
-                    select.append((first['y'],  x1,             first['GLYPHS'][-1][5] + first['x'],    first['page']))
-                    select.extend((line['y'],   line['start'],  line['GLYPHS'][-1][5] + line['x'],      line['page']) for line in (self._LINES[l] for l in range(l1 + 1, l2)))
-                    select.append((last['y'],   last['start'],  x2,                                     last['page']))
-        return select
+        return self._highlight_spelling_lines()
     
     def run_stats(self, spell):
-        self.content.stats(spell)
-        return self.content.word_count
+        return self._run_stats_content(spell)
 
     def transfer(self, S):
-        for page, lines in ((p, list(ps)) for p, ps in groupby(chain(self._OBSERVERLINES, self._LINES), key=lambda line: line['page'])):
-            sorted_page = S[page]
-            for line in lines:
-                line.deposit(sorted_page)
+        self._transfer_lines(S)
 
     def copy_empty(self):
         if str(self['class']) != 'body':

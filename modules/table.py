@@ -6,15 +6,6 @@ from interface.base import accent
 from meredith.box import Box
 from meredith.paragraph import Plane, Blockelement
 
-def _split_pages(groups, function):
-        D = {}
-        for K, G in groups:
-            if K not in D:
-                D[K] = G
-            else:
-                D[K].extend(G)
-        return [(p, lambda * args : function( * args , H)) for p, H in D.items()]
-
 class Matrix(list):
     def __str__(self):
         M = []
@@ -150,22 +141,22 @@ class Table(Blockelement):
         for u in row_u:
             x1, x2, y, pn = frames.at(u)
             width = x2 - x1
-            grid.append([(x1 + width*factor, y) for factor in part])
+            grid.append([(int(round(x1 + width*factor)), y) for factor in part])
             pgrid.append(pn)
         self._grid = grid
         self._ortho = list(zip( * grid ))
 
         # calculate annot grid
-        self._paint_annot_functions = _split_pages(((K, list(G[1] for G in G)) for K, G in groupby(enumerate(grid), key=lambda R: pgrid[R[0]])), 
-                                                    self._paint_annot)        
+        grouped_rows = ((page, list(g[1] for g in G)) for page, G in groupby(enumerate(grid), key=lambda R: pgrid[R[0]]))
+        paint_annot_functions = [(page, (lambda * args: self._paint_annot( * args, rows), 0, 0)) for page, rows in grouped_rows]
         # calculate grid
-        self._paint_functions = _split_pages(((K, list(G)) for K, G in groupby(self._hrules, key=lambda h: pgrid[h])),
-                                            self._paint_table_hrules)
+        grouped_rules = ((page, list(G)) for page, G in groupby(self._hrules, key=lambda h: pgrid[h]))
+        paint_functions = [(page, (lambda * args: self._paint_table_hrules( * args, rows), 0, 0)) for page, rows in grouped_rules]
         p0 = pgrid[0]
-        if self._vrules and all(p0 == p for p in pgrid):
-            self._paint_functions.append((p0, self._paint_table_vrules))
+        if self._vrules and len(paint_annot_functions) == 1:
+            paint_functions.append((p0, (self._paint_table_vrules, 0, 0)))
         
-        return row_u[-1]
+        return row_u[-1], [], self._FLOW, paint_functions, paint_annot_functions
 
     def _paint_annot(self, cr, O, rows):
         if O in self._planes:
@@ -210,19 +201,5 @@ class Table(Blockelement):
                 cr.move_to(a[0] + e, a[1])
                 cr.line_to(b[0] + e, b[1])
                 cr.stroke()
-    
-    def run_stats(self, spell):
-        return sum(block.run_stats(spell) for block in chain.from_iterable(cell.content for cell in self._FLOW))
 
-    def highlight_spelling(self):
-        return chain.from_iterable(cell.highlight_spelling() for cell in self._FLOW)
-    
-    def transfer(self, S):
-        for cell in self._FLOW:
-            cell.transfer(S)
-        for page, F in self._paint_functions:
-            S[page]['_paint'].append((F, 0, 0))
-        for page, F in self._paint_annot_functions:
-            S[page]['_paint_annot'].append((F, 0, 0))
-        
 members = [Table, Table_tr, Table_td]

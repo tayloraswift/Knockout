@@ -1,9 +1,8 @@
 from bisect import bisect
 from itertools import chain
 
-from model.olivia import Block, Flowing_text
-from elements.elements import Block_element
-from model.george import Subcell
+from meredith.paragraph import Plane, Blockelement
+from olivia.frames import Subcell
 from .cartesian import namespace, Axis, axismembers, Cartesian
 from .data import Data
 from state.exceptions import LineOverflow
@@ -42,18 +41,15 @@ class Plot_key(object):
     def target(self, y):
         return min(self._i, max(0, bisect(self._ki, y)))
 
-class Plot(Block_element):
+class Plot(Blockelement):
     name = namespace
-    ADNA = [('height', 89, 'int'), ('azm', 0, 'float'), ('alt', 'pi*0.5', 'float'), ('rot', 0, 'float'), ('tickwidth', 0.5, 'float')]
-    DNA = {'axis': {}, 'key': {}, 'num': {}}
+    DNA = [('height', 'int', 89), ('azm', 'float', 0), ('alt', 'float', 'pi*0.5'), ('rot', 'float', 0), ('tickwidth', 'float', 0.5)]
     
     def _load(self):
-        system = Cartesian(self.filter_nodes(Axis, inherit=True))
-        self._FLOW = [Flowing_text(A.content) for A in system]
+        system = Cartesian(self.find_nodes(Axis, Axis, Axis))
         
-        self._datasets = [PL.unit(system) for PL in self.filter_nodes(Data, inherit=True)]
-        self._keys = list(chain.from_iterable(PL.key() for PL in self._datasets))
-        self._FLOW += [K[0] for K in self._keys]
+        self._datasets = [PL.unit(system) for PL in self.filter_nodes(Data)]
+        self._FLOW = system + self._datasets
         self._CS = system
         self._hk = (None, None)
     
@@ -115,36 +111,7 @@ class Plot(Block_element):
                     self.ink_graph, self.ink_annot, 
                     (px, py), self.regions, self.PP)
         
-class GraphBlock(Block):
-    def __init__(self, FLOW, MONO, box, draw, draw_annot, origin, regions, PP):
-        Block.__init__(self, FLOW, * box, PP)
-        self._origin = origin
-        self._MONO = MONO
-        self._draw = draw
-        self._draw_annot = draw_annot
-        self._regions = regions
-
-    def _print_annot(self, cr, O):
-        if O in self._FLOW:
-            self._draw_annot(cr)
-            self._handle(cr)
-            cr.fill()
-    
-    def target(self, x, y):
-        if x <= self['right']:
-            dx, dy = self._origin
-            return self._regions(x - dx, y - dy)
-        else:
-            return None
-    
-    def deposit(self, repository):
-        repository['_paint'].append((self._draw, * self._origin )) # come before to avoid occluding child elements
-        repository['_paint_annot'].append((self._print_annot, 0, 0))
-        for A in self._FLOW:
-            A.deposit(repository)
-        for A in self._MONO:
-            A.deposit(repository, * self._origin)
 
 members = [Plot] + axismembers
-members.extend(chain.from_iterable(D.members for D in (scatterplot, f, histogram)))
-inline = False
+members += f.members
+#members.extend(chain.from_iterable(D.members for D in (scatterplot, f, histogram)))

@@ -108,7 +108,7 @@ class PlaneCursor(object):
             self._target_shallow(line['x'] + glyph[1], line['u'] + (direction - 0.5)*line['leading'])
             self.i = self.j
         else:
-            self.i = self.increment_cursor((self.i[0] + direction,), 0)
+            self.i = self.increment_cursor((self.i[0] + direction,), 0, True)
             self.j = self.i
     
     def home_end(self, direction):
@@ -128,7 +128,7 @@ class PlaneCursor(object):
         if self.i > self.j:
             self.i, self.j = self.j, self.i
     
-    def increment_cursor(self, a, da):
+    def increment_cursor(self, a, da, clamp=False):
         a = list(a)
         if len(a) == 2:
             a[1] += da
@@ -146,7 +146,7 @@ class PlaneCursor(object):
                 else:
                     a = [len(self._blocks) - 1, len(self._blocks[a[0]].content)]
         else:
-            a[0] = min(len(self._blocks) - 1, max(0, a[0] + da))
+            a[0] = min(len(self._blocks) - clamp, max(0, a[0] + da))
         return tuple(a)
         
     def delete(self, da=0, db=0, nolayout=False):
@@ -342,5 +342,8 @@ class PlaneCursor(object):
         return list(chain.from_iterable(block.highlight( * bound ) for bound, block in zip(bounds, lit))), signs
     
     def styling_at(self):
-        l, line, glyph = self.PLANE.where(self.i)
-        return line['BLOCK'], glyph[3]
+        try:
+            l, line, glyph = self.PLANE.where(self.i)
+            return line['BLOCK'], glyph[3]
+        except IndexError:
+            return self._blocks[-1], None

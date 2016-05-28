@@ -464,7 +464,7 @@ class Properties(_Properties_panel):
 
         elif to == 'frames':
             tabs = (('section', 'S'), ('frames', 'F'),)
-            default = 0
+            default = 1
             self._panel = self._frames_panel
         
         else:

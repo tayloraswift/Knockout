@@ -156,9 +156,14 @@ def interpret_rgba(C):
         # hex
         else:
             colorstring = ''.join(c for c in C if c in hx)
-            colorstring = colorstring + '000000ff'[len(colorstring):]
+            if len(colorstring) > 3:
+                colorstring = colorstring + '000000ff'[len(colorstring):]
+                bytes = 2
+            else:
+                colorstring = colorstring + '000f'[len(colorstring):]
+                bytes = 1
             for pos in range(4):
-                RGBA[pos] = int(colorstring[pos*2 : pos*2 + 2], 16) / 255
+                RGBA[pos] = int(colorstring[pos*bytes : pos*bytes + bytes], 16) / (16**bytes - 1)
     return tuple(RGBA)
 
 def interpret_haylor(value): # X X X X X : (X, X, X, X, X)

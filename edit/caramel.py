@@ -51,20 +51,28 @@ class Channels_controls(object):
         if c is None:
             c = 0
         
-        self._grid_controls = DOCUMENT['grid']
-
-        self.section = DOCUMENT.content[s]
+        try:
+            self.section = DOCUMENT.content[s]
+        except IndexError:
+            self.section = DOCUMENT.content[0]
         self._FRAMES = self.section['frames']
-        
-        self.PG = self._FRAMES[c].page
-        self.HPG = self._FRAMES[c].page
-        
+
+        try:
+            frame = self._FRAMES[c]
+        except IndexError:
+            frame = self._FRAMES[0]
+            c = 0
+
+        self.PG = frame.page
+        self.HPG = frame.page
         self._selected_point = [c, None, None]
         self._selected_portal = (None, None, None)
 
         # these are stateful
         self._hover_point = (None, None, None)
         self._hover_portal = (None, None)
+                        
+        self._grid_controls = DOCUMENT['grid']
 
     def at(self):
         return DOCUMENT.content.index(self.section), self._selected_point[0]

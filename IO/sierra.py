@@ -1,3 +1,5 @@
+from itertools import chain
+
 from pprint import pformat
 from ast import literal_eval
 
@@ -17,11 +19,9 @@ def save():
             'channels': caramel.delight.at(), 
             'view': taylor.becky.read_display_state()}
     
+    FT = ''.join(chain(FI, ('\n\n<!-- #############\n', pformat(DATA, width=189), '\n############# -->\n') ))
     with open(constants.filename, 'w') as fi:
-        fi.write(''.join(FI))
-        fi.write('\n<!-- #############\n')
-        fi.write(pformat(DATA, width=189))
-        fi.write('\n############# -->\n')
+        fi.write(FT)
 
 def load(name):
     with open(name, 'r') as fi:

@@ -114,6 +114,14 @@ escape_chars = {'&': '&amp;',
                 '"': '&quot;',
                 "'": "&#x27;"}
 
+def chainwithseperator(G, sep):
+    for item in next(G):
+        yield item
+    for sublis in G:
+        yield sep
+        for item in sublis:
+            yield item
+
 def _group_inline(L, indent=0):
     esc = escape_chars
     
@@ -122,7 +130,7 @@ def _group_inline(L, indent=0):
         if is_str:
             lines.append([[indent, ''.join(esc[c] if c in esc else c for c in C)]])
         else: # node
-            lines += [_write_box(c, indent) for c in C]
+            lines += [_write_box(c, indent, False) for c in C]
     return lines
 
 def _merge_inline(lines, expanded):
@@ -141,7 +149,7 @@ def _write_partial(box, indent=0, a=None, b=None):
         lines = [[indent]]
     return _merge_inline(lines, expanded)
 
-def _write_box(box, indent=0):
+def _write_box(box, indent=0, space=True):
     if box.content:
         if type(box).textfacing:
             expanded = _group_inline(box.content, indent + 1)
@@ -150,7 +158,10 @@ def _write_box(box, indent=0):
             A = _merge_inline(lines, expanded)
         else:
             A = [[indent, '<' + box.print_A() + '>']]
-            A.extend(chain.from_iterable(_write_box(N, indent + 1) for N in box.content))
+            if space:
+                A.extend(chainwithseperator((_write_box(N, indent + 1, space) for N in box.content), [0, '']))
+            else:
+                A.extend(chain.from_iterable(_write_box(N, indent + 1, space) for N in box.content))
             A += [[indent, '</' + box.name + '>']]
         return A
     else:
@@ -162,10 +173,10 @@ def _write_L(L, indent=0):
     elif type(L[0]) is str or type(L[0]).inline:
         return _merge_inline([[indent]], _group_inline(L, indent))
     else:
-        return list(chain.from_iterable(_write_box(B, indent) for B in L))
+        return chainwithseperator((_write_box(B, indent, True) for B in L), [0, ''])
 
 def miniserialize(L):
-    return ''.join(N[1] for N in _write_L(L))
+    return ''.join(N[1] for N in chain.from_iterable(_write_box(B, 0, True) for B in L))
 
 def serialize(blocks, indent=0, trim=None):
     if trim is None:
@@ -173,6 +184,9 @@ def serialize(blocks, indent=0, trim=None):
     else: # blocks will always be at least len() == 2
         begin, *middle, end = blocks
         lines = _write_partial(begin, indent, a=trim[0])
+        lines.append([0, ''])
         lines += _write_L(middle, indent)
+        if len(lines) > 2:
+            lines.append([0, ''])
         lines += _write_partial(end, indent, b=trim[1])
     return outpattern.sub(lambda x: OUT[x.group(0)], '\n'.join('    ' * ind + line for ind, line in lines))

@@ -44,18 +44,22 @@ def overflow(cr, frames, Tx, Ty):
         cr.stroke()
 
 class Channels_controls(object):
-    def __init__(self, address):
+    def __init__(self, s, c):
         self._mode = 'outlines'
+        if s is None:
+            s = 0
+        if c is None:
+            c = 0
         
         self._grid_controls = DOCUMENT['grid']
 
-        self.section = DOCUMENT.content[address[0]]
+        self.section = DOCUMENT.content[s]
         self._FRAMES = self.section['frames']
         
-        self.PG = self._FRAMES[address[1]].page
-        self.HPG = self._FRAMES[address[1]].page
+        self.PG = self._FRAMES[c].page
+        self.HPG = self._FRAMES[c].page
         
-        self._selected_point = [address[1], None, None]
+        self._selected_point = [c, None, None]
         self._selected_portal = (None, None, None)
 
         # these are stateful

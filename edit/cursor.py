@@ -17,7 +17,13 @@ _zeros = {'<fc/>', '<fo/>', '\t'}
 
 class PlaneCursor(object):
     def __init__(self, plane_address, i, j):
-        self._set_plane(address(DOCUMENT, plane_address), plane_address)
+        try:
+            self._set_plane(address(DOCUMENT, plane_address), plane_address)
+        except IndexError:
+            plane_address = [0]
+            i = (0,)
+            j = (0,)
+            self._set_plane(address(DOCUMENT, plane_address), plane_address)
         self.i = i
         self.j = j
         self.section = DOCUMENT.content[plane_address[0]]

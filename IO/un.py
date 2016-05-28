@@ -55,7 +55,7 @@ class UN(object):
         contexts.Text.__init__()
         
         cursor.fcursor.__init__( * DATA['text'] )
-        caramel.delight.__init__(DATA['channels'])
+        caramel.delight.__init__( * DATA['channels'] )
         
         contexts.Text.update_force()
         contexts.Text.turnover_k( * activity )

@@ -41,7 +41,7 @@ def load(name):
     from edit import cursor, caramel
     
     # aim editor objects
-    caramel.delight = caramel.Channels_controls(DATA['channels'])
+    caramel.delight = caramel.Channels_controls( * DATA['channels'] )
     keyboard.keyboard = keyboard.Keyboard(constants.shortcuts)
     cursor.fcursor = cursor.PlaneCursor( * DATA['text'] )
     

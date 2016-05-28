@@ -60,12 +60,12 @@ class Sprinkles(object):
     def move_grid(self, x, y):
         if self.grid_selected[0] is not None:
             if self.grid_selected[0] == 0:
-                if 0 < x < datablocks.DOCUMENT.WIDTH:
+                if 0 < x < datablocks.DOCUMENT['width']:
                     value = x
                 else:
                     return False
             else:
-                if 0 < y < datablocks.DOCUMENT.HEIGHT:
+                if 0 < y < datablocks.DOCUMENT['height']:
                     value = y
                 else:
                     return False

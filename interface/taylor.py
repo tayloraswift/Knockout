@@ -121,8 +121,10 @@ class Document_toolbar(object):
         y += 30
         self._items.append(kookies.Button(5, y, 90, 30, callback=lambda: _punch_tags('Ctrl B'), name='x Strong'))
 
-        y += 50
-        self._items.append(fields.Checkbox(15, y, 80, node=DOCUMENT, A='dual', name='Dual'.upper(), no_z=True))
+        y += 40
+        self._items.append(fields.Checkbox(20, y, 70, node=DOCUMENT, A='dual', name='Dual'.upper(), no_z=True))
+        y += 35
+        self._items.append(fields.Checkbox(20, y, 70, node=DOCUMENT, A='even', name='Even'.upper(), no_z=True))
         
         y += 50
         
@@ -131,7 +133,7 @@ class Document_toolbar(object):
                                                 node=fontsettings, 
                                                 A='hinting',
                                                 name='HINTING', no_z=True))
-        y += 40
+        y += 45
         self._items.append(fields.Selection_menu(5, y, 90, partition=0, 
                                                 menu_options=[(0, 'Default'), (1, 'None'), (2, 'Grayscale'), (3, 'Subpixel')], 
                                                 node=fontsettings, 
@@ -345,6 +347,8 @@ class Document_view(ui.Cell):
                 caramel.delight.dpress()
     
     def press_right(self, x, y):
+        self._check_region_press(x, y)
+        
         if self._region_active == 'view':
 
             xo, yo = self._T_1(x, y)

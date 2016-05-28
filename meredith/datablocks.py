@@ -5,7 +5,10 @@ class Datablock_lib(dict):
 
 class Tag_lib(Datablock_lib):
     def __missing__(self, key):
-        self.ordered.new(key)
+        O = self.ordered.new(key)
+        self.ordered.content.append(O)
+        self.ordered.sort_content()
+        self.update_datablocks(self.ordered)
         return self[key]
 
 Texttags_D = Tag_lib()

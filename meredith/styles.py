@@ -46,9 +46,6 @@ class Textstyles(Box):
         datablocks.BSTYLES.text_projections.clear()
         datablocks.DOCUMENT.layout_all()
     
-    def sort_content(self):
-        self.content.sort(key=lambda O: O['name'])
-    
     def new(self):
         O = self.__class__.contains({'name': new_name('Untitled fontstyle', self.__class__.dblibrary)})
         self.content.append(O)

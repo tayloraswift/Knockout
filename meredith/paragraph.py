@@ -38,6 +38,7 @@ class Meredith(Box):
     DNA  = [('width',   'int',  816),
             ('height',  'int',  1056),
             ('dual',    'bool', False),
+            ('even',     'bool', False),
             ('grid',    'pagegrid', '')]
     
     def __init__(self, * II, ** KII ):
@@ -89,16 +90,16 @@ class Meredith(Box):
         if self['dual']:
             E = int((y + self._HALFGAP) // self._HEIGHT_HALFGAP) * 2
             if x > self._WIDTH_HALFGAP:
-                return E
+                return E + self['even']
             else:
-                return E - 1
+                return E + self['even'] - 1
         else:
             return int((y + self._HALFGAP) // self._HEIGHT_HALFGAP)
     
     def normalize_XY(self, x, y, pp):
         if self['dual']:
-            y -= (pp + 1)//2 * self._HEIGHT_HALFGAP
-            if pp % 2 == 0:
+            y -= (pp + (not self['even']))//2 * self._HEIGHT_HALFGAP
+            if pp % 2 == self['even']:
                 x -= self._WIDTH_HALFGAP
             return x, y
         else:
@@ -106,13 +107,13 @@ class Meredith(Box):
     
     def map_X(self, x, pp):
         if self['dual']:
-            return x + self._WIDTH_HALFGAP * ( not (pp % 2))
+            return x + self._WIDTH_HALFGAP * ( self['even'] ^ (not (pp % 2)))
         else:
             return x
 
     def map_Y(self, y, pp):
         if self['dual']:
-            return y + (pp + 1)//2 * self._HEIGHT_HALFGAP
+            return y + (pp + (not self['even']))//2 * self._HEIGHT_HALFGAP
         else:
             return y + pp * self._HEIGHT_HALFGAP
 

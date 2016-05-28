@@ -149,6 +149,9 @@ class Box(dict):
                 yield boxes.pop(next(i for i, e in enumerate(boxes) if isinstance(e, cls)))
             except StopIteration:
                 yield None
+
+    def sort_content(self):
+        self.content.sort(key=lambda O: O['name'])
     
 class _Tags(Box):
     name = '_abstract_taglist'

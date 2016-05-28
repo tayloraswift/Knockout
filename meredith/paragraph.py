@@ -435,12 +435,12 @@ class Paragraph_block(Blockelement):
     def insert(self, at, text):
         self.content[at:at] = text
         n = len(text)
-        self.content.misspellings = [pair if pair[1] < at else (pair[0] + n, pair[1] + n, pair[2]) if pair[0] > at else (pair[0], pair[1] + n, pair[2]) for pair in self.content.misspellings]
+        self.content.misspellings = [pair if pair[1] <= at else (pair[0] + n, pair[1] + n, pair[2]) if pair[0] >= at else (pair[0], pair[1] + n, pair[2]) for pair in self.content.misspellings]
     
     def delete(self, a, b):
         del self.content[a:b]
         n = a - b
-        self.content.misspellings = [pair if pair[1] < a else (pair[0] + n, pair[1] + n, pair[2]) if pair[0] > b else (0, 0, None) for pair in self.content.misspellings]
+        self.content.misspellings = [pair if pair[1] <= a else (pair[0] + n, pair[1] + n, pair[2]) if pair[0] >= b else (0, 0, None) for pair in self.content.misspellings]
     
     def bridge(self, I, J, positive, negative, sign):
         paragraph = self.content

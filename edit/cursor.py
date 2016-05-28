@@ -319,6 +319,12 @@ class PlaneCursor(object):
         except IndexError:
             return None
     
+    def at(self):
+        try:
+            return address(self.PLANE, self.i)
+        except IndexError:
+            return None
+    
     def paint_current_selection(self):
         i, j = sorted((self.i, self.j))
         double = len(i) == 2

@@ -425,8 +425,8 @@ class Properties(_Properties_panel):
             self._heading = lambda: 'Element source'
             
             self._items.append(source.Rose_garden(10, y, width=KW + 10, 
-                    e_acquire = lambda: contexts.Text.char,
-                    before = un.history.save, after = lambda: (self._stack(20), meredith.mipsy.recalculate_all(), contexts.Text.update())))
+                    context = contexts.Text,
+                    save = un.history.save))
             y = self._y_incr() + 20
         return y
 

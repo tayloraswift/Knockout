@@ -8,13 +8,16 @@ from fonts.interfacefonts import ISTYLES
 
 from IO.tree import serialize, deserialize
 
-#from elements.node import Mod_element
+from meredith.box import Box
+
 from edit import cursor
 from edit.text import expand_cursors_word
-#from edit.paperairplanes import interpret_rgba
+
+from olivia import interpret_rgba
+
 from state.exceptions import IO_Error
 
-from interface.base import Kookie, accent
+from interface.base import Kookie, set_fonts, accent
 
 xml_lexer = pygments_html.XmlLexer(stripnl=False)
 
@@ -57,10 +60,9 @@ def _paint_select(cl, sl, cx, sx, left, right):
     return select
 
 class Rose_garden(Kookie):
-    def __init__(self, x, y, width, e_acquire, before=lambda: None, after=lambda: None):
-        self._BEFORE = before
-        self._AFTER = after
-        self._e_acquire = e_acquire
+    def __init__(self, x, y, width, context, save):
+        self._save = save
+        self._context = context
 
         self.font = ISTYLES[('mono',)]
         fontsize = self.font['fontsize']
@@ -77,9 +79,9 @@ class Rose_garden(Kookie):
                         Token.Error: "1, 0.2, 0.3"}
         self._palatte = {token: interpret_rgba(color) for token, color in palatte.items()}
         
-        Base_kookie.__init__(self, x, y, width, 0, font=None)
+        Kookie.__init__(self, x, y, width, 0)
         
-        self._SYNCHRONIZE()
+        self._read()
         
         self.is_over_hover = self.is_over
         
@@ -90,16 +92,15 @@ class Rose_garden(Kookie):
         self._active = False
         self._invalid = False
 
-    def _ACQUIRE_REPRESENT(self):
-        self._element = self._e_acquire()
-        self._VALUE = serialize([self._element])
-        self._CHARS = list(self._VALUE) + ['\n']
+    def _read(self):
+        self._element = self._context.char
+        if self._element is not None:
+            self._value = serialize([self._element])
+        else:
+            self._value = ''
+        self._CHARS = list(self._value) + ['\n']
         self._grid_glyphs(self._CHARS)
         self._invalid = False
-
-    def _SYNCHRONIZE(self):
-        self._ACQUIRE_REPRESENT()
-        self._PREV_VALUE = self._VALUE
 
     def _grid_glyphs(self, glyphs):
         x = self._x
@@ -340,17 +341,16 @@ class Rose_garden(Kookie):
 
     def _commit(self, B):
         success = False
-        if isinstance(self._element, Mod_element):
+        if isinstance(self._element, Box):
             try:
                 E = deserialize(B, fragment=True)
-
                 try: # locate object
                     L = [next(e for e in E if type(e) is type(self._element))]
                     success = True
                 except StopIteration:
                     # if the object type changed
                     try:
-                        L = [next(e for e in E if isinstance(e, Mod_element))]
+                        L = [next(e for e in E if isinstance(e, Box))]
                         success = True
                     except StopIteration:
                         pass
@@ -369,22 +369,22 @@ class Rose_garden(Kookie):
         if not success:
             self._invalid = True
             return
+        self._save()
         i = cursor.fcursor.i
-        cursor.fcursor.j = i + 1
+        * j_r, jl = cursor.fcursor.j
+        cursor.fcursor.j = *j_r, jl + 1
         cursor.fcursor.insert(L)
         cursor.fcursor.i = i
         cursor.fcursor.j = i
-        self._SYNCHRONIZE()
-        self._AFTER()
+        self._read()
+        self._context.update()
         
     def defocus(self):
         self._active = False
         # dump entry
-        self._VALUE = self._entry()
-        if self._VALUE != self._PREV_VALUE:
-            self._BEFORE()
-            self._commit(self._VALUE)
-            self._PREV_VALUE = self._VALUE
+        value = self._entry()
+        if value != self._value or self._invalid:
+            self._commit(value)
         else:
             return False
         return True
@@ -401,7 +401,7 @@ class Rose_garden(Kookie):
         return l, int(self._x + 30 + gx), self._y + self._leading * l
 
     def draw(self, cr, hover=(None, None)):
-        self._render_fonts(cr)
+        set_fonts(cr, self.font['font'], self.font['fontsize'])
         
         # highlight
         if self._active:

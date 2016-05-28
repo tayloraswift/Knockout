@@ -27,8 +27,7 @@ class Text_context(object):
 
     def update(self):
         BLOCK, TEXTSTYLE = cursor.fcursor.styling_at()
-        C = cursor.fcursor.char(cursor.fcursor.i)
-        
+        C = cursor.fcursor.at()
         if BLOCK is not self.bk:
             self.changed.update({'paragraph'})
             self.bk = BLOCK
@@ -54,7 +53,7 @@ class Text_context(object):
 
     def update_force(self):
         BLOCK, TEXTSTYLE = cursor.fcursor.styling_at()
-        C = cursor.fcursor.char(cursor.fcursor.i)
+        C = cursor.fcursor.at()
         
         self.changed.update({'paragraph'})
         self.bk = BLOCK
@@ -66,7 +65,7 @@ class Text_context(object):
         self.changed.update({'character'})
         self.char = C
         
-        self.ct, self.c = caramel.delight.at()
+        self.sc, self.c = caramel.delight.at()
         self.changed.update({'frames'})
 
     def push_active(self, A, node):

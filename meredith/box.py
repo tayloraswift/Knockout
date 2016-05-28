@@ -216,15 +216,15 @@ class Inline(Box):
         self.width = width
         self.ascent = A
         self.descent = D
-        self._paint = paint
-        self._paint_annot = paint_annot
+        self.__paint = paint
+        self.__paint_annot = paint_annot
     
     def deposit_glyphs(self, repository, x, y):
         for line in self._LINES:
             line.deposit(repository, x, y)
-        if self._paint is not None:
-            repository['_paint'].append((self._paint[0], self._paint[1] + x, self._paint[2] + y))
-        if self._paint_annot is not None:
-            repository['_paint_annot'].append((self._paint_annot[0], self._paint_annot[1] + x, self._paint_annot[2] + y))
+        if self.__paint is not None:
+            repository['_paint'].append((self.__paint[0], self.__paint[1] + x, self.__paint[2] + y))
+        if self.__paint_annot is not None:
+            repository['_paint_annot'].append((self.__paint_annot[0], self.__paint_annot[1] + x, self.__paint_annot[2] + y))
   
 members = (Null, Texttags, Texttag, Blocktags, Blocktag)

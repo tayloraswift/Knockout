@@ -12,14 +12,10 @@ def save():
             tree.serialize([datablocks.DOCUMENT, datablocks.TSTYLES, datablocks.BSTYLES]))
     
     from edit import cursor, caramel
-    textcontexts = (cursor.fcursor.plane_address, cursor.fcursor.i, cursor.fcursor.j)
-    
-    ct, c = caramel.delight.at()
-    channelcontexts = datablocks.DOCUMENT.content.index(ct), c
-
     from interface import taylor
-    
-    DATA = {'text': textcontexts, 'channels': channelcontexts, 'view': taylor.becky.read_display_state()}
+    DATA = {'text': (cursor.fcursor.plane_address, cursor.fcursor.i, cursor.fcursor.j), 
+            'channels': caramel.delight.at(), 
+            'view': taylor.becky.read_display_state()}
     
     with open(constants.filename, 'w') as fi:
         fi.write(''.join(FI))

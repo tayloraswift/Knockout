@@ -49,12 +49,11 @@ class Meredith(Box):
     
     def layout_all(self):
         self._recalc_page()
-        self._sorted_pages.clear()
         for section in self.content:
-            section.layout(section['frames'])
+            section.layout()
 
     def transfer(self):
-        if any(section.rebuilt for section in self.content) or not self._sorted_pages:
+        if any(section.rebuilt for section in self.content):
             self._sorted_pages.clear()
             self._sorted_pages.annot = []
             for section in self.content:
@@ -66,7 +65,7 @@ class Meredith(Box):
     
     def add_section(self):
         self.content.append(Section({}, [Paragraph_block({}, Text(list('{new}')))]))
-        self.layout_all()
+        self.content[-1].layout()
     # Page functions
     
     def _recalc_page(self):
@@ -160,7 +159,6 @@ class Plane(Box):
                 else:
                     break
             UU.append(block.u)
-        self.rebuilt = True
     
     def which(self, x, u, r=-1):
         if r:
@@ -188,18 +186,45 @@ class Section(Plane):
         if 'frames' not in self.attrs:
             self.attrs['frames'] = self['frames']
         
+        self._SP = Sorted_pages()
+        self.annot = {}
+        self.rebuilt = False
+
+    def after(self, A):
+        if A == 'repeat':
+            self.layout()
+        
+    def layout(self, * I, ** KI ):
+        self._SP.clear()
+        self.annot = {}
+        self.rebuilt = True
         if self['repeat'] > 1:
-            pass
-    
-    def transfer(self, S):
+            for F in (self['frames'].make_page_copy(i + 1) for i in range(self['repeat'] - 1)):
+                super().layout(F, * I, ** KI )
+                self._cache_pages(self._SP, self.annot)
+        super().layout(self['frames'], * I, ** KI ) # always do the fist one last
+        self._cache_pages(self._SP, self.annot)
+
+    def _cache_pages(self, S, A):
         for block in self.content:
             block.transfer(S)
-        annot = {}
         for page, P in S.items():
-            annot[page] = (P.pop('_annot'), P.pop('_paint_annot'))
+            A[page] = (P.pop('_annot'), P.pop('_paint_annot'))
             P['_annot'] = []
             P['_paint_annot'] = []
-        S.annot.append(annot)
+        
+    def transfer(self, S):
+        for page, P in self._SP.items():
+            superpage = S[page]
+            for name, L in P.items():
+                if name in superpage:
+                    if type(name) is int:
+                        superpage[name][1].extend(L[1])
+                    else:
+                        superpage[name].extend(L)
+                else:
+                    superpage[name] = L
+        S.annot.append(self.annot)
         self.rebuilt = False
 
 class Wheels(list):

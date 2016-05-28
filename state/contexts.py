@@ -11,7 +11,7 @@ class Text_context(object):
         self.ts = None
         self.char = None
         
-        self.ct = None
+        self.sc = None
         self.c = None
         
         self.kbt = None
@@ -42,12 +42,15 @@ class Text_context(object):
             self.changed.update({'character'})
             self.char = C
 
-    def update_channels(self):
-        ct, c = caramel.delight.at()
-        if c != self.c or ct is not self.ct:
-            self.changed.update({'channels'})
+    def update_frames(self):
+        sc, c = caramel.delight.at()
+        if sc != self.sc:
+            self.changed.update({'frames', 'section'})
             self.c = c
-            self.ct = ct
+            self.sc = sc
+        elif c != self.c:
+            self.changed.update({'frames'})
+            self.c = c
 
     def update_force(self):
         BLOCK, TEXTSTYLE = cursor.fcursor.styling_at()
@@ -64,7 +67,7 @@ class Text_context(object):
         self.char = C
         
         self.ct, self.c = caramel.delight.at()
-        self.changed.update({'channels'})
+        self.changed.update({'frames'})
 
     def push_active(self, A, node):
         if A == 'kbs':

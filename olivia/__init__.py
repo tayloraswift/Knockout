@@ -21,6 +21,8 @@ def interpret_frame(S):
     return F
 
 def interpret_grid(S):
+    if type(S) is Sprinkles:
+        return S.copy()
     if not S:
         S = ';'
     xx, yy, *_ = (list(map(interpret_int, g.split(' '))) for g in S.split(';'))

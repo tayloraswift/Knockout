@@ -67,7 +67,11 @@ class Channels_controls(object):
         self._hover_portal = (None, None)
 
     def at(self):
-        return self.section, self._selected_point[0]
+        return DOCUMENT.content.index(self.section), self._selected_point[0]
+
+    def add_frame(self):
+        self.section['frames'].add_frame()
+        self.section.layout()
 
     def target_select(self, x, y):
         p, c, r, i = self._FRAMES.which_point(x, y, 20)

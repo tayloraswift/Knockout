@@ -87,6 +87,9 @@ class Frames(list):
         self._savestack = []
         self._straighten()
     
+    def make_page_copy(self, offset):
+        return self.__class__(((F[0], F[1], F.page + offset) for F in self))
+    
     def _straighten(self):
         left, right = zip( * self )
         
@@ -266,7 +269,7 @@ class Frames(list):
         x1, y1, x2 = self[-1][0][-1][0], self[-1][0][-1][1] + 40, self[-1][1][-1][0]
         F = Frame( ([[x1, y1, False], [x1, y1 + 40, False]], [[x2, y1, False], [x2, y1 + 40, False]], self[-1].page) )
         self.append(F)
-        datablocks.DOCUMENT.layout_all()
+        self._straighten()
         
     def __repr__(self):
         return ' |\n    '.join(repr(F) for F in self)

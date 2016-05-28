@@ -21,9 +21,7 @@ class UN(object):
             del self._history[self._i:]
                 
         kitty = list(map(lambda k: miniserialize([k]), (datablocks.TTAGS, datablocks.BTAGS, datablocks.DOCUMENT, datablocks.TSTYLES, datablocks.BSTYLES)))
-        
-        ct, c = caramel.delight.at()
-        DATA = {'text': (cursor.fcursor.plane_address, cursor.fcursor.i, cursor.fcursor.j), 'channels': (datablocks.DOCUMENT.content.index(ct), c)}
+        DATA = {'text': (cursor.fcursor.plane_address, cursor.fcursor.i, cursor.fcursor.j), 'channels': caramel.delight.at()}
 
         self._history.append((kitty, DATA, contexts.Text.index_k()))
         self._i = len(self._history)

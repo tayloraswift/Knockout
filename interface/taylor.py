@@ -29,9 +29,9 @@ accent_light = caramel.accent
 class Mode_switcher(object):
     def __init__(self, callback, default):
         self._hover_j = None
-        signals = [('render', 'R'), ('text', 'T'), ('channels', 'C')]
+        signals = [('render', 'R'), ('text', 'T'), ('frames', 'F')]
         default = next(i for i, k in enumerate(signals) if k[0] == default)
-        self._switcher = kookies.Tabs_round(0, -70, 40, 30, default=default, callback=callback, signals=signals, longstrings=['View render', 'Edit text', 'Edit channels'])
+        self._switcher = kookies.Tabs_round(0, -70, 40, 30, default=default, callback=callback, signals=signals, longstrings=['View render', 'Edit text', 'Edit frames'])
 
     def is_over(self, x, y):
         return self._switcher.is_over(x - self._dx, y - self._dy)
@@ -107,7 +107,7 @@ class Document_toolbar(object):
         self._items.append(kookies.Button(5, y, 90, 30, callback=un.history.forward, name='Redo'))
         
         y += 40
-        self._items.append(kookies.Button(5, y, 90, 30, callback=caramel.delight.section['frames'].add_frame, name='Add frame'))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=caramel.delight.add_frame, name='Add frame'))
         y += 30
         self._items.append(kookies.Button(5, y, 90, 30, callback=DOCUMENT.add_section, name='Add section'))
         
@@ -300,11 +300,11 @@ class Document_view(ui.Cell):
             clipboard = keyboard.type_document(name, char)
             # check if paragraph and font context changed
             CText.update()
-            
             return clipboard
             
-        elif self._mode == 'channels':
+        elif self._mode == 'frames':
             caramel.delight.key_input(name)
+            CText.update_frames()
             
     def press(self, x, y, name):
         self._check_region_press(x, y)
@@ -328,10 +328,10 @@ class Document_view(ui.Cell):
                 # count words
                 self.planecursor.run_stats()
             
-            # CHANNEL EDITING MODE
-            elif self._mode == 'channels':
+            # frame EDITING MODE
+            elif self._mode == 'frames':
                 caramel.delight.press(x, y, name=name)
-                CText.update_channels()
+                CText.update_frames()
 
         elif self._region_active == 'toolbar':
             self._toolbar.press(x, y)
@@ -343,7 +343,7 @@ class Document_view(ui.Cell):
             # TEXT EDITING MODE
             if self._mode == 'text':
                 self.planecursor.expand_cursors_word()
-            elif self._mode == 'channels':
+            elif self._mode == 'frames':
                 caramel.delight.dpress()
     
     def press_right(self, x, y):
@@ -377,7 +377,7 @@ class Document_view(ui.Cell):
                         menu.create(x, y, 200, list(zip(suggestions, labels)), _replace_misspelled)
 
                 except IndexError:
-                    # occurs if an empty channel is selected
+                    # occurs if an empty frame is selected
                     pass
                 # check if paragraph context changed
                 CText.update()
@@ -400,7 +400,7 @@ class Document_view(ui.Cell):
                     self._sel_cursor = self.planecursor.j
                     noticeboard.redraw_becky.push_change()
 
-            elif self._mode == 'channels':
+            elif self._mode == 'frames':
                 caramel.delight.press_motion(x, y)
         elif self._region_active == 'toolbar':
             pass
@@ -436,7 +436,7 @@ class Document_view(ui.Cell):
         self._toolbar.release(x, y)
 
         if self._region_active == 'view':
-            if self._mode == 'channels':
+            if self._mode == 'frames':
                 caramel.delight.release()
         elif self._region_active == 'toolbar':
             pass
@@ -486,7 +486,7 @@ class Document_view(ui.Cell):
             if self._mode == 'text':
                 pass
 
-            elif self._mode == 'channels':
+            elif self._mode == 'frames':
                 caramel.delight.hover( * self._T_1(x, y) )
                 
         elif self._region_hover == 'toolbar':
@@ -574,7 +574,7 @@ class Document_view(ui.Cell):
             
             page_highlight = self.planecursor.PG
         
-        elif self._mode == 'channels':
+        elif self._mode == 'frames':
             page_highlight = caramel.delight.PG
         
         else:
@@ -615,7 +615,7 @@ class Document_view(ui.Cell):
             
             cr.fill()
             
-            if self._mode == 'channels':
+            if self._mode == 'frames':
                 caramel.delight.render_grid(cr, px, py, PWIDTH, PHEIGHT, self._A)
 
     def _draw_images(self, cr, images):
@@ -769,10 +769,10 @@ class Document_view(ui.Cell):
         # text
         self._draw_by_page(cr, self._H - self._Hc, self._K - self._Kc, self._Hc, self._Kc, self._A)
         
-        # channels
+        # frames
         if self._mode == 'text':
             caramel.delight.render(cr, self._X_to_screen, self._Y_to_screen, frames=self.planecursor.section['frames'])
-        elif self._mode == 'channels':
+        elif self._mode == 'frames':
             caramel.delight.render(cr, self._X_to_screen, self._Y_to_screen)
         
         if self._mode != 'render':

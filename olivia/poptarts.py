@@ -148,3 +148,6 @@ class Sprinkles(object):
 
     def __repr__(self):
         return ';'.join(' '.join(map(str, grid)) for grid in self._grid)
+    
+    def copy(self):
+        return self.__class__(self._grid[0][:], self._grid[1][:])

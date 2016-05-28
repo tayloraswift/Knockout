@@ -440,12 +440,12 @@ class Properties(_Properties_panel):
             y = self._y_incr() + 20
         return y
 
-    def _channels_panel(self, y, KW):
-        c = contexts.Text.c
-        ct = contexts.Text.ct
+    def _frames_panel(self, y, KW):
+
         
-        if self._tab == 'channels':
-            self._heading = lambda: 'Channel ' + str(c)
+        if self._tab == 'frames':
+            c = contexts.Text.c
+            self._heading = lambda: 'Frame ' + str(c)
             if c is not None:
                 self._items.append(fields.Blank_space(15, y, KW, 
                         node = caramel.delight.section['frames'][c],
@@ -453,7 +453,17 @@ class Properties(_Properties_panel):
                         name = 'PAGE',
                         override_in = lambda N, A: N.page))
                 y += 30
-            
+
+        if self._tab == 'section':
+            section = contexts.Text.sc
+            self._heading = lambda: 'Section ' + str(section)
+            if section is not None:
+                self._items.append(fields.Blank_space(15, y, KW, 
+                        node = caramel.delight.section,
+                        A = 'repeat', 
+                        name = 'REPEAT'))
+                y += 30
+        
         return y
         
     def _swap_reconstruct(self, to):
@@ -462,10 +472,10 @@ class Properties(_Properties_panel):
             default = 2
             self._panel = self._text_panel
 
-        elif to == 'channels':
-            tabs = (('channels', 'C'),)
+        elif to == 'frames':
+            tabs = (('section', 'S'), ('frames', 'F'),)
             default = 0
-            self._panel = self._channels_panel
+            self._panel = self._frames_panel
         
         else:
             tabs = (('render', 'R'),)

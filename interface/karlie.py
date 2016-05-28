@@ -292,12 +292,6 @@ def _print_bcounter(node):
     else:
         return 'ELEMENT'
 
-def _copy_member(node, active):
-    if active is None:
-        return type(node).contains({})
-    else:
-        return type(node).contains({'class': active['class']})
-
 class Properties(_Properties_panel):
     def _text_panel(self, y, KW):
         if self._tab == 'font':
@@ -308,8 +302,7 @@ class Properties(_Properties_panel):
                             node = contexts.Text.kbs, 
                             context = contexts.Text,
                             slot = 'kbm',
-                            display = _print_counter,
-                            copy = _copy_member))
+                            display = _print_counter))
                 y = self._y_incr() + 20
                 
                 if contexts.Text.kbm is not None:
@@ -355,8 +348,7 @@ class Properties(_Properties_panel):
                     node = BSTYLES, 
                     context = contexts.Text, 
                     slot = 'kbs', 
-                    display = _print_bcounter, 
-                    copy = _copy_member))
+                    display = _print_bcounter))
             y = self._y_incr() + 20
             
             if contexts.Text.kbs is not None:
@@ -387,8 +379,7 @@ class Properties(_Properties_panel):
                         node = BTAGS, 
                         context = contexts.Text, 
                         slot = 'kbt', 
-                        display = lambda l: l['name'],
-                        copy = lambda N, active: N.new()))
+                        display = lambda l: l['name']))
             
             y = self._y_incr() + 20
             
@@ -404,8 +395,7 @@ class Properties(_Properties_panel):
                         node = TTAGS, 
                         context = contexts.Text, 
                         slot = 'ktt', 
-                        display = lambda l: l['name'],
-                        copy = lambda N, active: N.new()))
+                        display = lambda l: l['name']))
             
             y = self._y_incr() + 20
             

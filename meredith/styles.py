@@ -2,7 +2,7 @@ from itertools import chain
 
 from libraries.freetype import ft_errors
 
-from meredith.box import Box, new_name
+from meredith.box import Box, Datablocks
 from meredith import datablocks
 
 from fonts import get_font
@@ -34,10 +34,13 @@ class Textstyle(Box):
     def __str__(self):
         return self['name']
 
-class Textstyles(Box):
+class Textstyles(Datablocks):
     name = 'textstyles'
     contains = Textstyle
     dblibrary = datablocks.Textstyles_D
+    
+    defmembername = 'Untitled fontstyle'
+    
     def __init__(self, * II, ** KII ):
         Box.__init__(self, * II, ** KII )
         self.__class__.dblibrary.update_datablocks(self)
@@ -45,20 +48,12 @@ class Textstyles(Box):
     def after(self, A):
         datablocks.BSTYLES.text_projections.clear()
         datablocks.DOCUMENT.layout_all()
-    
-    def new(self):
-        O = self.__class__.contains({'name': new_name('Untitled fontstyle', self.__class__.dblibrary)})
-        self.content.append(O)
-        self.sort_content()
-        self.__class__.dblibrary.update_datablocks(self)
-        self.after('__content__')
-        return O
-    
+
 class Memberstyle(Box):
     name = 'memberstyle'
     DNA  = [('class',           'texttc',  ''),
             ('textstyle',       'textstyle', None)]
-
+    
     def after(self, A):
         datablocks.BSTYLES.text_projections.clear()
         datablocks.DOCUMENT.layout_all()
@@ -80,7 +75,19 @@ _block_DNA = [('hyphenate',       'bool',   False),
 
 block_styling_attrs = [a[0] for a in _block_DNA]
 
-class Blockstyle(Box):
+class _Has_tagged_members(Box):
+    def content_new(self, active=None, i=None):
+        if active is None:
+            O = self.__class__.contains({})
+        else:
+            O = self.__class__.contains({'class': active['class']})
+        if i is None:
+            self.content.append(O)
+        else:
+            self.content.insert(i, O)
+        return O
+
+class Blockstyle(_Has_tagged_members):
     name = 'blockstyle'
     
     DNA  = [('class',           'blocktc',  'body')] + [A[:2] for A in _block_DNA]
@@ -91,6 +98,16 @@ class Blockstyle(Box):
     def __init__(self, * II, ** KII ):
         Box.__init__(self, * II, ** KII )
         self.isbase = False
+
+    def content_new(self, active=None, i=None):
+        if active is None:
+            O = self.__class__.contains({})
+        else:
+            O = self.__class__.contains({'class': active['class']})
+        if i is None:
+            self.content.append(O)
+        else:
+            self.content.insert(i, O)
     
     def after(self, A):
         datablocks.BSTYLES.block_projections.clear()
@@ -120,7 +137,7 @@ def _cast_default(cls):
     D['class'] = {}
     return cls(D)
 
-class Blockstyles(Box):
+class Blockstyles(_Has_tagged_members):
     name = 'blockstyles'
     
     contains = Blockstyle

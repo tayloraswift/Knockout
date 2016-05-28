@@ -141,6 +141,8 @@ class Box(dict):
     def where(self, address):
         i, * address = address
         return self.content[i].where(address)
+    
+
     ## FOR MODULES ##
     def find_nodes(self, * classes):
         boxes = [e for e in self.content if type(e) is not str]
@@ -150,23 +152,39 @@ class Box(dict):
             except StopIteration:
                 yield None
 
+
+class Datablocks(Box):
+    def content_new(self, active=None, i=None):
+        if active is None:
+            name = self.__class__.defmembername
+        else:
+            name = active['name']
+        O = self.__class__.contains({'name': new_name(name, self.__class__.dblibrary)})
+        if i is None:
+            self.content.append(O)
+            self.sort_content()
+        else:
+            self.content.insert(i, O)
+        self.__class__.dblibrary.update_datablocks(self)
+        self.after('__content__')
+        return O
+
     def sort_content(self):
         self.content.sort(key=lambda O: O['name'])
-    
-class _Tags(Box):
-    name = '_abstract_taglist'
 
+class _Tags(Datablocks):
+    name = '_abstract_taglist'
+    
+    defmembername = 'Untitled tag'
+    
     def __init__(self, * II, ** KII ):
         Box.__init__(self, * II, ** KII )
         self.__class__.dblibrary.ordered = self
         self.__class__.dblibrary.update_datablocks(self)
 
     def after(self, A):
-        if A == 'name' or A == '__addition__':
+        if A == 'name':
             self.__class__.dblibrary.update_datablocks(self)
-
-    def new(self, name='Untitled tag'):
-        return self.__class__.contains({'name': new_name(name, self.__class__.dblibrary)})
     
 class _Tag(Box):
     name = '_abstract_tag'

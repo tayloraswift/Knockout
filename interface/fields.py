@@ -686,7 +686,7 @@ class OM(_Widget):
         elif J == 2:
             self._NAMEWIDGET.focus(x - self._d1, y)
         elif J == 3:
-            self._O = self._supernode.new()
+            self._O = self._supernode.content_new(self._O)
             self._minform()
         elif J == 4:
             self._O = None

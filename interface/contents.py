@@ -93,7 +93,7 @@ class Ordered(Kookie):
             self._node.before()
             self._add()
             self._send(forceread=True)
-            self._node.after(self._node)
+            self._node.after('__addition__')
         else:
             if C == 1:
                 self._active = items[F]

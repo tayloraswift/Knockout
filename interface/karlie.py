@@ -301,7 +301,6 @@ def _copy_member(node, active):
 class Properties(_Properties_panel):
     def _text_panel(self, y, KW):
         if self._tab == 'font':
-            print('recon')
             if contexts.Text.kbs is not None:
                 self._heading = lambda: ', '.join(T['name'] for T in contexts.Text.kbs['class'])
                 
@@ -389,7 +388,7 @@ class Properties(_Properties_panel):
                         context = contexts.Text, 
                         slot = 'kbt', 
                         display = lambda l: l['name'],
-                        copy = lambda N, active: node.new()))
+                        copy = lambda N, active: N.new()))
             
             y = self._y_incr() + 20
             
@@ -406,7 +405,7 @@ class Properties(_Properties_panel):
                         context = contexts.Text, 
                         slot = 'ktt', 
                         display = lambda l: l['name'],
-                        copy = lambda N, active: node.new()))
+                        copy = lambda N, active: N.new()))
             
             y = self._y_incr() + 20
             

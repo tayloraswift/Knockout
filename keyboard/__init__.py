@@ -61,17 +61,18 @@ class Keyboard(dict):
         
         elif name == 'paragraph':
             un.history.undo_save(2)
-            P0 = cursor.fcursor.PLANE.content[max(0, CURSOR[0] - 1)]
             P1 = cursor.fcursor.PLANE.content[CURSOR[0]]
-            if isinstance(P0, Paragraph_block):
-                P = P0.copy_empty()
-            elif isinstance(P1, Paragraph_block):
-                P = P1.copy_empty()
-            else:
-                P = Paragraph_block({})
             if len(CURSOR) == 2:
+                P = P1.copy_empty()
                 cursor.fcursor.insert([P, P])
             else:
+                P0 = cursor.fcursor.PLANE.content[max(0, CURSOR[0] - 1)]
+                if isinstance(P0, Paragraph_block):
+                    P = P0.copy_empty()
+                elif isinstance(P1, Paragraph_block):
+                    P = P1.copy_empty()
+                else:
+                    P = Paragraph_block({})
                 cursor.fcursor.insert([P])
             
         elif name == 'Return':

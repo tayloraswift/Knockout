@@ -159,15 +159,11 @@ class _Tags(Box):
         self.__class__.dblibrary.update_datablocks(self)
 
     def after(self, A):
-        if A == 'name':
+        if A == 'name' or A == '__addition__':
             self.__class__.dblibrary.update_datablocks(self)
 
     def new(self, name='Untitled tag'):
-        O = self.__class__.contains({'name': new_name(name, self.__class__.dblibrary)})
-        self.content.append(O)
-        self.__class__.dblibrary.update_datablocks(self)
-        self.after('__content__')
-        return O
+        return self.__class__.contains({'name': new_name(name, self.__class__.dblibrary)})
     
 class _Tag(Box):
     name = '_abstract_tag'

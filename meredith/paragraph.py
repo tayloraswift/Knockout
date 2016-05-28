@@ -42,6 +42,8 @@ class Meredith(Box):
     
     def __init__(self, * II, ** KII ):
         Box.__init__(self, * II, ** KII )
+        if 'grid' not in self.attrs:
+            self.attrs['grid'] = self['grid']
         self._sorted_pages = Sorted_pages()
     
     def layout_all(self):
@@ -182,6 +184,8 @@ class Section(Plane):
 
     def __init__(self, * II, ** KII ):
         Plane.__init__(self, * II, ** KII )
+        if 'frames' not in self.attrs:
+            self.attrs['frames'] = self['frames']
         
         if self['repeat'] > 1:
             pass

@@ -153,7 +153,7 @@ class _Attribute(Kookie): # abstract base class
         
     def type_box(self, name, char):
         if self._WActive:
-            self._WIDGET.type_box(name, char)
+            return self._WIDGET.type_box(name, char)
     
     def draw(self, cr, hover=(None, None)):
         if hover[0] is not None:

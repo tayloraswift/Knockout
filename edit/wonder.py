@@ -4,9 +4,13 @@ _fail = '\033[91m'
 _endc = '\033[0m'
 _bold = '\033[1m'
 
-def check_spelling(word):
+def fold_possesive(word):
     if word[-2:] in ('’s', '\'s'):
-        word = word[:-2]
+        return word[:-2]
+    else:
+        return word
+
+def check_spelling(word):
     if word.isalpha() and not word.isupper():
         return struck.spell(word.encode('latin-1', 'ignore'))
     return True
@@ -38,27 +42,32 @@ _breaking_prose = set(('<br/>', '—', '–', '/', '(', ')', '\\', '|', '=', '+'
 _breaking_chars = set((' ', '<fo/>', '<fc/>', '<br/>', '—', '–', '-', ':', '.', ',', ';', '/', '!', '?', '(', ')', '[', ']', '{', '}', '\\', '|', '=', '+', '_', '"', '“', '”', '<', '>' ))
 
 def words(text, spell=False):
-
     T = list(map(str, text))
 
+    BP = _breaking_prose
     if spell:
+        cs = check_spelling
+        fp = fold_possesive
+        P = _prose
+        BC = _breaking_chars
+        
         word_count = 0
         misspelled_indices = []
         
         i = 0
-        for j in chain((j for j, e in enumerate(T) if e in _breaking_prose), (len(text),)):
+        for j in chain((j for j, e in enumerate(T) if e in BP), (len(text),)):
             if j - i:
                 selection = T[i:j]
                 
-                if any(e in _prose for e in selection):
+                if any(e in P for e in selection):
                     word_count += 1
                     
                     iprevious = 0
-                    for ii in (ii for ii, e in enumerate(selection + [' ']) if e in _breaking_chars):
+                    for ii in (ii for ii, e in enumerate(selection + [' ']) if e in BC):
                         if ii - iprevious:
                             W = ''.join([v for v in selection[iprevious:ii] if len(v) == 1])
-                            if len(W) > 1 and not check_spelling(W):
-                                misspelled_indices.append((i + iprevious, i + ii, W))
+                            if len(W) > 1 and not cs(fp(W)):
+                                misspelled_indices.append((i + iprevious, i + ii, fp(W)))
                         
                         iprevious = ii + 1
                 
@@ -69,7 +78,7 @@ def words(text, spell=False):
     else:
         word_count = 0
         previous = 0
-        for i in chain((i for i, e in enumerate(T) if type(e) is str and e in _breaking_prose), (len(text),)):
+        for i in chain((i for i, e in enumerate(T) if type(e) is str and e in BP), (len(text),)):
             if i - previous:
                 if any(e in _prose for e in T[previous:i]):
                     word_count += 1

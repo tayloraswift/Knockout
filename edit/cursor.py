@@ -152,8 +152,8 @@ class PlaneCursor(object):
     def delete(self, da=0, db=0, nolayout=False):
         self._sort_cursors()
         
-        a = self.increment_cursor(self.i, da)
-        b = self.increment_cursor(self.j, db)
+        a = self.increment_cursor(self.i, da, not nolayout)
+        b = self.increment_cursor(self.j, db, not nolayout)
         
         if len(a) == 2:
             affected = self._blocks[a[0]:b[0] + 1]

@@ -98,16 +98,6 @@ class Blockstyle(_Has_tagged_members):
     def __init__(self, * II, ** KII ):
         Box.__init__(self, * II, ** KII )
         self.isbase = False
-
-    def content_new(self, active=None, i=None):
-        if active is None:
-            O = self.__class__.contains({})
-        else:
-            O = self.__class__.contains({'class': active['class']})
-        if i is None:
-            self.content.append(O)
-        else:
-            self.content.insert(i, O)
     
     def after(self, A):
         datablocks.BSTYLES.block_projections.clear()

@@ -71,7 +71,8 @@ _block_DNA = [('hyphenate',       'bool',   False),
             
             ('incr_place_value','int',      13),
             ('incr_assign',     'fn',       None),
-            ('show_count',      'farray',   None)]
+            ('show_count',      'farray',   None),
+            ('counter_space',   'float',    0.5)]
 
 block_styling_attrs = [a[0] for a in _block_DNA]
 

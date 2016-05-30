@@ -43,7 +43,7 @@ class Plot_key(object):
 
 class Plot(Blockelement):
     name = namespace
-    DNA = [('height', 'int', 89), ('azm', 'float', 0), ('alt', 'float', 'pi*0.5'), ('rot', 'float', 0), ('tickwidth', 'float', 0.5)]
+    DNA = [('height', 'int', 89), ('azm', 'float', 0), ('alt', 'float', 'pi*0.5'), ('rot', 'float', 0), ('tick_width', 'float', 0.5)]
     
     def _load(self):
         system = Cartesian(self.find_nodes(Axis, Axis, Axis))

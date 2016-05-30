@@ -274,7 +274,7 @@ class Frames(list):
     def __repr__(self):
         return ' |\n    '.join(repr(F) for F in self)
 
-class Subcell(object):
+class Frames_wrapper(object):
     def __init__(self, outer, a, b):
         self._outer = outer
         self._a = a
@@ -286,7 +286,13 @@ class Subcell(object):
         self.restore_u = outer.restore_u
         self.read_u = outer.read_u
         self.at = outer.at
-    
+
+class Margined(Frames_wrapper):
+    def fit(self, du):
+        u, x1, x2, y, c, pn = self._outer.fit(du)
+        return u, x1 + self._a, x2 - self._b, y, c, pn
+
+class Subcell(Frames_wrapper):
     def fit(self, du):
         u, x1, x2, y, c, pn = self._outer.fit(du)
         width = x2 - x1

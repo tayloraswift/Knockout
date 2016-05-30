@@ -45,6 +45,7 @@ class Slope(Data):
             dy = -m*factor # because screen coordinates are opposite the virtual space (“downward sloping” is positive)
             inflated.append(((x - dx, y - dy), (x + dx, y + dy)))
         self._inflated = inflated
+        return (), (self.paint,), ()
     
     def paint(self, cr):
         cr.set_source_rgba( * self['color'] )
@@ -100,11 +101,15 @@ class Axis(Plane):
             bx = x2 + length * cos(angle + 0.3)
             by = y2 + length * sin(angle + 0.3)
             self._arrow = (x2, y2), (ax, ay), (bx, by)
+        if self.math:
+            return (), (self.paint,), ()
+        else:
+            return (), (self.paint,), ()
     
-    def generate_numbers(self, slug, B, T, ox, oy, align=1):
+    def generate_numbers(self, slug, B, ox, oy, align=1):
         numerals = (self['start'], * self.inflated[0]), (self['stop'], * self.inflated[-1])
         for numeral, x, y in numerals:
-            label = cast_mono_line(slug, list(str(numeral).replace('-', '−')), 0, B, T)
+            label = cast_mono_line(slug, list(str(numeral).replace('-', '−')), 0, B)
             if align:
                 if align > 0:
                     label['x'] = x + ox
@@ -131,7 +136,7 @@ class Axis(Plane):
     
 class Plot(Blockelement):
     name = 'mod:plot'
-    DNA = [('class', 'blocktc', 'body'), ('cl_variable', 'texttc', 'emphasis'), ('cl_constant', 'texttc', ''), ('height', 'int', 189), ('azm', 'float', 0), ('alt', 'float', 'pi*0.5'), ('rot', 'float', 0), ('tickwidth', 'float', 0.5)]
+    DNA = Blockelement.DNA + [('cl_variable', 'texttc', 'emphasis'), ('height', 'int', 189), ('azm', 'float', 0), ('alt', 'float', 'pi*0.5'), ('rot', 'float', 0), ('tickwidth', 'float', 0.5)]
     
     def _load(self):
         system = Cartesian(self.find_nodes(Axis, Axis, Axis))
@@ -153,23 +158,38 @@ class Plot(Blockelement):
         
         planes = []
         X, Y, * DATA = self._FLOW
-        if Y.content:
+        if Y.content and X.content:
             if overlay is not None:
                 Y_ol = overlay + Y['class']
+                X_ol = overlay + X['class']
             else:
                 Y_ol = Y['class']
-            Y.layout(frames, u=u, overlay=Y_ol)
-            planes.append(Y)
-        frames.space(40)
+                X_ol = X['class']
+            Y.layout(Subcell(frames, -0.15, 0.15), u=u, overlay=Y_ol)
 
-        u, x1, x2, y, c, pn = frames.fit(self['height'])
+            frames.space(20)
+            u, x1, x2, y, c, pn = frames.fit(self['height'])
+            frames.space(20)
+            X.layout(frames, u=u, overlay=X_ol)
+            u = frames.read_u()
+            Y.math = False
+            X.math = False
+            planes += [Y, X]
+        else:
+            u, x1, x2, y, c, pn = frames.fit(self['height'])
+            Y.math = True
+            X.math = True
+
         ytop = y - self['height']
         width = x2 - x1
         
+        monos = []
         paint_functions = []
+        paint_annot_functions = []
         for E in self._FLOW:
-            E.inflate(width)
-            paint_functions.append((pn, (E.paint, x1, y)))
+            mono, paint, paint_annot = E.inflate(width)
+            paint_functions.extend((pn, (F, x1, y)) for F in paint)
+            #paint_annot_functions.extend((pn, (F, x1, y)) for F in paint_annot)
 
         # axis labels
         slug = {'l': 0, 'c': c, 'page': pn}
@@ -188,8 +208,8 @@ class Plot(Blockelement):
         O_label['y'] = X.inflated[0][1] + oy
         
         labels = [x_label, y_label, O_label]
-        labels.extend(X.generate_numbers(slug, self, self['cl_constant'], x1, oy, 0))
-        labels.extend(Y.generate_numbers(slug, self, self['cl_constant'], ox, y + x_label['fstyle']['fontsize']*0.3, -1))
+        labels.extend(X.generate_numbers(slug, self, x1, oy, 0))
+        labels.extend(Y.generate_numbers(slug, self, ox, y + x_label['fstyle']['fontsize']*0.3, -1))
         
         return u, labels, [], planes, paint_functions
         

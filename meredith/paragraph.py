@@ -5,6 +5,7 @@ from math import inf as infinity
 from meredith.box import Box
 from meredith import datablocks
 from olivia import Tagcounter
+from olivia.frames import Margined
 from meredith.styles import Blockstyle, block_styling_attrs
 
 from layout.line import Glyphs_line, cast_liquid_line, cast_mono_line
@@ -266,7 +267,7 @@ class Blockelement(Blockstyle):
     planelevel = True
     
     IMPLY = {'class': 'body'}
-
+    
     def __init__(self, * II, ** KII ):
         Blockstyle.__init__(self, * II, ** KII )
         self._OBSERVERLINES = []
@@ -303,22 +304,24 @@ class Blockelement(Blockstyle):
         
         # print para flag
         flag = (-2, -BSTYLE['leading'], 0, LINE['fstyle'], LINE['F'], 0)
-        self._OBSERVERLINES.append(Glyphs_line({'x': LINE['left'], 'y': LINE['y'], 'page': LINE['page'], 
+        self._OBSERVERLINES.append(Glyphs_line({'x': LINE['start'], 'y': LINE['y'], 'page': LINE['page'], 
                                     'GLYPHS': [flag], 'BLOCK': self, 'observer': []}))
         # print counters
         if BSTYLE['show_count'] is not None:
             
             wheelprint = cast_mono_line({'l': 0, 'c': LINE['c'], 'page': LINE['page']}, 
                                 BSTYLE['show_count'](wheels), 0, self, LINE['F'])
-            wheelprint['x'] = LINE['left'] + BSTYLE['margin_left'] - wheelprint['advance'] - BSTYLE['leading']*0.5
+            wheelprint['x'] = LINE['start'] - wheelprint['advance'] - BSTYLE['leading']*BSTYLE['counter_space']
             wheelprint['y'] = LINE['y']
             self._OBSERVERLINES.append(wheelprint)
         
-        self.left_edge = LINE['left'] - BSTYLE['leading']*0.5
+        self.left_edge = LINE['start'] - BSTYLE['leading']*0.5
         self._whole_location = -1, LINE, flag
         self.wheels = wheels
     
     def layout(self, frames, BSTYLE, wheels, cascade, overlay):
+        if BSTYLE['margin_left'] or BSTYLE['margin_right']:
+            frames = Margined(frames, BSTYLE['margin_left'], BSTYLE['margin_right'])
         frames.save_u()
         u, left, right, y, c, pn = frames.fit(BSTYLE['leading'])
         
@@ -330,9 +333,8 @@ class Blockelement(Blockstyle):
             self.line0 = cast_mono_line({'l': 0, 'c': c, 'page': pn},
                             [], 
                             BSTYLE['leading'],
-                            self,
-                            Tagcounter())
-            self.line0.update({'u': u, 'left': left, 'start': left, 'width': right - left, 'x': left, 'y': y})
+                            self)
+            self.line0.update({'u': u, 'start': left, 'width': right - left, 'x': left, 'y': y})
             self.layout_observer(BSTYLE, wheels, self.line0)
             self.u = u - BSTYLE['leading']
             self._cast( * self._layout_block(frames, BSTYLE, cascade, overlay) )
@@ -370,9 +372,9 @@ class Blockelement(Blockstyle):
         l = 0
         line = self.line0
         if i == -1:
-            x = line['left']
+            x = line['start']
         else:
-            x = line['left'] + line['width']
+            x = line['start'] + line['width']
         return l, line, x
     
     def highlight(self, a, b):
@@ -429,8 +431,6 @@ class Paragraph_block(Blockelement):
         indent_range = BSTYLE['indent_range']
         D, SIGN, K = BSTYLE['indent']
         
-        R_indent = BSTYLE['margin_right']
-        
         i = 0
         l = 0
         
@@ -438,7 +438,7 @@ class Paragraph_block(Blockelement):
         LIQUID = self.content
         total = len(LIQUID) + 1 # for imaginary </p> cap
         while True:
-            u, left, right, y, c, pn = frames.fit(leading)
+            u, x1, x2, y, c, pn = frames.fit(leading)
             
             # calculate indentation
             if l in indent_range:
@@ -449,19 +449,16 @@ class Paragraph_block(Blockelement):
                         self,
                         F.copy()
                         )
-                    L_indent = BSTYLE['margin_left'] + D + INDLINE['advance'] * SIGN
+                    x1 += D + INDLINE['advance'] * SIGN
                 else:
-                    L_indent = BSTYLE['margin_left'] + D
+                    x1 += D
             else:
-                L_indent = BSTYLE['margin_left']
-
-            # generate line objects
-            x1 = left + L_indent
-            x2 = right - R_indent
+                L_indent = 0
+            
             if x1 > x2:
                 x1, x2 = x2, x1
             # initialize line
-            LINE = Glyphs_line({'observer': [], 'left': left, 'start': x1, 'y': y, 'c': c, 'u': u, 'l': l, 'page': pn})
+            LINE = Glyphs_line({'observer': [], 'start': x1, 'y': y, 'c': c, 'u': u, 'l': l, 'page': pn})
             cast_liquid_line(LINE,
                     LIQUID[i : i + 1989], 
                     i, 
@@ -654,7 +651,7 @@ class Paragraph_block(Blockelement):
         elif i == -1:
             l = 0
             line = self._editable_lines[0]
-            x = line['left'] - line['leading']
+            x = line['start'] - line['leading']
         else:
             l = len(self._editable_lines) - 1
             line = self._editable_lines[l]

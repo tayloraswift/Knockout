@@ -23,6 +23,23 @@ def get_font(path, overwrite=False):
         
     return _type_registry[path]
 
+spaces = {
+            '\t': -7,
+            '\u00A0': -30, # nbsp
+            '\u2003': -31, # em
+            '\u2002': -32, # en
+            '\u2004': -33, # 1/3
+            '\u2005': -34, # 1/4
+            '\u2006': -35, # 1/6
+            '\u2007': -36, # figure
+            '\u2008': -37, # punctuation
+            '\u2009': -38, # thin
+            '\u200A': -39, # hair
+            '\u202F': -40, # narrow nbsp
+            '\u205F': -41, # math med
+            
+            }
+
 # extended fontface class
 class Memo_font(freetype.Face):
     
@@ -30,22 +47,7 @@ class Memo_font(freetype.Face):
         freetype.Face.__init__(self, path)
         UPM = self.units_per_EM
         self._kerning = {}
-        self._ordinals = {
-                '\t': -7,
-                '\u00A0': -30, # nbsp
-                '\u2003': -31, # em
-                '\u2002': -32, # en
-                '\u2004': -33, # 1/3
-                '\u2005': -34, # 1/4
-                '\u2006': -35, # 1/6
-                '\u2007': -36, # figure
-                '\u2008': -37, # punctuation
-                '\u2009': -38, # thin
-                '\u200A': -39, # hair
-                '\u202F': -40, # narrow nbsp
-                '\u205F': -41, # math med
-                
-                }
+        self._ordinals = spaces.copy()
                 # '<p>':        -2
                 # '</p>':       -3
                 # '<f>':        -4

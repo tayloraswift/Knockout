@@ -2,7 +2,7 @@ from meredith.paragraph import Blockelement
 
 class Rule(Blockelement):
     name = 'hr'
-    DNA = [('class', 'blocktc', ''), ('width', 'float', 1), ('color', 'rgba', '#000')]
+    DNA = Blockelement.DNA + [('rule_width', 'float', 1), ('color', 'rgba', '#000')]
 
     def _load(self):
         pass
@@ -13,7 +13,7 @@ class Rule(Blockelement):
         x1, x2, y, pn = frames.at(u)
         def draw(cr):
             cr.set_source_rgba( * self['color'] )
-            cr.rectangle(0, -BSTYLE['leading']*0.5, x2 - x1, self['width'])
+            cr.rectangle(0, -BSTYLE['leading']*0.5, x2 - x1, self['rule_width'])
             cr.fill()
         
         return u, [], [], [], [(pn, (draw, x1, y))]

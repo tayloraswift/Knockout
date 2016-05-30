@@ -3,6 +3,8 @@ from itertools import chain
 
 from libraries.pyphen import pyphen
 
+from olivia import Tagcounter
+
 from meredith import datablocks
 from meredith.elements import PosFontpost, NegFontpost, Line_break
 
@@ -239,8 +241,11 @@ def cast_liquid_line(LINE, letters, startindex, width, leading, BLOCK, F, hyphen
     LINE['GLYPHS'] = GLYPHS
     LINE['_X_'] = [g[1] for g in GLYPHS]
 
-def cast_mono_line(PARENT, letters, leading, BLOCK, F):
-    F = F.copy()
+def cast_mono_line(PARENT, letters, leading, BLOCK, F=None):
+    if F is None:
+        F = Tagcounter()
+    else:
+        F = F.copy()
     LINE = Glyphs_line({
             'i': 0,
       

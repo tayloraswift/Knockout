@@ -66,8 +66,8 @@ class Table_tr(Box):
 class Table(Blockelement):
     name = 'table'
 
-    DNA = [('class', 'blocktc', 'body'), ('distr', 'float tuple', ''), ('celltop', 'float', 0), ('cellbottom', 'float', 0), ('hrules', 'int set', set()), ('vrules', 'int set', set()), ('rulemargin', 'int', 0), ('rulewidth', 'float', 1),
-            ('cl_table', 'blocktc', 'tablecell'), ('cl_thead', 'blocktc', 'emphasis'), ('cl_tleft', 'blocktc', 'emphasis')]
+    DNA = Blockelement.DNA + [('distr', 'float tuple', ''), ('cell_top', 'float', 0), ('cell_bottom', 'float', 0), ('hrules', 'int set', set()), ('vrules', 'int set', set()), 
+                              ('rule_margin', 'int', 0), ('rule_width', 'float', 1), ('cl_table', 'blocktc', 'tablecell'), ('cl_thead', 'blocktc', 'emphasis'), ('cl_tleft', 'blocktc', 'emphasis')]
 
     def _load(self):
         self._CELLS = [tr.content for tr in self.content]
@@ -111,9 +111,9 @@ class Table(Blockelement):
         
         row_u = [frames.read_u()] * (len(self._MATRIX) + 1)
         part = self._MATRIX.partitions
-        cellbottom = self['cellbottom']
+        cell_bottom = self['cell_bottom']
         for r, overlay, row in ((c, P_table, b) if c else (c, head, b) for c, b in enumerate(self._CELLS)):
-            frames.space(self['celltop'])
+            frames.space(self['cell_top'])
             for i, cell in enumerate(row):
                 if not i:
                     ol = overlay + left
@@ -123,7 +123,7 @@ class Table(Blockelement):
                 frames.save_u()
                 cell.layout(Subcell(frames, part[cell.col], part[cell.col + cell['colspan']]), 
                             u = frames.read_u(), overlay = ol)
-                bottom = frames.read_u() + cellbottom
+                bottom = frames.read_u() + cell_bottom
                 frames.restore_u()
                 
                 ki = r + cell['rowspan']
@@ -167,9 +167,9 @@ class Table(Blockelement):
             cr.fill()
 
     def _paint_table_hrules(self, cr, hrules):
-        e = (self['rulewidth'] % 2) / 2
-        p = self['rulemargin']
-        cr.set_line_width(self['rulewidth'])
+        e = (self['rule_width'] % 2) / 2
+        p = self['rule_margin']
+        cr.set_line_width(self['rule_width'])
         cr.set_source_rgb(0, 0, 0)
         for hrule in hrules:
             if p:
@@ -185,9 +185,9 @@ class Table(Blockelement):
                 cr.stroke()
 
     def _paint_table_vrules(self, cr):
-        e = (self['rulewidth'] % 2) / 2
-        p = self['rulemargin']
-        cr.set_line_width(self['rulewidth'])
+        e = (self['rule_width'] % 2) / 2
+        p = self['rule_margin']
+        cr.set_line_width(self['rule_width'])
         cr.set_source_rgb(0, 0, 0)
         for vrule in self._vrules:
             if p:

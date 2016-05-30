@@ -156,7 +156,7 @@ class Table(Blockelement):
         if self._vrules and len(paint_annot_functions) == 1:
             paint_functions.append((p0, (self._paint_table_vrules, 0, 0)))
         
-        return row_u[-1], [], self._FLOW, paint_functions, paint_annot_functions
+        return row_u[-1], [], [], self._FLOW, paint_functions, paint_annot_functions
 
     def _paint_annot(self, cr, O, rows):
         if O in self._planes:

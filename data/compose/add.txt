@@ -1,6 +1,7 @@
 <Multi_key> <i> <n> <t>          	: "∫"   integral # INTEGRAL
 <Multi_key> <s> <u> <m>          	: "∑"   summation # SUM
 <Multi_key> <p> <r> <d>          	: "∏"   product # PRODUCT
+<Multi_key> <p> <i>     	: "π" # PI
 
 <Multi_key> <less> <period>         : "‹"   guilsinglleft # guillemet, left pointing single
 <Multi_key> <greater> <period>         : "›"   guilsinglright # guillemet, right pointing single
@@ -21,3 +22,6 @@
 <Multi_key> <space> <t>     	: " "   U205F # MATHEMATICAL MEDIUM SPACE
 
 <Multi_key> <m> <minus>     	: "−" # MINUS
+<Multi_key> <parenleft> <1>     	: "′" # PRIME
+<Multi_key> <parenleft> <2>     	: "″" # DOUBLE PRIME
+<Multi_key> <parenleft> <3>     	: "‴" # DOUBLE PRIME

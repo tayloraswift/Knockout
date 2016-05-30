@@ -93,10 +93,10 @@ IN = dict((('<em>', '<fo class="emphasis"/>'),
     ('</em>', '<fc class="emphasis"/>'),
     ('<strong>', '<fo class="strong"/>'),
     ('</strong>', '<fc class="strong"/>'),
-    ('<sup>', '<fo class="sup"/>'),
-    ('</sup>', '<fc class="sup"/>'),
-    ('<sub>', '<fo class="sub"/>'),
-    ('</sub>', '<fc class="sub"/>')))
+    ('<sup>', '<fo class="small^sup"/>'),
+    ('</sup>', '<fc class="small^sup"/>'),
+    ('<sub>', '<fo class="small^sub"/>'),
+    ('</sub>', '<fc class="small^sub"/>')))
 OUT = {k: v for v, k in IN.items()}
 
 inpattern = re.compile("|".join([re.escape(k) for k in IN.keys()]), re.M)

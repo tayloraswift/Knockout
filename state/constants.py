@@ -18,8 +18,8 @@ class Window(object):
 
 window = Window(1300, 800)
 
-shortcuts = [('Ctrl equal', 'Ctrl plus', 'sup'),
-        ('Ctrl minus', 'Ctrl underscore', 'sub'),
+shortcuts = [('Ctrl equal', 'Ctrl plus', 'small^sup'),
+        ('Ctrl minus', 'Ctrl underscore', 'small^sub'),
         ('Ctrl b', 'Ctrl B', 'strong'),
         ('Ctrl i', 'Ctrl I', 'emphasis')
         ]

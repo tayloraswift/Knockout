@@ -338,10 +338,12 @@ class Blockelement(Blockstyle):
             self._cast( * self._layout_block(frames, BSTYLE, cascade, overlay) )
             return False, self.wheels
 
-    def _cast(self, u, lines=(), blocks=(), paint=(), paint_annot=()):
+    def _cast(self, u, monolines=[], lines=[], blocks=[], paint=[], paint_annot=[]):
         self.u_bottom = u
         self._editable_lines = lines
-        self.__lines = self._OBSERVERLINES + lines
+        self.__lines = self._OBSERVERLINES
+        self.__lines += monolines
+        self.__lines += lines
         self.__blocklines = blocks
         self.__paint = paint
         self.__paint_annot = paint_annot
@@ -505,7 +507,7 @@ class Paragraph_block(Blockelement):
         self._search_j = [line['j'] for line in LINES]
         # shift left edge
         self.left_edge = LINES[0]['x'] - BSTYLE['leading']*0.5
-        return LINES[-1]['u'], LINES
+        return LINES[-1]['u'], [], LINES
     
     def insert(self, at, text):
         self.content[at:at] = text

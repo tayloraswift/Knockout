@@ -1,3 +1,5 @@
+from math import sqrt
+
 from layout.line import cast_mono_line, calculate_vmetrics
 from meredith.box import Box, Inline
 
@@ -37,21 +39,25 @@ class Fraction(Inline):
         numerator = cast_mono_line(LINE, self._numerator.content, 13, PP, F_fraction)
         denominator = cast_mono_line(LINE, self._denominator.content, 13, PP, F_fraction)
         
+        gapline = cast_mono_line(LINE, [], 13, PP, F_fraction)
+        vgap = int(gapline['fstyle']['fontsize'] * 0.15)
+        
         nascent, ndescent = calculate_vmetrics(numerator)
         nwidth = numerator['advance']
         dascent, ddescent = calculate_vmetrics(denominator)
         dwidth = denominator['advance']
         
-        fracwidth = max(nwidth, dwidth) + LINE['leading']/2
+        fracwidth = max(nwidth, dwidth)
+        fracwidth = fracwidth + LINE['leading']*0.05 + sqrt(fracwidth)*LINE['leading']*0.05
         
         numerator['x'] = x + (fracwidth - nwidth)/2
-        numerator['y'] = y - vy + ndescent
+        numerator['y'] = y - vy - vgap + ndescent
         
         denominator['x'] = x + (fracwidth - dwidth)/2
-        denominator['y'] = y - vy + dascent
+        denominator['y'] = y - vy + vgap + dascent
         
-        fascent = vy + nascent - ndescent
-        fdescent = vy - dascent + ddescent
+        fascent = vy + vgap+ nascent - ndescent
+        fdescent = vy - vgap - dascent + ddescent
         self._fracwidth = fracwidth
         return [numerator, denominator], fracwidth, fascent, fdescent, (self._draw_vinculum, x, y - vy)
 

@@ -10,7 +10,7 @@ pyphen.language_fallback('en_US')
 hy = pyphen.Pyphen(lang='en_US')
 
 # linebreaking characters
-_BREAK_WHITESPACE = set((' '))
+_BREAK_WHITESPACE = set((' ', '\u2003', '\u2002', '\u2004', '\u2005', '\u2006', '\u2007', '\u2008'))
 _BREAK_ONLY_AFTER = set('-')
 _BREAK_AFTER_ELSE_BEFORE = set('–—')
 

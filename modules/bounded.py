@@ -73,7 +73,7 @@ class Bounded(Inline):
         a['y'] = y - symbol_desc + a_asc
         
         b['x'] = x + (width - b['advance']) / 2
-        b['y'] = y - symbol_asc + b_desc
+        b['y'] = y - symbol_asc*0.9 + b_desc
         
         ascent = symbol_asc - b_desc + b_asc
         descent = symbol_desc + a_desc - a_asc

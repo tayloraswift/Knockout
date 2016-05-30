@@ -1,40 +1,29 @@
-from model.cat import cast_mono_line, calculate_vmetrics
-from elements.node import Inline_element, Node
-from model.olivia import Inline
+from layout.line import cast_mono_line, calculate_vmetrics
+from meredith.box import Inline
     
-class Limit(Inline_element):
+class Limit(Inline):
     name = 'mod:lim'
     textfacing = True
-    DNA = {'limit': {}}
-    ADNA = []
-    documentation = []
+    
+    DNA = [('cl_limit', 'texttc', 'small')]
     
     def _load(self):
         pass
         
-    def cast_inline(self, LINE, x, y, PP, F, FSTYLE):
-        F_bottom, = self.styles(F, 'limit')
-
-        limit = cast_mono_line(LINE, self.content, 13, PP, F_bottom)
+    def _cast_inline(self, LINE, x, y, PP, F, FSTYLE):
+        limit = cast_mono_line(LINE, self.content, 13, PP, F + self['cl_limit'])
         lim = cast_mono_line(LINE, 'lim', 13, PP, F)
         
-        lim['x'] = x
+        width = max(lim['advance'], limit['advance'])
+        
+        lim['x'] = x + (width - lim['advance'])*0.5
         lim['y'] = y
         
         limit_asc, limit_desc = calculate_vmetrics(limit)
         lim_asc, lim_desc = calculate_vmetrics(lim)
-        limit['x'] = x + (lim['advance'] - limit['advance'])*0.5
-        limit['y'] = y + limit_asc
-               
-        width = lim['advance']
+        limit['x'] = x + (width - limit['advance'])*0.5
+        limit['y'] = y - lim_desc + limit_asc
         
-        ascent = lim_asc
-        descent = limit_desc
-        
-        return Inline([lim, limit], width, ascent, descent)
-        
-    def __len__(self):
-        return 7
+        return [lim, limit], width, lim_asc, limit_desc
 
 members = [Limit]
-inline = True

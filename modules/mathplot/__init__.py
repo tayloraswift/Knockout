@@ -36,7 +36,7 @@ class Slope(Data):
                     pass
         self._compacted = P
     
-    def inflate(self, width):
+    def inflate(self, width, ox, oy, slug, B):
         pl = self['pill_length']
         inflated = []
         for x, y, m in ((x*width, y, m) for x, y, m in self._compacted):
@@ -54,10 +54,12 @@ class Slope(Data):
             cr.move_to( * p1 )
             cr.line_to( * p2 )
         cr.stroke()
-    
+
 class Axis(Plane):
     name = 'mod:plot:axis'
-    DNA = [('class', 'blocktc', '_center'), ('start', 'float', 0), ('stop', 'float', 12), ('line_width', 'float', 1.5), ('arrowhead', 'bool', True), ('color', 'rgba', '#000')]
+    DNA = [('class', 'blocktc', '_center'), ('cl_variable', 'texttc', 'emphasis'), ('variable', 'str', 'u'), 
+            ('start', 'float', 0), ('stop', 'float', 12), ('number', 'float', 4), 
+            ('line_width', 'float', 1), ('arrowhead', 'bool', True), ('pixel_align', 'bool', False), ('color', 'rgba', '#000')]
     
     def bubble(self, x):
         return (x - self['start']) / (self['stop'] - self['start'])
@@ -68,6 +70,13 @@ class Axis(Plane):
         if stop is None:
             stop = self['stop']
         return (start + i * step for i in range(floor(abs(stop - start)/step) + 1))
+
+    def _enum(self):
+        if self['number'] > 0 and (self['stop'] - self['start']) / self['number'] < 1989:
+            bubble = self.bubble
+            return ((n, bubble(n)) for n in self.step(self['number']))
+        else:
+            return (self['start'], 0), (self['stop'], 1)
     
     def compact(self, system, height):
         A = next(i for i, a in enumerate(system) if a is self)
@@ -78,46 +87,85 @@ class Axis(Plane):
         x1, y1 = system.to( * begin )
         x2, y2 = system.to( * end )
         self._compacted = x1, y1*height, x2, y2*height
+        self._numbers = list(self._enum())
+    
+    def _pix_epsilon(self, u):
+        e1 = (u + self['line_width']*0.5) % 1
+        if 1 - e1 < e1:
+            e1 -= 1
+        e2 = - ((u - self['line_width']*0.5) % 1)
+        if -1 - e2 > e2:
+            e2 += 1
+        if abs(e2) > abs(e1):
+            return e1
+        else:
+            return e2
+    
+    def inflate(self, width, ox, oy, slug, B):
+        x1, y1, x2, y2 = self._compacted[0]*width, self._compacted[1], self._compacted[2]*width, self._compacted[3]
+        # align to pixels
+        if self['pixel_align']:
+            if x1 == x2:
+                e = self._pix_epsilon(x2)
+                x1 -= e
+                x2 -= e
+            elif y1 == y2:
+                e = self._pix_epsilon(y2)
+                y1 -= e
+                y2 -= e
+        self.inflated = (x1, y1), (x2, y2)
+        
+        variable = cast_mono_line(slug, list(self['variable']), 0, B, self['cl_variable'])
+        k = variable['fstyle']['fontsize']*0.3
+        v_distance = variable['fstyle']['fontsize']*1.5
+        
+        # calculate vectors
+        totalvector = x2 - x1, y2 - y1
+        inv_hyp = 1/sqrt(totalvector[0]**2 + totalvector[1]**2)
+        vector = totalvector[0]*inv_hyp, totalvector[1]*inv_hyp
+        perpendicular = vector[1], -vector[0]
+        
+        # bias perpendicular towards the bottom left
+        if perpendicular[0] - perpendicular[1] > 0:
+            perpendicular = -perpendicular[0], -perpendicular[1]
+        self.perpendicular = perpendicular
+        
+        variable.nail_to(ox + x2 + v_distance*vector[0], oy + y2 + v_distance*vector[1], k, round((x2 - x1)*inv_hyp))
+        
+        mono = chain((variable,), self._generate_numbers(slug, ox, oy, B, k, totalvector))
 
-    def inflate(self, width):
-        self.inflated = (self._compacted[0]*width, self._compacted[1]), (self._compacted[2]*width, self._compacted[3])
         # arrowheads
         if self['arrowhead']:
-            (x1, y1), (x2, y2) = self.inflated
-            length = 6*self['line_width']
-            angle = atan2((y2 - y1), (x2 - x1)) + pi
+            a_length = 8*self['line_width']
+            angle = atan2(totalvector[1], totalvector[0]) + pi
+            aa = 0.275
+            a_distance = cos(aa)*a_length
             
-            dx = x2 - x1
-            if dx:
-                m = (y2 - y1)/dx
-                factor = length/sqrt(1 + m**2)*0.5
-                x2 += factor
-                y2 += -m*factor
-            else:
-                y2 += -length*0.5
+            cx = x2 + a_distance*vector[0]
+            cy = y2 + a_distance*vector[1]
             
-            ax = x2 + length * cos(angle - 0.3)
-            ay = y2 + length * sin(angle - 0.3)
-            bx = x2 + length * cos(angle + 0.3)
-            by = y2 + length * sin(angle + 0.3)
-            self._arrow = (x2, y2), (ax, ay), (bx, by)
+            ax = cx + a_length * cos(angle - aa)
+            ay = cy + a_length * sin(angle - aa)
+            bx = cx + a_length * cos(angle + aa)
+            by = cy + a_length * sin(angle + aa)
+            self._arrow = (cx, cy), (ax, ay), (bx, by)
         if self.math:
-            return (), (self.paint,), ()
+            return mono, (self.paint,), ()
         else:
-            return (), (self.paint,), ()
+            return mono, (self.paint,), ()
     
-    def generate_numbers(self, slug, B, ox, oy, align=1):
-        numerals = (self['start'], * self.inflated[0]), (self['stop'], * self.inflated[-1])
-        for numeral, x, y in numerals:
-            label = cast_mono_line(slug, list(str(numeral).replace('-', '−')), 0, B)
-            if align:
-                if align > 0:
-                    label['x'] = x + ox
-                else:
-                    label['x'] = x + ox - label['advance']
-            else:
-                label['x'] = x + ox - label['advance']*0.5
-            label['y'] = y + oy
+    def _generate_numbers(self, slug, ox, oy, B, k, totalvector):
+        dx, dy = totalvector
+        space = 2.5*k
+        ox += self.inflated[0][0] + space*self.perpendicular[0]
+        oy += self.inflated[0][1] + space*self.perpendicular[1]
+        
+        sign = round(self.perpendicular[0])
+        
+        numerals = ((u, ox + dx*factor, oy + dy*factor) for u, factor in self._numbers if u)
+        for u, x, y in numerals:
+            label = cast_mono_line(slug, list(str(u).replace('-', '−')), 0, B)
+            label.nail_to(x, y, k, sign)
             yield label
     
     def paint(self, cr):
@@ -136,13 +184,14 @@ class Axis(Plane):
     
 class Plot(Blockelement):
     name = 'mod:plot'
-    DNA = Blockelement.DNA + [('cl_variable', 'texttc', 'emphasis'), ('height', 'int', 189), ('azm', 'float', 0), ('alt', 'float', 'pi*0.5'), ('rot', 'float', 0), ('tickwidth', 'float', 0.5)]
+    DNA = Blockelement.DNA + [('height', 'int', 189), ('azm', 'float', 0), ('alt', 'float', 'pi*0.5'), ('rot', 'float', 0), ('tickwidth', 'float', 0.5)]
     
     def _load(self):
         system = Cartesian(self.find_nodes(Axis, Axis, Axis))
         self._FLOW = list(chain(system, self.filter_nodes(Data)))
         for DS in self._FLOW:
             DS.compact(system, -self['height'])
+        self._origin = system.to(0, 0, 0)
         self._CS = system
         
     def regions(self, x, y):
@@ -183,36 +232,26 @@ class Plot(Blockelement):
         ytop = y - self['height']
         width = x2 - x1
         
+        slug = {'l': 0, 'c': c, 'page': pn}
+        
         monos = []
         paint_functions = []
         paint_annot_functions = []
         for E in self._FLOW:
-            mono, paint, paint_annot = E.inflate(width)
+            mono, paint, paint_annot = E.inflate(width, x1, y, slug, self)
+            monos.extend(mono)
             paint_functions.extend((pn, (F, x1, y)) for F in paint)
             #paint_annot_functions.extend((pn, (F, x1, y)) for F in paint_annot)
-
-        # axis labels
-        slug = {'l': 0, 'c': c, 'page': pn}
-        y_label = cast_mono_line(slug, ['y'], 0, self, self['cl_variable'])
-        y_label['x'] = x1 + Y.inflated[-1][0] - y_label['advance']*0.5
-        y_label['y'] = y + Y.inflated[-1][1] - y_label['fstyle']['fontsize']*0.8
-
-        x_label = cast_mono_line(slug, ['x'], 0, self, self['cl_variable'])
-        x_label['x'] = x1 + X.inflated[-1][0] + x_label['fstyle']['fontsize']*0.8
-        x_label['y'] = y + X.inflated[-1][1] + x_label['fstyle']['fontsize']*0.3
         
-        ox = x1 - x_label['fstyle']['fontsize']*0.45
-        oy = y + x_label['fstyle']['fontsize']*1.1
-        O_label = cast_mono_line(slug, ['O'], 0, self, self['cl_variable'])
-        O_label['x'] = Y.inflated[0][0] - O_label['advance'] + ox
-        O_label['y'] = X.inflated[0][1] + oy
+        perp_x, perp_y = zip( * (A.perpendicular for A in self._CS) )
+        O_label = cast_mono_line(slug, ['O'], 0, self, self._CS[0]['cl_variable'])
+        k = O_label['fstyle']['fontsize']*0.3
+        origin_k = 2.5*k
+        O_label.nail_to(x1 + self._origin[0]*width + 1.1*origin_k*sum(perp_x), 
+                        y + self._origin[1]*-self['height'] + origin_k*sum(perp_y), k, 0)
+        monos.append(O_label)
         
-        labels = [x_label, y_label, O_label]
-        labels.extend(X.generate_numbers(slug, self, x1, oy, 0))
-        labels.extend(Y.generate_numbers(slug, self, ox, y + x_label['fstyle']['fontsize']*0.3, -1))
-        
-        return u, labels, [], planes, paint_functions
-        
+        return u, monos, [], planes, paint_functions
 
 members = [Plot, Axis, Slope]
 #members.extend(chain.from_iterable(D.members for D in (scatterplot, f, histogram)))

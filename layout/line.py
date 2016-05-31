@@ -63,6 +63,18 @@ class Glyphs_line(dict):
                 except KeyError:
                     repository[N] = (glyph[3], [K])
 
+    def nail_to(self, x, y, k=None, align=1):
+        if k is None:
+            k = self['fstyle']['fontsize']*0.3
+        if align:
+            if align > 0:
+                self['x'] = x - k
+            else:
+                self['x'] = x - self['advance'] + k
+        else:
+            self['x'] = x - self['advance']*0.5
+        self['y'] = y + k
+
 def cast_liquid_line(LINE, letters, startindex, width, leading, BLOCK, F, hyphenate=False):
     LINE['i'] = startindex
     LINE['width'] = width

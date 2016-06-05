@@ -161,6 +161,9 @@ class Plane(Box):
                     break
             UU.append(block.u)
     
+    def u_extents(self):
+        return self.content[0].u, self.content[-1].u_bottom
+    
     def which(self, x, u, r=-1):
         if r:
             b = max(0, bisect(self._UU, u) - 1)

@@ -19,7 +19,7 @@
     <section frames="80,80 80,910 ; 360,80 360,910 ; 0 |
     420,80 420,910 ; 700,80 700,910 ; 0 |
     80,100 80,650 ; 360,100 360,650 ; 1 |
-    420,100 420,910 ; 700,100 700,910 ; 1 |
+    420,100 420,780 ; 700,100 700,780 ; 1 |
     80,100 80,910 ; 360,100 360,910 ; 2 |
     420,100 420,910 ; 700,100 700,910 ; 2 |
     80,100 80,910 ; 360,100 360,910 ; 3 |
@@ -295,6 +295,10 @@
             <mod:plot:slope m="1 - x*y/4" pill_width="1" pill_length="6" color="#000">
                 <p>x + y</p>
             </mod:plot:slope>
+
+            <mod:plot:slope m="1 - x*y/16" pill_width="1" pill_length="6">
+                <p>1 - x*y/16</p>
+            </mod:plot:slope>
         </mod:plot>
 
         <mod:plot class="figure" height="220" azm="-0.3" alt="0.8">
@@ -318,9 +322,73 @@
 
             <mod:plot:axis variable="y" range="0:10" number="2" floor="True" line_width="1" arrowhead="False" axis="False" ticks="True"/>
 
-            <mod:plot:slope m="1 - x*y/4" pill_width="0" pill_length="6" color="#000">
+            <mod:plot:slope m="1 - x*y/4" pill_width="1" pill_length="6" color="#000">
                 <p>x + y</p>
             </mod:plot:slope>
+        </mod:plot>
+
+        <mod:plot class="figure" height="80">
+            <mod:plot:axis range="0:2800" minor="100" major="200" number="400">
+                <p>Calories</p>
+            </mod:plot:axis>
+
+            <mod:plot:axis range="0:0.12" minor="0.01" major="0.02" number="0.02">
+                <p>Frequency</p>
+            </mod:plot:axis>
+
+            <mod:hist start="0" step="100">
+                <mod:hist:bars data="0.001 0.018 0.02 0.021 0.06 0.11 0.115 0.075 0.05 0.028 0.017 0.009 0.006 0.005 0.004 0.003 0.002 0.001" color="#666666">
+                    <p>Breakfast eaters</p>
+                </mod:hist:bars>
+
+                <mod:hist:bars data="0.009 0 0 0 0 0.001 0.001 0.0015 0.005 0.01 0.015 0.02 0.025 0.03 0.05 0.04 0.032 0.025 0.02 0.01 0.004 0.002 0.001 0.0005" color="#cccccc">
+                    <p>Breakfast skippers</p>
+                </mod:hist:bars>
+            </mod:hist>
+        </mod:plot>
+
+        <mod:plot class="figure" height="90">
+            <mod:plot:axis range="1968:2016" minor="1" major="4" number="8">
+                <p>Year</p>
+            </mod:plot:axis>
+
+            <mod:plot:axis range="-8:8" minor="1" major="2" number="2">
+                <p>Dollars</p>
+
+                <p class="body^units">Trillions</p>
+            </mod:plot:axis>
+
+            <mod:hist start="1968" step="1">
+                <mod:hist:bars data="0.186882 0.192807 0.187139 0.207309 0.230799 0.263224 0.27909 0.29806 0.081232 0.355559 0.399561 0.463302 0.517112 0.599272 0.617766 0.600562 0.666438 0.734037 0.769155 0.854287 0.909238 0.991104 1.031958 1.054988 1.091208 1.154334 1.258566 1.35179 1.453053 1.579232 1.721728 1.827452 2.025191 1.991082 1.853136 1.782314 1.880114 2.153611 2.406869 2.567985 2.523991 2.104989 2.162706 2.303466 2.449988 2.775103 3.021487 3.249886" color="#80e080">
+                    <p>Government revenue</p>
+                </mod:hist:bars>
+            </mod:hist>
+
+            <mod:hist start="1968" step="1">
+                <mod:hist:bars data="-0.18364 -0.195649 -0.210172 -0.230681 -0.245707 -0.269359 -0.332332 -0.371792 -0.095975 -0.409218 -0.458746 -0.504028 -0.590941 -0.678241 -0.745743 -0.808364 -0.851805 -0.946344 -0.990382 -1.004017 -1.064416 -1.143743 -1.252993 -1.324226 -1.381529 -1.409386 -1.461752 -1.515742 -1.560484 -1.601116 -1.652458 -1.701842 -1.78895 -1.862846 -2.010894 -2.159899 -2.292841 -2.471957 -2.65505 -2.728686 -2.982544 -3.517677 -3.457079 -3.603056 -3.536951 -3.454647 -3.506114 -3.688292 " color="#90b0ff">
+                    <p>Government spending</p>
+                </mod:hist:bars>
+            </mod:hist>
+        </mod:plot>
+
+        <p class="caption^h4">Signed histogram.</p>
+
+        <mod:plot class="figure" height="90">
+            <mod:plot:axis range="1968:2016" minor="1" major="4" number="8">
+                <p>Year</p>
+            </mod:plot:axis>
+
+            <mod:plot:axis range="-1600:400" minor="200" major="400" number="400">
+                <p>Dollars</p>
+
+                <p class="body^units">Billions</p>
+            </mod:plot:axis>
+
+            <mod:hist start="1968" step="1">
+                <mod:hist:bars data="3.242 -2.842 -23.033 -23.373 -14.908 -6.135 -53.242 -73.732 -14.744 -53.659 -59.185 -40.726 -73.83 -78.968 -127.977 -207.802 -185.367 -212.308 -221.227 -149.73 -155.178 -152.639 -221.036 -269.238 -290.321 -255.051 -203.186 -163.952 -107.431 -21.884 69.27 125.61 236.241 128.236 -157.758 -377.585 -412.727 -318.346 -248.181 -160.701 -458.553 -1412.688 -1294.373 -1299.59 -1086.963 -679.544 -484.627 -438.406" color="#80e080" colorneg="#ff6070">
+                    <p>United States budget surplus/deficit</p>
+                </mod:hist:bars>
+            </mod:hist>
         </mod:plot>
 
         <p/>
@@ -494,5 +562,5 @@
 </blockstyles>
 
 <!-- #############
-{'channels': (1, 2), 'text': ([1], (43,), (43,)), 'view': {'H': -601, 'Hc': 977.0, 'K': 108, 'Kc': 281.0, 'Zoom': 17, 'mode': 'text'}}
+{'channels': (1, 3), 'text': ([1], (42,), (42,)), 'view': {'H': -731, 'Hc': 592.0, 'K': -32, 'Kc': 485.0, 'Zoom': 11, 'mode': 'text'}}
 ############# -->

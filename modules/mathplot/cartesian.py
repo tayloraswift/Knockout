@@ -23,7 +23,7 @@ class Cartesian(list):
         list.__init__(self, (axis for axis in axes if axis is not None))
     
     def to(self, * coord ):
-        x, y = map(sum, zip( * ((U*avx, U*avy) for (avx, avy), U in zip(self._unitaxes, (axis.bubble(u) for axis, u in zip(self, coord))) ) ))
+        x, y = map(sum, zip( * ((U*avx, U*avy) for (avx, avy), U in zip(self._unitaxes, (axis.bubble(u) for axis, u in zip(self, chain(coord, (0, 0))))) ) ))
         return x, y
     
     def in_range(self, * coord ):

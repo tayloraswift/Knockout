@@ -286,11 +286,11 @@
         <p class="h2">Histogram testing</p>
 
         <mod:plot class="figure" height="210">
-            <mod:plot:axis variable="x" range="-6:6" number="-1" line_width="1.5">
+            <mod:plot:axis variable="x" range="-6:6" number="-1" line_width="1.5" arrowhead="True" axis="True">
                 <p>X axis</p>
             </mod:plot:axis>
 
-            <mod:plot:axis variable="y" range="-4:4" number="-1" line_width="1.5"/>
+            <mod:plot:axis variable="y" range="-4:4" number="-1" line_width="1.5" arrowhead="True" axis="True"/>
 
             <mod:plot:slope m="1 - x*y/4" pill_width="1" pill_length="6" color="#000">
                 <p>x + y</p>
@@ -302,13 +302,13 @@
         </mod:plot>
 
         <mod:plot class="figure" height="220" azm="-0.3" alt="0.8">
-            <mod:plot:axis variable="x" range="-6:6" number="2" line_width="1.5" ticks="True">
+            <mod:plot:axis variable="x" range="-6:6" number="2" line_width="1.5" arrowhead="True" axis="True" ticks="True">
                 <p>X axis</p>
             </mod:plot:axis>
 
-            <mod:plot:axis variable="y" range="-6:6" number="2" line_width="1.5" ticks="True"/>
+            <mod:plot:axis variable="y" range="-6:6" number="2" line_width="1.5" arrowhead="True" axis="True" ticks="True"/>
 
-            <mod:plot:axis variable="z" range="-4:4" number="2" line_width="1.5" ticks="True"/>
+            <mod:plot:axis variable="z" range="-4:4" number="2" line_width="1.5" arrowhead="True" axis="True" ticks="True"/>
 
             <mod:plot:slope m="1 - x*y/4" pill_width="0.5" pill_length="6" color="#000">
                 <p>x + y</p>
@@ -316,7 +316,7 @@
         </mod:plot>
 
         <mod:plot class="figure" height="210">
-            <mod:plot:axis variable="x" range="0:12" number="2" floor="True" line_width="1" arrowhead="False" axis="False" ticks="True">
+            <mod:plot:axis variable="x" range="0:12" number="2" floor="True" ticks="True">
                 <p>X axis</p>
             </mod:plot:axis>
 
@@ -328,12 +328,12 @@
         </mod:plot>
 
         <mod:plot class="figure" height="80">
-            <mod:plot:axis range="0:2800" minor="100" major="200" number="400">
-                <p>Calories</p>
+            <mod:plot:axis range="0:2800" minor="100" major="200" number="400" floor="True" ticks="True">
+                <p class="h1^tablecell">Calories</p>
             </mod:plot:axis>
 
-            <mod:plot:axis range="0:0.12" minor="0.01" major="0.02" number="0.02">
-                <p>Frequency</p>
+            <mod:plot:axis range="0:0.12" minor="0.01" major="0.02" number="0.02" floor="True" ticks="True">
+                <p class="h1^tablecell">Frequency</p>
             </mod:plot:axis>
 
             <mod:hist start="0" step="100">
@@ -348,14 +348,14 @@
         </mod:plot>
 
         <mod:plot class="figure" height="90">
-            <mod:plot:axis range="1968:2016" minor="1" major="4" number="8">
-                <p>Year</p>
+            <mod:plot:axis range="1968:2016" minor="1" major="4" number="8" ticks="True">
+                <p class="h1^tablecell">Year</p>
             </mod:plot:axis>
 
-            <mod:plot:axis range="-8:8" minor="1" major="2" number="2">
-                <p>Dollars</p>
+            <mod:plot:axis range="-8:8" minor="1" major="2" number="2" ticks="True">
+                <p class="h1^tablecell">Dollars</p>
 
-                <p class="body^units">Trillions</p>
+                <p class="h1^tablecell^units">Trillions</p>
             </mod:plot:axis>
 
             <mod:hist start="1968" step="1">
@@ -374,14 +374,14 @@
         <p class="caption^h4">Signed histogram.</p>
 
         <mod:plot class="figure" height="90">
-            <mod:plot:axis range="1968:2016" minor="1" major="4" number="8">
-                <p>Year</p>
+            <mod:plot:axis range="1968:2016" minor="1" major="4" number="8" ticks="True">
+                <p class="h1^tablecell">Year</p>
             </mod:plot:axis>
 
-            <mod:plot:axis range="-1600:400" minor="200" major="400" number="400">
-                <p>Dollars</p>
+            <mod:plot:axis range="-1600:400" minor="200" major="400" number="400" ticks="True">
+                <p class="h1^tablecell">Dollars</p>
 
-                <p class="body^units">Billions</p>
+                <p class="h1^tablecell^units">Billions</p>
             </mod:plot:axis>
 
             <mod:hist start="1968" step="1">
@@ -390,6 +390,28 @@
                 </mod:hist:bars>
             </mod:hist>
         </mod:plot>
+
+        <mod:plot class="figure" height="80">
+            <mod:plot:axis range="0:2800" minor="100" major="200" number="400" ticks="True">
+                <p class="h1^tablecell">Calories</p>
+            </mod:plot:axis>
+
+            <mod:plot:logaxis range="0.0001:1" minor="10" major="10" number="10" ticks="True">
+                <p class="h1^tablecell">Frequency</p>
+            </mod:plot:logaxis>
+
+            <mod:hist start="0" step="100">
+                <mod:hist:bars data="0.001 0.018 0.02 0.021 0.06 0.11 0.115 0.075 0.05 0.028 0.017 0.009 0.006 0.005 0.004 0.003 0.002 0.001" color="#666666">
+                    <p>Breakfast eaters</p>
+                </mod:hist:bars>
+
+                <mod:hist:bars data="0.009 0 0 0 0 0.001 0.001 0.0015 0.005 0.01 0.015 0.02 0.025 0.03 0.05 0.04 0.032 0.025 0.02 0.01 0.004 0.002 0.001 0.0005" color="#cccccc">
+                    <p>Breakfast skippers</p>
+                </mod:hist:bars>
+            </mod:hist>
+        </mod:plot>
+
+        <p class="caption^h4">Logarithmic histogram.</p>
 
         <p/>
     </section>
@@ -536,7 +558,7 @@
         <memberstyle class="" textstyle="Table"/>
     </blockstyle>
 
-    <blockstyle class="h1^tablecell" margin_bottom="0" align_to="">
+    <blockstyle class="h1^tablecell" leading="22" margin_bottom="0" align_to="">
         <memberstyle class="" textstyle="Sans serif semi"/>
 
         <memberstyle class="" textstyle="Table heading"/>
@@ -562,5 +584,5 @@
 </blockstyles>
 
 <!-- #############
-{'channels': (1, 3), 'text': ([1], (42,), (42,)), 'view': {'H': -731, 'Hc': 592.0, 'K': -32, 'Kc': 485.0, 'Zoom': 11, 'mode': 'text'}}
+{'channels': (1, 4), 'text': ([1], (42,), (42,)), 'view': {'H': -431, 'Hc': 485.0, 'K': -122, 'Kc': 480.0, 'Zoom': 11, 'mode': 'text'}}
 ############# -->

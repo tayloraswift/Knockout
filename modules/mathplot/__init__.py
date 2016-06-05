@@ -11,13 +11,13 @@ from layout.line import cast_mono_line
 from state.exceptions import LineOverflow
 
 from .data import Data
-from .cartesian import Cartesian, Axis
+from .cartesian import Cartesian, Axis, LogAxis
 from . import slope, histogram
 
 class Plot(Blockelement):
     name = 'mod:plot'
     DNA = Blockelement.DNA + [('height', 'int', 189), ('azm', 'float', 0), ('alt', 'float', 0), ('rot', 'float', 0),
-                              ('key_shift', 'float', 4), ('key_bottom', 'float', 4)]
+                              ('graph_top', 'float', 20), ('graph_bottom', 'float', 15), ('key_shift', 'float', 4), ('key_bottom', 'float', 4)]
     
     def _load(self):
         system = Cartesian(self.find_nodes(Axis, Axis, Axis), self['azm'], self['alt'], self['rot'])
@@ -29,7 +29,7 @@ class Plot(Blockelement):
         self._legend = tuple(chain.from_iterable(box.get_legend() for box in self._DS))
 
     def which(self, x, u, r):
-        if r:
+        if (r > 1 or r < 0):
             if self._planeaxes:
                 if u <= self._graph_top_u:
                     return ((1, self._CS[1]), * self._CS[1].which(x, u, r - 1))
@@ -44,9 +44,9 @@ class Plot(Blockelement):
         if len(self._CS) == 2 and self._CS[0].content and self._CS[1].content:
             X, Y = self._CS
             Y.layout(Subcell(frames, -0.15, 0.15), u=block_top_u, overlay=Y['class'] + overlay)
-            frames.space(30)
+            frames.space(self['graph_top'])
             u, x1, x2, y, c, pn = frames.fit(self['height'])
-            frames.space(10)
+            frames.space(self['graph_bottom'])
             self._graph_bottom_u = frames.read_u()
             X.layout(frames, u=self._graph_bottom_u, overlay=X['class'] + overlay)
             block_bottom_u = frames.read_u()
@@ -107,5 +107,5 @@ class Plot(Blockelement):
         
         return block_bottom_u, monos, [], planes, paint_functions
 
-members = [Plot, Axis]
+members = [Plot, Axis, LogAxis]
 members.extend(chain.from_iterable(D.members for D in (slope, histogram)))

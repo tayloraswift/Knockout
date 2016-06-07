@@ -7,7 +7,7 @@ class Rule(Blockelement):
     def _load(self):
         pass
     
-    def _layout_block(self, frames, BSTYLE, cascade, overlay):
+    def _layout_block(self, frames, BSTYLE, overlay):
         frames.fit(BSTYLE['leading'])
         u = frames.read_u()
         x1, x2, y, pn = frames.at(u)

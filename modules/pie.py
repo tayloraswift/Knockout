@@ -2,11 +2,9 @@ from math import pi, atan2
 from itertools import chain, accumulate
 from bisect import bisect
 
-from model.olivia import Flowing_text
-from model.george import Subcell
-from elements.node import Block_element
+from meredith.paragraph import Blockelement
+from olivia.frames import Subcell
 
-from modules.plot import Plot_key, GraphBlock
 from modules.plot.data import Data
 from state.exceptions import LineOverflow
 
@@ -14,16 +12,14 @@ _namespace = 'mod:pie'
 
 class PieSlice(Data):
     name = _namespace + ':slice'
-    ADNA = [('prop', 1, 'float'), ('color', '#ff3085', 'rgba'), ('key', True, 'bool')]
+    DNA = Data.DNA + [('prop', 'float', 1), ('color', 'rgba', '#ff3085')]
 
     def freeze(self, h, k):
         self._right = h
     
-class PieChart(Block_element):
+class PieChart(Blockelement):
     name = _namespace
-    DNA = {'slice': {}}
-    ADNA = [('radius', 89, 'float'), ('center', 0.5, 'float'), ('rotate', 0, 'float')]
-    documentation = [(0, name), (1, 'slice')]
+    DNA = Blockelement.DNA + [('radius', 89, 'float'), ('center', 0.5, 'float'), ('rotate', 0, 'float')]
     
     def _load(self):
         self.active = 0
@@ -94,4 +90,3 @@ class PieChart(Block_element):
                     self._center, self.regions, self.PP)
 
 members = [PieChart, PieSlice]
-inline = False

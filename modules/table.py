@@ -102,7 +102,7 @@ class Table(Blockelement):
                         return ((m, tr), (n, td), * cell.which(x, u, r - 2))
         return ()
     
-    def _layout_block(self, frames, BSTYLE, cascade, overlay):
+    def _layout_block(self, frames, BSTYLE, overlay):
         self._frames = frames
         
         P_table = self['cl_table']

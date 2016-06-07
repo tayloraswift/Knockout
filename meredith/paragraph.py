@@ -149,8 +149,7 @@ class Plane(Box):
             frames.space(gap + BSTYLE['margin_top'])
             gap = BSTYLE['margin_bottom']
             try:
-                if not halt:
-                    halt, wheels = block.layout(frames, BSTYLE, wheels, cascade and db, overlay)
+                halt, wheels = block.layout(frames, BSTYLE, wheels, overlay, halt and cascade)
             except LineOverflow:
                 UU.append(block.u)
                 for blk in self.content[b + db:]:
@@ -278,6 +277,7 @@ class Blockelement(Blockstyle):
         
         self.implicit_ = None
         self.u = infinity
+        self.u_bottom = infinity
         
         self._load()
     
@@ -302,7 +302,6 @@ class Blockelement(Blockstyle):
     
     def layout_observer(self, BSTYLE, wheels, LINE):
         self._OBSERVERLINES = []
-        
         wheels = wheels.increment(BSTYLE['incr_place_value'], BSTYLE['incr_assign'])
         
         # print para flag
@@ -322,15 +321,18 @@ class Blockelement(Blockstyle):
         self._whole_location = -1, LINE, flag
         self.wheels = wheels
     
-    def layout(self, frames, BSTYLE, wheels, cascade, overlay):
+    def layout(self, frames, BSTYLE, wheels, overlay, halt):
         if BSTYLE['margin_left'] or BSTYLE['margin_right']:
             frames = Margined(frames, BSTYLE['margin_left'], BSTYLE['margin_right'])
         frames.save_u()
         u, left, right, y, c, pn = frames.fit(BSTYLE['leading'])
-        
         frames.restore_u()
-        if cascade and u - BSTYLE['leading'] == self.u:
+        
+        if halt and self.u_bottom < infinity:
+            n = len(self._OBSERVERLINES)
             self.layout_observer(BSTYLE, wheels, self.line0)
+            self.__lines[-n:] = self._OBSERVERLINES
+            frames.start(self.u_bottom)
             return True, self.wheels
         else:
             self.line0 = cast_mono_line({'l': 0, 'c': c, 'page': pn},
@@ -340,18 +342,19 @@ class Blockelement(Blockstyle):
             self.line0.update({'u': u, 'start': left, 'width': right - left, 'x': left, 'y': y})
             self.layout_observer(BSTYLE, wheels, self.line0)
             self.u = u - BSTYLE['leading']
-            self._cast( * self._layout_block(frames, BSTYLE, cascade, overlay) )
-            return False, self.wheels
+            return self._cast( * self._layout_block(frames, BSTYLE, overlay) ), self.wheels
 
     def _cast(self, u, monolines=[], lines=[], blocks=[], paint=[], paint_annot=[]):
-        self.u_bottom = u
         self._editable_lines = lines
-        self.__lines = self._OBSERVERLINES
-        self.__lines += monolines
-        self.__lines += lines
+        self.__lines = lines + monolines + self._OBSERVERLINES
         self.__blocklines = blocks
         self.__paint = paint
         self.__paint_annot = paint_annot
+        if u != self.u_bottom:
+            self.u_bottom = u
+            return False
+        else:
+            return True
     
     def erase(self):
         self.u = infinity
@@ -428,7 +431,7 @@ class Paragraph_block(Blockelement):
     name = 'p'
     textfacing = True
     
-    def _layout_block(self, frames, BSTYLE, cascade, overlay):
+    def _layout_block(self, frames, BSTYLE, overlay):
         F = Tagcounter()
         leading = BSTYLE['leading']
         indent_range = BSTYLE['indent_range']

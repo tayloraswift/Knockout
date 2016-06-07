@@ -142,9 +142,30 @@ def interpret_range(S):
             a = interpret_float(S)
             return a, a + 1
 
+def interpret_open_range(S):
+    if type(S) is tuple:
+        return tuple(sorted(S))
+    else:
+        if ':' in S:
+            a, b, *_ = S.split(':')
+        else:
+            a = S
+            b = ''
+        
+        if a:
+            i = interpret_float(a)
+        else:
+            i = None
+        if b:
+            j = interpret_float(b)
+        else:
+            j = None
+        return i, j
+    
 reformat = {'binomial': (pack_binomial, read_binomial),
             'int set': (interpret_enumeration, lambda S: ', '.join(str(i) for i in sorted(S))),
-            'range': (interpret_range, lambda R: ':'.join(str(r) for r in R))}
+            'range': (interpret_range, lambda R: ':'.join(str(r) for r in R)),
+            'open range': (interpret_open_range, lambda R: ':'.join(str(r) if r is not None else '' for r in R))}
 
 def interpret_float_tuple(value):
     L = (interpret_float(val, fail=None) for val in value.split(','))

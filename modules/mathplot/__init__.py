@@ -12,7 +12,7 @@ from state.exceptions import LineOverflow
 
 from .data import Data
 from .cartesian import Cartesian, Axis, LogAxis
-from . import slope, histogram
+from . import slope, histogram, scatterplot, f
 
 class Plot(Blockelement):
     name = 'mod:plot'
@@ -77,7 +77,7 @@ class Plot(Blockelement):
             planes.append(dataset)
         frames.restore_u()
     
-    def _layout_block(self, frames, BSTYLE, cascade, overlay):
+    def _layout_block(self, frames, BSTYLE, overlay):
         monos = []
         planes = []
         paint_functions = []
@@ -108,4 +108,4 @@ class Plot(Blockelement):
         return block_bottom_u, monos, [], planes, paint_functions
 
 members = [Plot, Axis, LogAxis]
-members.extend(chain.from_iterable(D.members for D in (slope, histogram)))
+members.extend(chain.from_iterable(D.members for D in (slope, histogram, scatterplot, f)))

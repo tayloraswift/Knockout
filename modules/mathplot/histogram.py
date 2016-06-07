@@ -64,7 +64,11 @@ class Histogram(Data):
             self._compact = P
         else:
             self._compact = []
-    
+
+    def inflate(self, width, * I ):
+        self._inflated = [(tuple(tuple((x*width, y) for x, y in poly) for poly in segments), color) for segments, color in self._compact]
+        return (), (self.paint,), ()
+        
     def paint(self, cr):
         for barset, color in self._inflated:
             cr.set_source_rgba( * color )
@@ -75,10 +79,6 @@ class Histogram(Data):
                 cr.line_to( * P4 )
                 cr.close_path()
             cr.fill()
-    
-    def inflate(self, width, * I ):
-        self._inflated = [(tuple(tuple((x*width, y) for x, y in poly) for poly in segments), color) for segments, color in self._compact]
-        return (), (self.paint,), ()
 
     def get_legend(self):
         return chain.from_iterable(barset.get_legend() for barset in self._barsets)

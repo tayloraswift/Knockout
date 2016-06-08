@@ -254,9 +254,9 @@ class PlaneCursor(object):
     
     def _relayout(self):
         if self.PLANE is self.section:
-            self.section.layout(b=self.i[0], cascade=True)
+            self.section.layout(b1=self.i[0], b2=self.j[0])
         else:
-            self.section.layout(b=self.plane_address[1], cascade=True)
+            self.section.layout(b1=self.plane_address[1], b2=self.plane_address[1])
     
     def run_stats(self, spell=False):
         self.word_total = sum(block.run_stats(spell) for block in self._blocks)

@@ -4,7 +4,7 @@ from itertools import chain
 
 from meredith import datablocks
 
-from state.exceptions import LineOverflow
+from state.exceptions import LineOverflow, LineSplit
 
 from olivia.basictypes import interpret_int
 
@@ -101,6 +101,7 @@ class Frames(list):
     
     def start(self, u):
         self.overflow = False
+        self._break_on_split = 0
         self._u = u
         self._c = bisect(self._segments, u) - 1
         try:
@@ -128,7 +129,9 @@ class Frames(list):
         except ValueError:
             self.overflow = True
             raise LineOverflow
-    
+        if self._break_on_split:
+            raise LineSplit
+        
     def space(self, du):
         u = self._u + du
         if u > self._limit:
@@ -166,6 +169,14 @@ class Frames(list):
             self[c].fix_r(0)
             self[c].fix_r(1)
         self._straighten()
+    
+    def freeze(self):
+        self._break_on_split += 1
+    
+    def unfreeze(self):
+        self._break_on_split -= 1
+        if self._break_on_split < 0:
+            raise RuntimeError
     
     ## used by editor ##
     
@@ -286,6 +297,8 @@ class Frames_wrapper(object):
         self.restore_u = outer.restore_u
         self.read_u = outer.read_u
         self.at = outer.at
+        self.freeze = outer.freeze
+        self.unfreeze = outer.unfreeze
 
 class Margined(Frames_wrapper):
     def fit(self, du):

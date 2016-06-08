@@ -10,7 +10,7 @@ from meredith.styles import Blockstyle, block_styling_attrs
 
 from layout.line import Glyphs_line, cast_liquid_line, cast_mono_line
 
-from state.exceptions import LineOverflow
+from state.exceptions import LineOverflow, LineSplit
 
 from edit.wonder import words
 
@@ -125,34 +125,43 @@ class Plane(Box):
         Box.__init__(self, * II, ** KII )
         self._UU = []
     
-    def layout(self, frames=None, b=0, u=0, cascade=False, overlay=None):
+    def layout(self, frames=None, b1=0, b2=infinity, u=0, overlay=None):
         calc_bstyle = datablocks.BSTYLES.project_b
         if frames is None:
             frames = self['frames']
         if overlay is not None:
             for block in self.content:
                 block.implicit_ = overlay
-        if b:
-            frames.start(self.content[b - 1].u_bottom)
-            gap = calc_bstyle(self.content[b - 1])['margin_bottom']
-            wheels = self.content[b - 1].wheels
+        if b1:
+            preceeding = self.content[b1 - 1]
+            frames.start(preceeding.u_bottom)
+            gap = calc_bstyle(preceeding)['margin_bottom']
+            wheels = preceeding.wheels
         else:
+            preceeding = None
             frames.start(u)
             gap = -calc_bstyle(self.content[0])['margin_top']
             wheels = Wheels()
         
         UU = self._UU
-        del UU[b:]
+        del UU[b1:]
         halt = False
-        for db, block in enumerate(self.content[b:]):
+        blocknumber = b1
+        contentlen = len(self.content)
+        while blocknumber < contentlen:
+            block = self.content[blocknumber]
             BSTYLE = calc_bstyle(block)
             frames.space(gap + BSTYLE['margin_top'])
             gap = BSTYLE['margin_bottom']
             try:
-                halt, wheels = block.layout(frames, BSTYLE, wheels, overlay, halt and cascade)
+                halt, wheels = block.layout(frames, BSTYLE, wheels, overlay, preceeding, halt and blocknumber > b2)
+                preceeding = block
+                blocknumber += 1
+            except LineSplit:
+                print('ls')
             except LineOverflow:
                 UU.append(block.u)
-                for blk in self.content[b + db:]:
+                for blk in self.content[blocknumber:]:
                     blk.erase()
                 if self.__class__ is not Section:
                     raise LineOverflow
@@ -279,6 +288,8 @@ class Blockelement(Blockstyle):
         self.u = infinity
         self.u_bottom = infinity
         
+        self._preceeding = None
+        
         self._load()
     
     def _load(self):
@@ -321,14 +332,14 @@ class Blockelement(Blockstyle):
         self._whole_location = -1, LINE, flag
         self.wheels = wheels
     
-    def layout(self, frames, BSTYLE, wheels, overlay, halt):
+    def layout(self, frames, BSTYLE, wheels, overlay, preceeding, halt):
         if BSTYLE['margin_left'] or BSTYLE['margin_right']:
             frames = Margined(frames, BSTYLE['margin_left'], BSTYLE['margin_right'])
         frames.save_u()
         u, left, right, y, c, pn = frames.fit(BSTYLE['leading'])
         frames.restore_u()
         
-        if halt and self.u_bottom < infinity:
+        if halt and self._preceeding is preceeding:
             n = len(self._OBSERVERLINES)
             self.layout_observer(BSTYLE, wheels, self.line0)
             self.__lines[-n:] = self._OBSERVERLINES
@@ -342,6 +353,7 @@ class Blockelement(Blockstyle):
             self.line0.update({'u': u, 'start': left, 'width': right - left, 'x': left, 'y': y})
             self.layout_observer(BSTYLE, wheels, self.line0)
             self.u = u - BSTYLE['leading']
+            self._preceeding = preceeding
             return self._cast( * self._layout_block(frames, BSTYLE, overlay) ), self.wheels
 
     def _cast(self, u, monolines=[], lines=[], blocks=[], paint=[], paint_annot=[]):

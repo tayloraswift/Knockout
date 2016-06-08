@@ -3,3 +3,6 @@ class IO_Error(Exception):
 
 class LineOverflow(Exception):
     pass
+
+class LineSplit(Exception):
+    pass

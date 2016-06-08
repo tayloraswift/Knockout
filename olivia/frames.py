@@ -99,9 +99,10 @@ class Frames(list):
     def y2u(self, y, c):
         return min(max(0, y - self[c][0][0][1]) + self._segments[c], self._segments[c + 1] - 0.000001)
     
-    def start(self, u):
+    def start(self, u, split=None):
         self.overflow = False
-        self._break_on_split = 0
+        if split is not None:
+            self._break_on_split = split
         self._u = u
         self._c = bisect(self._segments, u) - 1
         try:
@@ -112,10 +113,10 @@ class Frames(list):
             raise LineOverflow
     
     def save_u(self):
-        self._savestack.append((self._u, self._c, self._top, self._limit, self._y0))
+        self._savestack.append((self._u, self._c, self._top, self._limit, self._y0, self._break_on_split))
     
     def restore_u(self):
-        self._u, self._c, self._top, self._limit, self._y0 = self._savestack.pop()
+        self._u, self._c, self._top, self._limit, self._y0, self._break_on_split = self._savestack.pop()
     
     def read_u(self):
         return self._u

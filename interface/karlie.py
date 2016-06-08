@@ -365,7 +365,8 @@ class Properties(_Properties_panel):
                         [(0, fields.Blank_space, 'margin_left', 'SPACE LEFT'), (0.5, fields.Blank_space, 'margin_right', 'SPACE RIGHT')],
                         [(0, fields.Blank_space, 'margin_top', 'SPACE BEFORE'), (0.5, fields.Blank_space, 'margin_bottom', 'SPACE AFTER')],
                         [(0, fields.Checkbox, 'hyphenate', 'HYPHENATE')],
-                        [(0, fields.Blank_space, 'incr_place_value', 'INCREMENT'), (0.3, fields.Blank_space, 'incr_assign', 'BY')],
+                        [(0, fields.Checkbox, 'keep_together', 'KEEP TOGETHER')],
+                        [(0, fields.Blank_space, 'incr_place_value', 'INCREMENT'), (0.4, fields.Blank_space, 'incr_assign', 'BY')],
                         [(0, fields.Blank_space, 'show_count', 'COUNTER TEXT'), (0.7, fields.Blank_space, 'counter_space', 'SPACE')],
                         ]
                 self._items.extend(_stack_properties(y, 45, KW, contexts.Text.kbs, lambda: contexts.Text.bs, props))

@@ -126,6 +126,13 @@ class Plane(Box):
         self._UU = []
     
     def layout(self, frames=None, b1=0, b2=infinity, u=0, overlay=None):
+        if self.__class__ is Section:
+            detectexception = (LineSplit,)
+            split=0
+        else:
+            detectexception = ()
+            split=None
+
         calc_bstyle = datablocks.BSTYLES.project_b
         if frames is None:
             frames = self['frames']
@@ -134,12 +141,12 @@ class Plane(Box):
                 block.implicit_ = overlay
         if b1:
             preceeding = self.content[b1 - 1]
-            frames.start(preceeding.u_bottom)
+            frames.start(preceeding.u_bottom, split=split)
             gap = calc_bstyle(preceeding)['margin_bottom']
             wheels = preceeding.wheels
         else:
             preceeding = None
-            frames.start(u)
+            frames.start(u, split=split)
             gap = -calc_bstyle(self.content[0])['margin_top']
             wheels = Wheels()
         
@@ -148,17 +155,26 @@ class Plane(Box):
         halt = False
         blocknumber = b1
         contentlen = len(self.content)
+
+        new = True
         while blocknumber < contentlen:
-            block = self.content[blocknumber]
-            BSTYLE = calc_bstyle(block)
-            frames.space(gap + BSTYLE['margin_top'])
-            gap = BSTYLE['margin_bottom']
+            if new:
+                block = self.content[blocknumber]
+                BSTYLE = calc_bstyle(block)
+                frames.space(gap + BSTYLE['margin_top'])
+                gap = BSTYLE['margin_bottom']
+                if BSTYLE['keep_together']:
+                    frames.freeze()
             try:
                 halt, wheels = block.layout(frames, BSTYLE, wheels, overlay, preceeding, halt and blocknumber > b2)
+                if BSTYLE['keep_together']:
+                    frames.unfreeze()
                 preceeding = block
                 blocknumber += 1
-            except LineSplit:
-                print('ls')
+                new = True
+            except detectexception:
+                new = False
+                continue
             except LineOverflow:
                 UU.append(block.u)
                 for blk in self.content[blocknumber:]:
@@ -214,7 +230,7 @@ class Section(Plane):
             for F in (self['frames'].make_page_copy(i + 1) for i in range(self['repeat'] - 1)):
                 super().layout(F, * I, ** KI )
                 self._cache_pages(self._SP, self.annot)
-        super().layout(self['frames'], * I, ** KI ) # always do the fist one last
+        super().layout(self['frames'], * I, ** KI ) # always do the first one last
         self._cache_pages(self._SP, self.annot)
 
     def _cache_pages(self, S, A):

@@ -59,6 +59,7 @@ class Memberstyle(Box):
         datablocks.DOCUMENT.layout_all()
 
 _block_DNA = [('hyphenate',       'bool',   False),
+            ('keep_together',   'bool',     False),
             ('indent',          'binomial', (0, 0, 0)),
             ('indent_range',    'int set',  {0}),
             ('leading',         'float',    22),

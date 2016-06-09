@@ -3,7 +3,9 @@ from math import pi
 
 from fonts.interfacefonts import ISTYLES
 
-from interface.base import Kookie, accent, text, show_text
+from state.constants import accent
+
+from interface.base import Kookie, text, show_text
 
 class Null(object):
     def is_over_hover(a, b):

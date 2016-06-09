@@ -16,8 +16,9 @@ from edit.text import expand_cursors_word
 from olivia import interpret_rgba
 
 from state.exceptions import IO_Error
+from state.constants import accent
 
-from interface.base import Kookie, set_fonts, accent
+from interface.base import Kookie, set_fonts
 
 xml_lexer = pygments_html.XmlLexer(stripnl=False)
 

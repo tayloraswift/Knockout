@@ -16,15 +16,12 @@ from keyboard import keyboard
 
 from state import noticeboard, constants
 from state.contexts import Text as CText
+from state.constants import accent, accent_light
 
 from meredith.smoothing import fontsettings
 
 from interface import kookies, fields, ui
 from interface.menu import menu
-from interface.base import accent
-
-accent_light = caramel.accent
-
 
 class Mode_switcher(object):
     def __init__(self, callback, default):
@@ -643,10 +640,9 @@ class Document_view(ui.Cell):
             y = self._Y_to_screen(y, page)
             
             fontsize = F['fontsize'] * self._A
-
-            cr.set_source_rgba( * accent_light, 0.7)
+            
             if BLOCK is activeblock:
-                cr.set_source_rgba( * accent_light, 0.7)
+                cr.set_source_rgba( * BLOCK.color )
             else:
                 cr.set_source_rgba(0, 0, 0, 0.4)
             

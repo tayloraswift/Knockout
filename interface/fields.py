@@ -8,7 +8,9 @@ from edit.text import expand_cursors_word
 
 from olivia import literal
 
-from interface.base import Kookie, accent, text, set_fonts, show_text, plus_sign, minus_sign, downchevron, upchevron, cross
+from state.constants import accent
+
+from interface.base import Kookie, text, set_fonts, show_text, plus_sign, minus_sign, downchevron, upchevron, cross
 from interface.menu import menu
 
 z_colors = ((0.6, 0.6, 0.6), (0.7, 0.7, 0.7), accent, accent, (0.55, 0.55, 0.55))

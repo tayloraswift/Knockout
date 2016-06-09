@@ -4,7 +4,9 @@ from itertools import chain
 
 from fonts.interfacefonts import ISTYLES
 
-from interface.base import Kookie, accent, text, set_fonts, show_text, plus_sign, minus_sign, downchevron, upchevron, cross
+from state.constants import accent
+
+from interface.base import Kookie, text, set_fonts, show_text, plus_sign, minus_sign, downchevron, upchevron, cross
 
 class Ordered(Kookie):
     def __init__(self, x, y, width, node, context, slot, display=lambda: None, lcap=0):

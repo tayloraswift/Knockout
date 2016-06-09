@@ -2,7 +2,7 @@ from meredith.paragraph import Plane
 
 class Data(Plane):
     name = 'mod:plot:data'
-    DNA = [('class', 'blocktc', '_right^key')]
+    DNA = [('class', 'blocktc', '_right')]
     
     def set_key_height(self, k):
         self._key_height = k

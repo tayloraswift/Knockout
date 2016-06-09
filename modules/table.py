@@ -1,8 +1,10 @@
 from bisect import bisect
 from itertools import chain, accumulate, groupby
 
+from state.constants import accent_light
+
 from olivia.frames import Subcell
-from interface.base import accent
+
 from meredith.box import Box
 from meredith.paragraph import Plane, Blockelement
 
@@ -54,7 +56,7 @@ def _build_matrix(data):
 
 class Table_td(Plane):
     name = 'td'
-    DNA = [('rowspan', 'int', 1), ('colspan', 'int', 1)]
+    DNA = [('class', 'blocktc', ''), ('rowspan', 'int', 1), ('colspan', 'int', 1)]
 
     def nail(self, i, j):
         self.col = j
@@ -62,12 +64,13 @@ class Table_td(Plane):
 
 class Table_tr(Box):
     name = 'tr'
+    DNA = [('class', 'blocktc', '')]
 
 class Table(Blockelement):
     name = 'table'
 
     DNA = Blockelement.DNA + [('distr', 'float tuple', ''), ('cell_top', 'float', 0), ('cell_bottom', 'float', 0), ('hrules', 'int set', set()), ('vrules', 'int set', set()), 
-                              ('rule_margin', 'int', 0), ('rule_width', 'float', 1), ('cl_table', 'blocktc', 'tablecell'), ('cl_thead', 'blocktc', 'emphasis'), ('cl_tleft', 'blocktc', 'emphasis')]
+                              ('rule_margin', 'int', 0), ('rule_width', 'float', 1), ('cl_table', 'blocktc', 'tablecell'), ('cl_tleft', 'blocktc', 'firstchild')]
 
     def _load(self):
         self._CELLS = [tr.content for tr in self.content]
@@ -88,41 +91,41 @@ class Table(Blockelement):
         self._vrules = [i for i in self['vrules'] if 0 <= i <= cl]
 
     def which(self, x, u, r):
-        if (r > 1 or r < 0) and x > self.left_edge:
+        if (r > 1 or r < 0):
             x1, x2, *_ = self._frames.at(u)
-            R = bisect(self._row_u, u) - 1
-            C = max(0, bisect(self._MATRIX.partitions, (x - x1) / (x2 - x1)) - 1)
-            try:
-                cell = self._MATRIX[R][C]
-            except (IndexError, ValueError):
-                return ()
-            for m, tr in enumerate(self.content):
-                for n, td in enumerate(tr.content):
-                    if td is cell:
-                        return ((m, tr), (n, td), * cell.which(x, u, r - 2))
+            if x <= x2:
+                R = bisect(self._row_u, u) - 1
+                C = max(0, bisect(self._MATRIX.partitions, (x - x1) / (x2 - x1)) - 1)
+                try:
+                    cell = self._MATRIX[R][C]
+                except (IndexError, ValueError):
+                    return ()
+                for m, tr in enumerate(self.content):
+                    for n, td in enumerate(tr.content):
+                        if td is cell:
+                            return ((m, tr), (n, td), * cell.which(x, u, r - 2))
         return ()
     
     def _layout_block(self, frames, BSTYLE, overlay):
         self._frames = frames
         
-        P_table = self['cl_table']
-        head = P_table + self['cl_thead']
-        left = P_table + self['cl_tleft']
+        P_table = overlay + self['cl_table']
         
         row_u = [frames.read_u()] * (len(self._MATRIX) + 1)
         part = self._MATRIX.partitions
         cell_bottom = self['cell_bottom']
-        for r, overlay, row in ((c, P_table, b) if c else (c, head, b) for c, b in enumerate(self._CELLS)):
+        for r, row in enumerate(self.content):
+            ol = P_table + row['class']
             frames.space(self['cell_top'])
-            for i, cell in enumerate(row):
+            for i, cell in enumerate(row.content):
                 if not i:
-                    ol = overlay + left
+                    cell_ol = ol + self['cl_tleft']
                 else:
-                    ol = overlay
+                    cell_ol = ol
                 
                 frames.save_u()
                 cell.layout(Subcell(frames, part[cell.col], part[cell.col + cell['colspan']]), 
-                            u = frames.read_u(), overlay = ol)
+                            u = frames.read_u(), overlay = cell_ol)
                 bottom = frames.read_u() + cell_bottom
                 frames.restore_u()
                 
@@ -156,11 +159,11 @@ class Table(Blockelement):
         if self._vrules and len(paint_annot_functions) == 1:
             paint_functions.append((p0, (self._paint_table_vrules, 0, 0)))
         
-        return row_u[-1], [], [], self._FLOW, paint_functions, paint_annot_functions
+        return row_u[-1], [], [], self._FLOW, paint_functions, paint_annot_functions, lambda O: O in self._planes, accent_light
 
     def _paint_annot(self, cr, O, rows):
         if O in self._planes:
-            cr.set_source_rgb( * accent )
+            cr.set_source_rgb( * self.color )
             for x, y in chain.from_iterable(rows):
                 cr.rectangle(int(x), y - 3.25, 0.5, 7)
                 cr.rectangle(int(x) - 3.25, y, 7, 0.5)

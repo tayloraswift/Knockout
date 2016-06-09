@@ -2,7 +2,7 @@ from itertools import chain
 
 from edit import cursor
 
-from meredith.paragraph import Paragraph_block
+from meredith.paragraph import Paragraph_block, Text
 
 from IO import un
 
@@ -72,7 +72,7 @@ class Keyboard(dict):
                 elif isinstance(P1, Paragraph_block):
                     P = P1.copy_empty()
                 else:
-                    P = Paragraph_block({})
+                    P = Paragraph_block({}, Text())
                 cursor.fcursor.insert([P])
             
         elif name == 'Return':

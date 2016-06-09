@@ -2,6 +2,9 @@ filename = ''
 
 UI = [0, 950]
 
+accent = (1, 0.22, 0.50)
+accent_light = (1, 0.22, 0.55)
+
 class Window(object):
     def __init__(self, h, k):
         self.h = h

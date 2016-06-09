@@ -21,11 +21,22 @@ class Cartesian(list):
         zhat = 0, sin(self.b)
         self._unitaxes = (_vector_rotate( * xhat , self.c), _vector_rotate( * yhat , self.c), _vector_rotate( * zhat , self.c))
         list.__init__(self, (axis for axis in axes if axis is not None))
+
         for axis in self:
             axis.make_bubble_f()
+        
+        self.center()
+    
+    def center(self):
+        self._centering = (0, 0)
+        extreme1 = self.to( * (axis['range'][0] for axis in self) )
+        extreme2 = self.to( * (axis['range'][1] for axis in self) )
+        cx = (extreme1[0] + extreme2[0] - 1)*0.5
+        cy = (extreme1[1] + extreme2[1] - 1)*0.5
+        self._centering = (-cx, -cy)
     
     def to(self, * coord ):
-        x, y = map(sum, zip( * ((U*avx, U*avy) for (avx, avy), U in zip(self._unitaxes, (axis.bubble(u) for axis, u in zip(self, chain(coord, (0, 0))))) ) ))
+        x, y = map(sum, zip( * ((U*avx, U*avy) for (avx, avy), U in zip(self._unitaxes, (axis.bubble(u) for axis, u in zip(self, chain(coord, (0, 0))))) ), self._centering ))
         return x, y
     
     def in_range(self, * coord ):
@@ -228,8 +239,8 @@ def logrange(start, stop, step):
     return 1, la, lb
 
 def safelog(x, fl=1):
-    if x:
-        return log(abs(x))
+    if x > 0:
+        return log(x)
     else:
         return fl
 
@@ -281,11 +292,12 @@ class LogAxis(Axis):
 
     def _enum(self, k):
         eformat = self._format
-        if k > 0 and (self['range'][1] - self['range'][0]) / k < 1989:
+        if k > 0:
             if k == 1:
                 k = e
-            bubble = self.bubble
-            return ((bubble(n), eformat(n)) for n in (k**m for m in self.step( * logrange( * self['range'] , k) )))
-        else:
-            return (0, eformat(self['range'][0])), (1, eformat(self['range'][1]))
+            _, a, b = logrange( * self['range'] , k)
+            if (b - a) / k < 1989:
+                bubble = self.bubble
+                return ((bubble(n), eformat(n)) for n in (k**m for m in self.step(1, a, b)))
+        return (0, eformat(self['range'][0])), (1, eformat(self['range'][1]))
 

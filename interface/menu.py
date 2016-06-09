@@ -1,8 +1,9 @@
 from fonts.interfacefonts import ISTYLES
 
 from state import noticeboard, constants
+from state.constants import accent
 
-from interface.base import Kookie, text, set_fonts, accent
+from interface.base import Kookie, text, set_fonts
 
 class _Menu_widget(Kookie):
     def __init__(self, x, y, width, item_height, signals=None):

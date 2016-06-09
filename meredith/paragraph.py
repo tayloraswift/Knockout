@@ -11,6 +11,7 @@ from meredith.styles import Blockstyle, block_styling_attrs
 from layout.line import Glyphs_line, cast_liquid_line, cast_mono_line
 
 from state.exceptions import LineOverflow, LineSplit
+from state.constants import accent_light
 
 from edit.wonder import words
 
@@ -136,9 +137,16 @@ class Plane(Box):
         calc_bstyle = datablocks.BSTYLES.project_b
         if frames is None:
             frames = self['frames']
-        if overlay is not None:
+        
+        if overlay is None:
+            overlay = Tagcounter() + self['class']
+        else:
+            overlay = overlay + self['class']
+        
+        if overlay:
             for block in self.content:
                 block.implicit_ = overlay
+
         if b1:
             preceeding = self.content[b1 - 1]
             frames.start(preceeding.u_bottom, split=split)
@@ -206,7 +214,7 @@ class Plane(Box):
 class Section(Plane):
     name = 'section'
     
-    DNA  = [('repeat',      'int',    1),
+    DNA  = [('class', 'blocktc', ''), ('repeat',      'int',    1),
             ('frames',    'frames',     '10,10 10,100 ; 100,10 100,100 ; 0')]
 
     def __init__(self, * II, ** KII ):
@@ -328,21 +336,22 @@ class Blockelement(Blockstyle):
             return self._whole_location
     
     def layout_observer(self, BSTYLE, wheels, LINE):
-        self._OBSERVERLINES = []
         wheels = wheels.increment(BSTYLE['incr_place_value'], BSTYLE['incr_assign'])
         
         # print para flag
         flag = (-2, -BSTYLE['leading'], 0, LINE['fstyle'], LINE['F'], 0)
-        self._OBSERVERLINES.append(Glyphs_line({'x': LINE['start'], 'y': LINE['y'], 'page': LINE['page'], 
-                                    'GLYPHS': [flag], 'BLOCK': self, 'observer': []}))
+        
         # print counters
         if BSTYLE['show_count'] is not None:
-            
             wheelprint = cast_mono_line({'l': 0, 'c': LINE['c'], 'page': LINE['page']}, 
                                 BSTYLE['show_count'](wheels), 0, self, LINE['F'])
+            wheelprint['GLYPHS'].append(flag)
             wheelprint['x'] = LINE['start'] - wheelprint['advance'] - BSTYLE['leading']*BSTYLE['counter_space']
             wheelprint['y'] = LINE['y']
-            self._OBSERVERLINES.append(wheelprint)
+            self._OBSERVERLINES = [wheelprint]
+        else:
+            self._OBSERVERLINES = [Glyphs_line({'x': LINE['x'], 'y': LINE['y'], 'page': LINE['page'], 
+                                    'GLYPHS': [flag], 'BLOCK': self, 'observer': []})]
         
         self.left_edge = LINE['start'] - BSTYLE['leading']*0.5
         self._whole_location = -1, LINE, flag
@@ -370,16 +379,22 @@ class Blockelement(Blockstyle):
             self.layout_observer(BSTYLE, wheels, self.line0)
             self.u = u - BSTYLE['leading']
             self._preceeding = preceeding
-            return self._cast( * self._layout_block(frames, BSTYLE, overlay) ), self.wheels
+            return self._cast( frames, * self._layout_block(frames, BSTYLE, overlay) ), self.wheels
 
-    def _cast(self, u, monolines=[], lines=[], blocks=[], paint=[], paint_annot=[]):
+    def _cast(self, frames, u, monolines=[], lines=[], blocks=[], paint=[], paint_annot=[], handle_test=None, color=None):
         self._editable_lines = lines
         self.__lines = lines + monolines + self._OBSERVERLINES
         self.__blocklines = blocks
         self.__paint = paint
         self.__paint_annot = paint_annot
+        if color is None:
+            self.color = ( * accent_light , 0.7)
+        else:
+            self.color = color
         if u != self.u_bottom:
             self.u_bottom = u
+            if handle_test is not None:
+                paint_annot.append(self._gen_handle(frames, handle_test))
             return False
         else:
             return True
@@ -389,6 +404,20 @@ class Blockelement(Blockstyle):
         self._cast(infinity)
         self.__lines = ()
 
+    def _gen_handle(self, frames, test):
+        x1, x2, y, pn = frames.at((self.u + self.u_bottom)*0.5)
+        def paint_handle(cr, O):
+            if test(O):
+                cr.set_source_rgba( * self.color )
+                cr.move_to(6, 20)
+                cr.line_to(12, 0)
+                cr.line_to(6, -20)
+                cr.rectangle(0, -20, 2, 40)
+                cr.rectangle(4, -20, 2, 40)
+                cr.close_path()
+                cr.fill()
+        return pn, (paint_handle, x2, y)
+    
     def _transfer_lines(self, S):
         for page, lines in groupby(self.__lines, key=lambda line: line['page']):
             sorted_page = S[page]

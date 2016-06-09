@@ -1,7 +1,5 @@
 from fonts.interfacefonts import ISTYLES
 
-accent = (1, 0.22, 0.50)
-
 # shapes
 def plus_sign(cr, x, y):
     # w = 26

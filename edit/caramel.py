@@ -2,8 +2,7 @@ from math import pi
 from itertools import chain
 
 from state import noticeboard
-
-from olivia.poptarts import accent
+from state.constants import accent_light
 
 from meredith.datablocks import DOCUMENT
 
@@ -304,13 +303,13 @@ class Channels_controls(object):
                         )
                 # draw railings
                 if c == self._selected_point[0]:
-                    cr.set_source_rgba( * accent )
+                    cr.set_source_rgba( * accent_light )
                     w = 2
                 elif c == self._hover_point[0]:
-                    cr.set_source_rgba( * accent, 0.7)
+                    cr.set_source_rgba( * accent_light, 0.7)
                     w = 1
                 else:
-                    cr.set_source_rgba( * accent, 0.5)
+                    cr.set_source_rgba( * accent_light, 0.5)
                     w = 1
                 
                 for r, railing in enumerate(frame):
@@ -328,9 +327,9 @@ class Channels_controls(object):
                     for i, p in enumerate(railing):
                         cr.arc( Tx(p[0], page), Ty(p[1], page), 3, 0, 2*pi)
                         if (c, r, i) == self._hover_point:
-                            cr.set_source_rgba( * accent, 0.5)
+                            cr.set_source_rgba( * accent_light, 0.5)
                             cr.fill()
-                            cr.set_source_rgba( * accent, 0.7)
+                            cr.set_source_rgba( * accent_light, 0.7)
                         else:
                             cr.fill()
                         if p[2]:

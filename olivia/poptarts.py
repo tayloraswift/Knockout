@@ -3,7 +3,7 @@ import bisect
 from state import noticeboard
 from meredith import datablocks
 
-accent = (1, 0.22, 0.55)
+from state.constants import accent_light
 
 class Sprinkles(object):
     def __init__(self, xx, yy):
@@ -92,7 +92,7 @@ class Sprinkles(object):
     def render(self, cr, px, py, p_h, p_k, A):
         for n, notch in enumerate(self._grid[0]):
             if n == self.grid_selected[1] and self.grid_selected[0] == 0:
-                cr.set_source_rgba( * accent, 0.7)
+                cr.set_source_rgba( * accent_light, 0.7)
                 cr.move_to(px + int(round(notch*A)), py - int(round(10*A)))
                 cr.rel_line_to(1, 0)
                 cr.rel_line_to(1, -int(round(8*A)))
@@ -120,7 +120,7 @@ class Sprinkles(object):
 
         for n, notch in enumerate(self._grid[1]):
             if n == self.grid_selected[1] and self.grid_selected[0] == 1:
-                cr.set_source_rgba( * accent, 0.7)
+                cr.set_source_rgba( * accent_light, 0.7)
                 cr.move_to(px - int(round(10*A)), py + int(round(notch*A)))
                 cr.rel_line_to(0, 1)
                 cr.rel_line_to(-int(round(8*A)), 1)

@@ -159,12 +159,13 @@ class PlaneCursor(object):
             affected = self._blocks[a[0]:b[0] + 1]
             if len(affected) == 1:
                 affected[0].delete(a[1], b[1])
-            else:
+            elif type(affected[0]).textfacing and type(affected[-1]).textfacing:
                 a_end = len(self._blocks[a[0]].content)
                 affected[0].delete(a[1], a_end)
                 affected[0].insert(a_end, affected[-1].content[b[1]:])
                 self._blocks[a[0]:b[0] + 1] = affected[0:1]
-
+            else:
+                return
         else:
             del self._blocks[a[0]:b[0]]
 

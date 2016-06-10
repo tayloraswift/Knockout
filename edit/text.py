@@ -1,6 +1,6 @@
 from fonts import spaces
-from edit.wonder import _breaking_chars
-spaces_set = set(spaces)
+from edit.wonder import prose
+spaces_set = set(spaces) | {' '}
 
 def lookahead(text, start, f):
     try:
@@ -20,6 +20,7 @@ def expand_cursors_word(text, a):
     I = a
     J = a
     SP = spaces_set
+    PR = prose
     try:
         # select block of spaces
         if str(text[a]) in SP:
@@ -28,16 +29,16 @@ def expand_cursors_word(text, a):
             J = lookahead(text, a, lambda c: c not in SP)
         
         # select block of words
-        elif str(text[a]) not in _breaking_chars:
-            I = lookbehind(text, a, lambda c: c in _breaking_chars or c in SP) + 1
+        elif str(text[a]) in PR:
+            I = lookbehind(text, a, lambda c: c not in PR) + 1
             
-            J = lookahead(text, a, lambda c: c in _breaking_chars or c in SP)
+            J = lookahead(text, a, lambda c: c not in PR)
         
         # select block of punctuation
         else:
-            I = lookbehind(text, a, lambda c: c not in _breaking_chars or c in SP) + 1
+            I = lookbehind(text, a, lambda c: c in PR or c in SP) + 1
             
-            J = lookahead(text, a, lambda c: c not in _breaking_chars or c in SP)
+            J = lookahead(text, a, lambda c: c in PR or c in SP)
 
     except (ValueError, IndexError):
         pass

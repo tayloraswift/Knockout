@@ -1,5 +1,7 @@
 from itertools import chain
 
+from fonts import nonbreaking_spaces, breaking_spaces
+
 _fail = '\033[91m'
 _endc = '\033[0m'
 _bold = '\033[1m'
@@ -34,28 +36,32 @@ if hunspell is not None:
 else:
     check_spelling = lambda W: True
 
-_prose = set('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789&@#$\'’-')
+
+alphabet = set(c for c in (chr(n) for n in range(2**16)) if c.isalpha())
+
+prose = alphabet | set('0123456789&@#$\'’-')
 # these characters get read as word-breaks in speech
-_breaking_prose = set(('<br/>', '—', '–', '/', '(', ')', '\\', '|', '=', '+', '_', ' '))
+_breaking_prose = set(chain(('<br/>', '—', '–', '/', '(', ')', '\\', '|', '=', '+', '_', ' '), breaking_spaces, nonbreaking_spaces))
 
 # NOT the same as prose breaks because of '.', ':', etc. *Does not include ''' or '’' because these are found word-internal and when used as quotes, encapsulate single characters*
-_breaking_chars = set((' ', '<fo/>', '<fc/>', '<br/>', '—', '–', '-', ':', '.', ',', ';', '/', '!', '?', '(', ')', '[', ']', '{', '}', '\\', '|', '=', '+', '_', '"', '“', '”', '<', '>' ))
+breaking_chars = set(chain((' ', '<fo/>', '<fc/>', '<br/>', '—', '–', '-', ':', '.', ',', ';', '/', '!', '?', '(', ')', '[', ']', '{', '}', '\\', '|', '=', '+', '_', '"', '“', '”', '<', '>' ),
+                            breaking_spaces, nonbreaking_spaces))
 
 def words(text, spell=False):
     T = list(map(str, text))
 
     BP = _breaking_prose
+    P = prose
     if spell:
         cs = check_spelling
         fp = fold_possesive
-        P = _prose
-        BC = _breaking_chars
+        BC = breaking_chars
         
         word_count = 0
         misspelled_indices = []
         
         i = 0
-        for j in chain((j for j, e in enumerate(T) if e in BP), (len(text),)):
+        for j in chain((j for j, e in enumerate(T) if e in BP), (len(T),)):
             if j - i:
                 selection = T[i:j]
                 
@@ -63,9 +69,9 @@ def words(text, spell=False):
                     word_count += 1
                     
                     iprevious = 0
-                    for ii in (ii for ii, e in enumerate(selection + [' ']) if e in BC):
+                    for ii in chain((ii for ii, e in enumerate(selection) if e in BC), (len(selection),)):
                         if ii - iprevious:
-                            W = ''.join([v for v in selection[iprevious:ii] if len(v) == 1])
+                            W = ''.join(v for v in selection[iprevious:ii] if len(v) == 1)
                             if len(W) > 1 and not cs(fp(W)):
                                 misspelled_indices.append((i + iprevious, i + ii, fp(W)))
                         
@@ -77,12 +83,12 @@ def words(text, spell=False):
     
     else:
         word_count = 0
-        previous = 0
-        for i in chain((i for i, e in enumerate(T) if type(e) is str and e in BP), (len(text),)):
-            if i - previous:
-                if any(e in _prose for e in T[previous:i]):
+        i = 0
+        for j in chain((j for j, e in enumerate(T) if e in BP), (len(text),)):
+            if j - i:
+                if any(e in P for e in T[i:j]):
                     word_count += 1
                 
-            previous = i + 1
+            i = j + 1
 
         return word_count

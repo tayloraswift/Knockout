@@ -3,6 +3,10 @@ from itertools import chain
 
 from libraries.pyphen import pyphen
 
+from fonts import breaking_spaces
+
+from edit.wonder import alphabet
+
 from olivia import Tagcounter
 
 from meredith import datablocks
@@ -12,7 +16,7 @@ pyphen.language_fallback('en_US')
 hy = pyphen.Pyphen(lang='en_US')
 
 # linebreaking characters
-_BREAK_WHITESPACE = set((' ', '\u2003', '\u2002', '\u2004', '\u2005', '\u2006', '\u2007', '\u2008'))
+_BREAK_WHITESPACE = set(chain(' ', breaking_spaces))
 _BREAK_ONLY_AFTER = set('-')
 _BREAK_AFTER_ELSE_BEFORE = set('–—')
 
@@ -203,7 +207,7 @@ def cast_liquid_line(LINE, letters, startindex, width, leading, BLOCK, F, hyphen
                     except TypeError:
                         j = i
                     
-                    word = ''.join(c if type(c) is str and c.isalpha() else "'" if c in _APOSTROPHES else ' ' for c in letters[i:j])
+                    word = ''.join(c if c in alphabet else "'" if c in _APOSTROPHES else ' ' for c in letters[i:j])
 
                     leading_spaces = len(word) - len(word.lstrip(' '))
 

@@ -91,7 +91,7 @@ class Table(Blockelement):
         self._vrules = [i for i in self['vrules'] if 0 <= i <= cl]
 
     def which(self, x, u, r):
-        if (r > 1 or r < 0):
+        if (r > 2 or r < 0):
             x1, x2, *_ = self._frames.at(u)
             if x <= x2:
                 R = bisect(self._row_u, u) - 1

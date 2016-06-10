@@ -328,10 +328,13 @@ class Blockelement(Blockstyle):
     def which(self, x, u, r):
         return ()
 
+    def _find_location(self, address):
+        i, * address = address
+        return self.content[i].where(address)
+    
     def where(self, address):
         if address:
-            i, * address = address
-            return self.content[i].where(address)
+            return self._find_location(address)
         else:
             return self._whole_location
     
@@ -698,14 +701,11 @@ class Paragraph_block(Blockelement):
                 return ((line.I(x), None),)
         return ()
     
-    def where(self, address):
-        if address:
-            l = bisect(self._search_j, address[0])
-            line = self._editable_lines[l]
-            glyph = line['GLYPHS'][address[0] - line['i']]
-            return l, line, glyph
-        else:
-            return self._whole_location
+    def _find_location(self, address):
+        l = bisect(self._search_j, address[0])
+        line = self._editable_lines[l]
+        glyph = line['GLYPHS'][address[0] - line['i']]
+        return l, line, glyph
     
     def _cursor(self, i):
         if i >= 0:

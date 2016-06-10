@@ -96,7 +96,7 @@ class PlaneCursor(object):
         self._target_shallow( * self._to_c_local(x, y) )
     
     def _target_shallow(self, x, u):
-        j, *_ = zip( * self.PLANE.which(x, u, len(self.i)) )
+        j = tuple(k[0] for k in self.PLANE.which(x, u, len(self.i)))
         if len(j) < len(self.i):
             self.j = self._next_textfacing(j[0], j < self.i)
         else:

@@ -23,22 +23,30 @@ def get_font(path, overwrite=False):
         
     return _type_registry[path]
 
-spaces = {
-            '\t': -7,
+
+nonbreaking_spaces = {
             '\u00A0': -30, # nbsp
+            '\u2007': -36, # figure
+            '\u202F': -40, # narrow nbsp
+            }
+
+breaking_spaces = {
             '\u2003': -31, # em
             '\u2002': -32, # en
             '\u2004': -33, # 1/3
             '\u2005': -34, # 1/4
             '\u2006': -35, # 1/6
-            '\u2007': -36, # figure
+            
             '\u2008': -37, # punctuation
             '\u2009': -38, # thin
             '\u200A': -39, # hair
-            '\u202F': -40, # narrow nbsp
-            '\u205F': -41, # math med
             
+            '\u205F': -41, # math med
             }
+
+spaces = nonbreaking_spaces.copy()
+spaces.update(breaking_spaces)
+spaces['\t'] = -7
 
 # extended fontface class
 class Memo_font(freetype.Face):

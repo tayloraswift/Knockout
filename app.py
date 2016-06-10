@@ -218,7 +218,8 @@ class Display(Gtk.Window):
                 self._active.drag( * self._convert(e.x, e.y))
                 
             else:
-                self._active_hover.hover( * self._set_active_hover_region(e.x, e.y))
+                x, y = self._set_active_hover_region(e.x, e.y)
+                self._active_hover.hover(x, y)
 
         if noticeboard.redraw_overlay.should_refresh():
             self.SCREEN.queue_draw()

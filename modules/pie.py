@@ -50,7 +50,7 @@ class PieChart(Blockelement):
             cr.fill()
 
     def which(self, x, u, r):
-        if x <= self._extreme:
+        if (r > 1 or r < 0) and x <= self._extreme:
             dx = x - self._px
             du = u - self._pu
             

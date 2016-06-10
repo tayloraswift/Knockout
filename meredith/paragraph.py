@@ -510,7 +510,7 @@ class Paragraph_block(Blockelement):
             if l in indent_range:
                 if K:
                     INDLINE = cast_mono_line({'l': l, 'c': c, 'page': pn},
-                        LIQUID[i : i + K + (not bool(l))], 
+                        LIQUID[i : i + K], 
                         0,
                         self,
                         F.copy()

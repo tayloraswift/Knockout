@@ -29,7 +29,7 @@ python3.5 /usr/bin/pip3 install tinycss
 ````
 This problem is quite common, and users with the same problem on other platforms should also try running `pip` from python itself should its libraries install in the wrong locations.
 
-### Installing tinycss
+### Installing fonttools
 ````
 pip3 install fonttools
 ````

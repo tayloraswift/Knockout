@@ -60,6 +60,7 @@ class Memberstyle(Box):
 
 _block_DNA = [('hyphenate',       'bool',   False),
             ('keep_together',   'bool',     False),
+            ('keep_with_next',   'bool',     False),
             ('indent',          'binomial', (0, 0, 0)),
             ('indent_range',    'int set',  {0}),
             ('leading',         'float',    22),
@@ -70,7 +71,7 @@ _block_DNA = [('hyphenate',       'bool',   False),
             ('align',           'float',    0),
             ('align_to',        'str',      ''),
             
-            ('incr_place_value','int',      13),
+            ('incr_place_value','int',      -1),
             ('incr_assign',     'fn',       None),
             ('show_count',      'farray',   None),
             ('counter_space',   'float',    0.5)]

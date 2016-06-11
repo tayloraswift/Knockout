@@ -1,0 +1,298 @@
+<head><meta charset="UTF-8"></head>
+<title>tutorial.html</title>
+
+<body width="816" height="1056" dual="True" even="True" grid="90 390 430 730;0 80 960">
+    <section frames="90,60 90,960 ; 390,60 390,960 ; 0 |
+    430,60 430,960 ; 730,60 730,960 ; 0 |
+    90,80 90,960 ; 390,80 390,960 ; 1 |
+    430,80 430,960 ; 730,80 730,960 ; 1 |
+    90,80 90,960 ; 390,80 390,960 ; 2 |
+    430,80 430,960 ; 730,80 730,960 ; 2 |
+    90,80 90,960 ; 390,80 390,960 ; 3">
+        <p class="h1">The Knockout tutorial</p>
+
+        <p class="body^firstchild^quotation">using microsoft word</p>
+
+        <p class="body^quotation">*moves an image a mm to the left*</p>
+
+        <p class="body^quotation">all text and images shift. four new pages appear. paragraph breaks form a union. a swarm of commas buzzes at the window. in the distance, sirens.”</p>
+
+        <p class="body^quote source">laurelhach, February 3, 2016 <br/>321,101 notes (as of June 10, 2016)</p>
+
+        <p>Like Laurel over there, I too got fed up with Word’s sh–t. </p>
+
+        <p>Much to my disappointment, I could not find a real alternative to Word in the free software community. LibreOffice was modeled on Word, and so the same flaws that make Word so annoying to use make LibreOffice even more annoying to use. LaTeX was too unwieldy and foreign and didn’t seem like much fun to use. Inkscape, while flexible, was utterly inappropriate for setting orderly passages of text. So I exercised the right and duty of any FOSS citizen worth his salt—I made my own alternative.</p>
+
+        <p class="body^firstchild^quotation">D’you like it? ”</p>
+
+        <p class="body^quote source">Taylor Swift, <em>I Wish You Would</em> voice memo</p>
+
+        <p class="h2">How does Knockout work?</p>
+
+        <p class="body">Knockout is a low-level, class-based, modular <strong>typesetting engine</strong> and editor with hybrid user interaction. A typesetting engine is simply something that translates textual information (and styling information that goes with it) into a visual layout. The input of a typesetting image is text and data, like the string <fo class="code"/>&#x27;astounding&#x27;<fc class="code"/> or something more sophisticated like a graph with a point <fo class="code"/>&#x27;P&#x27;<fc class="code"/> at the coordinate <fo class="code"/>(3, 4)<fc class="code"/>. The typesetting engine then performs something called <strong>layout</strong>, when it decides where on the page everything should go. Finally, it does something called <strong>rendering</strong>, which actually draws the letters and shapes. When the output of rendering is expressed in pixels, this process is known as <strong>rasterization</strong>.</p>
+
+        <p class="h2">Document Classes</p>
+
+        <p class="body">Knockout styles documents using <strong>classes</strong>, not <strong>direct styling</strong>. Direct styling “bakes” styling information into the text. Class-based styling, on the other hand, tags text according to its meaning (“heading”, “body text”, “caption”, etc) and uses that to compute the styling of the text. This is useful because it separates meaning from styling in a document. For example, you can edit how you want the <fo class="code"/>&#x27;h2&#x27;<fc class="code"/> class to look, and the change will propagate to every paragraph that uses <fo class="code"/>&#x27;h2&#x27;<fc class="code"/>. Much easier than going to every second-level heading in your document and manually changing the styling!</p>
+
+        <p class="h3">Block-level styling</p>
+
+        <p class="body">Block-level styling refers to styling that affects how layout is done on paragraphs (and other modules). Knockout contains the following block-level styling attributes:</p>
+
+        <p class="attribute">leading</p>
+
+        <p class="attribute^units">float [=22]</p>
+
+        <p class="body">The height of each line of text, in pixels. The baseline of the text is anchored to the bottom edge of each leading strip. Leading in Knockout is always constant (there is <em>no</em> spreading of lines).</p>
+
+        <p leading="10">This paragraph has a <fo class="code"/>leading<fc class="code"/> property value of <fo class="code"/>10<fc class="code"/> pixels.</p>
+
+        <p class="attribute">align</p>
+
+        <p class="attribute^units">float [=0]</p>
+
+        <p class="body">The distribution of the space on either side of the text on each line. <fo class="code"/>0<fc class="code"/> puts all the space on the right (flush left). <fo class="code"/>1<fc class="code"/> puts all the space on the left (flush right). <fo class="code"/>0.5<fc class="code"/> puts half the space on the left and half on the right (flush center). As you might guess, <fo class="code"/>0.389<fc class="code"/> puts 38.9% of the space on the left and 61.1% of the space on the right.</p>
+
+        <p align="0.2">This line has <fo class="code"/>align = 0.2<fc class="code"/></p>
+
+        <p align="0.5">This line has <fo class="code"/>align = 0.5<fc class="code"/></p>
+
+        <p align="0.8">This line has <fo class="code"/>align = 0.8<fc class="code"/></p>
+
+        <p align="1">This line has <fo class="code"/>align = 1<fc class="code"/></p>
+
+        <p class="attribute">align on</p>
+
+        <p class="attribute^units">string [=&#x27;&#x27;]</p>
+
+        <p>The characters that Knockout will attempt to anchor the line on. The characters are ordered in decreasing power. If <fo class="code"/>align on<fc class="code"/> is not empty, the tab character <fo class="code"/>&#x27;\t&#x27;<fc class="code"/> is implied to be ranked first. Thus, with the value <fo class="code"/>&#x27;.:-&#x27;<fc class="code"/>, Knockout will first search the line for a tab character; if there is none, it will search for a <fo class="code"/>&#x27;.&#x27;<fc class="code"/>, then it will search for a <fo class="code"/>&#x27;:&#x27;<fc class="code"/>, and finally it will search for a <fo class="code"/>&#x27;-&#x27;<fc class="code"/>. If there are still no matches, Knockout will place the anchor at the end of the line. This is very useful for aligning tables of numbers.</p>
+
+        <p align="0.5" align_to=".:-">1989,131.6209<br/>1,989,131.62<br/>31,228.1248589<br/>403.293.590<br/>22:13:56<br/>22:13:56.04<br/>45-a1-78-BB<br/>45-a1:78-BB<br/>45-a1:78.BB<br/>45,a1,78,BB<br/>45,a1-7	8.BB</p>
+
+        <p class="attribute">indent</p>
+
+        <p class="attribute^units">binomial [=&#x27;0&#x27;]</p>
+
+        <p>The amount that indented lines are pushed inward, in the form <fo class="code"/>a + bK<fc class="code"/>, where <fo class="code"/>a<fc class="code"/> is in pixels, and <fo class="code"/>b<fc class="code"/> is the number of characters <fo class="code"/>K<fc class="code"/> the line is indented. </p>
+
+        <p indent="-3K">—» The <fo class="code"/>K<fc class="code"/> term, when used with a negative coefficient, is useful for creating hanging indents like this one.</p>
+
+        <p>The <fo class="code"/>indent<fc class="code"/> property should not be used to typeset numbered or bulleted lists; use <fo class="code"/>incr_place_value<fc class="code"/>, <fo class="code"/>incr_assign<fc class="code"/>, <fo class="code"/>show_count<fc class="code"/>, and <fo class="code"/>counter_space<fc class="code"/> instead.</p>
+
+        <p class="attribute">indent_range</p>
+
+        <p class="attribute^units">integer set [=&#x27;0&#x27;]</p>
+
+        <p indent="20" indent_range="0, 2">The indices of the lines in each paragraph that the <fo class="code"/>indent<fc class="code"/> is applied to. For example, a value of <fo class="code"/>0, 2<fc class="code"/> indents the first and third lines of the affected paragraphs, such as this one (used with <fo class="code"/>indent = 20<fc class="code"/>). This property is labeled as <strong>for lines</strong> in the Knockout UI.</p>
+
+        <p class="attribute">margin_left</p>
+
+        <p class="attribute^units">float [=0]</p>
+
+        <p>The left margin of the block element, in pixels. This property is labeled as <strong>space left</strong> in the Knockout UI.</p>
+
+        <p margin_left="60">This paragraph has a <fo class="code"/>margin_left<fc class="code"/> value of <fo class="code"/>60<fc class="code"/> pixels.</p>
+
+        <p class="attribute">margin_right</p>
+
+        <p class="attribute^units">float [=0]</p>
+
+        <p>The right margin of the block element, in pixels. This property is labeled as <strong>space right</strong> in the Knockout UI.</p>
+
+        <p margin_right="60">This paragraph has a <fo class="code"/>margin_right<fc class="code"/> value of <fo class="code"/>60<fc class="code"/> pixels.</p>
+
+        <p class="attribute">margin_top</p>
+
+        <p class="attribute^units">float [=0]</p>
+
+        <p>The upper margin of the block element, in pixels. This property is labeled as <strong>space before</strong> in the Knockout UI. This property only takes effect between two blocks; it is irrelevant for the first block in any frame.</p>
+
+        <p margin_top="60">This paragraph has a <fo class="code"/>margin_top<fc class="code"/> value of <fo class="code"/>60<fc class="code"/> pixels.</p>
+
+        <p class="attribute">margin_bottom</p>
+
+        <p class="attribute^units">float [=0]</p>
+
+        <p>The lower margin of the block element, in pixels. This property is labeled as <strong>space after</strong> in the Knockout UI. This property only takes effect between two blocks; it is irrelevant for the last block in any frame.</p>
+
+        <p margin_bottom="60">This paragraph has a <fo class="code"/>margin_bottom<fc class="code"/> value of <fo class="code"/>60<fc class="code"/> pixels.</p>
+
+        <p class="attribute">hyphenate</p>
+
+        <p class="attribute^units">boolean [=False]</p>
+
+        <p class="body">Whether or not hyphenation is performed on the paragraph.</p>
+
+        <p class="attribute">keep_together</p>
+
+        <p class="attribute^units">boolean [=False]</p>
+
+        <p class="body">Whether or not to treat the block element as inseparable over multiple frames. If set to <fo class="code"/>True<fc class="code"/>, the block element will not split over frame breaks. It’s strongly recommended to set this property to <fo class="code"/>True<fc class="code"/> on graphs and charts.</p>
+
+        <p class="attribute">keep_with_next</p>
+
+        <p class="attribute^units">boolean [=False]</p>
+
+        <p class="body">Whether or not to move the block element to the next frame if the following block element breaks into the next frame. It’s recommended to set this property to <fo class="code"/>True<fc class="code"/> for headings. Overuse of this property may make editing chaotic as it forces Knockout to re-layout preceding block elements to a limited degree. The names and types of all property documentations in this manual have <fo class="code"/>keep_with_next<fc class="code"/> set to <fo class="code"/>True<fc class="code"/>.</p>
+
+        <p class="attribute">incr_place_value</p>
+
+        <p class="attribute^units">integer [=-1]</p>
+
+        <p class="body">The place value in the Knockout block element counter that <fo class="code"/>incr_assign<fc class="code"/> affects. Can be any integer from negative infinity to 12, inclusive. This property is labeled as <strong>increment</strong> in the Knockout UI.</p>
+
+        <p class="attribute">incr_assign</p>
+
+        <p class="attribute^units">function (n) : integer [=&#x27;None&#x27;]</p>
+
+        <p class="body">Returns the new value of the Knockout counter at <fo class="code"/>incr_place_value<fc class="code"/>, with the old value <fo class="code"/>n<fc class="code"/> as input. Setting this property to <fo class="code"/>&#x27;n + 1&#x27;<fc class="code"/> will increment the counter by 1. Setting this property to <fo class="code"/>&#x27;None&#x27;<fc class="code"/> will disable incrementation. If <fo class="code"/>incr_place_value<fc class="code"/> is positive, <fo class="code"/>incr_assign<fc class="code"/> will also overwrite all counter place values of higher index with <fo class="code"/>0<fc class="code"/>. This property is labeled as <strong>by</strong> in the Knockout UI.</p>
+
+        <p class="attribute">show_counter</p>
+
+        <p class="attribute^units">function (A) = string [=&#x27;None&#x27;]</p>
+
+        <p class="body">Returns the string to be rendered alongside the block element, with the array <fo class="code"/>A<fc class="code"/> as input. For example, <fo class="code"/>&quot;&#x27;.&#x27;.join(A[:4])&quot;<fc class="code"/> will print the first four place values of the Knockout counter, separated by periods. <fo class="code"/>&#x27;None&#x27;<fc class="code"/> will disable counter printing. This property is labeled as <strong>counter text</strong> in the Knockout UI.</p>
+
+        <p class="attribute">counter_space</p>
+
+        <p class="attribute^units">float [=0.5]</p>
+
+        <p class="body">The distance, as a factor of the paragraph <fo class="code"/>leading<fc class="code"/> value, that the printed counter is spaced to the left of the leftmost edge of the block element.</p>
+
+        <p show_count="'[X]'" counter_space="0.5">This counter is has a <fo class="code"/>counter_space<fc class="code"/> value of <fo class="code"/>0.5<fc class="code"/>.</p>
+
+        <p show_count="'[X]'" counter_space="1">This counter is has a <fo class="code"/>counter_space<fc class="code"/> value of <fo class="code"/>1<fc class="code"/>.</p>
+
+        <p show_count="'[X]'" counter_space="1.5">This counter is has a <fo class="code"/>counter_space<fc class="code"/> value of <fo class="code"/>1.5<fc class="code"/>.</p>
+
+        <p/>
+    </section>
+
+    <section repeat="3" frames="90,40 90,70 ; 730,40 730,70 ; 1">
+        <table>
+            <tr class="h2^unnumbered">
+                <td>
+                    <p class="body^firstchild">The Knockout Tutorial</p>
+                </td>
+
+                <td>
+                    <p class="_right^body^firstchild"><pn/></p>
+                </td>
+            </tr>
+        </table>
+    </section>
+</body>
+
+<textstyles>
+    <textstyle name="Black" color="#000"/>
+
+    <textstyle name="Body text" fontsize="15"/>
+
+    <textstyle name="Body text smaller" fontsize="13"/>
+
+    <textstyle name="Body text sub" shift="-2"/>
+
+    <textstyle name="Body text super" shift="5"/>
+
+    <textstyle name="Code" path="interface/Share-TechMono.otf" color="#6a59ff"/>
+
+    <textstyle name="attribute type" fontsize="12"/>
+
+    <textstyle name="Sans medium" path="data/fonts/FiraSans-Medium.otf"/>
+
+    <textstyle name="Sans medium italic" path="data/fonts/FiraSans-MediumItalic.otf"/>
+
+    <textstyle name="Serif" path="data/fonts/FiraSans-Book.otf"/>
+
+    <textstyle name="Serif bold" path="data/fonts/FiraSans-Medium.otf"/>
+
+    <textstyle name="Serif bold italic" path="data/fonts/FiraSans-MediumItalic.otf"/>
+
+    <textstyle name="Serif italic" path="data/fonts/FiraSans-BookItalic.otf"/>
+
+    <textstyle name="Title text" fontsize="40" path="/home/kelvin/.fonts/Kabel.otf" capitals="True"/>
+
+    <textstyle name="h2 text" fontsize="15" tracking="2" capitals="True"/>
+
+    <textstyle name="h3 text" fontsize="15" tracking="1"/>
+</textstyles>
+
+<blockstyles>
+    <blockstyle class="">
+        <memberstyle class="" textstyle="Black"/>
+    </blockstyle>
+
+    <blockstyle hyphenate="True" leading="20" margin_bottom="10">
+        <memberstyle class="" textstyle="Body text"/>
+
+        <memberstyle class="" textstyle="Serif"/>
+
+        <memberstyle class="emphasis" textstyle="Serif italic"/>
+
+        <memberstyle class="strong" textstyle="Serif bold"/>
+
+        <memberstyle class="emphasis^strong" textstyle="Serif bold italic"/>
+
+        <memberstyle class="code" textstyle="Code"/>
+
+        <memberstyle class="small" textstyle="Body text smaller"/>
+
+        <memberstyle class="sub" textstyle="Body text sub"/>
+
+        <memberstyle class="sup" textstyle="Body text super"/>
+    </blockstyle>
+
+    <blockstyle class="body^quotation" margin_left="20">
+        <memberstyle textstyle="Serif italic"/>
+
+        <memberstyle class="emphasis" textstyle="Serif"/>
+    </blockstyle>
+
+    <blockstyle class="body^firstchild^quotation" show_count="'“'" counter_space="0.2"/>
+
+    <blockstyle class="body^quote source" indent="0" margin_left="42" show_count="'—'">
+        <memberstyle textstyle="Body text smaller"/>
+    </blockstyle>
+
+    <blockstyle class="body^firstchild" indent="0"/>
+
+    <blockstyle class="attribute" keep_with_next="True" leading="20" margin_bottom="5" margin_top="5">
+        <memberstyle class="" textstyle="h3 text"/>
+
+        <memberstyle textstyle="Code"/>
+    </blockstyle>
+
+    <blockstyle class="attribute^units" leading="15" margin_top="0">
+        <memberstyle class="" textstyle="Serif"/>
+
+        <memberstyle class="" textstyle="attribute type"/>
+    </blockstyle>
+
+    <blockstyle class="h1" keep_with_next="False" leading="40" margin_bottom="40">
+        <memberstyle class="" textstyle="Title text"/>
+    </blockstyle>
+
+    <blockstyle class="h2" keep_with_next="False" leading="20" margin_bottom="10" margin_top="20" incr_place_value="1" incr_assign="n + 1" show_count="str(A[1])" counter_space="0.75">
+        <memberstyle class="" textstyle="h2 text"/>
+
+        <memberstyle class="" textstyle="Sans medium"/>
+
+        <memberstyle class="emphasis" textstyle="Sans medium italic"/>
+    </blockstyle>
+
+    <blockstyle class="h3" keep_with_next="False" leading="20" margin_bottom="10" margin_top="10" incr_place_value="2" incr_assign="n + 1" show_count="'.'.join(str(k) for k in A[1:3])" counter_space="0.75">
+        <memberstyle class="" textstyle="Sans medium italic"/>
+
+        <memberstyle textstyle="h3 text"/>
+    </blockstyle>
+
+    <blockstyle class="firstchild" incr_assign="1"/>
+
+    <blockstyle class="unnumbered" incr_assign="None" show_count="None"/>
+
+    <blockstyle class="_right" align="1"/>
+</blockstyles>
+
+<!-- #############
+{'channels': (0, 6), 'text': ([0], (36, 18), (36, 18)), 'view': {'H': -809, 'Hc': 1199.0, 'K': 4, 'Kc': 489.0, 'Zoom': 11, 'mode': 'text'}}
+############# -->

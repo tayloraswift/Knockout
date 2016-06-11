@@ -67,3 +67,9 @@ blonde
 faves
 meme
 Renewables
+LibreOffice
+Inkscape
+rasterization
+styletags
+styletag
+indices

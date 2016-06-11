@@ -148,9 +148,16 @@ class Plane(Box):
                 block.implicit_ = overlay
 
         if b1:
-            preceeding = self.content[b1 - 1]
+            # find last unchained block
+            while True:
+                preceeding = self.content[b1 - 1]
+                pre_bstyle = calc_bstyle(preceeding)
+                if not pre_bstyle['keep_with_next']:
+                    break
+                else:
+                    b1 -= 1
             frames.start(preceeding.u_bottom, split=split)
-            gap = calc_bstyle(preceeding)['margin_bottom']
+            gap = pre_bstyle['margin_bottom']
             wheels = preceeding.wheels
         else:
             preceeding = None
@@ -158,30 +165,44 @@ class Plane(Box):
             gap = -calc_bstyle(self.content[0])['margin_top']
             wheels = Wheels()
         
-        UU = self._UU
-        del UU[b1:]
         halt = False
         blocknumber = b1
         contentlen = len(self.content)
 
         new = True
+        chained = False
         while blocknumber < contentlen:
             if new:
                 block = self.content[blocknumber]
                 BSTYLE = calc_bstyle(block)
-                frames.space(gap + BSTYLE['margin_top'])
+                if new == 1:
+                    frames.space(gap + BSTYLE['margin_top'])
                 gap = BSTYLE['margin_bottom']
+                if BSTYLE['keep_with_next']:
+                    if not chained:
+                        frames.freeze()
+                    chained = True
                 if BSTYLE['keep_together']:
                     frames.freeze()
             try:
+
                 halt, wheels = block.layout(frames, BSTYLE, wheels, overlay, preceeding, halt and blocknumber > b2)
                 if BSTYLE['keep_together']:
                     frames.unfreeze()
+                if not BSTYLE['keep_with_next']:
+                    if chained:
+                        chained = False
+                        frames.unfreeze()
                 preceeding = block
                 blocknumber += 1
                 new = True
             except detectexception:
-                new = False
+                if chained:
+                    blocknumber -= next(i for i, B in enumerate(reversed(self.content[:blocknumber])) if not calc_bstyle(B)['keep_with_next'])
+                    chained = False
+                    new = 2
+                else:
+                    new = False
                 continue
             except LineOverflow:
                 UU.append(block.u)
@@ -191,7 +212,7 @@ class Plane(Box):
                     raise LineOverflow
                 else:
                     break
-            UU.append(block.u)
+        self._UU = [block.u for block in self.content]
     
     def u_extents(self):
         return self.content[0].u, self.content[-1].u_bottom
@@ -287,7 +308,10 @@ class Wheels(list):
         if type(i) is not slice and i < 0:
             return self._iso.get(i, 0)
         else:
-            return list.__getitem__(self, i)
+            try:
+                return list.__getitem__(self, i)
+            except IndexError:
+                return 'ERROR: COUNTER LIMITED TO MAX_INDEX=12'
     
     def __setitem__(self, i, v):
         if type(i) is not slice and i < 0:

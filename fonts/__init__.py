@@ -2,6 +2,22 @@ import os
 
 from libraries import freetype
 
+_fail = '\033[91m'
+_endc = '\033[0m'
+_bold = '\033[1m'
+
+try:
+    from fontTools.ttLib import TTFont
+except ImportError:
+    print(_bold + _fail + 'ERROR: The fontTools library can’t be found. Emoji rendering has been disabled.' + _endc + _fail + ' \n\tTry ' + _bold + 'pip3 install fonttools' + _endc + _fail + '\n\tMake sure pip installs hunspell for python3.5, not python3.4!' + _endc)
+    TTFont = None
+
+try:
+    from IO.svg import render_SVG
+except ImportError as message:
+    print(_bold + _fail + 'ERROR: ' + _endc + _fail + str(message) + '. Emoji rendering has been disabled.' + _endc)
+    TTFont = None
+
 from fonts import fontloader
 
 _type_registry = {}
@@ -23,6 +39,10 @@ def get_font(path, overwrite=False):
         
     return _type_registry[path]
 
+def get_emoji_font(path, overwrite=False):
+    if path not in _type_registry or overwrite:
+        _type_registry[path] = Emoji_font(path)
+    return _type_registry[path]
 
 nonbreaking_spaces = {
             '\u00A0': -30, # nbsp
@@ -130,6 +150,39 @@ class Memo_font(freetype.Face):
             dy = kern.y / self.units_per_EM
             self._kerning[(g1, g2)] = (dx, dy)
             return (dx, dy)
+
+class Emoji_font(Memo_font):
+    def __init__(self, path):
+        Memo_font.__init__(self, path)
+        
+        self.vectors = vectors = {}
+        if TTFont is not None:
+            for SVG, i, j in TTFont(path)['SVG '].docList:
+                try:
+                    CSVG = render_SVG(bytestring=SVG)
+                except ValueError:
+                    continue
+                vectors.update((n, CSVG) for n in range(i, j + 1))
+        self._fac = 1/(self.units_per_EM*0.045)
+
+    def generate_paint_function(self, letter, fontsize):
+        try:
+            E = Emoji(self.vectors[self.character_index(letter)], fontsize*self._fac)
+            return E.render_bubble
+        except KeyError:
+            return lambda cr: None
+
+class Emoji(object):
+    def __init__(self, CSVG, factor):
+        self._CSVG = CSVG
+        self._factor = factor
+    
+    def render_bubble(self, cr):
+        cr.save()
+        cr.scale(self._factor, self._factor)
+        cr.translate(0, 1788)
+        self._CSVG.paint_SVG(cr)
+        cr.restore()
     
 class Memo_I_font(Memo_font):
     def __init__(self, path):

@@ -38,6 +38,5 @@ class RSurface(surface.Surface):
         
         self.draw(self.TREE)
 
-def render_SVG(U):
-    tree = parser.Tree(url=U)
-    return RSurface(tree)
+def render_SVG( ** kwargs ):
+    return RSurface(parser.Tree( ** kwargs ))

@@ -5,10 +5,11 @@ from libraries.freetype import ft_errors
 from meredith.box import Box, Datablocks
 from meredith import datablocks
 
-from fonts import get_font
+from fonts import get_font, get_emoji_font
 
 _text_DNA = [('fontsize',    'float',   13),
             ('path',        'str',      'fonts/Ubuntu-R.ttf'),
+            ('path_emoji',  'str',      'fonts/TwitterColorEmoji-SVGinOT.ttf'),
             ('tracking',    'float',    0),
             ('shift',       'float',    0),
             ('capitals',    'bool',     False),
@@ -193,6 +194,11 @@ class Blockstyles(_Has_tagged_members):
                 path = Textstyle.BASE['path']
                 projection['color'] = (1, 0.15, 0.2, 1)
                 projection['fontmetrics'], projection['font'] = get_font(path)
+            
+            try:
+                projection['font_emoji'] = get_emoji_font(projection['path_emoji'])
+            except ft_errors.FT_Exception:
+                projection['font_emoji'] = get_emoji_font(Textstyle.BASE['path_emoji'])
             
             projection['hash'] = H
             

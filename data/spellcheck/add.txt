@@ -73,3 +73,8 @@ rasterization
 styletags
 styletag
 indices
+FreeType
+Fontforge
+emoji
+emojis
+rgba

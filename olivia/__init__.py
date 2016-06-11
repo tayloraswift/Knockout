@@ -189,7 +189,7 @@ def interpret_rgba(C):
         # hex
         else:
             colorstring = ''.join(c for c in C if c in hx)
-            if len(colorstring) > 3:
+            if len(colorstring) > 4:
                 colorstring = colorstring + '000000ff'[len(colorstring):]
                 bytes = 2
             else:

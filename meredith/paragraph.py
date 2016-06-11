@@ -205,7 +205,6 @@ class Plane(Box):
                     new = False
                 continue
             except LineOverflow:
-                UU.append(block.u)
                 for blk in self.content[blocknumber:]:
                     blk.erase()
                 if self.__class__ is not Section:

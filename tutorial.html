@@ -8,7 +8,9 @@
     430,80 430,960 ; 730,80 730,960 ; 1 |
     90,80 90,960 ; 390,80 390,960 ; 2 |
     430,80 430,960 ; 730,80 730,960 ; 2 |
-    90,80 90,960 ; 390,80 390,960 ; 3">
+    90,80 90,960 ; 390,80 390,960 ; 3 |
+    430,80 430,960 ; 730,80 730,960 ; 3 |
+    90,80 90,960 ; 390,80 390,960 ; 4">
         <p class="h1">The Knockout tutorial</p>
 
         <p class="body^firstchild^quotation">using microsoft word</p>
@@ -37,7 +39,7 @@
 
         <p class="h3">Block-level styling</p>
 
-        <p class="body">Block-level styling refers to styling that affects how layout is done on paragraphs (and other modules). Knockout contains the following block-level styling attributes:</p>
+        <p class="body">Block-level styling refers to styling that affects how layout is done on paragraphs (and other modules). Knockout contains the following block-level styling properties:</p>
 
         <p class="attribute">leading</p>
 
@@ -83,7 +85,7 @@
 
         <p class="attribute^units">integer set [=&#x27;0&#x27;]</p>
 
-        <p indent="20" indent_range="0, 2">The indices of the lines in each paragraph that the <fo class="code"/>indent<fc class="code"/> is applied to. For example, a value of <fo class="code"/>0, 2<fc class="code"/> indents the first and third lines of the affected paragraphs, such as this one (used with <fo class="code"/>indent = 20<fc class="code"/>). This property is labeled as <strong>for lines</strong> in the Knockout UI.</p>
+        <p indent="20" indent_range="0, 2">The indices of the lines in each paragraph that the <fo class="code"/>indent<fc class="code"/> is applied to. For example, a value of <fo class="code"/>&#x27;0, 2&#x27;<fc class="code"/> indents the first and third lines of the affected paragraphs, such as this one (used with <fo class="code"/>indent = 20<fc class="code"/>). This property is labeled as <strong>for lines</strong> in the Knockout UI.</p>
 
         <p class="attribute">margin_left</p>
 
@@ -165,7 +167,53 @@
 
         <p show_count="'[X]'" counter_space="1.5">This counter is has a <fo class="code"/>counter_space<fc class="code"/> value of <fo class="code"/>1.5<fc class="code"/>.</p>
 
-        <p/>
+        <p class="h3">Text-level styling</p>
+
+        <p>Text-level styling refers to styling rules that affect how text is rendered within paragraphs. You can think of them sort of like font settings. Knockout supports the following text-level styling properties:</p>
+
+        <p class="attribute">path</p>
+
+        <p class="attribute^units">string [=&#x27;fonts/Ubuntu-R.ttf&#x27;]</p>
+
+        <p class="body">The font file used to render the text with. The file can be of any font format supported by FreeType (OTF, TTF, TTC, WOFF, PFA, PFB, etc), as well as Fontforge SFD font source files, which Knockout compiles at startup. This property is labeled as <strong>font file</strong> in the Knockout UI.</p>
+
+        <p class="attribute">path_emoji</p>
+
+        <p class="attribute^units">string [=&#x27;fonts/TwitterColorEmoji-SVGinOT.ttf&#x27;]</p>
+
+        <p class="body">The color emoji font file used to render emojis with. Knockout uses the SVG data encoded in a font’s <fo class="code"/>&#x27;SVG&#x27;<fc class="code"/> table; if this data is invalid (as in the EmojiOne font), emoji rendering will fail. Diversity emojis and composite emojis (like families or flags) are not currently supported. This property is labeled as <strong>emoji font file</strong> in the Knockout UI.</p>
+
+        <p>♥💜💙💁🤐😰😅😎💀👂👅🤔🍕🌭🚀🐭🌲🐋🙌🏐</p>
+
+        <p class="attribute">fontsize</p>
+
+        <p class="attribute^units">float [=13]</p>
+
+        <p class="body">The side-length, in pixels, of the EM square font glyphs are rendered in. The optical result of <fo class="code"/>fontsize<fc class="code"/> is strongly font-dependent as it is simply a factor of the font-internal drawing size.</p>
+
+        <p class="attribute">tracking</p>
+
+        <p class="attribute^units">float [=0]</p>
+
+        <p class="body">Additional space, in pixels, inserted between letters. Tracking is not inserted between text-styling characters.</p>
+
+        <p class="attribute">shift</p>
+
+        <p class="attribute^units">float [=0]</p>
+
+        <p class="body">Vertical offset of glyphs from the baseline. Positive values shift glyphs upwards; negative values shift glyphs downwards. This property is labeled as <strong>vertical shift</strong> in the Knockout UI.</p>
+
+        <p class="attribute">capitals</p>
+
+        <p class="attribute^units">boolean [=False]</p>
+
+        <p class="body">Whether or not to set text in all caps. This property should be used when capitalization is a stylistic choice, such as in headings or labels. This property should not be used when capitalization carries semantic meaning, such as in an acronym like NATO.</p>
+
+        <p class="attribute">color</p>
+
+        <p class="attribute^units">rgba [=&#x27;(1, 0.15, 0.2, 1)&#x27;]</p>
+
+        <p class="body">The color that text is inked in. It can be given in an RGB triple or an RGBA 4-tuple, with each channel on a [<fo class="code"/>0<fc class="code"/>, <fo class="code"/>1<fc class="code"/>] range. It can also be given as a hex code; any code longer than 4 digits will be treated as a 2-digit hex code, on the range [<fo class="code"/>00<fc class="code"/>, <fo class="code"/>ff<fc class="code"/>]; any code 4 digits or shorter as a 1-digit hex code, on the range [<fo class="code"/>0<fc class="code"/>, <fo class="code"/>f<fc class="code"/>]. Incomplete color entries will be filled in with the corresponding digits from <fo class="code"/>(0, 0, 0, 1)<fc class="code"/>, <fo class="code"/>000000ff<fc class="code"/>, or <fo class="code"/>000f<fc class="code"/>.</p>
     </section>
 
     <section repeat="3" frames="90,40 90,70 ; 730,40 730,70 ; 1">
@@ -294,5 +342,5 @@
 </blockstyles>
 
 <!-- #############
-{'channels': (0, 6), 'text': ([0], (36, 18), (36, 18)), 'view': {'H': -809, 'Hc': 1199.0, 'K': 4, 'Kc': 489.0, 'Zoom': 11, 'mode': 'text'}}
+{'channels': (0, 8), 'text': ([0], (101, 452), (101, 452)), 'view': {'H': -171, 'Hc': 1001.0, 'K': -1455, 'Kc': 883.0, 'Zoom': 11, 'mode': 'text'}}
 ############# -->

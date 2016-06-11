@@ -62,7 +62,7 @@ class Image(Inline):
         if src[-4:] == '.svg':
             if render_SVG is not None:
                 try:
-                    self._CSVG = render_SVG(src)
+                    self._CSVG = render_SVG(url=src)
                     self.h = int(self._CSVG.h)
                     self.k = int(self._CSVG.k)
                     renderfunc = self.paint_SVG

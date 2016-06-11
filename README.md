@@ -11,7 +11,7 @@ Install
 ------------
 This application should work **out of the box** on a *default* Ubuntu (15.10) installation. It is written in Python 3.5.
 However, some libraries might be necessary for SVG rendering because of [cairoSVG](https://github.com/Kozea/CairoSVG), which depends on the `tinycss` module.
-`tinycss` is easily installable through `pip`. 
+`tinycss` is easily installable through `pip`. If you want emoji support, you will also need to install the [fonttools](https://github.com/behdad/fonttools) module. `fonttools` is also easily installable through `pip`.
 
 ### Installing pip
 You may have `pip` installed already. (`pip` is the python package manager.) If you are not sure, run the terminal command
@@ -29,7 +29,13 @@ python3.5 /usr/bin/pip3 install tinycss
 ````
 This problem is quite common, and users with the same problem on other platforms should also try running `pip` from python itself should its libraries install in the wrong locations.
 
-Special thanks to the developers of Pygments, Pyphen, and CairoSVG for their valuable free libraries.
+### Installing tinycss
+````
+pip3 install fonttools
+````
+Again, if `fonttools` still can’t be found, try running `pip` from python itself to install in the correct location.
+
+Special thanks to the developers of Pygments, Pyphen, fontTools, and CairoSVG for their valuable free libraries.
 
 ![Screenshot](screenshots/screenshot.png?raw=true "Text")
 

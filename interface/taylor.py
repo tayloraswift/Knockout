@@ -362,12 +362,11 @@ class Document_view(ui.Cell):
                     pair_i = bisect.bisect([pair[0] for pair in ms], it) - 1
 
                     if ms[pair_i][0] <= it <= ms[pair_i][1]:
-                        if it == ms[pair_i][1]:
-                            self.planecursor.i = (ib, it - 1)
+                        self.planecursor.i = (ib, ms[pair_i][0])
+                        self.planecursor.j = (self.planecursor.j[0], ms[pair_i][1])
                         
                         # used to keep track of ui redraws
                         self._sel_cursor = self.planecursor.j
-                        self.planecursor.expand_cursors_word()
                         suggestions = [ms[pair_i][2]] + [w.decode("utf-8") for w in wonder.struck.suggest(ms[pair_i][2].encode('latin-1', 'ignore'))]
                         labels = suggestions[:]
                         labels[0] = '“' + labels[0] + '”'

@@ -26,6 +26,9 @@ _BREAK_P = _BREAK | set(('</p>',))
 
 _APOSTROPHES = set("'’")
 
+from data.emoji.unicode_codes import EMOJI_UNICODE
+EMOJIS = set(EMOJI_UNICODE.values())
+
 class Glyphs_line(dict):
     def I(self, x):
         x -= self['x']
@@ -55,6 +58,8 @@ class Glyphs_line(dict):
             if glyph[0] < 0:
                 if glyph[0] == -6:
                     repository['_annot'].append( (glyph[0], glyph[1] + x, glyph[2] + y, BLOCK, glyph[3]))
+                elif glyph[0] == -22:
+                    repository['_paint'].append((glyph[6], glyph[1] + x, glyph[2] + y))
                 elif glyph[0] == -89:
                     glyph[6].deposit_glyphs(repository, x, y)
                 else:
@@ -97,6 +102,7 @@ def cast_liquid_line(LINE, letters, startindex, width, leading, BLOCK, F, hyphen
     F_char_index = FSTYLE['fontmetrics'].character_index
     F_kern = FSTYLE['fontmetrics'].kern
     kern_available = FSTYLE['fontmetrics'].has_kerning
+    fontsize = FSTYLE['fontsize']
     
     x = 0
     y = -FSTYLE['shift']
@@ -104,31 +110,39 @@ def cast_liquid_line(LINE, letters, startindex, width, leading, BLOCK, F, hyphen
     glyphwidth = 0
     GI = -1
     cap = True
-
+    
+    emojiset = EMOJIS
+    
     for letter in letters:
         CT = type(letter)
         if CT is str:
-            if caps:
-                letter = letter.upper()
-            glyphwidth = F_advance_width(letter) * FSTYLE['fontsize']
-            # kern
-            if GI > 0 and kern_available:
-                new_GI = F_char_index(letter)
-                kdx, kdy = F_kern(GI, new_GI)
-                x += kdx
-                y += kdy
-                GI = new_GI
+            if letter in emojiset:
+                GI = -22
+                efont = FSTYLE['font_emoji']
+                glyphwidth = efont.advance_pixel_width(letter) * fontsize
+                glyphappend((-22, x, y - fontsize, FSTYLE, fstat, x + glyphwidth, efont.generate_paint_function(letter, fontsize)))
             else:
-                GI = F_char_index(letter)
-            glyphappend((
-                    GI,             # 0
-                    x,              # 1
-                    y,              # 2
-                    
-                    FSTYLE,         # 3
-                    fstat,          # 4
-                    x + glyphwidth  # 5
-                    ))
+                if caps:
+                    letter = letter.upper()
+                glyphwidth = F_advance_width(letter) * fontsize
+                # kern
+                if GI > 0 and kern_available:
+                    new_GI = F_char_index(letter)
+                    kdx, kdy = F_kern(GI, new_GI)
+                    x += kdx
+                    y += kdy
+                    GI = new_GI
+                else:
+                    GI = F_char_index(letter)
+                glyphappend((
+                        GI,             # 0
+                        x,              # 1
+                        y,              # 2
+                        
+                        FSTYLE,         # 3
+                        fstat,          # 4
+                        x + glyphwidth  # 5
+                        ))
         
         elif CT is PosFontpost:            
             # increment tag count
@@ -140,6 +154,7 @@ def cast_liquid_line(LINE, letters, startindex, width, leading, BLOCK, F, hyphen
             F_char_index = FSTYLE['fontmetrics'].character_index
             F_kern = FSTYLE['fontmetrics'].kern
             kern_available = FSTYLE['fontmetrics'].has_kerning
+            fontsize = FSTYLE['fontsize']
             
             y = -FSTYLE['shift']
             caps = FSTYLE['capitals']
@@ -160,6 +175,7 @@ def cast_liquid_line(LINE, letters, startindex, width, leading, BLOCK, F, hyphen
             F_char_index = FSTYLE['fontmetrics'].character_index
             F_kern = FSTYLE['fontmetrics'].kern
             kern_available = FSTYLE['fontmetrics'].has_kerning
+            fontsize = FSTYLE['fontsize']
             
             y = -FSTYLE['shift']
             caps = FSTYLE['capitals']
@@ -288,37 +304,46 @@ def cast_mono_line(PARENT, letters, leading, BLOCK, F=None):
     F_char_index = FSTYLE['fontmetrics'].character_index
     F_kern = FSTYLE['fontmetrics'].kern
     kern_available = FSTYLE['fontmetrics'].has_kerning
+    fontsize = FSTYLE['fontsize']
 
     x = 0
     y = -FSTYLE['shift']
     caps = FSTYLE['capitals']
     glyphwidth = 0
     GI = -1
-
+    
+    emojiset = EMOJIS
+    
     for letter in letters:
         CT = type(letter)
         if CT is str:
-            if caps:
-                letter = letter.upper()
-            glyphwidth = F_advance_width(letter) * FSTYLE['fontsize']
-            # kern
-            if GI > 0 and kern_available:
-                new_GI = F_char_index(letter)
-                kdx, kdy = F_kern(GI, new_GI)
-                x += kdx
-                y += kdy
-                GI = new_GI
+            if letter in emojiset:
+                GI = -22
+                efont = FSTYLE['font_emoji']
+                glyphwidth = efont.advance_pixel_width(letter) * fontsize
+                glyphappend((-22, x, y - fontsize, FSTYLE, fstat, x + glyphwidth, efont.generate_paint_function(letter, fontsize)))
             else:
-                GI = F_char_index(letter)
-            glyphappend((
-                    GI,             # 0
-                    x,              # 1
-                    y,              # 2
-                    
-                    FSTYLE,         # 3
-                    fstat,          # 4
-                    x + glyphwidth  # 5
-                    ))
+                if caps:
+                    letter = letter.upper()
+                glyphwidth = F_advance_width(letter) * fontsize
+                # kern
+                if GI > 0 and kern_available:
+                    new_GI = F_char_index(letter)
+                    kdx, kdy = F_kern(GI, new_GI)
+                    x += kdx
+                    y += kdy
+                    GI = new_GI
+                else:
+                    GI = F_char_index(letter)
+                glyphappend((
+                        GI,             # 0
+                        x,              # 1
+                        y,              # 2
+                        
+                        FSTYLE,         # 3
+                        fstat,          # 4
+                        x + glyphwidth  # 5
+                        ))
         
         elif CT is PosFontpost:            
             # increment tag count
@@ -330,6 +355,7 @@ def cast_mono_line(PARENT, letters, leading, BLOCK, F=None):
             F_char_index = FSTYLE['fontmetrics'].character_index
             F_kern = FSTYLE['fontmetrics'].kern
             kern_available = FSTYLE['fontmetrics'].has_kerning
+            fontsize = FSTYLE['fontsize']
             
             y = -FSTYLE['shift']
             caps = FSTYLE['capitals']
@@ -350,6 +376,7 @@ def cast_mono_line(PARENT, letters, leading, BLOCK, F=None):
             F_char_index = FSTYLE['fontmetrics'].character_index
             F_kern = FSTYLE['fontmetrics'].kern
             kern_available = FSTYLE['fontmetrics'].has_kerning
+            fontsize = FSTYLE['fontsize']
             
             y = -FSTYLE['shift']
             caps = FSTYLE['capitals']

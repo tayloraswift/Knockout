@@ -325,6 +325,7 @@ class Properties(_Properties_panel):
                     if TS is not None:
                         y += 55
                         props = [[(0, fields.Blank_space, 'path', 'FONT FILE')],
+                                [(0, fields.Blank_space, 'path_emoji', 'EMOJI FONT FILE')],
                                 [(0, fields.Blank_space, 'fontsize', 'FONT SIZE')],
                                 [(0, fields.Blank_space, 'tracking', 'TRACKING')],
                                 [(0, fields.Blank_space, 'shift', 'VERTICAL SHIFT')],

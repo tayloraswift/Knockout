@@ -248,18 +248,22 @@ class Section(Plane):
             A[page] = (P.pop('_annot'), P.pop('_paint_annot'))
             P['_annot'] = []
             P['_paint_annot'] = []
-        
+
     def transfer(self, S):
         for page, P in self._SP.items():
             superpage = S[page]
             for name, L in P.items():
-                if name in superpage:
-                    if type(name) is int:
+                if type(name) is int:
+                    if name in superpage:
                         superpage[name][1].extend(L[1])
                     else:
-                        superpage[name].extend(L)
+                        superpage[name] = L[0], L[1][:]
                 else:
-                    superpage[name] = L
+                    if name in superpage:
+                        superpage[name].extend(L)
+                    else:
+                        superpage[name] = L[:]
+
         S.annot.append(self.annot)
         self.rebuilt = False
 

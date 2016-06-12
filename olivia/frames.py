@@ -1,10 +1,12 @@
+from math import inf as infinity
+
 from bisect import bisect
 
 from itertools import chain
 
 from meredith import datablocks
 
-from state.exceptions import LineOverflow, LineSplit
+from state.exceptions import LineSplit
 
 from olivia.basictypes import interpret_int
 
@@ -93,11 +95,15 @@ class Frames(list):
     def _straighten(self):
         left, right = zip( * self )
         
-        self._run = tuple(accumulate_path(left)), tuple(accumulate_path(right))
-        self._segments = (0,) + tuple(F[-1][1] for F in self._run[0])
+        acc_left = tuple(accumulate_path(left))
+        acc_right = tuple(accumulate_path(right))
+                                                                                                    # lateral bounds cannot be infinity
+        self._run = acc_left + ((acc_left[-1][-1], (acc_left[-1][-1][0], infinity)),) , acc_right + (((1989000, acc_right[-1][-1][1]), (1989000, infinity)),)
+        self._segments = 0, * (F[-1][1] for F in self._run[0]) , infinity
+        self._yy = * (F[0][0][1] for F in self), self[-1][0][-1][1]
     
     def y2u(self, y, c):
-        return min(max(0, y - self[c][0][0][1]) + self._segments[c], self._segments[c + 1] - 0.000001)
+        return min(max(0, y - self._yy[c]) + self._segments[c], self._segments[c + 1] - 0.000001)
     
     def start(self, u, split=None):
         self.overflow = False
@@ -105,12 +111,13 @@ class Frames(list):
             self._break_on_split = split
         self._u = u
         self._c = bisect(self._segments, u) - 1
+        self._top, self._limit = self._segments[self._c : self._c + 2]
+        self._y0 = self._yy[self._c]
         try:
-            self._top, self._limit = self._segments[self._c : self._c + 2]
-            self._y0 = self[self._c][0][0][1]
-        except ValueError:
+            self._pn = self[self._c].page
+        except IndexError:
             self.overflow = True
-            raise LineOverflow
+            self._pn = None
     
     def save_u(self):
         self._savestack.append((self._u, self._c, self._top, self._limit, self._y0, self._break_on_split))
@@ -123,13 +130,15 @@ class Frames(list):
     
     def _next_frame(self):
         self._c += 1
+        self._top, self._limit = self._segments[self._c : self._c + 2]
+        self._u = self._top
+        self._y0 = self._yy[self._c]
         try:
-            self._top, self._limit = self._segments[self._c : self._c + 2]
-            self._u = self._top
-            self._y0 = self[self._c][0][0][1]
-        except ValueError:
+            self._pn = self[self._c].page
+        except IndexError:
             self.overflow = True
-            raise LineOverflow
+            self._pn = None
+            
         if self._break_on_split:
             raise LineSplit
         
@@ -150,12 +159,12 @@ class Frames(list):
             x2 = piecewise(self._run[1][self._c], u)
             y = self._y0 + u - self._top
             self._u = u
-            return u, x1, x2, y, self._c, self[self._c].page
+            return u, x1, x2, y, self._c, self._pn
     
     def at(self, u):
         c = bisect(self._segments, u) - 1
-        y = self[c][0][0][1] + u - self._segments[c]
-        return piecewise(self._run[0][c], u), piecewise(self._run[1][c], u), y, self[c].page
+        y = self._yy[c] + u - self._segments[c]
+        return piecewise(self._run[0][c], u), piecewise(self._run[1][c], u), y, self._pn
         
     def which(self, x0, y0, radius):
         norm = datablocks.DOCUMENT.normalize_XY

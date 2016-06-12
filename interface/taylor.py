@@ -526,7 +526,7 @@ class Document_view(ui.Cell):
         max_page = 0
         sorted_glyphs = DOCUMENT.transfer()
         section = self.planecursor.plane_address[0]
-        for page, P in sorted_glyphs.items():
+        for page, P in (PP for PP in sorted_glyphs.items() if PP[0] is not None):
             max_page = max(max_page, page)
             
             # Transform goes
@@ -549,10 +549,11 @@ class Document_view(ui.Cell):
             # only annotate active tract
             if self._mode == 'text':
                 annot, paint_annot = sorted_glyphs.annot[section].get(page, ((), ()))
+                O = self.planecursor.PLANE
                 for operation, x, y in paint_annot:
                     cr.save()
                     cr.translate(x, y)
-                    operation(cr, self.planecursor.PLANE)
+                    operation(cr, O)
                     cr.restore()
                 cr.restore()
                 self._draw_annotations(cr, annot, page)
@@ -562,8 +563,6 @@ class Document_view(ui.Cell):
         
         if self._mode == 'text':
             self._draw_spelling(cr, self.planecursor.section.highlight_spelling())
-        
-        if self._mode == 'text':
             selections, signs = self.planecursor.paint_current_selection()
             if selections:
                 self._draw_selection_highlight(cr, selections, signs)
@@ -584,30 +583,30 @@ class Document_view(ui.Cell):
             else:
                 cr.set_source_rgba(0, 0, 0, 0.2)
 
-            px = self._X_to_screen(0, pp)
-            py = self._Y_to_screen(0, pp)
+            px1 = self._X_to_screen(0, pp)
+            py1 = self._Y_to_screen(0, pp)
             
-            cr.rectangle(px, py, int(round(PWIDTH*self._A)), 1)
+            px2 = px1 + int(round(PWIDTH*self._A))
+            py2 = py1 + int(round(PHEIGHT*self._A))
             
-            cr.rectangle(px - int(round(20*self._A)), py, int(round(10*self._A)), 1)
-            cr.rectangle(px + int(round((PWIDTH + 10)*self._A)), py, int(round(10*self._A)), 1)
+            prg = int(round(10*sqrt(self._A)))
             
+            cr.rectangle(px1, py1, px2 - px1, 1         )
+            cr.rectangle(px1, py1, 1        , py2 - py1 )
+            cr.rectangle(px1, py2, px2 - px1, 1         )
+            cr.rectangle(px2, py1, 1        , py2 - py1 )
             
-            cr.rectangle(px, py, 1, int(round(PHEIGHT*self._A)))
+            cr.rectangle(px1 - prg  , py1       , -prg,   1 )
+            cr.rectangle(px1        , py1 - prg ,   1 , -prg)
             
-            cr.rectangle(px, py - int(round(20*self._A)), 1, int(round(10*self._A)))
-            cr.rectangle(px, py + int(round((PHEIGHT + 10)*self._A)), 1, int(round(10*self._A)))
+            cr.rectangle(px2 + prg  , py1       ,  prg,   1 )
+            cr.rectangle(px2        , py1 - prg ,   1 , -prg)
             
-            cr.rectangle(px + int(round(PWIDTH*self._A)), py, 1, int(round(PHEIGHT*self._A)) + 1)
+            cr.rectangle(px1 - prg  , py2       , -prg,   1 )
+            cr.rectangle(px1        , py2 + prg ,   1 ,  prg)
             
-            cr.rectangle(px + int(round(PWIDTH*self._A)), py - int(round(20*self._A)), 1, int(round(10*self._A)))
-            cr.rectangle(px + int(round(PWIDTH*self._A)), py + int(round((PHEIGHT + 10)*self._A)), 1, int(round(10*self._A)))
-            
-            
-            cr.rectangle(px, py + int(round(PHEIGHT*self._A)), int(round(PWIDTH*self._A)) + 1, 1)
-            
-            cr.rectangle(px - int(round(20*self._A)), py + int(round(PHEIGHT*self._A)), int(round(10*self._A)), 1)
-            cr.rectangle(px + int(round((PWIDTH + 10)*self._A)), py + int(round(PHEIGHT*self._A)), int(round(10*self._A)), 1)
+            cr.rectangle(px2 + prg  , py2       ,  prg,   1 )
+            cr.rectangle(px2        , py2 + prg ,   1 ,  prg)
             
             cr.fill()
             
@@ -698,36 +697,42 @@ class Document_view(ui.Cell):
     def _draw_spelling(self, cr, underscores):
         cr.set_source_rgba(1, 0.15, 0.2, 0.8)
         for y, x1, x2, page in underscores:
-            cr.rectangle(self._X_to_screen(x1, page), 
-                    self._Y_to_screen(y + 2, page), 
-                    int((x2 - x1) * self._A), 1)
+            if page is not None:
+                cr.rectangle(self._X_to_screen(x1, page), 
+                        self._Y_to_screen(y + 2, page), 
+                        int((x2 - x1) * self._A), 1)
         cr.fill()
         
     def _draw_selection_highlight(self, cr, selections, signs):
         cr.push_group()
         cr.set_source_rgba(0, 0, 0, 0.1)
         for y, x1, x2, leading, page in selections:
-            cr.rectangle(self._X_to_screen(x1, page), 
-                    self._Y_to_screen(y - leading, page), 
-                    int((x2 - x1) * self._A), 
-                    int(leading * self._A))
+            if page is not None:
+                cr.rectangle(self._X_to_screen(x1, page), 
+                        self._Y_to_screen(y - leading, page), 
+                        int((x2 - x1) * self._A), 
+                        int(leading * self._A))
         cr.fill()
         
-        # first
-        y1, x11, x21, leading1, page1 = selections[0]
-        y2, x12, x22, leading2, page2 = selections[-1]
-        self._draw_cursor(cr, signs[0], self._X_to_screen(x11, page1), self._Y_to_screen(y1, page1), int(leading1 * self._A))
-        self._draw_cursor(cr, signs[1], self._X_to_screen(x22, page2), self._Y_to_screen(y2, page2), int(leading2 * self._A))
+        self._draw_cursor(cr, signs[0], selections[0])
+        self._draw_cursor(cr, signs[1], selections[-1])
 
         cr.pop_group_to_source()
         cr.paint_with_alpha(0.8)
     
-    def _draw_cursor(self, cr, sign, x, y, leading):
+    def _draw_cursor(self, cr, sign, selection):
+        y1, x1, x2, leading, page = selection
+        if page is None:
+            return
+        height = int(leading * self._A)
+        x = self._X_to_screen(x1, page)
+        y = self._Y_to_screen(y1, page)
+        
         cr.set_source_rgb(1, 0, 0.5)
 
         ux = x
-        uy = y - leading
-        uh = leading
+        uy = y - height
+        uh = height
         
         cr.rectangle(ux - 1, 
                     uy, 

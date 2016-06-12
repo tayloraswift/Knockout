@@ -10,7 +10,7 @@ from meredith.styles import Blockstyle, block_styling_attrs
 
 from layout.line import Glyphs_line, cast_liquid_line, cast_mono_line
 
-from state.exceptions import LineOverflow, LineSplit
+from state.exceptions import LineSplit
 from state.constants import accent_light
 
 from edit.wonder import words
@@ -204,13 +204,7 @@ class Plane(Box):
                 else:
                     new = False
                 continue
-            except LineOverflow:
-                for blk in self.content[blocknumber:]:
-                    blk.erase()
-                if self.__class__ is not Section:
-                    raise LineOverflow
-                else:
-                    break
+        
         self._UU = [block.u for block in self.content]
     
     def u_extents(self):
@@ -421,33 +415,29 @@ class Blockelement(Blockstyle):
             self.color = ( * accent_light , 0.7)
         else:
             self.color = color
+        if handle_test is not None:
+            self.__handle_test = handle_test
+            x1, x2, y, pn = frames.at((self.u + u)*0.5)
+            paint_annot.append((pn, (self._paint_handle, x2, y)))
+            
         if u != self.u_bottom:
             self.u_bottom = u
-            if handle_test is not None:
-                paint_annot.append(self._gen_handle(frames, handle_test))
+            
             return False
         else:
             return True
-    
-    def erase(self):
-        self.u = infinity
-        self._cast(infinity)
-        self.__lines = ()
 
-    def _gen_handle(self, frames, test):
-        x1, x2, y, pn = frames.at((self.u + self.u_bottom)*0.5)
-        def paint_handle(cr, O):
-            if test(O):
-                cr.set_source_rgba( * self.color )
-                cr.move_to(6, 20)
-                cr.line_to(12, 0)
-                cr.line_to(6, -20)
-                cr.rectangle(0, -20, 2, 40)
-                cr.rectangle(4, -20, 2, 40)
-                cr.close_path()
-                cr.fill()
-        return pn, (paint_handle, x2, y)
-    
+    def _paint_handle(self, cr, O):
+        if self.__handle_test(O):
+            cr.set_source_rgba( * self.color )
+            cr.move_to(6, 20)
+            cr.line_to(12, 0)
+            cr.line_to(6, -20)
+            cr.rectangle(0, -20, 2, 40)
+            cr.rectangle(4, -20, 2, 40)
+            cr.close_path()
+            cr.fill()
+            
     def _transfer_lines(self, S):
         for page, lines in groupby(self.__lines, key=lambda line: line['page']):
             sorted_page = S[page]
@@ -478,7 +468,6 @@ class Blockelement(Blockstyle):
             return []
         
         return [(first['y'] - first['leading'], x1, x2, self.u - self.u_bottom, first['page'])]
-
 
     def _run_stats_content(self, spell):
         self.content.stats(spell)
@@ -774,14 +763,11 @@ class Paragraph_block(Blockelement):
 
         return select
 
-    def highlight_spelling(self):
-        return self._highlight_spelling_lines()
+    highlight_spelling = Blockelement._highlight_spelling_lines
     
-    def run_stats(self, spell):
-        return self._run_stats_content(spell)
+    run_stats = Blockelement._run_stats_content
 
-    def transfer(self, S):
-        self._transfer_lines(S)
+    transfer = Blockelement._transfer_lines
 
     def copy_empty(self):
         if str(self['class']) != 'body':

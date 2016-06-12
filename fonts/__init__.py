@@ -6,16 +6,16 @@ _fail = '\033[91m'
 _endc = '\033[0m'
 _bold = '\033[1m'
 
+from IO.image import SVG_image, render_SVG
+
 try:
     from fontTools.ttLib import TTFont
 except ImportError:
     print(_bold + _fail + 'ERROR: The fontTools library can’t be found. Emoji rendering has been disabled.' + _endc + _fail + ' \n\tTry ' + _bold + 'pip3 install fonttools' + _endc + _fail + '\n\tMake sure pip installs hunspell for python3.5, not python3.4!' + _endc)
     TTFont = None
 
-try:
-    from IO.svg import render_SVG
-except ImportError as message:
-    print(_bold + _fail + 'ERROR: ' + _endc + _fail + str(message) + '. Emoji rendering has been disabled.' + _endc)
+if render_SVG is None:
+    print(_bold + _fail + 'WARNING: SVG rendering is disabled. Emoji rendering has been disabled.' + _endc)
     TTFont = None
 
 from fonts import fontloader
@@ -36,12 +36,14 @@ def get_font(path, overwrite=False):
         FT_font = Memo_font(filepath)
         CR_font = fontloader.create_cairo_font_face_for_file(filepath)
         _type_registry[path] = FT_font, CR_font
+        print('\033[92mLoaded font\033[0m      :', filepath)
         
     return _type_registry[path]
 
 def get_emoji_font(path, overwrite=False):
     if path not in _type_registry or overwrite:
         _type_registry[path] = Emoji_font(path)
+        print('\033[92mLoaded emoji font\033[0m:', path)
     return _type_registry[path]
 
 nonbreaking_spaces = {
@@ -151,37 +153,48 @@ class Memo_font(freetype.Face):
             self._kerning[(g1, g2)] = (dx, dy)
             return (dx, dy)
 
+def _print_emoji_error(cr, fontsize):
+    unit = int(round(fontsize*0.05))
+    cr.set_source_rgb(0.4, 0.4, 0.4)
+    cr.rectangle(unit, unit, fontsize - 2*unit, fontsize - 2*unit)
+    cr.fill()
+    cr.set_line_width(2*unit)
+    cr.move_to(4*unit, 4*unit)
+    cr.line_to(fontsize - 4*unit, fontsize - 4*unit)
+    cr.move_to(fontsize - 4*unit, 4*unit)
+    cr.line_to(4*unit, fontsize - 4*unit)
+    cr.set_source_rgb(1, 1, 1)
+    cr.stroke()
+
 class Emoji_font(Memo_font):
     def __init__(self, path):
         Memo_font.__init__(self, path)
         
         self.vectors = vectors = {}
+        self._fac = fac = 1/(self.units_per_EM*0.045)
         if TTFont is not None:
             for SVG, i, j in TTFont(path)['SVG '].docList:
-                try:
-                    CSVG = render_SVG(bytestring=SVG)
-                except ValueError:
-                    continue
-                vectors.update((n, CSVG) for n in range(i, j + 1))
-        self._fac = 1/(self.units_per_EM*0.045)
-
+                print('\r...Caching emoji at {0} 💁'.format(i), end='')
+                SVGI = SVG_image(bytestring=SVG, dx=0, dy=1788, hfactor=2.5, kfactor=2.5)
+                vectors.update((n, SVGI) for n in range(i, j + 1))
+            print()
+    
     def generate_paint_function(self, letter, fontsize):
         try:
             E = Emoji(self.vectors[self.character_index(letter)], fontsize*self._fac)
             return E.render_bubble
         except KeyError:
-            return lambda cr: None
+            return lambda cr, render: _print_emoji_error(cr, fontsize)
 
 class Emoji(object):
-    def __init__(self, CSVG, factor):
-        self._CSVG = CSVG
+    def __init__(self, SVGI, factor):
+        self._SVGI = SVGI
         self._factor = factor
     
-    def render_bubble(self, cr):
+    def render_bubble(self, cr, render=False):
         cr.save()
         cr.scale(self._factor, self._factor)
-        cr.translate(0, 1788)
-        self._CSVG.paint_SVG(cr)
+        self._SVGI.paint(cr, render)
         cr.restore()
     
 class Memo_I_font(Memo_font):

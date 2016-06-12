@@ -59,7 +59,7 @@ class Glyphs_line(dict):
                 if glyph[0] == -6:
                     repository['_annot'].append( (glyph[0], glyph[1] + x, glyph[2] + y, BLOCK, glyph[3]))
                 elif glyph[0] == -22:
-                    repository['_paint'].append((glyph[6], glyph[1] + x, glyph[2] + y))
+                    repository['_images'].append((glyph[6], glyph[1] + x, glyph[2] + y))
                 elif glyph[0] == -89:
                     glyph[6].deposit_glyphs(repository, x, y)
                 else:

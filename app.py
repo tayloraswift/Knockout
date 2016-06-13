@@ -8,7 +8,10 @@ from state import noticeboard, constants
 from IO import un
 from edit import cursor
 from keyboard import compose
+
 from meredith.smoothing import fontsettings
+from meredith.meta import filedata
+
 from interface import karlie, taylor, menu
 
 _dead_keys = set(('dead_tilde', 'dead_acute', 'dead_grave', 'dead_circumflex', 'dead_abovering', 'dead_macron', 'dead_breve', 'dead_abovedot', 'dead_diaeresis', 'dead_doubleacute', 'dead_caron', 'dead_cedilla', 'dead_ogonek', 'dead_iota', 'Multi_key'))
@@ -80,7 +83,7 @@ class Display(Gtk.Window):
         self.connect("key-press-event", self.on_key_press)
         self.connect("check-resize", self.on_resize)
         
-        self.set_title(constants.filename)
+        self.set_title(filedata.filename)
 
         self.resize(self._h, self._k)
         
@@ -99,6 +102,7 @@ class Display(Gtk.Window):
         self.BECKY.queue_draw()
         self.KLOSSY.queue_draw()
         self.SCREEN.queue_draw()
+        self.set_title(filedata.filename)
         return True
 
     def DRAW_BECKY(self, w, cr):

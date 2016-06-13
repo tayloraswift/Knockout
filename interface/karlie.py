@@ -9,6 +9,7 @@ from edit import caramel
 
 from meredith.styles import Blockstyle
 from meredith.datablocks import DOCUMENT, TTAGS, BTAGS, TSTYLES, BSTYLES
+from meredith.meta import filedata
 
 from IO import un
 
@@ -422,6 +423,12 @@ class Properties(_Properties_panel):
                         A = 'height',
                         name = 'HEIGHT' ))
             y += 45
+            
+            self._items.append(fields.Blank_space(15, y, KW, 
+                        node=filedata, 
+                        A='filepath', 
+                        name='SAVE AS'))
+            y += 30
         
         elif self._tab == 'character':
             self._heading = lambda: 'Element source'
@@ -433,8 +440,6 @@ class Properties(_Properties_panel):
         return y
 
     def _frames_panel(self, y, KW):
-
-        
         if self._tab == 'frames':
             c = contexts.Text.c
             self._heading = lambda: 'Frame ' + str(c)

@@ -19,6 +19,7 @@ from state.contexts import Text as CText
 from state.constants import accent, accent_light
 
 from meredith.smoothing import fontsettings
+from meredith.meta import filedata
 
 from interface import kookies, fields, ui
 from interface.menu import menu
@@ -59,16 +60,16 @@ class Mode_switcher(object):
         self._hover_j = None
         noticeboard.redraw_becky.push_change()
 
-
 def PDF():
-    name = os.path.splitext(constants.filename)[0]
+    name = os.path.splitext(filedata['filepath'])[0]
     surface = cairo.PDFSurface(name + '.pdf', DOCUMENT['width']*0.75, DOCUMENT['height']*0.75)
     cr = cairo.Context(surface)
     cr.scale(0.75, 0.75)
-    classes = DOCUMENT.transfer()
-    max_page = max(classes.keys())
+    pages = DOCUMENT.transfer()
+    max_page = max(k for k in pages if k is not None)
     for p in range(max_page + 1):
-        becky.print_page(cr, p, classes)
+        if p in pages:
+            becky.print_page(cr, p, pages[p])
         cr.show_page()
 
 def _place_tags(key):
@@ -508,17 +509,16 @@ class Document_view(ui.Cell):
             cr.set_font_face(font['font'])
             cr.show_glyphs(glyphs)
     
-    def print_page(self, cr, p, classed_pages):
+    def print_page(self, cr, p, page):
         m = self._mode
         self._mode = 'render'
-        if p in classed_pages:
-            self._draw_images(cr, classed_pages[p]['_images'])
-            for operation, x, y in classed_pages[p]['_paint']:
-                cr.save()
-                cr.translate(x, y)
-                operation(cr)
-                cr.restore()
-            self._print_sorted(cr, classed_pages[p])
+        self._draw_images(cr, page['_images'])
+        for operation, x, y in page['_paint']:
+            cr.save()
+            cr.translate(x, y)
+            operation(cr)
+            cr.restore()
+        self._print_sorted(cr, page)
         self._mode = m
             
     def _draw_by_page(self, cr, mx_cx, my_cy, cx, cy, A=1):

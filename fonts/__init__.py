@@ -35,17 +35,17 @@ def get_font(path, overwrite=False):
             filepath = fontname + '.otf'
         else:
             filepath = path
+        print('\033[92mLoading font\033[0m      :', filepath)
         FT_font = Memo_font(filepath)
         CR_font = fontloader.create_cairo_font_face_for_file(filepath)
         _type_registry[path] = FT_font, CR_font
-        print('\033[92mLoaded font\033[0m      :', filepath)
         
     return _type_registry[path]
 
 def get_emoji_font(path, overwrite=False):
     if path not in _type_registry or overwrite:
+        print('\033[92mLoading emoji font\033[0m:', path)
         _type_registry[path] = Emoji_font(path)
-        print('\033[92mLoaded emoji font\033[0m:', path)
     return _type_registry[path]
 
 nonbreaking_spaces = {

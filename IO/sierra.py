@@ -5,12 +5,12 @@ from ast import literal_eval
 
 from state import constants, noticeboard
 
-from meredith import datablocks, box
+from meredith import datablocks, box, meta
 
 from IO import tree
 
 def save():
-    FI = ('<head><meta charset="UTF-8"></head>\n<title>', constants.filename, '</title>\n\n',
+    FI = ('<head><meta charset="UTF-8"></head>\n<title>', meta.filedata.filename, '</title>\n\n',
             tree.serialize([datablocks.DOCUMENT, datablocks.TSTYLES, datablocks.BSTYLES]))
     
     from edit import cursor, caramel
@@ -20,12 +20,12 @@ def save():
             'view': taylor.becky.read_display_state()}
     
     FT = ''.join(chain(FI, ('\n\n<!-- #############\n', pformat(DATA, width=189), '\n############# -->\n') ))
-    with open(constants.filename, 'w') as fi:
+    with open(meta.filedata['filepath'], 'w') as fi:
         fi.write(FT)
 
 def load(name):
     with open(name, 'r') as fi:
-        constants.filename = name
+        meta.filedata = meta.Metadata(name)
         doc = fi.read()
 
     DATA = literal_eval(doc[doc.find('<!-- #############') + 18 : doc.find('############# -->')])

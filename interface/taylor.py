@@ -239,6 +239,9 @@ class Document_view(ui.Cell):
         self._K = state['K']
 
         self._A = self._scroll_notches[self._scroll_notch_i]
+        
+        self._font = ISTYLES[('strong',)]
+        self._SN = self._font['fontmetrics'].spacenames
 
     def read_display_state(self):
         return {
@@ -556,6 +559,7 @@ class Document_view(ui.Cell):
                     operation(cr, O)
                     cr.restore()
                 cr.restore()
+                cr.set_font_face(self._font['font'])
                 self._draw_annotations(cr, annot, page)
             
             else:
@@ -611,7 +615,7 @@ class Document_view(ui.Cell):
             cr.fill()
             
             if self._mode == 'frames':
-                caramel.delight.render_grid(cr, px, py, PWIDTH, PHEIGHT, self._A)
+                caramel.delight.render_grid(cr, px1, py1, PWIDTH, PHEIGHT, self._A)
 
     def _draw_images(self, cr, images):
         mode = self._mode == 'render'
@@ -624,12 +628,10 @@ class Document_view(ui.Cell):
             cr.restore()
 
     def _draw_annotations(self, cr, annot, page):
-        font = ISTYLES[('strong',)]
         afs = int(6 * sqrt(self._A))
         uscore = 1 + (self._A > 0.5)
         cr.set_font_size(afs)
-        cr.set_font_face(font['font'])
-        SN = font['fontmetrics'].spacenames
+        SN = self._SN
         
         activeblock = self.planecursor.PLANE.content[self.planecursor.i[0]]
         for a, x, y, BLOCK, F in annot:
@@ -768,12 +770,12 @@ class Document_view(ui.Cell):
         
         # text
         self._draw_by_page(cr, self._H - self._Hc, self._K - self._Kc, self._Hc, self._Kc, self._A)
-        
+        cr.set_font_face(self._font['font'])
         # frames
         if self._mode == 'text':
             caramel.delight.render(cr, self._X_to_screen, self._Y_to_screen, frames=self.planecursor.section['frames'])
         elif self._mode == 'frames':
-            caramel.delight.render(cr, self._X_to_screen, self._Y_to_screen)
+            caramel.delight.render(cr, self._X_to_screen, self._Y_to_screen, A=self._A)
         
         if self._mode != 'render':
             # DRAW TOOLBAR BACKGROUND
@@ -790,10 +792,7 @@ class Document_view(ui.Cell):
         
         # draw stats
         cr.set_source_rgba(0, 0, 0, 0.8)
-        font = ISTYLES[('strong',)]
-        
-        cr.set_font_size(font['fontsize'])
-        cr.set_font_face(font['font'])
+        cr.set_font_size(self._font['fontsize'])
         
         cr.move_to(130, k - 20)
         cr.show_text('{0:g}'.format(self._A*100) + '%')

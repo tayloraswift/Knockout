@@ -35,7 +35,7 @@ class Sprinkles(object):
         
         i = bisect.bisect(self._grid[a], value)
         self._grid[a].insert(i, value)
-        self.grid_selected = (a, i)
+        self.grid_selected = a, i
     
     def _target_grid(self, axis, value):
         if axis == 'x':
@@ -47,14 +47,14 @@ class Sprinkles(object):
         try:
             g = self._grid[a][g_closest]
         except IndexError:
-            self.grid_selected = (None, None)
+            self.grid_selected = None, None
             return False
         
         if abs(value - g) < 5:
-            self.grid_selected = (a, g_closest)
+            self.grid_selected = a, g_closest
             return True
         else:
-            self.grid_selected = (None, None)
+            self.grid_selected = None, None
             return False
     
     def move_grid(self, x, y):
@@ -91,7 +91,7 @@ class Sprinkles(object):
 
     def render(self, cr, px, py, p_h, p_k, A):
         for n, notch in enumerate(self._grid[0]):
-            if n == self.grid_selected[1] and self.grid_selected[0] == 0:
+            if self.grid_selected == (0, n):
                 cr.set_source_rgba( * accent_light, 0.7)
                 cr.move_to(px + int(round(notch*A)), py - int(round(10*A)))
                 cr.rel_line_to(1, 0)
@@ -119,7 +119,7 @@ class Sprinkles(object):
             cr.stroke()
 
         for n, notch in enumerate(self._grid[1]):
-            if n == self.grid_selected[1] and self.grid_selected[0] == 1:
+            if self.grid_selected == (1, n):
                 cr.set_source_rgba( * accent_light, 0.7)
                 cr.move_to(px - int(round(10*A)), py + int(round(notch*A)))
                 cr.rel_line_to(0, 1)
@@ -140,7 +140,6 @@ class Sprinkles(object):
             cr.fill()
 
             cr.set_line_width(1)
-#            cr.set_dash([2, 8], 0)
             cr.move_to(px, py + int(round(notch*A)) + 0.5)
             cr.rel_line_to(p_h*A, 0)
             

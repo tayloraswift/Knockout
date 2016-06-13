@@ -1,5 +1,7 @@
 import os
 
+from itertools import chain
+
 from libraries import freetype
 
 _fail = '\033[91m'
@@ -170,21 +172,29 @@ class Emoji_font(Memo_font):
     def __init__(self, path):
         Memo_font.__init__(self, path)
         
-        self.vectors = vectors = {}
+        
+        self._emojis = {}
         self._fac = fac = 1/(self.units_per_EM*0.045)
         if TTFont is not None:
-            for SVG, i, j in TTFont(path)['SVG '].docList:
-                print('\r...Caching emoji at {0} 💁'.format(i), end='')
-                SVGI = SVG_image(bytestring=SVG, dx=0, dy=1788, hfactor=2.5, kfactor=2.5)
-                vectors.update((n, SVGI) for n in range(i, j + 1))
-            print()
+            self._vectors = dict(chain.from_iterable(((n, SVG) for n in range(i, j + 1)) for SVG, i, j in TTFont(path)['SVG '].docList))
+        else:
+            self._vectors = {}
     
     def generate_paint_function(self, letter, fontsize):
         try:
-            E = Emoji(self.vectors[self.character_index(letter)], fontsize*self._fac)
-            return E.render_bubble
+            return self._emojis[(letter, fontsize)]
         except KeyError:
-            return lambda cr, render: _print_emoji_error(cr, fontsize)
+            i = self.character_index(letter)
+            try:
+                BS = self._vectors[i]
+            except KeyError:
+                self._emojis[(letter, fontsize)] = lambda cr, render: _print_emoji_error(cr, fontsize)
+                return self._emojis[(letter, fontsize)]
+            
+            E = Emoji(SVG_image(bytestring=BS, dx=0, dy=1788, hfactor=2.5, kfactor=2.5), 
+                      fontsize*self._fac)
+            self._emojis[(letter, fontsize)] = E.render_bubble
+            return E.render_bubble
 
 class Emoji(object):
     def __init__(self, SVGI, factor):

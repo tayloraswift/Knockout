@@ -214,7 +214,7 @@ class Axis(Plane):
         if self['axis']:
             cr.move_to( * self._extended_line[0] )
             cr.line_to( * self._extended_line[1] )
-            cr.close_path()
+
         if self['ticks']:
             for p1, p2 in self._ticks:
                 cr.move_to( * p1 )

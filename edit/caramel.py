@@ -1,4 +1,4 @@
-from math import pi
+from math import pi, sqrt
 from itertools import chain
 
 from state import noticeboard
@@ -29,6 +29,24 @@ def _draw_broken_bar(cr, x1, y1, x2, color_rgba, top):
     cr.stroke()
     
     cr.set_dash([], 0)
+
+def _draw_portals(cr, frame, Tx, Ty, color1, color2):
+    page = frame.page
+             
+    _draw_broken_bar(cr,
+            round( Tx(frame[0][0][0] , page) ), 
+            round( Ty(frame[0][0][1] , page) ),
+            round( Tx(frame[1][0][0] , page) ),
+            color1,
+            top = 1
+            )
+    _draw_broken_bar(cr,
+            round( Tx(frame[0][-1][0] , page) ), 
+            round( Ty(frame[1][-1][1] , page) ),
+            round( Tx(frame[1][-1][0] , page) ),
+            color2,
+            top = 0
+            )
 
 def overflow(cr, frames, Tx, Ty):
     if frames.overflow:
@@ -72,6 +90,7 @@ class Channels_controls(object):
         self._hover_portal = (None, None)
                         
         self._grid_controls = DOCUMENT['grid']
+        self.render_grid = self._grid_controls.render
 
     def at(self):
         return DOCUMENT.content.index(self.section), self._selected_point[0]
@@ -232,7 +251,6 @@ class Channels_controls(object):
         un.history.pop()
     
     def key_input(self, name):
-
         if name in ['BackSpace', 'Delete']:
             if self._mode == 'outlines':
                 c, r, i = self._selected_point
@@ -273,110 +291,78 @@ class Channels_controls(object):
             noticeboard.redraw_becky.push_change()
             hovered[1] = self._hover_portal
 
-    def render(self, cr, Tx, Ty, frames=None):            
-            
+    def render(self, cr, Tx, Ty, A=1, frames=None):
         if frames is None:
+            em = int(sqrt(A)*15)
+            cr.set_font_size(em)
             for c, frame in enumerate(self._FRAMES):
                 page = frame.page
                 
-                color = (0.3, 0.3, 0.3, 0.5)
-                if (c, 'entrance') == self._hover_portal:
-                    color = (0.3, 0.3, 0.3, 1)
-                # draw portals            
-                _draw_broken_bar(cr,
-                        round( Tx(frame[0][0][0] , page) ), 
-                        round( Ty(frame[0][0][1] , page) ),
-                        round( Tx(frame[1][0][0] , page) ),
-                        color,
-                        top = 1
-                        )
-                if (c, 'portal') == self._hover_portal:
-                    color = (1, 0, 0.1, 1)
+                if c == self._hover_portal[0] and self._hover_portal[1] is not None:
+                    if 'entrance' == self._hover_portal[1]:
+                        colors = (0.3, 0.3, 0.3, 1), (1, 0, 0.1, 0.5)
+                    elif 'portal' == self._hover_portal[1]:
+                        colors = (0.3, 0.3, 0.3, 0.5), (1, 0, 0.1, 1)
                 else:
-                    color = (1, 0, 0.1, 0.5)
-                _draw_broken_bar(cr,
-                        round( Tx(frame[0][-1][0] , page) ), 
-                        round( Ty(frame[1][-1][1] , page) ),
-                        round( Tx(frame[1][-1][0] , page) ),
-                        color,
-                        top = 0
-                        )
+                    colors = (0.3, 0.3, 0.3, 0.5), (1, 0, 0.1, 0.5)
+                _draw_portals(cr, frame, Tx, Ty, * colors )
+                
                 # draw railings
                 if c == self._selected_point[0]:
                     cr.set_source_rgba( * accent_light )
-                    w = 2
                 elif c == self._hover_point[0]:
                     cr.set_source_rgba( * accent_light, 0.7)
-                    w = 1
                 else:
                     cr.set_source_rgba( * accent_light, 0.5)
-                    w = 1
                 
-                for r, railing in enumerate(frame):
-                    pts = [( Tx(p[0], page), Ty(p[1], page) ) for p in railing]
+                railingpoints = tuple(tuple((Tx(p[0], page), Ty(p[1], page), p[2]) for p in railing) for railing in frame)
+                
+                for r, points in enumerate(railingpoints):
+                    cr.move_to(points[0][0], points[0][1])
                     
-                    cr.move_to(pts[0][0], pts[0][1])
-
-                    for point in pts[1:]:
-                        cr.line_to(point[0], point[1])
-
-                    cr.set_line_width(w)
+                    for x, y, a in points:
+                        cr.line_to(x, y)
+                    
+                    cr.set_line_width(2)
                     cr.stroke()
 
                     # draw selections
-                    for i, p in enumerate(railing):
-                        cr.arc( Tx(p[0], page), Ty(p[1], page), 3, 0, 2*pi)
+                    for i, (x, y, a) in enumerate(points):
+                        cr.arc(x, y, 3, 0, 2*pi)
                         if (c, r, i) == self._hover_point:
-                            cr.set_source_rgba( * accent_light, 0.5)
+                            cr.set_source_rgba( * accent_light , 0.5)
                             cr.fill()
-                            cr.set_source_rgba( * accent_light, 0.7)
+                            cr.set_source_rgba( * accent_light , 0.7)
                         else:
                             cr.fill()
-                        if p[2]:
-                            cr.arc( Tx(p[0], page), Ty(p[1], page), 5, 0, 2*pi)
+                        if a:
+                            cr.arc(x, y, 5, 0, 2*pi)
                             cr.set_line_width(1)
                             cr.stroke()
-    
+            
+                cr.move_to(railingpoints[0][0][0] - 1.5*em, railingpoints[0][0][1] + 0.7*em)
+                cr.show_text(str(c))
+                cr.move_to(railingpoints[0][-1][0] - 1.5*em, railingpoints[0][-1][1])
+                cr.show_text(str(c + 1))
+            
+            cr.set_line_width(1)
             for frame in chain.from_iterable(section['frames'] for section in DOCUMENT.content if section is not self.section):
                 page = frame.page
                 
                 cr.set_source_rgba(0.3, 0.3, 0.3, 0.3)
                 
-                pts = [( Tx(p[0], page), Ty(p[1], page) ) for p in frame[0] + list(reversed(frame[1]))]
-                cr.move_to(pts[0][0], pts[0][1])
-                for point in pts[1:]:
-                    cr.line_to(point[0], point[1])
+                pts = (( Tx(p[0], page), Ty(p[1], page) ) for p in chain(frame[0], reversed(frame[1])))
+                cr.move_to( * next(pts) )
+                for point in pts:
+                    cr.line_to( * point )
                 
                 cr.close_path()
-                cr.set_line_width(1)
-                cr.stroke()
-            
+                
+            cr.stroke()
             overflow(cr, self._FRAMES, Tx, Ty)
             
         else:
-            for c, frame in enumerate(frames):
-                page = frame.page
-                
-                color = (0.3, 0.3, 0.3, 0.5)
-
-                # draw portals            
-                _draw_broken_bar(cr,
-                        round( Tx(frame[0][0][0] , page) ), 
-                        round( Ty(frame[0][0][1] , page) ),
-                        round( Tx(frame[1][0][0] , page) ),
-                        color,
-                        top = 1
-                        )
-                color = (1, 0, 0.1, 0.5)
-                _draw_broken_bar(cr,
-                        round( Tx(frame[0][-1][0] , page) ), 
-                        round( Ty(frame[1][-1][1] , page) ),
-                        round( Tx(frame[1][-1][0] , page) ),
-                        color,
-                        top = 0
-                        )
+            for frame in frames:
+                _draw_portals(cr, frame, Tx, Ty, (0.3, 0.3, 0.3, 0.5), (1, 0, 0.1, 0.5))
+            
             overflow(cr, frames, Tx, Ty)
-
-    def render_grid(self, cr, px, py, p_h, p_k, A):
-        self._grid_controls.render(cr, px, py, p_h, p_k, A)
-

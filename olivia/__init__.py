@@ -25,7 +25,7 @@ def interpret_grid(S):
         return S.copy()
     if not S:
         S = ';'
-    xx, yy, *_ = (list(map(interpret_int, g.split(' '))) for g in S.split(';'))
+    xx, yy, *_ = (list(map(interpret_int, (u for u in g.split(' ') if u))) for g in S.split(';'))
     return Sprinkles(xx, yy)
 
 # special named datatypes

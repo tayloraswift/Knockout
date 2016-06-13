@@ -716,18 +716,18 @@ class Document_view(ui.Cell):
                         int(leading * self._A))
         cr.fill()
         
-        self._draw_cursor(cr, signs[0], selections[0])
-        self._draw_cursor(cr, signs[1], selections[-1])
+        self._draw_cursor(cr, signs[0], selections[0], False)
+        self._draw_cursor(cr, signs[1], selections[-1], True)
 
         cr.pop_group_to_source()
         cr.paint_with_alpha(0.8)
     
-    def _draw_cursor(self, cr, sign, selection):
+    def _draw_cursor(self, cr, sign, selection, side):
         y1, x1, x2, leading, page = selection
         if page is None:
             return
         height = int(leading * self._A)
-        x = self._X_to_screen(x1, page)
+        x = self._X_to_screen(selection[1 + side], page)
         y = self._Y_to_screen(y1, page)
         
         cr.set_source_rgb(1, 0, 0.5)

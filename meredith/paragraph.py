@@ -9,6 +9,7 @@ from olivia.frames import Margined
 from meredith.styles import Blockstyle, block_styling_attrs
 
 from layout.line import Glyphs_line, cast_liquid_line, cast_mono_line
+from layout import otline
 
 from state.exceptions import LineSplit
 from state.constants import accent_light
@@ -507,7 +508,46 @@ class Paragraph_block(Blockelement):
     name = 'p'
     textfacing = True
     
+    def _yield_linespaces(self, frames, BSTYLE):
+        leading = BSTYLE['leading']
+        indent_range = BSTYLE['indent_range']
+        D, SIGN, K = BSTYLE['indent']
+        l = 0
+        while True:
+            u, x1, x2, y, c, pn = frames.fit(leading)
+
+            # calculate indentation
+            if l in indent_range:
+                if K:
+                    #INDLINE = cast_mono_line({'l': l, 'c': c, 'page': pn},
+                    #    LIQUID[i : i + K], 
+                    #    0,
+                    #    self,
+                    #    F.copy()
+                    #    )
+                    x1 += D #+ INDLINE['advance'] * SIGN
+                else:
+                    x1 += D
+            else:
+                L_indent = 0
+            if x1 > x2:
+                x1, x2 = x2, x1                                                                       # TEMP
+            yield otline.OT_line({'BLOCK': self, 'leading': leading, 'start': x1, 'width': x2 - x1, 'x': x1, 'y': y, 'c': c, 'u': u, 'l': l, 'page': pn})
+            l += 1
+    
     def _layout_block(self, frames, BSTYLE, overlay):
+        flattened = otline.iterate_bidir_layers(otline.bidir_layers(self, BSTYLE['language']))
+        linemaker = self._yield_linespaces(frames, BSTYLE)
+        LINES = [line.fuse_glyphs() for line, strline in zip( * otline.shape_in_pieces(flattened, linemaker) )]
+        
+        leading = BSTYLE['leading']
+        self._UU = [line['u'] - leading for line in LINES]
+        self._search_j = []
+        # shift left edge
+        self.left_edge = LINES[0]['x'] - BSTYLE['leading']*0.5
+        return LINES[-1]['u'], [], LINES
+    
+    def __layout_block(self, frames, BSTYLE, overlay):
         F = Tagcounter()
         leading = BSTYLE['leading']
         indent_range = BSTYLE['indent_range']
@@ -720,8 +760,8 @@ class Paragraph_block(Blockelement):
     def _find_location(self, address):
         l = bisect(self._search_j, address[0])
         line = self._editable_lines[l]
-        glyph = line['GLYPHS'][address[0] - line['i']]
-        return l, line, glyph
+        #glyph = line['GLYPHS'][address[0] - line['i']]
+        return l, line, [0, 0, 0, {}]
     
     def _cursor(self, i):
         if i >= 0:

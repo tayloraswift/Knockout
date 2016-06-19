@@ -69,6 +69,7 @@ _block_DNA = [('hyphenate',       'bool',   False),
             ('margin_left',     'float',    0),
             ('margin_right',    'float',    0),
             ('margin_top',      'float',    0),
+            ('language',        'str',      'english'),
             ('align',           'float',    0),
             ('align_to',        'str',      ''),
             

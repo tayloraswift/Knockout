@@ -1,6 +1,6 @@
 from meredith.box import Box
 
-class _Fontpost(Box):
+class Fontpost(Box):
     name = '_f_'
     inline = True
     DNA = [('class', 'texttc', '_undefined_')]
@@ -11,13 +11,15 @@ class _Fontpost(Box):
     def __eq__(self, other):
         return type(other) is self.__class__ and other['class'] == self['class']
 
-class PosFontpost(_Fontpost):
+class PosFontpost(Fontpost):
     name = 'fo'
+    countersign = True
     def __str__(self):
         return '<fo/>'
 
-class NegFontpost(_Fontpost):
+class NegFontpost(Fontpost):
     name = 'fc'
+    countersign = False
     def __str__(self):
         return '<fc/>'
 
@@ -28,4 +30,9 @@ class Line_break(Box):
     def __str__(self):
         return '<br/>'
 
-members = (PosFontpost, NegFontpost, Line_break)
+class Reverse(Box):
+    name = 'reverse'
+    inline = True
+    DNA = [('language', 'language', None)]
+
+members = (PosFontpost, NegFontpost, Line_break, Reverse)

@@ -2,6 +2,10 @@
 
 import sys
 
+from os import environ
+environ['LD_LIBRARY_PATH'] = 'libraries/harfbuzz/girepository-1.0'
+environ['GI_TYPELIB_PATH'] = 'libraries/harfbuzz/girepository-1.0'
+
 from IO import sierra
 
 _fail = '\033[91m'

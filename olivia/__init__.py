@@ -8,6 +8,7 @@ import meredith
 from olivia.frames import Frames
 from olivia.poptarts import Sprinkles
 from olivia.basictypes import interpret_bool, interpret_int, interpret_float
+from olivia.languages import interpret_locale
 
 # attribute types #
 # stored as literals            : bool, int, float, float tuple
@@ -165,7 +166,8 @@ def interpret_open_range(S):
 reformat = {'binomial': (pack_binomial, read_binomial),
             'int set': (interpret_enumeration, lambda S: ', '.join(str(i) for i in sorted(S))),
             'range': (interpret_range, lambda R: ':'.join(str(r) for r in R)),
-            'open range': (interpret_open_range, lambda R: ':'.join(str(r) if r is not None else '' for r in R))}
+            'open range': (interpret_open_range, lambda R: ':'.join(str(r) if r is not None else '' for r in R)),
+            'language': (interpret_locale, str)}
 
 def interpret_float_tuple(value):
     L = (interpret_float(val, fail=None) for val in value.split(','))

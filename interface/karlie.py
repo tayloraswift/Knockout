@@ -362,6 +362,7 @@ class Properties(_Properties_panel):
                 y = self._y_incr() + 20
                 
                 props = [[(0, fields.Blank_space, 'leading', 'LEADING')],
+                        [(0, fields.Blank_space, 'language', 'LANGUAGE')],
                         [(0, fields.Blank_space, 'align', 'ALIGN') , (0.6, fields.Blank_space, 'align_to', 'ALIGN ON')],
                         [(0, fields.Blank_space, 'indent', 'INDENT') , (0.6, fields.Blank_space, 'indent_range', 'FOR LINES')],
                         [(0, fields.Blank_space, 'margin_left', 'SPACE LEFT'), (0.5, fields.Blank_space, 'margin_right', 'SPACE RIGHT')],

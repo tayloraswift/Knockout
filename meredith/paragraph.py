@@ -531,14 +531,42 @@ class Paragraph_block(Blockelement):
             else:
                 L_indent = 0
             if x1 > x2:
-                x1, x2 = x2, x1                                                                       # TEMP
-            yield otline.OT_line({'BLOCK': self, 'leading': leading, 'start': x1, 'width': x2 - x1, 'x': x1, 'y': y, 'c': c, 'u': u, 'l': l, 'page': pn})
+                x1, x2 = x2, x1
+            yield otline.OT_line({'BLOCK': self, 'leading': leading, 'start': x1, 'width': x2 - x1, 'y': y, 'c': c, 'u': u, 'l': l, 'page': pn})
             l += 1
     
     def _layout_block(self, frames, BSTYLE, overlay):
-        flattened = otline.iterate_bidir_layers(otline.bidir_layers(self, BSTYLE['language']))
+        direction, flattened = otline.bidir_layers(self, BSTYLE['language'])
         linemaker = self._yield_linespaces(frames, BSTYLE)
         LINES = [line.fuse_glyphs() for line, strline in zip( * otline.shape_in_pieces(flattened, linemaker) )]
+        if direction:
+            align = 1 - BSTYLE['align']
+        else:
+            align = BSTYLE['align']
+        # alignment
+        if BSTYLE['align_to']:
+            LIQUID = self.content
+            for LINE in LINES:
+                if LINE['j'] - LINE['i']:
+                    searchtext = LIQUID[LINE['i'] : LINE['j']]
+                    ai = -1
+                    for aligner in '\t' + BSTYLE['align_to']:
+                        try:
+                            ai = searchtext.index(aligner)
+                            break
+                        except ValueError:
+                            continue
+                    anchor = LINE['start'] + LINE['width'] * align
+                    LINE['x'] = anchor - LINE['_X_'][ai]
+                else:
+                    LINE['x'] = LINE['start']
+        elif not align:
+            for LINE in LINES:
+                LINE['x'] = LINE['start']
+        else:
+            for LINE in LINES:
+                rag = LINE['width'] - LINE['advance']
+                LINE['x'] = LINE['start'] + rag * align
         
         leading = BSTYLE['leading']
         self._UU = [line['u'] - leading for line in LINES]

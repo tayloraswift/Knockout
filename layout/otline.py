@@ -14,6 +14,7 @@ hbfontface = hb.face_create(hb.glib_blob_create(Bytes.new(fontdata)), 0)
 
 from itertools import chain, accumulate
 from bisect import bisect
+from re import finditer
 
 from meredith.box import Box
 from meredith.elements import Reverse, Fontpost, Line_break
@@ -83,15 +84,6 @@ def find_breakpoint(string, start, n, hyphenate=False):
         
         yield i, ''
 
-class Run(list):
-    def __init__(self, * G , language=None):
-        self.language = language
-        self.direction = directionality[language]
-        list.__init__(self, * G )
-
-    def __repr__(self):
-        return ''.join(('<', self.language, '>{', ', '.join(repr(c) for c in self), '} '))
-
 def get_font_info(paragraph, F, post):
     F = F.copy()
     if post.countersign:
@@ -100,50 +92,54 @@ def get_font_info(paragraph, F, post):
         F -= post['class']
     return F, datablocks.BSTYLES.project_t(paragraph, F)
 
+def _raise_digits(string):
+    ranges = list(chain((0,), * ((i, j) for i, j in (m.span() for m in finditer("[-+]?\d+[\.,]?\d*", string)) if j - i > 1) , (len(string),)))
+    if ranges:
+        return (string[i:j] for i, j in zip(ranges, ranges[1:]))
+    else:
+        return string,
+
 def bidir_layers(paragraph, base):
-    print(base)
     text = paragraph.content
-    O = Run(language=base)
-    stack = [O]
     i = 0
     n = len(text)
     F = Tagcounter()
     fontinfo = F, datablocks.BSTYLES.project_t(paragraph, F)
     
+    RUNS = []
+    l = directionality[base]
+    runinfo = (base,)
+    runinfo_stack = [runinfo]
+    
     for j, v in chain((k for k in enumerate(text) if type(k[1]) is not str), ((len(text), Reverse({})),) ):
         if j - i:
-            O.append((True, fontinfo, text[i:j]))
+            if l % 2:
+                RUNS.extend((l + i % 2, True, s, runinfo, fontinfo) for i, s in enumerate(_raise_digits(''.join(text[i:j]))) if s)
+            else:
+                RUNS.append((l, True, ''.join(text[i:j]), runinfo, fontinfo))
             
         if type(v) is Reverse:
             if v['language'] is None:
-                if len(stack) > 1:
-                    O = stack[-2]
-                    O.append(stack.pop())
+                if len(runinfo_stack) > 1:
+                    runinfo_stack.pop()
+                    runinfo = runinfo_stack[-1]
+                    l -= 1
                     if j < n:
-                        O.append((False, fontinfo, v))
+                        RUNS.append((l, False, v, runinfo, fontinfo))
             else:
-                O.append((False, fontinfo, v))
-                O = Run(language=v['language'])
-                stack.append(O)
+                RUNS.append((l, False, v, runinfo, fontinfo))
+                l += 1
+                runinfo = (v['language'],)
+                runinfo_stack.append(runinfo)
         else:
             if isinstance(v, Fontpost):
                 fontinfo = get_font_info(paragraph, fontinfo[0], v)
-            O.append((False, fontinfo, v))
+            RUNS.append((l, False, v, runinfo, fontinfo))
         i = j + 1
     
-    for k, O in enumerate(reversed(stack[1:])):
-        stack[-k - 2].append(O)
-    
-    return stack[0]
+    return l, RUNS
 
-def iterate_bidir_layers(seg, l=0):
-    for k in seg:
-        if type(k) is Run:
-            yield from iterate_bidir_layers(k, l + 1)
-        else:
-            yield l, seg, k
-
-def _get_glyphs_entire(sequence, run, font):
+def _get_glyphs_entire(sequence, font, runinfo):
     HBB = hb.buffer_create()
     cp = list(map(ord, sequence))
     hb.buffer_add_codepoints(HBB, cp, 0, len(cp))
@@ -161,8 +157,8 @@ def _get_glyphs_entire(sequence, run, font):
     
     return int(hb.buffer_get_direction(HBB)) - 4, x, glyphs
     
-def shape_right_glyphs(string, run, glyphs, i, font, limit):
-    direction, x, glyphs = _get_glyphs_entire(string[i:], run, font)
+def shape_right_glyphs(string, glyphs, i, font, runinfo, limit):
+    direction, x, glyphs = _get_glyphs_entire(string[i:], font, runinfo)
     
     if limit < x:
         if direction:
@@ -173,13 +169,12 @@ def shape_right_glyphs(string, run, glyphs, i, font, limit):
         I = None
     return glyphs, I
     
-def shape_left_glyphs(string, run, glyphs, start, i, font, sep=''):
+def shape_left_glyphs(string, glyphs, start, i, font, runinfo, sep=''):
     substr = string[start:i]
     if sep:
         substr = chain(substr, (sep,))
-    #print(':', start, i, string[start:i] + sep)
     
-    direction, x, glyphs = _get_glyphs_entire(substr, run, font)
+    direction, x, glyphs = _get_glyphs_entire(substr, font, runinfo)
     return glyphs, x
 
 def shape_in_pieces(runs, linemaker):
@@ -190,10 +185,9 @@ def shape_in_pieces(runs, linemaker):
     lines = [line]
     space = line['width']
     i = 0
-    for l, R, (is_text, (fstat, FSTYLE), V) in runs:
+    for l, is_text, V, runinfo, (fstat, FSTYLE) in runs:
         if is_text:
-            string = ''.join(V)
-            i_limit = len(string)
+            i_limit = len(V)
             font = hb.font_create(hbfontface)
             hb.font_set_scale(font, FSTYLE['fontsize'], FSTYLE['fontsize'])
             hb.ot_font_set_funcs(font)
@@ -202,9 +196,9 @@ def shape_in_pieces(runs, linemaker):
             r_glyphs = []
             
             while i < i_limit:
-                r_glyphs, I = shape_right_glyphs(string, R, r_glyphs, i, font, space)
+                r_glyphs, I = shape_right_glyphs(V, r_glyphs, i, font, runinfo, space)
                 if I is None: # entire line fits
-                    _strline.append(string[i:])
+                    _strline.append(V[i:])
                     line.L.append((l, FSTYLE, r_glyphs))
                     space -= r_glyphs[-1][2]
                     break
@@ -213,12 +207,12 @@ def shape_in_pieces(runs, linemaker):
                     try:
                         i_over = i + r_glyphs[I + 1][4] - 1
                     except IndexError:
-                        i_over = i + len(string) - 1
-                    for breakpoint, sep in find_breakpoint(string, i, i_over, True):
-                        l_glyphs, x = shape_left_glyphs(string, R, r_glyphs, i, breakpoint, font, sep)
+                        i_over = i + len(V) - 1
+                    for breakpoint, sep in find_breakpoint(V, i, i_over, True):
+                        l_glyphs, x = shape_left_glyphs(V, r_glyphs, i, breakpoint, font, runinfo, sep)
                         if x < space or not sep:
                             if l_glyphs:
-                                _strline.append(string[i:breakpoint] + sep)
+                                _strline.append(V[i:breakpoint] + sep)
                                 line.L.append((l, FSTYLE, l_glyphs))
 
                             _strline = []
@@ -238,8 +232,6 @@ def shape_in_pieces(runs, linemaker):
                 V.layout_inline(line, 0, 0, fstat, FSTYLE) # reminder to remove x, y parameters later
                 line.L.append((l, FSTYLE, (-89, 0, V.width, 0, i, V)))
     return lines, _strlines
-
-
 
 class OT_line(dict):
     def __init__(self, * I, ** KI ):
@@ -268,7 +260,10 @@ class OT_line(dict):
             level.append(i_top)
         if len(steps) > 1: # skip reversals that cancel each other out
             null_list = [0, i_top]
-            change = next(i for i, level in enumerate(steps) if level != null_list)
+            try:
+                change = next(i for i, level in enumerate(steps) if level != null_list)
+            except StopIteration:
+                change = len(steps)
             change = change - (change % 2)
             if change > 0:
                 del steps[:change]
@@ -299,6 +294,7 @@ class OT_line(dict):
             else:
                 G.append((dx, fontstyle['hash'], fontstyle, glyphs))
                 dx += glyphs[-1][2]
+        self['advance'] = dx
         return self
     
     def deposit(self, repository, x=0, y=0):

@@ -536,7 +536,7 @@ class Paragraph_block(Blockelement):
             l += 1
     
     def _layout_block(self, frames, BSTYLE, overlay):
-        direction, flattened = otline.bidir_layers(self, BSTYLE['language'])
+        direction, flattened = otline.bidir_levels(self, BSTYLE['language'])
         linemaker = self._yield_linespaces(frames, BSTYLE)
         LINES = [line.fuse_glyphs() for line, strline in zip( * otline.shape_in_pieces(flattened, linemaker) )]
         if direction:

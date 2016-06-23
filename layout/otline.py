@@ -99,19 +99,21 @@ def _raise_digits(string):
     else:
         return string,
 
-def bidir_levels(paragraph, base):
-    text = paragraph.content
+def bidir_levels(base, text, BLOCK, F=None):
+    if F is None:
+        F = Tagcounter()
+    else:
+        F = F.copy()
     i = 0
     n = len(text)
-    F = Tagcounter()
-    fontinfo = F, datablocks.BSTYLES.project_t(paragraph, F)
+    fontinfo = F, datablocks.BSTYLES.project_t(BLOCK, F)
     
-    RUNS = []
     l = directionality[base]
     runinfo = (base,)
     runinfo_stack = [runinfo]
+    RUNS = [(l, False, None, runinfo, fontinfo)]
     
-    for j, v in chain((k for k in enumerate(text) if type(k[1]) is not str), ((len(text), Reverse({})),) ):
+    for j, v in chain((k for k in enumerate(text) if type(k[1]) is not str), ((n, Reverse({})),) ):
         if j - i:
             if l % 2:
                 RUNS.extend((l + i % 2, True, s, runinfo, fontinfo) for i, s in enumerate(_raise_digits(''.join(text[i:j]))) if s)
@@ -132,12 +134,17 @@ def bidir_levels(paragraph, base):
                 runinfo = (v['language'],)
                 runinfo_stack.append(runinfo)
         else:
+            print(type(v))
             if isinstance(v, Fontpost):
-                fontinfo = get_font_info(paragraph, fontinfo[0], v)
+                fontinfo = get_font_info(BLOCK, fontinfo[0], v)
             RUNS.append((l, False, v, runinfo, fontinfo))
         i = j + 1
     
-    return l, RUNS
+    return RUNS
+
+def cast_paragraph(linemaker, BLOCK, base):
+    runs = bidir_levels(base, BLOCK.content, BLOCK)
+    return runs[0][0], [line.fuse_glyphs() for line in shape_in_pieces(runs, linemaker)]
 
 def _get_glyphs_entire(sequence, font, runinfo):
     HBB = hb.buffer_create()
@@ -178,12 +185,8 @@ def shape_left_glyphs(string, glyphs, start, i, font, runinfo, sep=''):
     return glyphs, x
 
 def shape_in_pieces(runs, linemaker):
-    _strlines = [[]]
-    _strline = _strlines[0]
-    
-    line = next(linemaker)
-    lines = [line]
-    space = line['width']
+    LINE = next(linemaker)
+    space = LINE['width']
     i = 0
     for l, is_text, V, runinfo, (fstat, FSTYLE) in runs:
         if is_text:
@@ -195,11 +198,10 @@ def shape_in_pieces(runs, linemaker):
             i = 0
             r_glyphs = []
             
-            while i < i_limit:
+            while True:
                 r_glyphs, I = shape_right_glyphs(V, r_glyphs, i, font, runinfo, space)
                 if I is None: # entire line fits
-                    _strline.append(V[i:])
-                    line.L.append((l, FSTYLE, r_glyphs))
+                    LINE.L.append((l, FSTYLE, r_glyphs))
                     space -= r_glyphs[-1][2]
                     break
                     
@@ -212,26 +214,23 @@ def shape_in_pieces(runs, linemaker):
                         l_glyphs, x = shape_left_glyphs(V, r_glyphs, i, breakpoint, font, runinfo, sep)
                         if x < space or not sep:
                             if l_glyphs:
-                                _strline.append(V[i:breakpoint] + sep)
-                                line.L.append((l, FSTYLE, l_glyphs))
-
-                            _strline = []
-                            line = next(linemaker)
-                            _strlines.append(_strline)
-                            lines.append(line)
-                            space = line['width']
+                                LINE.L.append((l, FSTYLE, l_glyphs))
+                            LINE['fstyle'] = FSTYLE
+                            yield LINE
+                            LINE = next(linemaker)
+                            space = LINE['width']
                             i = breakpoint
                             break
-        else:
-            _strline.append(str(V))
+        elif V is not None:
             if isinstance(V, Fontpost):
-                line.L.append((l, FSTYLE, (-4, 0, 0, 0, i)))
+                LINE.L.append((l, FSTYLE, (-4, 0, 0, 0, i)))
             elif type(V) is Reverse:
-                line.L.append((l, FSTYLE, (-8, 0, 0, 0, i)))
+                LINE.L.append((l, FSTYLE, (-8, 0, 0, 0, i)))
             else:
-                V.layout_inline(line, 0, 0, fstat, FSTYLE) # reminder to remove x, y parameters later
-                line.L.append((l, FSTYLE, (-89, 0, V.width, 0, i, V)))
-    return lines, _strlines
+                V.layout_inline(LINE, 0, 0, runinfo, fstat, FSTYLE) # reminder to remove x, y parameters later
+                LINE.L.append((l, FSTYLE, (-89, 0, V.width, 0, i, V)))
+    LINE['fstyle'] = FSTYLE
+    yield LINE
 
 class OT_line(dict):
     def __init__(self, * I, ** KI ):
@@ -282,10 +281,16 @@ class OT_line(dict):
         self._IMG = IMG = []
         self._ANO = ANO = []
         dx = 0
+        ascent, descent = self['fstyle'].vmetrics()
         for fontstyle, glyphs in segments:
             if type(glyphs) is tuple: # special char
                 if glyphs[0] == -89:
-                    INL.append((dx, glyphs[5]))
+                    E = glyphs[5]
+                    INL.append((dx, E))
+                    if E.ascent > ascent:
+                        ascent = E.ascent
+                    if E.descent < descent:
+                        descent = E.descent
                 elif glyphs[0] == -22:
                     IMG.append((dx, glyphs))
                 else:
@@ -295,6 +300,8 @@ class OT_line(dict):
                 G.append((dx, fontstyle['hash'], fontstyle, glyphs))
                 dx += glyphs[-1][2]
         self['advance'] = dx
+        self['ascent'] = ascent
+        self['descent'] = descent
         return self
     
     def deposit(self, repository, x=0, y=0):
@@ -316,137 +323,36 @@ class OT_line(dict):
         repository['_images'].extend((glyph[6], glyph[1] + dx + x, glyph[3] + y) for dx, glyph in self._IMG)
         repository['_annot'].extend((glyph[0], glyph[1] + dx + x, glyph[3] + y, BLOCK, FSTYLE) for dx, glyph, FSTYLE in self._ANO)
 
-def cast_mono_line(PARENT, letters, leading, BLOCK, F=None):
-    if F is None:
-        F = Tagcounter()
-    else:
-        F = F.copy()
-    LINE = Glyphs_line({
+def cast_mono_line(PARENT, letters, runinfo, F=None):
+    BLOCK = PARENT['BLOCK']
+    LINE = OT_line({
             'i': 0,
       
-            'leading': leading,
+            'leading': PARENT['leading'],
             
-            'F': F,
             'BLOCK': BLOCK,
-            
-            'observer': [],
             
             'l': PARENT['l'], 
             'c': PARENT['c'], 
             'page': PARENT['page']
             })
-    
-    # list that contains glyphs
-    GLYPHS = []
-    glyphappend = GLYPHS.append
 
-    # retrieve font style
-    fstat = F.copy()
-    FSTYLE = datablocks.BSTYLES.project_t(BLOCK, F)
-    F_advance_width = FSTYLE['fontmetrics'].advance_pixel_width
-    F_char_index = FSTYLE['fontmetrics'].character_index
-    F_kern = FSTYLE['fontmetrics'].kern
-    kern_available = FSTYLE['fontmetrics'].has_kerning
-    fontsize = FSTYLE['fontsize']
+    for l, is_text, V, runinfo, (fstat, FSTYLE) in bidir_levels(runinfo[0], letters, BLOCK, F):
+        if is_text:
+            font = hb.font_create(hbfontface)
+            hb.font_set_scale(font, FSTYLE['fontsize'], FSTYLE['fontsize'])
+            hb.ot_font_set_funcs(font)
+            
+            direction, x, glyphs = _get_glyphs_entire(V, font, runinfo)
+            LINE.L.append((l, FSTYLE, glyphs))
 
-    x = 0
-    y = -FSTYLE['shift']
-    caps = FSTYLE['capitals']
-    glyphwidth = 0
-    GI = -1
-    
-    emojiset = EMOJIS
-    
-    for letter in letters:
-        CT = type(letter)
-        if CT is str:
-            if letter in emojiset:
-                GI = -22
-                efont = FSTYLE['font_emoji']
-                glyphwidth = efont.advance_pixel_width(letter) * fontsize
-                glyphappend((-22, x, y - fontsize, FSTYLE, fstat, x + glyphwidth, efont.generate_paint_function(letter, fontsize)))
+        elif V is not None:
+            if isinstance(V, Fontpost):
+                LINE.L.append((l, FSTYLE, (-4, 0, 0, 0, i)))
+            elif type(V) is Reverse:
+                LINE.L.append((l, FSTYLE, (-8, 0, 0, 0, i)))
             else:
-                if caps:
-                    letter = letter.upper()
-                glyphwidth = F_advance_width(letter) * fontsize
-                # kern
-                if GI > 0 and kern_available:
-                    new_GI = F_char_index(letter)
-                    kdx, kdy = F_kern(GI, new_GI)
-                    x += kdx
-                    y += kdy
-                    GI = new_GI
-                else:
-                    GI = F_char_index(letter)
-                glyphappend((
-                        GI,             # 0
-                        x,              # 1
-                        y,              # 2
-                        
-                        FSTYLE,         # 3
-                        fstat,          # 4
-                        x + glyphwidth  # 5
-                        ))
-        
-        elif CT is PosFontpost:            
-            # increment tag count
-            F += letter['class']
-            fstat = F.copy()
-            
-            FSTYLE = datablocks.BSTYLES.project_t(BLOCK, F)
-            F_advance_width = FSTYLE['fontmetrics'].advance_pixel_width
-            F_char_index = FSTYLE['fontmetrics'].character_index
-            F_kern = FSTYLE['fontmetrics'].kern
-            kern_available = FSTYLE['fontmetrics'].has_kerning
-            fontsize = FSTYLE['fontsize']
-            
-            y = -FSTYLE['shift']
-            caps = FSTYLE['capitals']
-            
-            glyphappend((-4, x, y, FSTYLE, fstat, x))
-            GI = -4
-            continue
-            
-        elif CT is NegFontpost:
-            glyphappend((-5, x, y, FSTYLE, fstat, x))
-            
-            # increment tag count
-            F -= letter['class']
-            fstat = F.copy()
-            
-            FSTYLE = datablocks.BSTYLES.project_t(BLOCK, F)
-            F_advance_width = FSTYLE['fontmetrics'].advance_pixel_width
-            F_char_index = FSTYLE['fontmetrics'].character_index
-            F_kern = FSTYLE['fontmetrics'].kern
-            kern_available = FSTYLE['fontmetrics'].has_kerning
-            fontsize = FSTYLE['fontsize']
-            
-            y = -FSTYLE['shift']
-            caps = FSTYLE['capitals']
-            GI = -5
-            continue
-        
-        elif CT is Line_break:
-            glyphappend((-6, x, y, FSTYLE, fstat, x))
-            break
-        
-        else:
-            letter.layout_inline(LINE, x, y, BLOCK, F, FSTYLE)
-            glyphwidth = letter.width                               #6. object
-            glyphappend((-89, x, y, FSTYLE, fstat, x + glyphwidth, letter))
-            GI = -89
-        
-        x += glyphwidth + FSTYLE['tracking']
-    
+                V.layout_inline(line, 0, 0, runinfo, fstat, FSTYLE) # reminder to remove x, y parameters later
+                LINE.L.append((l, FSTYLE, (-89, 0, V.width, 0, i, V)))
     LINE['fstyle'] = FSTYLE
-    try:
-        LINE['F'] = GLYPHS[-1][4]
-        LINE['advance'] = GLYPHS[-1][5]
-    except IndexError:
-        LINE['advance'] = 0
-    
-    LINE['j'] = len(GLYPHS)
-    LINE['GLYPHS'] = GLYPHS
-    LINE['_X_'] = [g[1] for g in GLYPHS]
-        
-    return LINE
+    return LINE.fuse_glyphs()

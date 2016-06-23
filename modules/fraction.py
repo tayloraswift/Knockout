@@ -1,6 +1,7 @@
 from math import sqrt
 
-from layout.line import cast_mono_line, calculate_vmetrics
+from layout.otline import cast_mono_line
+
 from meredith.box import Box, Inline
 
 _namespace = 'mod:frac'
@@ -26,7 +27,7 @@ class Fraction(Inline):
         cr.rectangle(0, 0, self._fracwidth, 0.5)
         cr.fill()
         
-    def _cast_inline(self, LINE, x, y, PP, F, FSTYLE):
+    def _cast_inline(self, LINE, x, y, runinfo, F, FSTYLE):
         self._color = FSTYLE['color']
         if self['cl_fraction']:
             F_fraction = F + self['cl_fraction']
@@ -36,28 +37,23 @@ class Fraction(Inline):
         ascent, descent = FSTYLE.vmetrics()
         vy = int(FSTYLE['fontsize'] * 0.25)
         
-        numerator = cast_mono_line(LINE, self._numerator.content, 13, PP, F_fraction)
-        denominator = cast_mono_line(LINE, self._denominator.content, 13, PP, F_fraction)
+        numerator = cast_mono_line(LINE, self._numerator.content, runinfo, F_fraction)
+        denominator = cast_mono_line(LINE, self._denominator.content, runinfo, F_fraction)
         
-        gapline = cast_mono_line(LINE, [], 13, PP, F_fraction)
+        gapline = cast_mono_line(LINE, [], runinfo, F_fraction)
         vgap = int(gapline['fstyle']['fontsize'] * 0.15)
         
-        nascent, ndescent = calculate_vmetrics(numerator)
-        nwidth = numerator['advance']
-        dascent, ddescent = calculate_vmetrics(denominator)
-        dwidth = denominator['advance']
-        
-        fracwidth = max(nwidth, dwidth)
+        fracwidth = max(numerator['advance'], denominator['advance'])
         fracwidth = fracwidth + LINE['leading']*0.05 + sqrt(fracwidth)*LINE['leading']*0.05
         
-        numerator['x'] = x + (fracwidth - nwidth)/2
-        numerator['y'] = y - vy - vgap + ndescent
+        numerator['x'] = x + (fracwidth - numerator['advance'])/2
+        numerator['y'] = y - vy - vgap + numerator['descent']
         
-        denominator['x'] = x + (fracwidth - dwidth)/2
-        denominator['y'] = y - vy + vgap + dascent
+        denominator['x'] = x + (fracwidth - denominator['advance'])/2
+        denominator['y'] = y - vy + vgap + denominator['ascent']
         
-        fascent = vy + vgap+ nascent - ndescent
-        fdescent = vy - vgap - dascent + ddescent
+        fascent = vy + vgap+ numerator['ascent'] - numerator['descent']
+        fdescent = vy - vgap - denominator['ascent'] + denominator['descent']
         self._fracwidth = fracwidth
         return [numerator, denominator], fracwidth, fascent, fdescent, (self._draw_vinculum, x, y - vy)
 

@@ -3,8 +3,8 @@
 import sys
 
 from os import environ
-environ['LD_LIBRARY_PATH'] = 'libraries/HB/lib/girepository-1.0'
-environ['GI_TYPELIB_PATH'] = 'libraries/HB/lib/girepository-1.0'
+environ['LD_LIBRARY_PATH'] = '/usr/local/lib/girepository-1.0'
+environ['GI_TYPELIB_PATH'] = '/usr/local/lib/girepository-1.0'
 
 from IO import sierra
 

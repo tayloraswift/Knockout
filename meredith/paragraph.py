@@ -537,6 +537,7 @@ class Paragraph_block(Blockelement):
     
     def _layout_block(self, frames, BSTYLE, overlay):
         direction, LINES = otline.cast_paragraph(self._yield_linespaces(frames, BSTYLE), self, BSTYLE['language'])
+        
         if direction:
             align = 1 - BSTYLE['align']
         else:

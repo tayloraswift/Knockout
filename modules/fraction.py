@@ -27,7 +27,7 @@ class Fraction(Inline):
         cr.rectangle(0, 0, self._fracwidth, 0.5)
         cr.fill()
         
-    def _cast_inline(self, LINE, x, y, runinfo, F, FSTYLE):
+    def _cast_inline(self, LINE, runinfo, F, FSTYLE):
         self._color = FSTYLE['color']
         if self['cl_fraction']:
             F_fraction = F + self['cl_fraction']
@@ -46,15 +46,15 @@ class Fraction(Inline):
         fracwidth = max(numerator['advance'], denominator['advance'])
         fracwidth = fracwidth + LINE['leading']*0.05 + sqrt(fracwidth)*LINE['leading']*0.05
         
-        numerator['x'] = x + (fracwidth - numerator['advance'])/2
-        numerator['y'] = y - vy - vgap + numerator['descent']
+        numerator['x'] = (fracwidth - numerator['advance'])/2
+        numerator['y'] = -vy - vgap + numerator['descent']
         
-        denominator['x'] = x + (fracwidth - denominator['advance'])/2
-        denominator['y'] = y - vy + vgap + denominator['ascent']
+        denominator['x'] = (fracwidth - denominator['advance'])/2
+        denominator['y'] = -vy + vgap + denominator['ascent']
         
         fascent = vy + vgap+ numerator['ascent'] - numerator['descent']
         fdescent = vy - vgap - denominator['ascent'] + denominator['descent']
         self._fracwidth = fracwidth
-        return [numerator, denominator], fracwidth, fascent, fdescent, (self._draw_vinculum, x, y - vy)
+        return [numerator, denominator], fracwidth, fascent, fdescent, (self._draw_vinculum, 0, -vy)
 
 members = [Fraction, Numerator, Denominator]

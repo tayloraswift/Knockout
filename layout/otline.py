@@ -145,53 +145,49 @@ def cast_paragraph(linemaker, BLOCK, base):
     runs = bidir_levels(base, BLOCK.content, BLOCK)
     return runs[0][0], [line.fuse_glyphs() for line in shape_in_pieces(runs, linemaker)]
 
-def _get_glyphs_entire(cp, a, b, font, runinfo):
+def _get_glyphs_entire(cp, cpstart, a, n, font, runinfo):
     HBB = hb.buffer_create()
-    hb.buffer_add_codepoints(HBB, cp, a, b - a)
+    hb.buffer_add_codepoints(HBB, cp, a - cpstart, n)
     hb.buffer_guess_segment_properties(HBB)
     hb.shape(font, HBB, [])
-
     x = 0
     y = 0
     glyphs = []
     for N, P in zip(hb.buffer_get_glyph_infos(HBB), hb.buffer_get_glyph_positions(HBB)):
         gx = x + P.x_offset
         x += P.x_advance
-        glyphs.append((N.codepoint, gx, x, y + P.y_offset, N.cluster))
+        glyphs.append((N.codepoint, gx, x, y + P.y_offset, N.cluster + cpstart))
         y += P.y_advance
-    
     return int(hb.buffer_get_direction(HBB)) - 4, x, glyphs
     
-def shape_right_glyphs(cp, a, b, glyphs, font, runinfo, limit):
-    direction, x, glyphs = _get_glyphs_entire(cp, a, b, font, runinfo)
-    
+def shape_right_glyphs(cp, cpstart, a, b, glyphs, font, runinfo, limit):
+    direction, x, glyphs = _get_glyphs_entire(cp, cpstart, a, b - a, font, runinfo)
     if limit < x:
         if direction:
-            I = bisect([g[1] for g in glyphs], x - limit) - 1
+            I = bisect([g[1] for g in glyphs], x - limit)
         else:
             I = bisect([g[1] for g in glyphs], limit)
     else:
         I = None
     return glyphs, I
     
-def shape_left_glyphs(cp, a, b, glyphs, font, runinfo, sep=''):
-    cp = cp[:b]
+def shape_left_glyphs(cp, cpstart, a, b, glyphs, font, runinfo, sep=''):
+    cp = cp[:b - cpstart]
     if sep:
         cp.append(ord(sep))
         b += 1
-    
-    direction, x, glyphs = _get_glyphs_entire(cp, a, b, font, runinfo)
-    return glyphs, x
+    direction, x, glyphs = _get_glyphs_entire(cp, cpstart, a, b - a, font, runinfo) # this is the opposite of what it should be, direction should be dictated, not read
+    return glyphs, x 
 
 def shape_in_pieces(runs, linemaker):
-    li = 0
+    i = 0
     LINE = next(linemaker)
-    LINE['i'] = li
+    LINE['i'] = i
     space = LINE['width']
     for l, is_text, V, runinfo, (fstat, FSTYLE) in runs:
         if is_text:
-            i_limit = len(V)
-            i0 = li
+            i0 = i
+            i_limit = i0 + len(V)
             CP = list(map(ord, V))
             font = hb.font_create(hbfontface)
             hb.font_set_scale(font, FSTYLE['fontsize'], FSTYLE['fontsize'])
@@ -199,57 +195,61 @@ def shape_in_pieces(runs, linemaker):
             
             r_glyphs = []
             
-            while True:
-                r_glyphs, I = shape_right_glyphs(CP, li - i0, i_limit, r_glyphs, font, runinfo, space)
+            while i < i_limit:
+                r_glyphs, I = shape_right_glyphs(CP, i0, i, i_limit, r_glyphs, font, runinfo, space)
                 if I is None: # entire line fits
                     LINE.L.append((l, FSTYLE, r_glyphs))
                     space -= r_glyphs[-1][2]
-                    li += i_limit
+                    i = i_limit
                     break
                     
                 else:
                     try:
-                        i_over = i0 + r_glyphs[I + 1][4] - 1
+                        searchlen = r_glyphs[I][4] - i0 - 1
+                        if l % 2:
+                            searchlen = min(len(V) - 1, searchlen + 2)
                     except IndexError:
-                        i_over = i0 + len(V) - 1
+                        searchlen = len(V) - 1
                     
-                    for breakpoint, sep in find_breakpoint(V, li - i0, i_over - i0, True):
-                        l_glyphs, x = shape_left_glyphs(CP, li - i0, breakpoint, r_glyphs, font, runinfo, sep)
+                    for breakpoint, sep in find_breakpoint(V, i - i0, searchlen, True):
+                        l_glyphs, x = shape_left_glyphs(CP, i0, i, breakpoint + i0, r_glyphs, font, runinfo, sep)
                         
                         if x < space or not sep:
                             if l_glyphs:
                                 LINE.L.append((l, FSTYLE, l_glyphs))
-                            li = breakpoint + i0
+                            i = breakpoint + i0
                             LINE['fstyle'] = FSTYLE
-                            LINE['j'] = li
+                            LINE['j'] = i
                             yield LINE
                             LINE = next(linemaker)
-                            LINE['i'] = li
+                            LINE['i'] = i
                             space = LINE['width']
                             break
         elif V is not None:
-            li += 1
             if isinstance(V, Fontpost):
-                LINE.L.append((l, FSTYLE, (-4, 0, 0, 0, li)))
+                LINE.L.append((l, FSTYLE, (-4, 0, 0, 0, i)))
+                i += 1
             elif type(V) is Reverse:
-                LINE.L.append((l, FSTYLE, (-8, 0, 0, 0, li)))
+                LINE.L.append((l, FSTYLE, (-8, 0, 0, 0, i)))
+                i += 1
             else:
                 while True:
                     V.layout_inline(LINE, runinfo, fstat, FSTYLE)
                     if V.width <= space:
-                        LINE.L.append((l, FSTYLE, (-89, 0, V.width, 0, li, V)))
+                        LINE.L.append((l, FSTYLE, (-89, 0, V.width, 0, i, V)))
+                        i += 1
                         space -= V.width
                         break
                     else:
                         LINE['fstyle'] = FSTYLE
-                        LINE['j'] = li - 1
+                        LINE['j'] = i
                         yield LINE
                         LINE = next(linemaker)
-                        LINE['i'] = li
+                        LINE['i'] = i
                         space = LINE['width']
     
     LINE['fstyle'] = FSTYLE
-    LINE['j'] = li
+    LINE['j'] = i
     yield LINE
 
 class OT_line(dict):
@@ -300,10 +300,13 @@ class OT_line(dict):
         self._INL = INL = []
         self._IMG = IMG = []
         self._ANO = ANO = []
+        SEARCH = []
         dx = 0
         ascent, descent = self['fstyle'].vmetrics()
+        
         for fontstyle, glyphs in segments:
             if type(glyphs) is tuple: # special char
+                SEARCH.append((glyphs[4], glyphs[1] + dx, fontstyle))
                 if glyphs[0] == -89:
                     E = glyphs[5]
                     INL.append((E, dx))
@@ -317,12 +320,52 @@ class OT_line(dict):
                     ANO.append((glyphs, fontstyle, dx))
                 dx += glyphs[2]
             else:
+                SEARCH.extend((glyph[4], glyph[1] + dx, fontstyle) for glyph in glyphs)
                 G.append((fontstyle['hash'], fontstyle, [(glyph[0], glyph[1] + dx, glyph[3]) for glyph in glyphs]))
                 dx += glyphs[-1][2]
+        
         self['advance'] = dx
         self['ascent'] = ascent
         self['descent'] = descent
+        
+        SEARCH.sort()
+        
+        i_p = self['i'] - 1
+        _IXF_ = []
+        for i, x, FSTYLE in SEARCH:
+            if i - i_p > 1:
+                r = i - i_p
+                x_p = _IXF_[-1][1]
+                unitgap = (x - x_p)/r
+                _IXF_.extend((i_p + j + 1, x_p + unitgap*(j + 1), FSTYLE) for j in range(r))
+            else:
+                _IXF_.append((i, x, FSTYLE))
+            i_p = i
+        self.X = [k[1] for k in _IXF_]
+        self.FS = [k[2] for k in _IXF_]
+        IX = sorted(_IXF_, key=lambda k: k[1])
+        self._ikey = [k[0] for k in IX]
+        self._ikey.append
+        self._xkey = [k[1] for k in IX]
         return self
+    
+    def I(self, x):
+        x -= self['x']
+        bi = bisect(self._xkey, x)
+        if bi:
+            try:
+                # compare before and after glyphs
+                x1 = self._xkey[bi - 1]
+                x2 = self._xkey[bi]
+                if x2 - x > x - x1:
+                    i = self._ikey[bi] - 1
+                else:
+                    i = self._ikey[bi]
+            except IndexError:
+                i = bi + self['i'] - 1
+        else:
+            i = bi + self['i']
+        return i
     
     def deposit(self, repository, x=0, y=0):
         x += self['x']
@@ -362,7 +405,7 @@ def cast_mono_line(PARENT, letters, runinfo, F=None):
             hb.font_set_scale(font, FSTYLE['fontsize'], FSTYLE['fontsize'])
             hb.ot_font_set_funcs(font)
             
-            direction, x, glyphs = _get_glyphs_entire(list(map(ord, V)), 0, len(V), font, runinfo)
+            direction, x, glyphs = _get_glyphs_entire(list(map(ord, V)), 0, 0, len(V), font, runinfo)
             LINE.L.append((l, FSTYLE, glyphs))
 
         elif V is not None:

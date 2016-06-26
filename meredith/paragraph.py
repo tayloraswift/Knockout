@@ -379,7 +379,7 @@ class Blockelement(Blockstyle):
                                     'GLYPHS': [flag], 'BLOCK': self, 'observer': []})]
         
         self.left_edge = LINE['start'] - BSTYLE['leading']*0.5
-        self._whole_location = -1, LINE, flag
+        self._whole_location = -1, LINE, 0, LINE['fstyle']
         self.wheels = wheels
     
     def layout(self, frames, BSTYLE, wheels, overlay, preceeding, halt):
@@ -496,9 +496,9 @@ class Blockelement(Blockstyle):
                     select.append((first['y'], x1, x2, first['page']))
                 
                 else:
-                    select.append((first['y'],  x1,             first['GLYPHS'][-1][5] + first['x'],    first['page']))
-                    select.extend((line['y'],   line['start'],  line['GLYPHS'][-1][5] + line['x'],      line['page']) for line in self._editable_lines[l1 + 1:l2])
-                    select.append((last['y'],   last['start'],  x2,                                     last['page']))
+                    select.append((first['y'],  x1           ,  first['advance'] + first['x'],  first['page']))
+                    select.extend((line['y'] ,  line['start'],  line['advance']  + line['x'] ,  line['page']) for line in self._editable_lines[l1 + 1:l2])
+                    select.append((last['y'] ,  last['start'],  x2                           ,  last['page']))
         return select
     
     def highlight_spelling(self):
@@ -569,7 +569,7 @@ class Paragraph_block(Blockelement):
         
         leading = BSTYLE['leading']
         self._UU = [line['u'] - leading for line in LINES]
-        self._search_j = []
+        self._search_j = [line['j'] for line in LINES]
         # shift left edge
         self.left_edge = LINES[0]['x'] - BSTYLE['leading']*0.5
         return LINES[-1]['u'], [], LINES
@@ -787,13 +787,13 @@ class Paragraph_block(Blockelement):
     def _find_location(self, address):
         l = bisect(self._search_j, address[0])
         line = self._editable_lines[l]
-        #glyph = line['GLYPHS'][address[0] - line['i']]
-        return l, line, [0, 0, 0, {}]
+        i = address[0] - line['i']
+        return l, line, line.X[i], line.FS[i]
     
     def _cursor(self, i):
         if i >= 0:
-            l, line, glyph = self.where((i,))
-            return l, line, glyph[1] + line['x']
+            l, line, gx, gfs = self.where((i,))
+            return l, line, gx + line['x']
         elif i == -1:
             l = 0
             line = self._editable_lines[0]

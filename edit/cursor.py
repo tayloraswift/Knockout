@@ -104,8 +104,8 @@ class PlaneCursor(object):
     
     def hop(self, direction):
         if len(self.i) == 2:
-            l, line, glyph = self._blocks[self.i[0]].where((self.i[1],))
-            self._target_shallow(line['x'] + glyph[1], line['u'] + (direction - 0.5)*line['leading'])
+            l, line, gx, gfs = self._blocks[self.i[0]].where((self.i[1],))
+            self._target_shallow(line['x'] + gx, line['u'] + (direction - 0.5)*line['leading'])
             self.i = self.j
         else:
             self.i = self.increment_cursor((self.i[0] + direction,), 0, True)
@@ -113,7 +113,7 @@ class PlaneCursor(object):
     
     def home_end(self, direction):
         if len(self.i) == 2:
-            l, line, G = self._blocks[self.i[0]].where((self.i[1],))
+            l, line, *_ = self._blocks[self.i[0]].where((self.i[1],))
             if direction:
                 i = (self.i[0], line['j'] - 1)
             else:
@@ -344,7 +344,7 @@ class PlaneCursor(object):
     
     def styling_at(self):
         try:
-            l, line, glyph = self.PLANE.where(self.i)
-            return line['BLOCK'], glyph[3]
+            l, line, gx, gfs = self.PLANE.where(self.i)
+            return line['BLOCK'], gfs
         except IndexError:
             return self._blocks[-1], None

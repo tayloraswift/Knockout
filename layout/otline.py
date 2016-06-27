@@ -325,13 +325,13 @@ class OT_line(dict):
         i_p = self['i'] - 1
         _IXF_ = []
         for i, x, FSTYLE in SEARCH:
-            if i - i_p > 1:
+            if i - i_p == 1:
+                _IXF_.append((i, x, FSTYLE))
+            elif i - i_p > 1:
                 r = i - i_p
                 x_p = _IXF_[-1][1]
                 unitgap = (x - x_p)/r
                 _IXF_.extend((i_p + j + 1, x_p + unitgap*(j + 1), FSTYLE) for j in range(r))
-            else:
-                _IXF_.append((i, x, FSTYLE))
             i_p = i
         self.X = [k[1] for k in _IXF_]
         self.FS = [k[2] for k in _IXF_]

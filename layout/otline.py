@@ -1,34 +1,18 @@
-import gi
-gi.require_version('HarfBuzz', '0.0')
-
-from gi.repository import HarfBuzz as hb
-
-from gi.repository.GLib import Bytes
-
-path = '/home/kelvin/amiri-regular.ttf'
-
-with open(path, 'rb') as fi:
-    fontdata = fi.read()
-
-hbfontface = hb.face_create(hb.glib_blob_create(Bytes.new(fontdata)), 0)
+from fonts import hb, breaking_spaces
 
 from itertools import chain, accumulate
 from bisect import bisect
 from re import finditer
 
-from meredith.box import Box
-from meredith.elements import Reverse, Fontpost, Line_break
-from meredith import datablocks
+from libraries.pyphen import pyphen
+
+from edit.wonder import alphabet
 
 from olivia.languages import directionality
 from olivia import Tagcounter
 
-
-from libraries.pyphen import pyphen
-
-from fonts import breaking_spaces
-
-from edit.wonder import alphabet
+from meredith.elements import Reverse, Fontpost, Line_break
+from meredith import datablocks
 
 pyphen.language_fallback('en_US')
 hy = pyphen.Pyphen(lang='en_US')
@@ -105,7 +89,6 @@ def bidir_levels(base, text, BLOCK, F=None):
     else:
         F = F.copy()
     i = 0
-    n = len(text)
     fontinfo = F, datablocks.BSTYLES.project_t(BLOCK, F)
     
     l = directionality[base]
@@ -113,7 +96,7 @@ def bidir_levels(base, text, BLOCK, F=None):
     runinfo_stack = [runinfo]
     RUNS = [(l, False, None, runinfo, fontinfo)]
     
-    for j, v in chain((k for k in enumerate(text) if type(k[1]) is not str), ((n, Reverse({})),) ):
+    for j, v in chain((k for k in enumerate(text) if type(k[1]) is not str), ((len(text), None),) ):
         if j - i:
             if l % 2:
                 RUNS.extend((l + i % 2, True, s, runinfo, fontinfo) for i, s in enumerate(_raise_digits(''.join(text[i:j]))) if s)
@@ -126,14 +109,13 @@ def bidir_levels(base, text, BLOCK, F=None):
                     runinfo_stack.pop()
                     runinfo = runinfo_stack[-1]
                     l -= 1
-                    if j < n:
-                        RUNS.append((l, False, v, runinfo, fontinfo))
+                    RUNS.append((l, False, v, runinfo, fontinfo))
             else:
                 RUNS.append((l, False, v, runinfo, fontinfo))
                 l += 1
                 runinfo = (v['language'],)
                 runinfo_stack.append(runinfo)
-        else:
+        elif v is not None:
             if isinstance(v, Fontpost):
                 fontinfo = get_font_info(BLOCK, fontinfo[0], v)
             RUNS.append((l, False, v, runinfo, fontinfo))
@@ -189,9 +171,7 @@ def shape_in_pieces(runs, linemaker):
             i0 = i
             i_limit = i0 + len(V)
             CP = list(map(ord, V))
-            font = hb.font_create(hbfontface)
-            hb.font_set_scale(font, FSTYLE['fontsize'], FSTYLE['fontsize'])
-            hb.ot_font_set_funcs(font)
+            font = FSTYLE['__hb_font__']
             
             r_glyphs = []
             
@@ -227,7 +207,10 @@ def shape_in_pieces(runs, linemaker):
                             break
         elif V is not None:
             if isinstance(V, Fontpost):
-                LINE.L.append((l, FSTYLE, (-4, 0, 0, 0, i)))
+                LINE.L.append((l, FSTYLE, (-5 + type(V).countersign, 0, 0, 0, i)))
+                i += 1
+            elif type(V) is Line_break:
+                LINE.L.append((l, FSTYLE, (-6, 0, 0, 0, i)))
                 i += 1
             elif type(V) is Reverse:
                 LINE.L.append((l, FSTYLE, (-8, 0, 0, 0, i)))
@@ -257,9 +240,14 @@ class OT_line(dict):
         dict.__init__(self, * I, ** KI )
         self.L = []
 
+        self._G   = []
+        self._INL = []
+        self._IMG = []
+        self._ANO = []
+    
     def _rearrange_line(self):
         line = self.L
-        line_segments = [k[1:] for k in line]
+        line_segments = [(l % 2, * k ) for l, * k in line]
         if len(line) < 1:
             return line_segments
         
@@ -296,17 +284,18 @@ class OT_line(dict):
     
     def fuse_glyphs(self):
         segments = self._rearrange_line()
-        self._G   =  G  = []
-        self._INL = INL = []
-        self._IMG = IMG = []
-        self._ANO = ANO = []
+        G   = self._G
+        INL = self._INL
+        IMG = self._IMG
+        ANO = self._ANO
         SEARCH = []
         dx = 0
-        ascent, descent = self['fstyle'].vmetrics()
+        ascent, descent = self['fstyle']['__fontmetrics__']
         
-        for fontstyle, glyphs in segments:
+        for direction, fontstyle, glyphs in segments:
+            direction += 1
             if type(glyphs) is tuple: # special char
-                SEARCH.append((glyphs[4], glyphs[1] + dx, fontstyle))
+                SEARCH.append((glyphs[4], glyphs[direction] + dx, fontstyle))
                 if glyphs[0] == -89:
                     E = glyphs[5]
                     INL.append((E, dx))
@@ -320,7 +309,7 @@ class OT_line(dict):
                     ANO.append((glyphs, fontstyle, dx))
                 dx += glyphs[2]
             else:
-                SEARCH.extend((glyph[4], glyph[1] + dx, fontstyle) for glyph in glyphs)
+                SEARCH.extend((glyph[4], glyph[direction] + dx, fontstyle) for glyph in glyphs)
                 G.append((fontstyle['hash'], fontstyle, [(glyph[0], glyph[1] + dx, glyph[3]) for glyph in glyphs]))
                 dx += glyphs[-1][2]
         
@@ -345,20 +334,20 @@ class OT_line(dict):
         self.FS = [k[2] for k in _IXF_]
         IX = sorted(_IXF_, key=lambda k: k[1])
         self._ikey = [k[0] for k in IX]
-        self._ikey.append
         self._xkey = [k[1] for k in IX]
         return self
     
     def I(self, x):
         x -= self['x']
         bi = bisect(self._xkey, x)
+        
         if bi:
             try:
                 # compare before and after glyphs
                 x1 = self._xkey[bi - 1]
                 x2 = self._xkey[bi]
                 if x2 - x > x - x1:
-                    i = self._ikey[bi] - 1
+                    i = self._ikey[bi - 1]
                 else:
                     i = self._ikey[bi]
             except IndexError:
@@ -401,11 +390,7 @@ def cast_mono_line(PARENT, letters, runinfo, F=None):
 
     for l, is_text, V, runinfo, (fstat, FSTYLE) in bidir_levels(runinfo[0], letters, BLOCK, F):
         if is_text:
-            font = hb.font_create(hbfontface)
-            hb.font_set_scale(font, FSTYLE['fontsize'], FSTYLE['fontsize'])
-            hb.ot_font_set_funcs(font)
-            
-            direction, x, glyphs = _get_glyphs_entire(list(map(ord, V)), 0, 0, len(V), font, runinfo)
+            direction, x, glyphs = _get_glyphs_entire(list(map(ord, V)), 0, 0, len(V), FSTYLE['__hb_font__'], runinfo)
             LINE.L.append((l, FSTYLE, glyphs))
 
         elif V is not None:

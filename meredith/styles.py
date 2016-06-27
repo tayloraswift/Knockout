@@ -5,7 +5,7 @@ from libraries.freetype import ft_errors
 from meredith.box import Box, Datablocks
 from meredith import datablocks
 
-from fonts import get_font, get_emoji_font
+from fonts import hb, get_ot_font, get_emoji_font
 
 _text_DNA = [('fontsize',    'float',   13),
             ('path',        'str',      'fonts/Ubuntu-R.ttf'),
@@ -122,11 +122,6 @@ class _Layer(dict):
             self.Z[A] = B
         self.members.append(B)
 
-class _FLayer(_Layer):
-    def vmetrics(self):
-        ascent, descent = self['fontmetrics'].vmetrics
-        return ascent * self['fontsize'] + self['shift'], descent * self['fontsize'] + self['shift']
-
 def _cast_default(cls):
     D = cls.BASE.copy()
     D['class'] = {}
@@ -184,17 +179,23 @@ class Blockstyles(_Has_tagged_members):
             return self.text_projections[H]
         except KeyError:
             # iterate through stack
-            projection = _FLayer(self._text_default)
+            projection = _Layer(self._text_default)
             for memberstyles in (b.content for b in self.content if b.content is not None and b['class'] <= P):
                 for TS in (c['textstyle'] for c in memberstyles if c['class'] <= F and c['textstyle'] is not None):
                     projection.overlay(TS)
             
             try:
-                projection['fontmetrics'], projection['font'] = get_font(projection['path'])
+                hb_face, projection['font'] = get_ot_font(projection['path'])
             except ft_errors.FT_Exception:
                 path = Textstyle.BASE['path']
                 projection['color'] = (1, 0.15, 0.2, 1)
-                projection['fontmetrics'], projection['font'] = get_font(path)
+                hb_face, projection['font'] = get_ot_font(path)
+            projection['__hb_font__'] = hb_font = hb.font_create(hb_face)
+            hb.font_set_scale(hb_font, projection['fontsize'], projection['fontsize'])
+            hb.ot_font_set_funcs(hb_font)
+            
+            hmetrics = hb.font_get_h_extents(hb_font)[1]
+            projection['__fontmetrics__'] = hmetrics.ascender + projection['shift'], hmetrics.descender + projection['shift']
             
             try:
                 projection['font_emoji'] = get_emoji_font(projection['path_emoji'])

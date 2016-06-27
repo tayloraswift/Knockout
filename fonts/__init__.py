@@ -1,5 +1,11 @@
 import os
 
+import gi
+gi.require_version('HarfBuzz', '0.0')
+
+from gi.repository import HarfBuzz as hb
+from gi.repository.GLib import Bytes
+
 from itertools import chain
 
 from libraries import freetype
@@ -23,6 +29,28 @@ if render_SVG is None:
 from fonts import fontloader
 
 _type_registry = {}
+
+_ot_type_registry = {}
+
+def get_ot_font(path, overwrite=False):
+    if path not in _ot_type_registry or overwrite:
+        # check if is sfd or binary
+        fontname, ext = os.path.splitext(path)
+        if ext == '.sfd':
+            print('Warning: implicit OTF build triggered')
+            os.system('fontforge -script IO/sfd2otf.pe ' + path)
+            #raise freetype.ft_errors.FT_Exception('SFD not supported')
+            filepath = fontname + '.otf'
+        else:
+            filepath = path
+        print('\033[92mLoading font\033[0m      :', filepath)
+        with open(filepath, 'rb') as fi:
+            fontdata = fi.read()
+        HB_face = hb.face_create(hb.glib_blob_create(Bytes.new(fontdata)), 0)
+        CR_face = fontloader.create_cairo_font_face_for_file(filepath)
+        _ot_type_registry[path] = HB_face, CR_face
+        
+    return _ot_type_registry[path]
 
 def get_font(path, overwrite=False):
     if path not in _type_registry or overwrite:

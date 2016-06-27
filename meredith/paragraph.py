@@ -8,7 +8,7 @@ from olivia import Tagcounter
 from olivia.frames import Margined
 from meredith.styles import Blockstyle, block_styling_attrs
 
-from layout.line import Glyphs_line, cast_liquid_line, cast_mono_line
+from layout.otline import OT_line, cast_mono_line
 from layout import otline
 
 from state.exceptions import LineSplit
@@ -364,19 +364,18 @@ class Blockelement(Blockstyle):
         wheels = wheels.increment(BSTYLE['incr_place_value'], BSTYLE['incr_assign'])
         
         # print para flag
-        flag = (-2, -BSTYLE['leading'], 0, LINE['fstyle'], LINE['F'], 0)
+        flag = (-2, -BSTYLE['leading'], 0, 0, -1)
         
         # print counters
         if BSTYLE['show_count'] is not None:
-            wheelprint = cast_mono_line({'l': 0, 'c': LINE['c'], 'page': LINE['page']}, 
-                                BSTYLE['show_count'](wheels), 0, self, LINE['F'])
-            wheelprint['GLYPHS'].append(flag)
-            wheelprint['x'] = LINE['start'] - wheelprint['advance'] - BSTYLE['leading']*BSTYLE['counter_space']
-            wheelprint['y'] = LINE['y']
-            self._OBSERVERLINES = [wheelprint]
+            flagline = cast_mono_line({'l': 0, 'c': LINE['c'], 'page': LINE['page'], 'BLOCK': self, 'leading': BSTYLE['leading']}, 
+                                       BSTYLE['show_count'](wheels), (BSTYLE['language'],))
+            flagline['x'] = LINE['start'] - flagline['advance'] - BSTYLE['leading']*BSTYLE['counter_space']
+            flagline['y'] = LINE['y']
         else:
-            self._OBSERVERLINES = [Glyphs_line({'x': LINE['x'], 'y': LINE['y'], 'page': LINE['page'], 
-                                    'GLYPHS': [flag], 'BLOCK': self, 'observer': []})]
+            flagline = OT_line({'x': LINE['x'], 'y': LINE['y'], 'page': LINE['page'], 'BLOCK': self})
+        flagline._ANO.append((flag, LINE['fstyle'], 0))
+        self._OBSERVERLINES = [flagline]
         
         self.left_edge = LINE['start'] - BSTYLE['leading']*0.5
         self._whole_location = -1, LINE, 0, LINE['fstyle']
@@ -396,10 +395,7 @@ class Blockelement(Blockstyle):
             frames.start(self.u_bottom)
             return True, self.wheels
         else:
-            self.line0 = cast_mono_line({'l': 0, 'c': c, 'page': pn},
-                            [], 
-                            BSTYLE['leading'],
-                            self)
+            self.line0 = cast_mono_line({'l': 0, 'c': c, 'page': pn, 'leading': BSTYLE['leading'], 'BLOCK': self}, '', (BSTYLE['language'],))
             self.line0.update({'u': u, 'start': left, 'width': right - left, 'x': left, 'y': y})
             self.layout_observer(BSTYLE, wheels, self.line0)
             self.u = u - BSTYLE['leading']
@@ -568,87 +564,6 @@ class Paragraph_block(Blockelement):
                 LINE['x'] = LINE['start'] + rag * align
         
         leading = BSTYLE['leading']
-        self._UU = [line['u'] - leading for line in LINES]
-        self._search_j = [line['j'] for line in LINES]
-        # shift left edge
-        self.left_edge = LINES[0]['x'] - BSTYLE['leading']*0.5
-        return LINES[-1]['u'], [], LINES
-    
-    def __layout_block(self, frames, BSTYLE, overlay):
-        F = Tagcounter()
-        leading = BSTYLE['leading']
-        indent_range = BSTYLE['indent_range']
-        D, SIGN, K = BSTYLE['indent']
-        
-        i = 0
-        l = 0
-        
-        LINES = []
-        LIQUID = self.content
-        total = len(LIQUID) + 1 # for imaginary </p> cap
-        while True:
-            u, x1, x2, y, c, pn = frames.fit(leading)
-            
-            # calculate indentation
-            if l in indent_range:
-                if K:
-                    INDLINE = cast_mono_line({'l': l, 'c': c, 'page': pn},
-                        LIQUID[i : i + K], 
-                        0,
-                        self,
-                        F.copy()
-                        )
-                    x1 += D + INDLINE['advance'] * SIGN
-                else:
-                    x1 += D
-            else:
-                L_indent = 0
-            
-            if x1 > x2:
-                x1, x2 = x2, x1
-            # initialize line
-            LINE = Glyphs_line({'observer': [], 'start': x1, 'y': y, 'c': c, 'u': u, 'l': l, 'page': pn})
-            cast_liquid_line(LINE,
-                    LIQUID[i : i + 1989], 
-                    i, 
-                    
-                    x2 - x1, 
-                    BSTYLE['leading'],
-                    self,
-                    F.copy(), 
-                    
-                    hyphenate = BSTYLE['hyphenate']
-                    )
-
-            # alignment
-            if BSTYLE['align_to'] and LINE['GLYPHS']:
-                searchtext = LIQUID[i : i + len(LINE['GLYPHS'])]
-                ai = -1
-                for aligner in '\t' + BSTYLE['align_to']:
-                    try:
-                        ai = searchtext.index(aligner)
-                        break
-                    except ValueError:
-                        continue
-                anchor = x1 + (x2 - x1) * BSTYLE['align']
-                LINE['x'] = anchor - LINE['_X_'][ai]
-            else:
-                if not BSTYLE['align']:
-                    LINE['x'] = x1
-                else:
-                    rag = LINE['width'] - LINE['advance']
-                    LINE['x'] = x1 + rag * BSTYLE['align']
-            
-            l += 1
-            LINES.append(LINE)
-            
-            i = LINE['j']
-            if i == total:
-                break
-            
-            F = LINE['F']
-
-
         self._UU = [line['u'] - leading for line in LINES]
         self._search_j = [line['j'] for line in LINES]
         # shift left edge

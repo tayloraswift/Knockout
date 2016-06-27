@@ -34,7 +34,7 @@ class Fraction(Inline):
         else:
             F_fraction = F
         
-        ascent, descent = FSTYLE.vmetrics()
+        ascent, descent = FSTYLE['__fontmetrics__']
         vy = int(FSTYLE['fontsize'] * 0.25)
         
         numerator = cast_mono_line(LINE, self._numerator.content, runinfo, F_fraction)

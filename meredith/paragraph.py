@@ -368,12 +368,11 @@ class Blockelement(Blockstyle):
         
         # print counters
         if BSTYLE['show_count'] is not None:
-            flagline = cast_mono_line({'l': 0, 'c': LINE['c'], 'page': LINE['page'], 'BLOCK': self, 'leading': BSTYLE['leading']}, 
-                                       BSTYLE['show_count'](wheels), (BSTYLE['language'],))
+            flagline = cast_mono_line(LINE, BSTYLE['show_count'](wheels), (BSTYLE['language'],))
             flagline['x'] = LINE['start'] - flagline['advance'] - BSTYLE['leading']*BSTYLE['counter_space']
             flagline['y'] = LINE['y']
         else:
-            flagline = OT_line({'x': LINE['x'], 'y': LINE['y'], 'page': LINE['page'], 'BLOCK': self})
+            flagline = OT_line(LINE)
         flagline._ANO.append((flag, LINE['fstyle'], 0))
         self._OBSERVERLINES = [flagline]
         

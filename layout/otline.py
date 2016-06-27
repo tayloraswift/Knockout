@@ -161,11 +161,20 @@ def shape_left_glyphs(cp, cpstart, a, b, glyphs, font, runinfo, sep=''):
     direction, x, glyphs = _get_glyphs_entire(cp, cpstart, a, b - a, font, runinfo) # this is the opposite of what it should be, direction should be dictated, not read
     return glyphs, x 
 
-def shape_in_pieces(runs, linemaker):
-    i = 0
+def _yield_line(LINE, i, FSTYLE):
+    LINE['fstyle'] = FSTYLE
+    LINE['j'] = i
+    return LINE
+
+def _next_line(linemaker, i):
     LINE = next(linemaker)
     LINE['i'] = i
-    space = LINE['width']
+    return LINE, LINE['width']
+
+def shape_in_pieces(runs, linemaker):
+    i = 0
+    LINE, space = _next_line(linemaker, i)
+    
     for l, is_text, V, runinfo, (fstat, FSTYLE) in runs:
         if is_text:
             i0 = i
@@ -198,12 +207,8 @@ def shape_in_pieces(runs, linemaker):
                             if l_glyphs:
                                 LINE.L.append((l, FSTYLE, l_glyphs))
                             i = breakpoint + i0
-                            LINE['fstyle'] = FSTYLE
-                            LINE['j'] = i
-                            yield LINE
-                            LINE = next(linemaker)
-                            LINE['i'] = i
-                            space = LINE['width']
+                            yield _yield_line(LINE, i, FSTYLE)
+                            LINE, space = _next_line(linemaker, i)
                             break
         elif V is not None:
             if isinstance(V, Fontpost):
@@ -212,6 +217,8 @@ def shape_in_pieces(runs, linemaker):
             elif type(V) is Line_break:
                 LINE.L.append((l, FSTYLE, (-6, 0, 0, 0, i)))
                 i += 1
+                yield _yield_line(LINE, i, FSTYLE)
+                LINE, space = _next_line(linemaker, i)
             elif type(V) is Reverse:
                 LINE.L.append((l, FSTYLE, (-8, 0, 0, 0, i)))
                 i += 1
@@ -224,12 +231,8 @@ def shape_in_pieces(runs, linemaker):
                         space -= V.width
                         break
                     else:
-                        LINE['fstyle'] = FSTYLE
-                        LINE['j'] = i
-                        yield LINE
-                        LINE = next(linemaker)
-                        LINE['i'] = i
-                        space = LINE['width']
+                        yield _yield_line(LINE, i, FSTYLE)
+                        LINE, space = _next_line(linemaker, i)
     
     LINE['fstyle'] = FSTYLE
     LINE['j'] = i

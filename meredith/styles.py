@@ -5,7 +5,7 @@ from libraries.freetype import ft_errors
 from meredith.box import Box, Datablocks
 from meredith import datablocks
 
-from fonts import hb, get_ot_font, get_emoji_font
+from fonts import hb, get_ot_font, get_ot_space_metrics, get_emoji_font
 
 _text_DNA = [('fontsize',    'float',   13),
             ('path',        'str',      'fonts/Ubuntu-R.ttf'),
@@ -196,6 +196,7 @@ class Blockstyles(_Has_tagged_members):
             
             hmetrics = hb.font_get_h_extents(hb_font)[1]
             projection['__fontmetrics__'] = hmetrics.ascender + projection['shift'], hmetrics.descender + projection['shift']
+            projection['__spacemetrics__'] = get_ot_space_metrics(hb_font)
             
             try:
                 projection['font_emoji'] = get_emoji_font(projection['path_emoji'])

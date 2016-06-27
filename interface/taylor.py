@@ -4,6 +4,7 @@ import os
 import cairo
 
 from fonts.interfacefonts import ISTYLES
+from fonts import SPACENAMES
 
 from meredith.datablocks import DOCUMENT
 
@@ -242,7 +243,6 @@ class Document_view(ui.Cell):
         self._A = self._scroll_notches[self._scroll_notch_i]
         
         self._font = ISTYLES[('strong',)]
-        self._SN = self._font['fontmetrics'].spacenames
 
     def read_display_state(self):
         return {
@@ -631,7 +631,7 @@ class Document_view(ui.Cell):
         afs = int(6 * sqrt(self._A))
         uscore = 1 + (self._A > 0.5)
         cr.set_font_size(afs)
-        SN = self._SN
+        SN = SPACENAMES
         
         activeblock = self.planecursor.PLANE.content[self.planecursor.i[0]]
         for a, x, y, BLOCK, F in annot:
@@ -682,7 +682,7 @@ class Document_view(ui.Cell):
                 cr.fill()
             
             elif -41 <= a <= -30: # nbsp
-                cr.rectangle(x, y, F['fontmetrics'].spacewidths[a] * fontsize, uscore)
+                cr.rectangle(x, y, F['__spacemetrics__'][a] * self._A, uscore)
                 cr.rel_move_to(0, afs * 1.25)
                 cr.show_text(SN[a])
                 cr.fill()

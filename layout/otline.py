@@ -1,4 +1,4 @@
-from fonts import hb, breaking_spaces
+from fonts import hb, breaking_spaces, SPACES
 
 from itertools import chain, accumulate
 from bisect import bisect
@@ -95,8 +95,8 @@ def bidir_levels(base, text, BLOCK, F=None):
     runinfo = (base,)
     runinfo_stack = [runinfo]
     RUNS = [(l, False, None, runinfo, fontinfo)]
-    
-    for j, v in chain((k for k in enumerate(text) if type(k[1]) is not str), ((len(text), None),) ):
+    SP = SPACES
+    for j, v in chain((k for k in enumerate(text) if type(k[1]) is not str or k[1] in SP), ((len(text), None),) ):
         if j - i:
             if l % 2:
                 RUNS.extend((l + i % 2, True, s, runinfo, fontinfo) for i, s in enumerate(_raise_digits(''.join(text[i:j]))) if s)
@@ -211,15 +211,27 @@ def shape_in_pieces(runs, linemaker):
                             LINE, space = _next_line(linemaker, i)
                             break
         elif V is not None:
-            if isinstance(V, Fontpost):
-                LINE.L.append((l, FSTYLE, (-5 + type(V).countersign, 0, 0, 0, i)))
+            tV = type(V)
+            if issubclass(tV, Fontpost):
+                LINE.L.append((l, FSTYLE, (-5 + tV.countersign, 0, 0, 0, i)))
                 i += 1
-            elif type(V) is Line_break:
+            elif tV is str:
+                O = (SPACES[V], 0, FSTYLE['__spacemetrics__'][SPACES[V]], 0, i)
+                while True:
+                    if O[2] <= space:
+                        LINE.L.append((l, FSTYLE, O))
+                        i += 1
+                        space -= O[2]
+                        break
+                    else:
+                        yield _yield_line(LINE, i, FSTYLE)
+                        LINE, space = _next_line(linemaker, i)
+            elif tV is Line_break:
                 LINE.L.append((l, FSTYLE, (-6, 0, 0, 0, i)))
                 i += 1
                 yield _yield_line(LINE, i, FSTYLE)
                 LINE, space = _next_line(linemaker, i)
-            elif type(V) is Reverse:
+            elif tV is Reverse:
                 LINE.L.append((l, FSTYLE, (-8, 0, 0, 0, i)))
                 i += 1
             else:

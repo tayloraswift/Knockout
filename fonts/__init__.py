@@ -32,6 +32,46 @@ _type_registry = {}
 
 _ot_type_registry = {}
 
+# spaces
+nonbreaking_spaces = {
+            '\u00A0': -30, # nbsp
+            '\u2007': -36, # figure
+            '\u202F': -40, # narrow nbsp
+            }
+
+breaking_spaces = {
+            '\u2003': -31, # em
+            '\u2002': -32, # en
+            '\u2004': -33, # 1/3
+            '\u2005': -34, # 1/4
+            '\u2006': -35, # 1/6
+            
+            '\u2008': -37, # punctuation
+            '\u2009': -38, # thin
+            '\u200A': -39, # hair
+            
+            '\u205F': -41, # math med
+            }
+
+SPACES = nonbreaking_spaces.copy()
+SPACES.update(breaking_spaces)
+SPACES['\t'] = -7
+
+SPACENAMES = {
+    -30: 'nb', # nbsp
+    -31: 'em', # em
+    -32: 'en', # en
+    -33: '1/3', # 1/3
+    -34: '1/4', # 1/4
+    -35: '1/6', # 1/6
+    -36: 'fig', # figure
+    -37: 'pn', # punctuation
+    -38: '1/5', # thin
+    -39: 'h', # hair
+    -40: 'nnb', # narrow nbsp
+    -41: 'mt', # math med
+    }
+
 def get_ot_font(path, overwrite=False):
     if path not in _ot_type_registry or overwrite:
         # check if is sfd or binary
@@ -51,6 +91,27 @@ def get_ot_font(path, overwrite=False):
         _ot_type_registry[path] = HB_face, CR_face
         
     return _ot_type_registry[path]
+
+def _hb_get_advance(hb_font, char):
+    return hb.font_get_glyph_h_advance(hb_font, hb.font_get_glyph(hb_font, ord(char), 0)[1])
+
+def get_ot_space_metrics(hb_font):
+    xppem = hb.font_get_scale(hb_font)[0]
+    proportions =  (('\u2003', 1   ), # em
+                    ('\u2002', 0.5 ), # en
+                    ('\u2004', 1/3 ), # 1/3
+                    ('\u2005', 0.25), # 1/4
+                    ('\u2006', 1/6 ), # 1/6
+                    ('\u2009', 0.2 ), # thin
+                    ('\u200A', 0.1 ), # hair
+                    ('\u202F', 0.2 ), # narrow nbsp
+                    ('\u205F', 4/18)) # math med
+    widths = {SPACES[c]: x*xppem for c, x in proportions}
+    widths[SPACES['\t']]     = 0
+    widths[SPACES['\u00A0']] = _hb_get_advance(hb_font, ' ') # nbsp
+    widths[SPACES['\u2007']] = _hb_get_advance(hb_font, '0') # figure
+    widths[SPACES['\u2008']] = _hb_get_advance(hb_font, ',') # punctuation
+    return widths
 
 def get_font(path, overwrite=False):
     if path not in _type_registry or overwrite:
@@ -76,30 +137,6 @@ def get_emoji_font(path, overwrite=False):
         _type_registry[path] = Emoji_font(path)
     return _type_registry[path]
 
-nonbreaking_spaces = {
-            '\u00A0': -30, # nbsp
-            '\u2007': -36, # figure
-            '\u202F': -40, # narrow nbsp
-            }
-
-breaking_spaces = {
-            '\u2003': -31, # em
-            '\u2002': -32, # en
-            '\u2004': -33, # 1/3
-            '\u2005': -34, # 1/4
-            '\u2006': -35, # 1/6
-            
-            '\u2008': -37, # punctuation
-            '\u2009': -38, # thin
-            '\u200A': -39, # hair
-            
-            '\u205F': -41, # math med
-            }
-
-spaces = nonbreaking_spaces.copy()
-spaces.update(breaking_spaces)
-spaces['\t'] = -7
-
 # extended fontface class
 class Memo_font(freetype.Face):
     
@@ -107,7 +144,7 @@ class Memo_font(freetype.Face):
         freetype.Face.__init__(self, path)
         UPM = self.units_per_EM
         self._kerning = {}
-        self._ordinals = spaces.copy()
+        self._ordinals = SPACES.copy()
                 # '<p>':        -2
                 # '</p>':       -3
                 # '<f>':        -4

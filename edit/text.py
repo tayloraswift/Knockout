@@ -1,6 +1,6 @@
-from fonts import spaces
+from fonts import SPACES
 from edit.wonder import prose
-spaces_set = set(spaces) | {' '}
+spaces_set = set(SPACES) | {' '}
 
 def lookahead(text, start, f):
     try:

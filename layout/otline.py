@@ -166,7 +166,7 @@ def cast_multi_line(runs, linemaker):
     LINE.L.append((l, FSTYLE, (-3, 0, 0, 0, i))) # final </p> cap
     yield LINE
 
-def cast_mono_line(PARENT, letters, runinfo, F=None):
+def cast_mono_line(PARENT, letters, runinfo, F=None, length_only=False):
     BLOCK = PARENT['BLOCK']
     LINE = OT_line({
             'i': 0,
@@ -202,7 +202,10 @@ def cast_mono_line(PARENT, letters, runinfo, F=None):
                 LINE.L.append((l, FSTYLE, (-89, 0, V.width, 0, -1, V)))
     
     LINE['fstyle'] = FSTYLE
-    return LINE.fuse_glyphs()
+    if length_only:
+        return LINE.get_length()
+    else:
+        return LINE.fuse_glyphs()
 
 class OT_line(dict):
     def __init__(self, * I, ** KI ):
@@ -257,6 +260,9 @@ class OT_line(dict):
                 if b - a > 1:
                     line_segments[a:b] = reversed(line_segments[a:b])
         return line_segments
+    
+    def get_length(self):
+        return sum(glyphs[2] if type(glyphs) is tuple else glyphs[-1][2] for l, fontstyle, glyphs in self.L)
     
     def fuse_glyphs(self, editable=False):
         segments = self._rearrange_line()

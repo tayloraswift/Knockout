@@ -506,24 +506,23 @@ class Paragraph_block(Blockelement):
         leading = BSTYLE['leading']
         indent_range = BSTYLE['indent_range']
         D, SIGN, K = BSTYLE['indent']
+        indent = None
         l = 0
         while True:
             u, x1, x2, y, c, pn = frames.fit(leading)
 
             # calculate indentation
             if l in indent_range:
-                if K:
-                    #INDLINE = cast_mono_line({'l': l, 'c': c, 'page': pn},
-                    #    LIQUID[i : i + K], 
-                    #    0,
-                    #    self,
-                    #    F.copy()
-                    #    )
-                    x1 += D #+ INDLINE['advance'] * SIGN
-                else:
-                    x1 += D
-            else:
-                L_indent = 0
+                if indent is None:
+                    if K:
+                        length = cast_mono_line({'l': l, 'c': c, 'page': pn, 'BLOCK': self, 'leading': leading},
+                            self.content[:K], 
+                            BSTYLE['__runinfo__'],
+                            length_only=True)
+                        indent = D + length * SIGN
+                    else:
+                        indent = D
+                x1 += indent
             if x1 > x2:
                 x1, x2 = x2, x1
             yield OT_line({'BLOCK': self, 'leading': leading, 'start': x1, 'width': x2 - x1, 'y': y, 'c': c, 'u': u, 'l': l, 'page': pn})

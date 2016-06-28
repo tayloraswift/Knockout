@@ -110,7 +110,8 @@ def bidir_levels(base, text, BLOCK, F=None):
         if K == 1:
             string = ''.join(G)
             if emojijoin and string == '\u200D':
-                emojijoin = 2
+                RUNS.append((l, True, string, runinfo, fontinfo))
+                emojijoin += 1
             else:
                 emojijoin = False
                 if l % 2:
@@ -118,12 +119,13 @@ def bidir_levels(base, text, BLOCK, F=None):
                 else:
                     RUNS.append((l, True, string, runinfo, fontinfo))
         elif K == 2:
-            if emojijoin == 2:
-                RUNS[-1][2].append('\u200D')
+            if emojijoin > 1:
+                del RUNS[-(emojijoin - 1):]
+                RUNS[-1][2].append('\u200D' * (emojijoin - 1))
                 RUNS[-1][2].extend(G)
             else:
                 RUNS.append((l, 2, list(G), runinfo, fontinfo))
-                emojijoin = True
+            emojijoin = True
         else:
             emojijoin = False
             for v in G:

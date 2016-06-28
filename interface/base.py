@@ -1,4 +1,5 @@
 from fonts.interfacefonts import ISTYLES
+from fonts import hb
 
 # shapes
 def plus_sign(cr, x, y):
@@ -29,21 +30,40 @@ def cross(cr, x, y):
     cr.rel_move_to(0, -8)
     cr.rel_line_to(-8, 8)
 
-def text(x, y, text, font, fontsize=None, align=1, sub_minus=False, upper=False):
-    if upper:
-        text = text.upper()
+def text(x, y, text, font, fontsize=None, align=1, sub_minus=False, upper=False, grid=False):    
     if fontsize is None:
         fontsize = font['fontsize']
     xo = x
     line = []
-    for character in text:
-        if sub_minus and character == '-':
-            character = '–'
-        try:
-            line.append((font['fontmetrics'].character_index(character), x, y))
-            x += (font['fontmetrics'].advance_pixel_width(character)*fontsize + font['tracking'])
-        except TypeError:
-            line.append((-1, x, y))
+    tracking = font['tracking']
+    
+    if grid:
+        if sub_minus:
+            iter_l = ('–' if c == '-' else c for c in text)
+        else:
+            iter_l = text
+        
+        for character in iter_l:
+            try:
+                line.append((font['__gridfont__'].character_index(character), x, y))
+                x += (font['__gridfont__'].advance_pixel_width(character)*fontsize + tracking)
+            except TypeError:
+                line.append((-1, x, y))
+    else:
+        if upper:
+            text = text.upper()
+        if sub_minus:
+            text = text.replace('-', '–')
+        
+        HBB = hb.buffer_create()
+        cp = list(map(ord, text))
+        hb.buffer_add_codepoints(HBB, cp, 0, len(cp))
+        hb.buffer_guess_segment_properties(HBB)
+        hb.shape(font['__hb_font__'], HBB, [])
+        factor = fontsize/font['__upem__']
+        for N, P in zip(hb.buffer_get_glyph_infos(HBB), hb.buffer_get_glyph_positions(HBB)):
+            line.append((N.codepoint, x + P.x_offset*factor, y))
+            x += P.x_advance*factor + tracking
 
     if align == 0:
         dx = (xo - x)/2

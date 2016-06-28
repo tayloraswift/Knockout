@@ -1,7 +1,5 @@
 from itertools import chain
 
-from libraries.freetype import ft_errors
-
 from meredith.box import Box, Datablocks
 from meredith import datablocks
 
@@ -186,7 +184,7 @@ class Blockstyles(_Has_tagged_members):
             
             try:
                 hb_face, projection['font'] = get_ot_font(projection['path'])
-            except ft_errors.FT_Exception:
+            except FileNotFoundError:
                 path = Textstyle.BASE['path']
                 projection['color'] = (1, 0.15, 0.2, 1)
                 hb_face, projection['font'] = get_ot_font(path)
@@ -200,7 +198,7 @@ class Blockstyles(_Has_tagged_members):
             
             try:
                 projection['font_emoji'] = get_emoji_font(projection['path_emoji'])
-            except ft_errors.FT_Exception:
+            except FileNotFoundError:
                 projection['font_emoji'] = get_emoji_font(Textstyle.BASE['path_emoji'])
             
             projection['hash'] = H

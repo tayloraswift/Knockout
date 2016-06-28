@@ -387,7 +387,7 @@ class BS(_Widget):
     
     def _stamp_glyphs(self, glyphs):
         font = ISTYLES[()]
-        self._contents = text(self._text_left, font['fontsize'] + 5, glyphs, font)
+        self._contents = text(self._text_left, font['fontsize'] + 5, glyphs, font, grid=True)
         self._template = self._contents[2]
     
     # scrolling function

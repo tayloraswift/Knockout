@@ -409,12 +409,18 @@ def cast_mono_line(PARENT, letters, runinfo, F=None):
             LINE.L.append((l, FSTYLE, glyphs))
 
         elif V is not None:
-            if isinstance(V, Fontpost):
-                LINE.L.append((l, FSTYLE, (-4, 0, 0, 0, -1)))
-            elif type(V) is Reverse:
+            tV = type(V)
+            if issubclass(tV, Fontpost):
+                LINE.L.append((l, FSTYLE, (-5 + tV.countersign, 0, 0, 0, -1)))
+            elif tV is str:
+                LINE.L.append((l, FSTYLE, (SPACES[V], 0, FSTYLE['__spacemetrics__'][SPACES[V]], 0, i)))
+            elif tV is Line_break:
+                LINE.L.append((l, FSTYLE, (-6, 0, 0, 0, -1)))
+            elif tV is Reverse:
                 LINE.L.append((l, FSTYLE, (-8, 0, 0, 0, -1)))
             else:
-                V.layout_inline(line, 0, 0, runinfo, fstat, FSTYLE) # reminder to remove x, y parameters later
+                V.layout_inline(LINE, runinfo, fstat, FSTYLE)
                 LINE.L.append((l, FSTYLE, (-89, 0, V.width, 0, -1, V)))
+    
     LINE['fstyle'] = FSTYLE
     return LINE.fuse_glyphs()

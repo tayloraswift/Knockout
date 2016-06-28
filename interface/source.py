@@ -67,7 +67,7 @@ class Rose_garden(Kookie):
 
         self.font = ISTYLES[('mono',)]
         fontsize = self.font['fontsize']
-        self._K = self.font['fontmetrics'].advance_pixel_width(' ') * fontsize
+        self._K = self.font['__gridfont__'].advance_pixel_width(' ') * fontsize
         self._leading = int(fontsize * 1.3)
         
         self._charlength = int((width - 30) // self._K)
@@ -109,7 +109,7 @@ class Rose_garden(Kookie):
         
         K = self._K
         leading = self._leading
-        FMX = self.font['fontmetrics'].character_index
+        FMX = self.font['__gridfont__'].character_index
         
         colored_chars = list(chain.from_iterable(zip_longest([], text, fillvalue=self._palatte.get(token, (0, 0, 0, 1))) for token, text in xml_lexer.get_tokens(''.join(self._CHARS))))
 #        print(set(token for token, text in xml_lexer.get_tokens(''.join(self._CHARS))))

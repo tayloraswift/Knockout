@@ -73,6 +73,7 @@ def cast_multi_line(runs, linemaker):
     i = 0
     LINE, space = _next_line(linemaker, i)
     
+    newline = False
     for l, is_text, V, runinfo, (fstat, FSTYLE) in runs:
         if is_text:
             V, is_not_emoji, font, get_emoji = _check_emoji(is_text, V, FSTYLE)
@@ -83,7 +84,6 @@ def cast_multi_line(runs, linemaker):
             
             r_glyphs = []
             
-            newline = False
             while i < i_limit:
                 if newline:
                     yield _yield_line(LINE, i, FSTYLE)
@@ -103,7 +103,10 @@ def cast_multi_line(runs, linemaker):
                         if l % 2:
                             searchlen = min(len(V) - 1, searchlen + 2)
                     except IndexError:
-                        searchlen = len(V) - 1
+                        if l % 2:
+                            searchlen = 0
+                        else:
+                            searchlen = len(V) - 1
                     
                     for breakpoint, sep in find_breakpoint(V, i - i0, searchlen, True):
                         l_glyphs, x = shape_left_glyphs(CP, i0, i, breakpoint + i0, r_glyphs, font, runinfo, sep)
@@ -112,9 +115,14 @@ def cast_multi_line(runs, linemaker):
                             if l_glyphs:
                                 LINE.add_text(is_not_emoji, l, FSTYLE, l_glyphs, get_emoji)
                             i = breakpoint + i0
-                            newline = True
+                            newline = True # this is necessary because whitespace chars at the end of the line are the only time we are allowed to “borrow” space from the end of the line.
                             break
         elif V is not None:
+            if newline:
+                yield _yield_line(LINE, i, FSTYLE)
+                LINE, space = _next_line(linemaker, i)
+                newline = False
+            
             tV = type(V)
             if issubclass(tV, Fontpost):
                 LINE.L.append((l, FSTYLE, (-5 + tV.countersign, 0, 0, 0, i)))
@@ -170,7 +178,7 @@ def cast_mono_line(PARENT, letters, runinfo, F=None):
             'page': PARENT['page']
             })
 
-    for l, is_text, V, runinfo, (fstat, FSTYLE) in bidir_levels(runinfo[0], letters, BLOCK, F):
+    for l, is_text, V, runinfo, (fstat, FSTYLE) in bidir_levels(runinfo, letters, BLOCK, F):
         if is_text:
             V, is_not_emoji, font, get_emoji = _check_emoji(is_text, V, FSTYLE)
             direction, x, glyphs = _get_glyphs_entire(list(map(ord, V)), 0, 0, len(V), font, runinfo)
@@ -181,7 +189,7 @@ def cast_mono_line(PARENT, letters, runinfo, F=None):
             if issubclass(tV, Fontpost):
                 LINE.L.append((l, FSTYLE, (-5 + tV.countersign, 0, 0, 0, -1)))
             elif tV is str:
-                LINE.L.append((l, FSTYLE, (SPACES[V], 0, FSTYLE['__spacemetrics__'][SPACES[V]], 0, i)))
+                LINE.L.append((l, FSTYLE, (SPACES[V], 0, FSTYLE['__spacemetrics__'][SPACES[V]], 0, -1)))
             elif tV is Line_break:
                 LINE.L.append((l, FSTYLE, (-6, 0, 0, 0, -1)))
             elif tV is Reverse:

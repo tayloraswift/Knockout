@@ -12,13 +12,12 @@ class Image(Inline):
         else:
             self._image = Bitmap_image(self['src'], self['resolution'])
     
-    def _cast_inline(self, LINE, x, y, PP, F, FSTYLE):
+    def _cast_inline(self, LINE, runinfo, F, FSTYLE):
         self._image.inflate(self['width'], LINE['leading'])
-        self._x = x
-        self._y = y - LINE['leading']
+        self._y_offset = -LINE['leading']
         return [], self['width'], LINE['leading'], self._image.height - LINE['leading']
 
     def deposit_glyphs(self, repository, x, y):
-        repository['_images'].append((self._image.paint, self._x + x, self._y + y))
+        repository['_images'].append((self._image.paint, x, self._y_offset + y))
 
 members = [Image]

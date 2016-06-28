@@ -8,3 +8,6 @@ def interpret_locale(S):
         return S
     else:
         return None
+
+def generate_runinfo(language):
+    return (directionality[language], language)

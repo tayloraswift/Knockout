@@ -1,4 +1,4 @@
-from layout.line import cast_mono_line, calculate_vmetrics
+from layout.otline import cast_mono_line
 from meredith.box import Box, Inline
 
 _namespace = 'mod:root'
@@ -27,16 +27,17 @@ class Root(Inline):
         cr.close_path()
         cr.fill()
     
-    def _cast_inline(self, LINE, x, y, PP, F, FSTYLE):
+    def _cast_inline(self, LINE, runinfo, F, FSTYLE):
         self._color = FSTYLE['color']
-        y += FSTYLE['shift']
+        y = FSTYLE['shift']
         
-        rad = cast_mono_line(LINE, self._radicand.content, 13, PP, F)
-        rad_asc, rad_desc = calculate_vmetrics(rad)
+        rad = cast_mono_line(LINE, self._radicand.content, runinfo, F)
+        rad_asc = rad['ascent']
+        rad_desc = rad['descent']
         
         rfs = FSTYLE['fontsize']
         iy = y - rfs * 0.44 - FSTYLE['shift']
-        ix = x + rfs*0.05
+        ix = rfs*0.05
         jx = ix - rad_desc * 0.4
         kx = jx + (rad_asc - rad_desc)*0.3
 
@@ -63,12 +64,12 @@ class Root(Inline):
         if self._index is None:
             NL = [rad]
         else:
-            index = cast_mono_line(LINE, self._index.content, 13, PP, F + self['cl_radicand'])
+            index = cast_mono_line(LINE, self._index.content, runinfo, F + self['cl_radicand'])
             index['x'] = jx - index['advance']*0.5
             index['y'] = y - rfs * 0.6
             NL = [index, rad]
         
-        width = kx - x + rfs * 0.35 + rad['advance']
+        width = kx + rfs * 0.35 + rad['advance']
         
         return NL, width, rad_asc + rfs*0.2, rad_desc, (self._draw_radix, 0, 0)
 

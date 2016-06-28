@@ -2,7 +2,7 @@ from math import floor, sqrt, atan2, sin, cos, pi, log, e, ceil, isclose
 
 from itertools import chain
 
-from layout.line import cast_mono_line
+from layout.otline import cast_mono_line
 
 from meredith.paragraph import Plane
 
@@ -132,16 +132,16 @@ class Axis(Plane):
         self._perpendicular = perpendicular
         return totalvector, vector, perpendicular
         
-    def inflate(self, width, ox, oy, slug, B):
+    def inflate(self, width, ox, oy, PARENTLINE, BSTYLE):
         x1, y1, x2, y2 = self._compact_line[0]*width, self._compact_line[1], self._compact_line[2]*width, self._compact_line[3]
         self._line = (x1, y1), (x2, y2)        
-        return self._construct(x2, y2, ox, oy, slug, B)
+        return self._construct(x2, y2, ox, oy, PARENTLINE, BSTYLE)
         
-    def _construct(self, x2, y2, ox, oy, slug, B):
+    def _construct(self, x2, y2, ox, oy, PARENTLINE, BSTYLE):
         totalvector, vector, perpendicular = self._calculate_vectors()
         
         # print variable
-        variable = cast_mono_line(slug, list(self['variable']), 0, B, self['cl_variable'])
+        variable = cast_mono_line(PARENTLINE, list(self['variable']), BSTYLE['__runinfo__'], self['cl_variable'])
         k = variable['fstyle']['fontsize']*0.3
         # arrowheads
         if self['arrowhead']:
@@ -184,7 +184,7 @@ class Axis(Plane):
         letterspacing = spacing + 2.5*k
         self.lettervector = letterspacing*perpendicular[0], letterspacing*perpendicular[1]
         mono = chain((variable,), self._generate_numbers(self._positions_to_xy(self._numbers, ox + self._line[0][0] + self.lettervector[0], 
-                                                                                            oy + self._line[0][1] + self.lettervector[1], * totalvector), slug, B, k))
+                                                                                            oy + self._line[0][1] + self.lettervector[1], * totalvector), PARENTLINE, BSTYLE['__runinfo__'], k))
         return mono, (self.paint,), ()
     
     def _positions_to_xy(self, positions, ox, oy, dx, dy):
@@ -193,10 +193,10 @@ class Axis(Plane):
         else:
             return ((ox + dx*factor, oy + dy*factor, u) for factor, u in positions)
     
-    def _generate_numbers(self, numerals, slug, B, k):
+    def _generate_numbers(self, numerals, PARENTLINE, runinfo, k):
         sign = round(self._perpendicular[0])
         for x, y, u in numerals:
-            label = cast_mono_line(slug, list(str(u).replace('-', '−')), 0, B)
+            label = cast_mono_line(PARENTLINE, str(u).replace('-', '−'), runinfo)
             label.nail_to(x, y, k, sign)
             yield label
     

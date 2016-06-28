@@ -367,7 +367,7 @@ class Blockelement(Blockstyle):
         
         # print counters
         if BSTYLE['show_count'] is not None:
-            flagline = cast_mono_line(LINE, BSTYLE['show_count'](wheels), (BSTYLE['language'],))
+            flagline = cast_mono_line(LINE, BSTYLE['show_count'](wheels), BSTYLE['__runinfo__'])
             flagline['x'] = LINE['start'] - flagline['advance'] - BSTYLE['leading']*BSTYLE['counter_space']
             flagline['y'] = LINE['y']
         else:
@@ -393,7 +393,7 @@ class Blockelement(Blockstyle):
             frames.start(self.u_bottom)
             return True, self.wheels
         else:
-            self.line0 = cast_mono_line({'l': 0, 'c': c, 'page': pn, 'leading': BSTYLE['leading'], 'BLOCK': self}, '', (BSTYLE['language'],))
+            self.line0 = cast_mono_line({'l': 0, 'c': c, 'page': pn, 'leading': BSTYLE['leading'], 'BLOCK': self}, '', BSTYLE['__runinfo__'])
             self.line0.update({'u': u, 'start': left, 'width': right - left, 'x': left, 'y': y})
             self.layout_observer(BSTYLE, wheels, self.line0)
             self.u = u - BSTYLE['leading']
@@ -530,7 +530,7 @@ class Paragraph_block(Blockelement):
             l += 1
     
     def _layout_block(self, frames, BSTYLE, overlay):
-        direction, LINES = cast_paragraph(self._yield_linespaces(frames, BSTYLE), self, BSTYLE['language'])
+        direction, LINES = cast_paragraph(self._yield_linespaces(frames, BSTYLE), self, BSTYLE['__runinfo__'])
         
         if direction:
             align = 1 - BSTYLE['align']
@@ -550,7 +550,7 @@ class Paragraph_block(Blockelement):
                         except ValueError:
                             continue
                     anchor = LINE['start'] + LINE['width'] * align
-                    LINE['x'] = anchor - LINE['_X_'][ai]
+                    LINE['x'] = anchor - LINE.X[ai]
                 else:
                     LINE['x'] = LINE['start']
         elif not align:

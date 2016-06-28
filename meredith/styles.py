@@ -1,5 +1,7 @@
 from itertools import chain
 
+from olivia.languages import generate_runinfo
+
 from meredith.box import Box, Datablocks
 from meredith import datablocks
 
@@ -162,6 +164,7 @@ class Blockstyles(_Has_tagged_members):
             for B in chain((b for b in self.content if b['class'] <= P), [BLOCK]):
                 projection.overlay(B)
             
+            projection['__runinfo__'] = generate_runinfo(projection['language'])
             self.block_projections[H] = projection
             return projection
 

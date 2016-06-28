@@ -20,7 +20,7 @@ class Slope(Data):
                     pass
         self._compacted = P
     
-    def inflate(self, width, ox, oy, slug, B):
+    def inflate(self, width, * I ):
         pl = self['pill_length']
         inflated = []
         for x, y, m in ((x*width, y, m) for x, y, m in self._compacted):

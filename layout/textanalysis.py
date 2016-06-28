@@ -7,7 +7,7 @@ from fonts import breaking_spaces, SPACES
 from edit.wonder import alphabet
 from data.emoji.unicode_codes import EMOJIS
 
-from olivia.languages import directionality
+from olivia.languages import generate_runinfo
 from olivia import Tagcounter
 
 from meredith.elements import Reverse, Fontpost, Line_break
@@ -77,7 +77,7 @@ def _raise_digits(string):
     else:
         return string,
 
-def bidir_levels(base, text, BLOCK, F=None):
+def bidir_levels(runinfo, text, BLOCK, F=None):
     fontproject = datablocks.BSTYLES.project_t
     if F is None:
         F = Tagcounter()
@@ -86,9 +86,8 @@ def bidir_levels(base, text, BLOCK, F=None):
     i = 0
     fontinfo = F, fontproject(BLOCK, F)
     
-    l = directionality[base]
-    runinfo = (base,)
     runinfo_stack = [runinfo]
+    l = runinfo[0]
     RUNS = [(l, False, None, runinfo, fontinfo)]
     
     SP = _S_SPACES
@@ -132,15 +131,19 @@ def bidir_levels(base, text, BLOCK, F=None):
                 if type(v) is Reverse:
                     if v['language'] is None:
                         if len(runinfo_stack) > 1:
-                            runinfo_stack.pop()
+                            old_runinfo = runinfo_stack.pop()
                             runinfo = runinfo_stack[-1]
-                            l -= 1
+                            if old_runinfo[0] != runinfo[0]:
+                                l -= 1
                             RUNS.append((l, False, v, runinfo, fontinfo))
                     else:
                         RUNS.append((l, False, v, runinfo, fontinfo))
-                        l += 1
-                        runinfo = (v['language'],)
+                        
+                        runinfo = generate_runinfo(v['language'])
+                        if runinfo[0] != runinfo_stack[-1][0]:
+                            l += 1
                         runinfo_stack.append(runinfo)
+                        
                 elif v is not None:
                     if isinstance(v, Fontpost):
                         F = fontinfo[0].copy()

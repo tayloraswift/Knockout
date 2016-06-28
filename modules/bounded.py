@@ -1,4 +1,4 @@
-from layout.line import cast_mono_line, calculate_vmetrics
+from layout.otline import cast_mono_line
 from meredith.box import Box, Inline
 
 _namespace = 'mod:bounded'
@@ -24,59 +24,53 @@ class Bounded(Inline):
         else:
             self._cast_inline = self._cast_inline_display
 
-    def _mono(self, LINE, PP, F):
+    def _mono(self, LINE, runinfo, F):
         F_small = F + self['cl_bound']
-        symbol = cast_mono_line(LINE, self._symbol.content, 13, PP, F + self['cl_symbol'])
-        a = cast_mono_line(LINE, self._a.content, 13, PP, F_small)
-        b = cast_mono_line(LINE, self._b.content, 13, PP, F_small)
+        symbol = cast_mono_line(LINE, self._symbol.content, runinfo, F + self['cl_symbol'])
+        a = cast_mono_line(LINE, self._a.content, runinfo, F_small)
+        b = cast_mono_line(LINE, self._b.content, runinfo, F_small)
         return symbol, a, b
         
-    def _cast_inline_inline(self, LINE, x, y, PP, F, FSTYLE):
-        symbol, a, b = self._mono(LINE, PP, F)
+    def _cast_inline_inline(self, LINE, runinfo, F, FSTYLE):
+        symbol, a, b = self._mono(LINE, runinfo, F)
         
-        symbol['x'] = x
-        symbol['y'] = y
+        symbol['x'] = 0
+        symbol['y'] = 0
         
-        symbol_asc, symbol_desc = calculate_vmetrics(symbol)
         symbol_fontsize = symbol['fstyle']['fontsize']
-        symbol_asc -= symbol_fontsize * 0.1
-        a_asc, a_desc = calculate_vmetrics(a)
-        b_asc, b_desc = calculate_vmetrics(b)
+        symbol_asc = symbol['ascent'] - symbol_fontsize * 0.1
         
-        a['x'] = x + symbol['advance']
-        a['y'] = y - symbol_desc
+        a['x'] = symbol['advance']
+        a['y'] = -symbol['descent']
         
-        b['x'] = x + symbol['advance'] + symbol_fontsize*0.1
-        b['y'] = y - symbol_asc - b['fstyle']['fontsize']*0.1 + b['fstyle'].vmetrics()[0] #only align to unexpanded metrics
+        b['x'] = symbol['advance'] + symbol_fontsize*0.1
+        b['y'] = -symbol_asc - b['fstyle']['fontsize']*0.1 + b['fstyle']['__fontmetrics__'][0] #only align to unexpanded metrics
                
         width = max(a['advance'] + a['x'], b['advance'] + b['x']) - symbol['x']
         
-        ascent = y - b['y'] + b_asc
-        descent = y - a['y'] + a_desc
+        ascent = -b['y'] + b['ascent']
+        descent = -a['y'] + a['descent']
         
         return [symbol, a, b], width, ascent, descent
 
-    def _cast_inline_display(self, LINE, x, y, PP, F, FSTYLE):
-        symbol, a, b = self._mono(LINE, PP, F)
+    def _cast_inline_display(self, LINE, runinfo, F, FSTYLE):
+        symbol, a, b = self._mono(LINE, runinfo, F)
         
         width = max(a['advance'], b['advance'], symbol['advance'])
 
-        symbol['x'] = x + (width - symbol['advance']) / 2
-        symbol['y'] = y
+        symbol['x'] = (width - symbol['advance']) * 0.5
+        symbol['y'] = 0
 
-        symbol_asc, symbol_desc = calculate_vmetrics(symbol)
-        symbol_asc -= symbol['fstyle']['fontsize'] * 0.1
-        a_asc, a_desc = calculate_vmetrics(a)
-        b_asc, b_desc = calculate_vmetrics(b)
+        symbol_asc = symbol['ascent'] - symbol['fstyle']['fontsize'] * 0.1
         
-        a['x'] = x + (width - a['advance']) / 2
-        a['y'] = y - symbol_desc + a_asc
+        a['x'] = (width - a['advance']) * 0.5
+        a['y'] = -symbol['descent'] + a['ascent']
         
-        b['x'] = x + (width - b['advance']) / 2
-        b['y'] = y - symbol_asc*0.9 + b_desc
+        b['x'] = (width - b['advance']) * 0.5
+        b['y'] = -symbol_asc*0.9 + b['descent']
         
-        ascent = symbol_asc - b_desc + b_asc
-        descent = symbol_desc + a_desc - a_asc
+        ascent = symbol_asc - b['descent'] + b['ascent']
+        descent = symbol['descent'] + a['descent'] - a['ascent']
         
         return [symbol, a, b], width, ascent, descent
 

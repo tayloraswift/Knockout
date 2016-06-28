@@ -1,4 +1,4 @@
-from layout.line import cast_mono_line, calculate_vmetrics
+from layout.otline import cast_mono_line
 from meredith.box import Box, Inline
 
 class Page_number(Inline):
@@ -17,13 +17,11 @@ class Page_number(Inline):
         cr.set_source_rgba(0, 0.8, 1, 0.4)
         cr.fill()
     
-    def _cast_inline(self, LINE, x, y, PP, F, FSTYLE):
-        C = cast_mono_line(LINE, list(str(LINE['page'] + self['offset'])), 13, PP, F)
-        C['x'] = x
-        C['y'] = y + FSTYLE['shift']
-        
-        ascent, descent = calculate_vmetrics(C)
+    def _cast_inline(self, LINE, runinfo, F, FSTYLE):
+        C = cast_mono_line(LINE, list(str(LINE['page'] + self['offset'])), runinfo, F)
+        C['x'] = 0
+        C['y'] = FSTYLE['shift']
 
-        return [C], C['advance'], ascent, descent, None, (self._paint_annot, x, y)
+        return [C], C['advance'], C['ascent'], C['descent'], None, (self._paint_annot, 0, 0)
 
 members = [Page_number]

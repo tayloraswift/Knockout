@@ -5,7 +5,7 @@ from bisect import bisect
 from meredith.paragraph import Blockelement
 from olivia.frames import Subcell
 
-from layout.line import cast_mono_line
+from layout.otline import cast_mono_line
 
 from .data import Data
 from .cartesian import Cartesian, Axis, LogAxis
@@ -130,10 +130,10 @@ class Plot(Blockelement):
         
         u = self._keys.layout_keys(frames, overlay + self['cl_key'], planes, paint_functions, block_top_u, block_bottom_u, self['key_shift'], self['key_bottom'])
         
-        slug = {'l': 0, 'c': c, 'page': pn}
+        PARENTLINE = {'l': 0, 'c': c, 'page': pn, 'leading': BSTYLE['leading'], 'BLOCK': self}
         
         for E in chain(self._CS, self._DS):
-            mono, paint, paint_annot = E.inflate(width, x1, y, slug, self)
+            mono, paint, paint_annot = E.inflate(width, x1, y, PARENTLINE, BSTYLE)
             monos.extend(mono)
             paint_functions.extend((pn, (F, x1, y)) for F in paint)
             #paint_annot_functions.extend((pn, (F, x1, y)) for F in paint_annot)
@@ -141,7 +141,7 @@ class Plot(Blockelement):
         if all(A.floating for A in self._CS):
             perp_x, perp_y = map(sum, zip( * (A.lettervector for A in self._CS) ))
             mag = sqrt(perp_x**2 + perp_y**2)
-            O_label = cast_mono_line(slug, ['O'], 0, self, self._CS[0]['cl_variable'])
+            O_label = cast_mono_line(PARENTLINE, 'O', BSTYLE['__runinfo__'], self._CS[0]['cl_variable'])
             O_label.nail_to(x1 + self._origin[0]*width + perp_x,
                             y + self._origin[1]*-self['height'] + perp_y, align=round(perp_x/mag))
             monos.append(O_label)

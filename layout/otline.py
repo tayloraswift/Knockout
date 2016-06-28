@@ -1,131 +1,15 @@
-from fonts import hb, breaking_spaces, SPACES
+from fonts import hb, SPACES
 
-from itertools import chain, accumulate
+from itertools import accumulate
 from bisect import bisect
-from re import finditer
-
-from libraries.pyphen import pyphen
-
-from edit.wonder import alphabet
-
-from olivia.languages import directionality
-from olivia import Tagcounter
 
 from meredith.elements import Reverse, Fontpost, Line_break
-from meredith import datablocks
 
-pyphen.language_fallback('en_US')
-hy = pyphen.Pyphen(lang='en_US')
-
-# linebreaking characters
-_BREAK_WHITESPACE = set(chain(' ', breaking_spaces))
-_BREAK_ONLY_AFTER = set('-')
-_BREAK_AFTER_ELSE_BEFORE = set('–—')
-
-_BREAK = _BREAK_WHITESPACE | _BREAK_ONLY_AFTER | _BREAK_AFTER_ELSE_BEFORE
-
-_APOSTROPHES = set("'’")
-
-def find_breakpoint(string, start, n, hyphenate=False):
-    CHAR = string[n]
-    if CHAR in _BREAK_WHITESPACE:
-        yield n + 1, ''
-    else:
-        try:
-            if CHAR in _BREAK_ONLY_AFTER:
-                i = n - 1 - next(i for i, v in enumerate(reversed(string[start:n - 1])) if v in _BREAK)
-            elif CHAR in _BREAK_AFTER_ELSE_BEFORE:
-                i = n
-            else:
-                i = n - next(i for i, v in enumerate(reversed(string[start:n])) if v in _BREAK)
-        
-        except StopIteration:
-            i = start
-        
-        ### AUTO HYPHENATION
-        if hyphenate:
-            try:
-                j = i + next(i for i, v in enumerate(string[i:]) if v in _BREAK)
-            except StopIteration:
-                j = i + 1989
-            except TypeError:
-                j = i
-            
-            word = ''.join(c if c in alphabet else "'" if c in _APOSTROPHES else ' ' for c in string[i:j])
-
-            leading_spaces = j - i - len(word.lstrip(' '))
-
-            for pair in hy.iterate(word.strip(' ')):
-                k = len(pair[0]) + leading_spaces
-                # no sense checking hyphenations that don’t fit
-                if k >= n - i:
-                    continue
-                # prevent too-short hyphenations
-                elif sum(c != ' ' for c in pair[0]) < 2 or sum(c != ' ' for c in pair[1]) < 2:
-                    continue
-                
-                yield i + k, '-'
-        
-        yield i, ''
-
-def get_font_info(paragraph, F, post):
-    F = F.copy()
-    if post.countersign:
-        F += post['class']
-    else:
-        F -= post['class']
-    return F, datablocks.BSTYLES.project_t(paragraph, F)
-
-def _raise_digits(string):
-    ranges = list(chain((0,), * ((i, j) for i, j in (m.span() for m in finditer("[-+]?\d+[\.,]?\d*", string)) if j - i > 1) , (len(string),)))
-    if ranges:
-        return (string[i:j] for i, j in zip(ranges, ranges[1:]))
-    else:
-        return string,
-
-def bidir_levels(base, text, BLOCK, F=None):
-    if F is None:
-        F = Tagcounter()
-    else:
-        F = F.copy()
-    i = 0
-    fontinfo = F, datablocks.BSTYLES.project_t(BLOCK, F)
-    
-    l = directionality[base]
-    runinfo = (base,)
-    runinfo_stack = [runinfo]
-    RUNS = [(l, False, None, runinfo, fontinfo)]
-    SP = SPACES
-    for j, v in chain((k for k in enumerate(text) if type(k[1]) is not str or k[1] in SP), ((len(text), None),) ):
-        if j - i:
-            if l % 2:
-                RUNS.extend((l + i % 2, True, s, runinfo, fontinfo) for i, s in enumerate(_raise_digits(''.join(text[i:j]))) if s)
-            else:
-                RUNS.append((l, True, ''.join(text[i:j]), runinfo, fontinfo))
-            
-        if type(v) is Reverse:
-            if v['language'] is None:
-                if len(runinfo_stack) > 1:
-                    runinfo_stack.pop()
-                    runinfo = runinfo_stack[-1]
-                    l -= 1
-                    RUNS.append((l, False, v, runinfo, fontinfo))
-            else:
-                RUNS.append((l, False, v, runinfo, fontinfo))
-                l += 1
-                runinfo = (v['language'],)
-                runinfo_stack.append(runinfo)
-        elif v is not None:
-            if isinstance(v, Fontpost):
-                fontinfo = get_font_info(BLOCK, fontinfo[0], v)
-            RUNS.append((l, False, v, runinfo, fontinfo))
-        i = j + 1
-    
-    return RUNS
+from layout.textanalysis import bidir_levels, find_breakpoint
 
 def cast_paragraph(linemaker, BLOCK, base):
     runs = bidir_levels(base, BLOCK.content, BLOCK)
-    return runs[0][0], [line.fuse_glyphs(True) for line in shape_in_pieces(runs, linemaker)]
+    return runs[0][0], [line.fuse_glyphs(True) for line in cast_multi_line(runs, linemaker)]
 
 def _get_glyphs_entire(cp, cpstart, a, n, font, runinfo):
     HBB = hb.buffer_create()
@@ -171,7 +55,7 @@ def _next_line(linemaker, i):
     LINE['i'] = i
     return LINE, LINE['width']
 
-def shape_in_pieces(runs, linemaker):
+def cast_multi_line(runs, linemaker):
     i = 0
     LINE, space = _next_line(linemaker, i)
     
@@ -255,6 +139,43 @@ def shape_in_pieces(runs, linemaker):
     LINE['j'] = i + 1
     LINE.L.append((l, FSTYLE, (-3, 0, 0, 0, i))) # final </p> cap
     yield LINE
+
+def cast_mono_line(PARENT, letters, runinfo, F=None):
+    BLOCK = PARENT['BLOCK']
+    LINE = OT_line({
+            'i': 0,
+            'j': len(letters),
+      
+            'leading': PARENT['leading'],
+            
+            'BLOCK': BLOCK,
+            
+            'l': PARENT['l'], 
+            'c': PARENT['c'], 
+            'page': PARENT['page']
+            })
+
+    for l, is_text, V, runinfo, (fstat, FSTYLE) in bidir_levels(runinfo[0], letters, BLOCK, F):
+        if is_text:
+            direction, x, glyphs = _get_glyphs_entire(list(map(ord, V)), 0, 0, len(V), FSTYLE['__hb_font__'], runinfo)
+            LINE.L.append((l, FSTYLE, glyphs))
+
+        elif V is not None:
+            tV = type(V)
+            if issubclass(tV, Fontpost):
+                LINE.L.append((l, FSTYLE, (-5 + tV.countersign, 0, 0, 0, -1)))
+            elif tV is str:
+                LINE.L.append((l, FSTYLE, (SPACES[V], 0, FSTYLE['__spacemetrics__'][SPACES[V]], 0, i)))
+            elif tV is Line_break:
+                LINE.L.append((l, FSTYLE, (-6, 0, 0, 0, -1)))
+            elif tV is Reverse:
+                LINE.L.append((l, FSTYLE, (-8, 0, 0, 0, -1)))
+            else:
+                V.layout_inline(LINE, runinfo, fstat, FSTYLE)
+                LINE.L.append((l, FSTYLE, (-89, 0, V.width, 0, -1, V)))
+    
+    LINE['fstyle'] = FSTYLE
+    return LINE.fuse_glyphs()
 
 class OT_line(dict):
     def __init__(self, * I, ** KI ):
@@ -403,40 +324,3 @@ class OT_line(dict):
         else:
             self['x'] = x - self['advance']*0.5
         self['y'] = y + k
-
-def cast_mono_line(PARENT, letters, runinfo, F=None):
-    BLOCK = PARENT['BLOCK']
-    LINE = OT_line({
-            'i': 0,
-            'j': len(letters),
-      
-            'leading': PARENT['leading'],
-            
-            'BLOCK': BLOCK,
-            
-            'l': PARENT['l'], 
-            'c': PARENT['c'], 
-            'page': PARENT['page']
-            })
-
-    for l, is_text, V, runinfo, (fstat, FSTYLE) in bidir_levels(runinfo[0], letters, BLOCK, F):
-        if is_text:
-            direction, x, glyphs = _get_glyphs_entire(list(map(ord, V)), 0, 0, len(V), FSTYLE['__hb_font__'], runinfo)
-            LINE.L.append((l, FSTYLE, glyphs))
-
-        elif V is not None:
-            tV = type(V)
-            if issubclass(tV, Fontpost):
-                LINE.L.append((l, FSTYLE, (-5 + tV.countersign, 0, 0, 0, -1)))
-            elif tV is str:
-                LINE.L.append((l, FSTYLE, (SPACES[V], 0, FSTYLE['__spacemetrics__'][SPACES[V]], 0, i)))
-            elif tV is Line_break:
-                LINE.L.append((l, FSTYLE, (-6, 0, 0, 0, -1)))
-            elif tV is Reverse:
-                LINE.L.append((l, FSTYLE, (-8, 0, 0, 0, -1)))
-            else:
-                V.layout_inline(LINE, runinfo, fstat, FSTYLE)
-                LINE.L.append((l, FSTYLE, (-89, 0, V.width, 0, -1, V)))
-    
-    LINE['fstyle'] = FSTYLE
-    return LINE.fuse_glyphs()

@@ -60,6 +60,8 @@ def _check_emoji(is_text, V, FSTYLE):
     if is_not_emoji:
         font = FSTYLE['__hb_font__']
         get_emoji = None
+        if FSTYLE['capitals']:
+            V = V.upper()
     else:
         V = ''.join(V)
         font = FSTYLE['__hb_emoji__']

@@ -11,23 +11,24 @@ def cast_paragraph(linemaker, BLOCK, base):
     runs = bidir_levels(base, BLOCK.content, BLOCK)
     return runs[0][0], [line.fuse_glyphs(True) for line in cast_multi_line(runs, linemaker)]
 
-def _get_glyphs_entire(cp, cpstart, a, n, font, runinfo):
+def _HB_cast_glyphs(cp, cpstart, a, n, font, runinfo, y=0, tracking=0):
     HBB = hb.buffer_create()
     hb.buffer_add_codepoints(HBB, cp, a - cpstart, n)
     hb.buffer_guess_segment_properties(HBB)
     hb.shape(font, HBB, [])
     x = 0
-    y = 0
     glyphs = []
     for N, P in zip(hb.buffer_get_glyph_infos(HBB), hb.buffer_get_glyph_positions(HBB)):
         gx = x + P.x_offset
         x += P.x_advance
-        glyphs.append((N.codepoint, gx, x, y + P.y_offset, N.cluster + cpstart))
-        y += P.y_advance
+        glyphs.append((N.codepoint, gx, x, y, N.cluster + cpstart))
+        x += tracking
+    if glyphs:
+        x -= tracking
     return int(hb.buffer_get_direction(HBB)) - 4, x, glyphs
     
-def shape_right_glyphs(cp, cpstart, a, b, glyphs, font, runinfo, limit):
-    direction, x, glyphs = _get_glyphs_entire(cp, cpstart, a, b - a, font, runinfo)
+def shape_right_glyphs(cp, cpstart, a, b, glyphs, font, runinfo, FSTYLE, limit):
+    direction, x, glyphs = _HB_cast_glyphs(cp, cpstart, a, b - a, font, runinfo, -FSTYLE['shift'], FSTYLE['tracking'])
     if limit < x:
         if direction:
             I = bisect([g[1] for g in glyphs], x - limit)
@@ -37,12 +38,12 @@ def shape_right_glyphs(cp, cpstart, a, b, glyphs, font, runinfo, limit):
         I = None
     return glyphs, I
     
-def shape_left_glyphs(cp, cpstart, a, b, glyphs, font, runinfo, sep=''):
+def shape_left_glyphs(cp, cpstart, a, b, glyphs, font, runinfo, FSTYLE, sep=''):
     cp = cp[:b - cpstart]
     if sep:
         cp.append(ord(sep))
         b += 1
-    direction, x, glyphs = _get_glyphs_entire(cp, cpstart, a, b - a, font, runinfo) # this is the opposite of what it should be, direction should be dictated, not read
+    direction, x, glyphs = _HB_cast_glyphs(cp, cpstart, a, b - a, font, runinfo, -FSTYLE['shift'], FSTYLE['tracking']) # this is the opposite of what it should be, direction should be dictated, not read
     return glyphs, x 
 
 def _yield_line(LINE, i, FSTYLE):
@@ -92,7 +93,7 @@ def cast_multi_line(runs, linemaker):
                     LINE, space = _next_line(linemaker, i)
                     newline = False
                 
-                r_glyphs, I = shape_right_glyphs(CP, i0, i, i_limit, r_glyphs, font, runinfo, space)
+                r_glyphs, I = shape_right_glyphs(CP, i0, i, i_limit, r_glyphs, font, runinfo, FSTYLE, space)
                 if I is None: # entire line fits
                     LINE.add_text(is_not_emoji, l, FSTYLE, r_glyphs, get_emoji)
                     space -= r_glyphs[-1][2]
@@ -111,7 +112,7 @@ def cast_multi_line(runs, linemaker):
                             searchlen = len(V) - 1
                     
                     for breakpoint, sep in find_breakpoint(V, i - i0, searchlen, True):
-                        l_glyphs, x = shape_left_glyphs(CP, i0, i, breakpoint + i0, r_glyphs, font, runinfo, sep)
+                        l_glyphs, x = shape_left_glyphs(CP, i0, i, breakpoint + i0, r_glyphs, font, runinfo, FSTYLE, sep)
                         
                         if x < space or not sep:
                             if l_glyphs:
@@ -183,7 +184,7 @@ def cast_mono_line(PARENT, letters, runinfo, F=None):
     for l, is_text, V, runinfo, (fstat, FSTYLE) in bidir_levels(runinfo, letters, BLOCK, F):
         if is_text:
             V, is_not_emoji, font, get_emoji = _check_emoji(is_text, V, FSTYLE)
-            direction, x, glyphs = _get_glyphs_entire(list(map(ord, V)), 0, 0, len(V), font, runinfo)
+            direction, x, glyphs = _HB_cast_glyphs(list(map(ord, V)), 0, 0, len(V), font, runinfo, -FSTYLE['shift'], FSTYLE['tracking'])
             LINE.add_text(is_not_emoji, l, FSTYLE, glyphs, get_emoji)
 
         elif V is not None:

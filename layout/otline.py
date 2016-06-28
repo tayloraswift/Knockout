@@ -164,7 +164,6 @@ def shape_left_glyphs(cp, cpstart, a, b, glyphs, font, runinfo, sep=''):
 def _yield_line(LINE, i, FSTYLE):
     LINE['fstyle'] = FSTYLE
     LINE['j'] = i
-    LINE['j_select'] = i
     return LINE
 
 def _next_line(linemaker, i):
@@ -253,8 +252,7 @@ def shape_in_pieces(runs, linemaker):
                         LINE, space = _next_line(linemaker, i)
     
     LINE['fstyle'] = FSTYLE
-    LINE['j'] = i
-    LINE['j_select'] = i + 1
+    LINE['j'] = i + 1
     LINE.L.append((l, FSTYLE, (-3, 0, 0, 0, i))) # final </p> cap
     yield LINE
 
@@ -353,7 +351,7 @@ class OT_line(dict):
                     unitgap = (x - x_p)/r
                     _IXF_.extend((i_p + j + 1, x_p + unitgap*(j + 1), FSTYLE) for j in range(r))
                 i_p = i
-            del _IXF_[self['j_select']:]
+            del _IXF_[self['j']:]
         self.X = [k[1] for k in _IXF_]
         self.FS = [k[2] for k in _IXF_]
         IX = sorted(_IXF_, key=lambda k: k[1])
@@ -441,5 +439,4 @@ def cast_mono_line(PARENT, letters, runinfo, F=None):
                 LINE.L.append((l, FSTYLE, (-89, 0, V.width, 0, -1, V)))
     
     LINE['fstyle'] = FSTYLE
-    LINE['j_select'] = LINE['j']
     return LINE.fuse_glyphs()

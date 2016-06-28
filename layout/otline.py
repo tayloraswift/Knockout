@@ -35,7 +35,7 @@ def find_breakpoint(string, start, n, hyphenate=False):
             if CHAR in _BREAK_ONLY_AFTER:
                 i = n - 1 - next(i for i, v in enumerate(reversed(string[start:n - 1])) if v in _BREAK)
             elif CHAR in _BREAK_AFTER_ELSE_BEFORE:
-                i = n - 1
+                i = n
             else:
                 i = n - next(i for i, v in enumerate(reversed(string[start:n])) if v in _BREAK)
         
@@ -125,7 +125,7 @@ def bidir_levels(base, text, BLOCK, F=None):
 
 def cast_paragraph(linemaker, BLOCK, base):
     runs = bidir_levels(base, BLOCK.content, BLOCK)
-    return runs[0][0], [line.fuse_glyphs() for line in shape_in_pieces(runs, linemaker)]
+    return runs[0][0], [line.fuse_glyphs(True) for line in shape_in_pieces(runs, linemaker)]
 
 def _get_glyphs_entire(cp, cpstart, a, n, font, runinfo):
     HBB = hb.buffer_create()
@@ -164,6 +164,7 @@ def shape_left_glyphs(cp, cpstart, a, b, glyphs, font, runinfo, sep=''):
 def _yield_line(LINE, i, FSTYLE):
     LINE['fstyle'] = FSTYLE
     LINE['j'] = i
+    LINE['j_select'] = i
     return LINE
 
 def _next_line(linemaker, i):
@@ -184,7 +185,13 @@ def shape_in_pieces(runs, linemaker):
             
             r_glyphs = []
             
+            newline = False
             while i < i_limit:
+                if newline:
+                    yield _yield_line(LINE, i, FSTYLE)
+                    LINE, space = _next_line(linemaker, i)
+                    newline = False
+                
                 r_glyphs, I = shape_right_glyphs(CP, i0, i, i_limit, r_glyphs, font, runinfo, space)
                 if I is None: # entire line fits
                     LINE.L.append((l, FSTYLE, r_glyphs))
@@ -207,8 +214,7 @@ def shape_in_pieces(runs, linemaker):
                             if l_glyphs:
                                 LINE.L.append((l, FSTYLE, l_glyphs))
                             i = breakpoint + i0
-                            yield _yield_line(LINE, i, FSTYLE)
-                            LINE, space = _next_line(linemaker, i)
+                            newline = True
                             break
         elif V is not None:
             tV = type(V)
@@ -248,6 +254,8 @@ def shape_in_pieces(runs, linemaker):
     
     LINE['fstyle'] = FSTYLE
     LINE['j'] = i
+    LINE['j_select'] = i + 1
+    LINE.L.append((l, FSTYLE, (-3, 0, 0, 0, i))) # final </p> cap
     yield LINE
 
 class OT_line(dict):
@@ -297,7 +305,7 @@ class OT_line(dict):
                     line_segments[a:b] = reversed(line_segments[a:b])
         return line_segments
     
-    def fuse_glyphs(self):
+    def fuse_glyphs(self, editable=False):
         segments = self._rearrange_line()
         G   = self._G
         INL = self._INL
@@ -332,19 +340,20 @@ class OT_line(dict):
         self['ascent'] = ascent
         self['descent'] = descent
         
-        SEARCH.sort()
-        
-        i_p = self['i'] - 1
         _IXF_ = []
-        for i, x, FSTYLE in SEARCH:
-            if i - i_p == 1:
-                _IXF_.append((i, x, FSTYLE))
-            elif i - i_p > 1:
-                r = i - i_p
-                x_p = _IXF_[-1][1]
-                unitgap = (x - x_p)/r
-                _IXF_.extend((i_p + j + 1, x_p + unitgap*(j + 1), FSTYLE) for j in range(r))
-            i_p = i
+        if editable and SEARCH:
+            SEARCH.sort()
+            i_p = self['i'] - 1
+            for i, x, FSTYLE in SEARCH:
+                if i - i_p == 1:
+                    _IXF_.append((i, x, FSTYLE))
+                elif i - i_p > 1:
+                    r = i - i_p
+                    x_p = _IXF_[-1][1]
+                    unitgap = (x - x_p)/r
+                    _IXF_.extend((i_p + j + 1, x_p + unitgap*(j + 1), FSTYLE) for j in range(r))
+                i_p = i
+            del _IXF_[self['j_select']:]
         self.X = [k[1] for k in _IXF_]
         self.FS = [k[2] for k in _IXF_]
         IX = sorted(_IXF_, key=lambda k: k[1])
@@ -355,20 +364,16 @@ class OT_line(dict):
     def I(self, x):
         x -= self['x']
         bi = bisect(self._xkey, x)
-        
         if bi:
             try:
                 # compare before and after glyphs
                 x1 = self._xkey[bi - 1]
                 x2 = self._xkey[bi]
-                if x2 - x > x - x1:
-                    i = self._ikey[bi - 1]
-                else:
-                    i = self._ikey[bi]
+                i = self._ikey[bi - (x2 - x > x - x1)]
             except IndexError:
-                i = bi + self['i'] - 1
+                i = self._ikey[-1]
         else:
-            i = bi + self['i']
+            i = self._ikey[0]
         return i
     
     def deposit(self, repository, x=0, y=0):
@@ -389,10 +394,23 @@ class OT_line(dict):
         repository['_images'].extend((glyph[6], glyph[1] + dx + x, glyph[3] + y) for glyph, dx in self._IMG)
         repository['_annot'].extend((glyph[0], glyph[1] + dx + x, glyph[3] + y, BLOCK, FSTYLE) for glyph, FSTYLE, dx in self._ANO)
 
+    def nail_to(self, x, y, k=None, align=1):
+        if k is None:
+            k = self['fstyle']['fontsize']*0.3
+        if align:
+            if align > 0:
+                self['x'] = x - k
+            else:
+                self['x'] = x - self['advance'] + k
+        else:
+            self['x'] = x - self['advance']*0.5
+        self['y'] = y + k
+
 def cast_mono_line(PARENT, letters, runinfo, F=None):
     BLOCK = PARENT['BLOCK']
     LINE = OT_line({
             'i': 0,
+            'j': len(letters),
       
             'leading': PARENT['leading'],
             
@@ -423,4 +441,5 @@ def cast_mono_line(PARENT, letters, runinfo, F=None):
                 LINE.L.append((l, FSTYLE, (-89, 0, V.width, 0, -1, V)))
     
     LINE['fstyle'] = FSTYLE
+    LINE['j_select'] = LINE['j']
     return LINE.fuse_glyphs()

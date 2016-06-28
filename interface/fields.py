@@ -389,6 +389,8 @@ class BS(_Widget):
         font = ISTYLES[()]
         self._contents = text(self._text_left, font['fontsize'] + 5, glyphs, font, grid=True)
         self._template = self._contents[2]
+        self._X_ = [g[1] for g in self._template]
+        del self._X_[-1]
     
     # scrolling function
     def _center_j(self):
@@ -499,7 +501,7 @@ class BS(_Widget):
     def _target(self, x):
         x -= self._scroll
         
-        i = bisect([g[1] for g in self._template[:-1]], x)
+        i = bisect(self._X_, x)
         if i > 0 and x - self._template[i - 1][1] < self._template[i][1] - x:
             i -= 1
         return i

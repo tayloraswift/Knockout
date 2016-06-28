@@ -8,8 +8,7 @@ from olivia import Tagcounter
 from olivia.frames import Margined
 from meredith.styles import Blockstyle, block_styling_attrs
 
-from layout.otline import OT_line, cast_mono_line
-from layout import otline
+from layout.otline import OT_line, cast_paragraph, cast_mono_line
 
 from state.exceptions import LineSplit
 from state.constants import accent_light
@@ -527,11 +526,11 @@ class Paragraph_block(Blockelement):
                 L_indent = 0
             if x1 > x2:
                 x1, x2 = x2, x1
-            yield otline.OT_line({'BLOCK': self, 'leading': leading, 'start': x1, 'width': x2 - x1, 'y': y, 'c': c, 'u': u, 'l': l, 'page': pn})
+            yield OT_line({'BLOCK': self, 'leading': leading, 'start': x1, 'width': x2 - x1, 'y': y, 'c': c, 'u': u, 'l': l, 'page': pn})
             l += 1
     
     def _layout_block(self, frames, BSTYLE, overlay):
-        direction, LINES = otline.cast_paragraph(self._yield_linespaces(frames, BSTYLE), self, BSTYLE['language'])
+        direction, LINES = cast_paragraph(self._yield_linespaces(frames, BSTYLE), self, BSTYLE['language'])
         
         if direction:
             align = 1 - BSTYLE['align']
@@ -566,7 +565,7 @@ class Paragraph_block(Blockelement):
         self._UU = [line['u'] - leading for line in LINES]
         self._search_j = [line['j'] for line in LINES]
         # shift left edge
-        self.left_edge = LINES[0]['x'] - BSTYLE['leading']*0.5
+        self.left_edge = LINES[0]['x'] - leading*0.5
         return LINES[-1]['u'], [], LINES
     
     def insert(self, at, text):
@@ -700,7 +699,10 @@ class Paragraph_block(Blockelement):
     
     def _find_location(self, address):
         l = bisect(self._search_j, address[0])
-        line = self._editable_lines[l]
+        try:
+            line = self._editable_lines[l]
+        except IndexError:
+            line = self._editable_lines[-1]
         i = address[0] - line['i']
         return l, line, line.X[i], line.FS[i]
     

@@ -26,8 +26,7 @@ _BREAK_P = _BREAK | set(('</p>',))
 
 _APOSTROPHES = set("'’")
 
-from data.emoji.unicode_codes import EMOJI_UNICODE
-EMOJIS = set(EMOJI_UNICODE.values())
+from data.emoji.unicode_codes import EMOJIS
 
 class Glyphs_line(dict):
     def I(self, x):

@@ -55,16 +55,31 @@ def _next_line(linemaker, i):
     LINE['i'] = i
     return LINE, LINE['width']
 
+def _check_emoji(is_text, V, FSTYLE):
+    is_not_emoji = not (is_text == 2)
+    if is_not_emoji:
+        font = FSTYLE['__hb_font__']
+        get_emoji = None
+    else:
+        V = ''.join(V)
+        font = FSTYLE['__hb_emoji__']
+        emojifont = FSTYLE['__emoji__']
+        fontsize = FSTYLE['fontsize']
+        def get_emoji(glyph_index):
+            return emojifont.generate_paint_function(glyph_index, fontsize)
+    return V, is_not_emoji, font, get_emoji
+
 def cast_multi_line(runs, linemaker):
     i = 0
     LINE, space = _next_line(linemaker, i)
     
     for l, is_text, V, runinfo, (fstat, FSTYLE) in runs:
         if is_text:
+            V, is_not_emoji, font, get_emoji = _check_emoji(is_text, V, FSTYLE)
+            
             i0 = i
             i_limit = i0 + len(V)
             CP = list(map(ord, V))
-            font = FSTYLE['__hb_font__']
             
             r_glyphs = []
             
@@ -77,7 +92,7 @@ def cast_multi_line(runs, linemaker):
                 
                 r_glyphs, I = shape_right_glyphs(CP, i0, i, i_limit, r_glyphs, font, runinfo, space)
                 if I is None: # entire line fits
-                    LINE.L.append((l, FSTYLE, r_glyphs))
+                    LINE.add_text(is_not_emoji, l, FSTYLE, r_glyphs, get_emoji)
                     space -= r_glyphs[-1][2]
                     i = i_limit
                     break
@@ -95,7 +110,7 @@ def cast_multi_line(runs, linemaker):
                         
                         if x < space or not sep:
                             if l_glyphs:
-                                LINE.L.append((l, FSTYLE, l_glyphs))
+                                LINE.add_text(is_not_emoji, l, FSTYLE, l_glyphs, get_emoji)
                             i = breakpoint + i0
                             newline = True
                             break
@@ -157,8 +172,9 @@ def cast_mono_line(PARENT, letters, runinfo, F=None):
 
     for l, is_text, V, runinfo, (fstat, FSTYLE) in bidir_levels(runinfo[0], letters, BLOCK, F):
         if is_text:
-            direction, x, glyphs = _get_glyphs_entire(list(map(ord, V)), 0, 0, len(V), FSTYLE['__hb_font__'], runinfo)
-            LINE.L.append((l, FSTYLE, glyphs))
+            V, is_not_emoji, font, get_emoji = _check_emoji(is_text, V, FSTYLE)
+            direction, x, glyphs = _get_glyphs_entire(list(map(ord, V)), 0, 0, len(V), font, runinfo)
+            LINE.add_text(is_not_emoji, l, FSTYLE, glyphs, get_emoji)
 
         elif V is not None:
             tV = type(V)
@@ -186,7 +202,14 @@ class OT_line(dict):
         self._INL = []
         self._IMG = []
         self._ANO = []
-    
+
+    def add_text(self, is_not_emoji, l, FSTYLE, glyphs, get_emoji):
+        if is_not_emoji:
+            self.L.append((l, FSTYLE, glyphs))
+        else:
+            fontsize = FSTYLE['fontsize']
+            self.L.extend((l, FSTYLE, (-22, 0, x2 - x1, y - fontsize, i, get_emoji(cp))) for cp, x1, x2, y, i in glyphs)
+                        
     def _rearrange_line(self):
         line = self.L
         line_segments = [(l % 2, * k ) for l, * k in line]
@@ -236,7 +259,7 @@ class OT_line(dict):
         
         for direction, fontstyle, glyphs in segments:
             direction += 1
-            if type(glyphs) is tuple: # special char
+            if type(glyphs) is tuple: # special char (text is lists)
                 SEARCH.append((glyphs[4], glyphs[direction] + dx, fontstyle))
                 if glyphs[0] == -89:
                     E = glyphs[5]
@@ -310,7 +333,7 @@ class OT_line(dict):
         for inline, dx in self._INL:
             inline.deposit_glyphs(repository, dx + x, y)
         
-        repository['_images'].extend((glyph[6], glyph[1] + dx + x, glyph[3] + y) for glyph, dx in self._IMG)
+        repository['_images'].extend((glyph[5], glyph[1] + dx + x, glyph[3] + y) for glyph, dx in self._IMG)
         repository['_annot'].extend((glyph[0], glyph[1] + dx + x, glyph[3] + y, BLOCK, FSTYLE) for glyph, FSTYLE, dx in self._ANO)
 
     def nail_to(self, x, y, k=None, align=1):

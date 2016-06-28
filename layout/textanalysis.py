@@ -1,11 +1,11 @@
-from itertools import chain
+from itertools import chain, groupby
 from re import finditer
 
 from libraries.pyphen import pyphen
 
 from fonts import breaking_spaces, SPACES
-
 from edit.wonder import alphabet
+from data.emoji.unicode_codes import EMOJIS
 
 from olivia.languages import directionality
 from olivia import Tagcounter
@@ -17,13 +17,16 @@ pyphen.language_fallback('en_US')
 hy = pyphen.Pyphen(lang='en_US')
 
 # linebreaking characters
-_BREAK_WHITESPACE = set(chain(' ', breaking_spaces))
-_BREAK_ONLY_AFTER = set('-')
-_BREAK_AFTER_ELSE_BEFORE = set('–—')
+_BREAK_WHITESPACE = frozenset(chain(' ', breaking_spaces))
+_BREAK_ONLY_AFTER = frozenset('-')
+_BREAK_AFTER_ELSE_BEFORE = frozenset('–—')
 
 _BREAK = _BREAK_WHITESPACE | _BREAK_ONLY_AFTER | _BREAK_AFTER_ELSE_BEFORE
 
-_APOSTROPHES = set("'’")
+_APOSTROPHES = frozenset("'’")
+
+_S_SPACES = frozenset(SPACES)
+_EMOJI_SPACES = _S_SPACES | EMOJIS # for shortcircuiting codepoint sorting
 
 def find_breakpoint(string, start, n, hyphenate=False):
     CHAR = string[n]
@@ -87,39 +90,67 @@ def bidir_levels(base, text, BLOCK, F=None):
     runinfo = (base,)
     runinfo_stack = [runinfo]
     RUNS = [(l, False, None, runinfo, fontinfo)]
-    SP = SPACES
-    for j, v in chain((k for k in enumerate(text) if type(k[1]) is not str or k[1] in SP), ((len(text), None),) ):
-        if j - i:
-            if l % 2:
-                RUNS.extend((l + i % 2, True, s, runinfo, fontinfo) for i, s in enumerate(_raise_digits(''.join(text[i:j]))) if s)
-            else:
-                RUNS.append((l, True, ''.join(text[i:j]), runinfo, fontinfo))
-            
-        if type(v) is Reverse:
-            if v['language'] is None:
-                if len(runinfo_stack) > 1:
-                    runinfo_stack.pop()
-                    runinfo = runinfo_stack[-1]
-                    l -= 1
-                    RUNS.append((l, False, v, runinfo, fontinfo))
-            else:
-                RUNS.append((l, False, v, runinfo, fontinfo))
-                l += 1
-                runinfo = (v['language'],)
-                runinfo_stack.append(runinfo)
-        elif v is not None:
-            if isinstance(v, Fontpost):
-                F = fontinfo[0].copy()
-                if v.countersign:
-                    F += v['class']
-                    fontinfo = F, fontproject(BLOCK, F)
-                    RUNS.append((l, False, v, runinfo, fontinfo))
+    
+    SP = _S_SPACES
+    EMSP = _EMOJI_SPACES
+    def sorting(k):
+        if type(k) is str:
+            if k in EMSP:
+                if k in SP:
+                    return 0
                 else:
-                    F -= v['class']
-                    RUNS.append((l, False, v, runinfo, fontinfo))
-                    fontinfo = F, fontproject(BLOCK, F)
+                    return 2
             else:
-                RUNS.append((l, False, v, runinfo, fontinfo))
-        i = j + 1
+                return 1
+        else:
+            return -1
+    
+    emojijoin = False
+    for K, G in groupby(text, key=sorting):
+        if K == 1:
+            string = ''.join(G)
+            if emojijoin and string == '\u200D':
+                emojijoin = 2
+            else:
+                emojijoin = False
+                if l % 2:
+                    RUNS.extend((l + i % 2, True, s, runinfo, fontinfo) for i, s in enumerate(_raise_digits(string)) if s)
+                else:
+                    RUNS.append((l, True, string, runinfo, fontinfo))
+        elif K == 2:
+            if emojijoin == 2:
+                RUNS[-1][2].append('\u200D')
+                RUNS[-1][2].extend(G)
+            else:
+                RUNS.append((l, 2, list(G), runinfo, fontinfo))
+                emojijoin = True
+        else:
+            emojijoin = False
+            for v in G:
+                if type(v) is Reverse:
+                    if v['language'] is None:
+                        if len(runinfo_stack) > 1:
+                            runinfo_stack.pop()
+                            runinfo = runinfo_stack[-1]
+                            l -= 1
+                            RUNS.append((l, False, v, runinfo, fontinfo))
+                    else:
+                        RUNS.append((l, False, v, runinfo, fontinfo))
+                        l += 1
+                        runinfo = (v['language'],)
+                        runinfo_stack.append(runinfo)
+                elif v is not None:
+                    if isinstance(v, Fontpost):
+                        F = fontinfo[0].copy()
+                        if v.countersign:
+                            F += v['class']
+                            fontinfo = F, fontproject(BLOCK, F)
+                            RUNS.append((l, False, v, runinfo, fontinfo))
+                        else:
+                            F -= v['class']
+                            RUNS.append((l, False, v, runinfo, fontinfo))
+                            fontinfo = F, fontproject(BLOCK, F)
+                    else:
+                        RUNS.append((l, False, v, runinfo, fontinfo))
     
     return RUNS

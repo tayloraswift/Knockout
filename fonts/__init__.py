@@ -69,6 +69,11 @@ SPACENAMES = {
     -41: 'mt', # math med
     }
 
+def _hb_face_from_path(filepath):
+    with open(filepath, 'rb') as fi:
+        fontdata = fi.read()
+    return hb.face_create(hb.glib_blob_create(Bytes.new(fontdata)), 0)
+
 def get_ot_font(path, overwrite=False):
     if path not in _ot_type_registry or overwrite:
         # check if is sfd or binary
@@ -80,9 +85,7 @@ def get_ot_font(path, overwrite=False):
         else:
             filepath = path
         print('\033[92mLoading font\033[0m      :', filepath)
-        with open(filepath, 'rb') as fi:
-            fontdata = fi.read()
-        HB_face = hb.face_create(hb.glib_blob_create(Bytes.new(fontdata)), 0)
+        HB_face = _hb_face_from_path(filepath)
         CR_face = fontloader.create_cairo_font_face_for_file(filepath)
         _ot_type_registry[path] = HB_face, CR_face
         
@@ -112,7 +115,8 @@ def get_ot_space_metrics(hb_font):
 def get_emoji_font(path, overwrite=False):
     if path not in _emoji_type_registry or overwrite:
         print('\033[92mLoading emoji font\033[0m:', path)
-        _emoji_type_registry[path] = Emoji_font(path, get_ot_font(path)[0])
+        HB_face = _hb_face_from_path(path)
+        _emoji_type_registry[path] = HB_face, Emoji_font(path, get_ot_font(path)[0])
     return _emoji_type_registry[path]
 
 # extended fontface class
@@ -150,35 +154,30 @@ def _print_emoji_error(cr, fontsize):
     cr.set_source_rgb(1, 1, 1)
     cr.stroke()
 
-class Emoji_font(Grid_font):
+class Emoji_font(object):
     def __init__(self, path, hb_face):
         upem = hb.face_get_upem(hb_face)
-        hb_font = hb.font_create(hb_face)
-        hb.font_set_scale(hb_font, upem, upem)
-        hb.ot_font_set_funcs(hb_font)
-        Grid_font.__init__(self, hb_font, upem)
         
         self._emojis = {}
-        self._fac = fac = self._upem_fac*0.045
+        self._fac = fac = 1/(upem*0.045)
         if TTFont is not None:
             self._vectors = dict(chain.from_iterable(((n, SVG) for n in range(i, j + 1)) for SVG, i, j in TTFont(path)['SVG '].docList))
         else:
             self._vectors = {}
     
-    def generate_paint_function(self, letter, fontsize):
+    def generate_paint_function(self, i, fontsize):
         try:
-            return self._emojis[(letter, fontsize)]
+            return self._emojis[(i, fontsize)]
         except KeyError:
-            i = self.character_index(letter)
             try:
                 BS = self._vectors[i]
             except KeyError:
-                self._emojis[(letter, fontsize)] = lambda cr, render: _print_emoji_error(cr, fontsize)
-                return self._emojis[(letter, fontsize)]
+                self._emojis[(i, fontsize)] = E = lambda cr, render: _print_emoji_error(cr, fontsize)
+                return E
             
             E = Emoji(SVG_image(bytestring=BS, dx=0, dy=1788, hfactor=2.5, kfactor=2.5), 
                       fontsize*self._fac)
-            self._emojis[(letter, fontsize)] = E.render_bubble
+            self._emojis[(i, fontsize)] = E.render_bubble
             return E.render_bubble
 
 class Emoji(object):

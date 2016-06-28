@@ -182,6 +182,7 @@ class Blockstyles(_Has_tagged_members):
                 for TS in (c['textstyle'] for c in memberstyles if c['class'] <= F and c['textstyle'] is not None):
                     projection.overlay(TS)
             
+            # text font
             try:
                 hb_face, projection['font'] = get_ot_font(projection['path'])
             except FileNotFoundError:
@@ -196,10 +197,16 @@ class Blockstyles(_Has_tagged_members):
             projection['__fontmetrics__'] = hmetrics.ascender + projection['shift'], hmetrics.descender + projection['shift']
             projection['__spacemetrics__'] = get_ot_space_metrics(hb_font)
             
+            # emoji font
             try:
-                projection['font_emoji'] = get_emoji_font(projection['path_emoji'])
+                hb_emoji_face, projection['__emoji__'] = get_emoji_font(projection['path_emoji'])
             except FileNotFoundError:
-                projection['font_emoji'] = get_emoji_font(Textstyle.BASE['path_emoji'])
+                hb_emoji_face, projection['__emoji__'] = get_emoji_font(Textstyle.BASE['path_emoji'])
+            projection['__hb_emoji__'] = hb_emoji_font = hb.font_create(hb_emoji_face)
+            hb.font_set_scale(hb_emoji_font, projection['fontsize'], projection['fontsize'])
+            hb.ot_font_set_funcs(hb_emoji_font)
+            
+            ###
             
             projection['hash'] = H
             

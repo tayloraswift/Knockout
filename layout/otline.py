@@ -321,18 +321,21 @@ class OT_line(dict):
         return self
     
     def I(self, x):
-        x -= self['x']
-        bi = bisect(self._xkey, x)
-        if bi:
-            try:
-                # compare before and after glyphs
-                x1 = self._xkey[bi - 1]
-                x2 = self._xkey[bi]
-                i = self._ikey[bi - (x2 - x > x - x1)]
-            except IndexError:
-                i = self._ikey[-1]
+        if self._ikey:
+            x -= self['x']
+            bi = bisect(self._xkey, x)
+            if bi:
+                try:
+                    # compare before and after glyphs
+                    x1 = self._xkey[bi - 1]
+                    x2 = self._xkey[bi]
+                    i = self._ikey[bi - (x2 - x > x - x1)]
+                except IndexError:
+                    i = self._ikey[-1]
+            else:
+                i = self._ikey[0]
         else:
-            i = self._ikey[0]
+            i = self['i']
         return i
     
     def deposit(self, repository, x=0, y=0):

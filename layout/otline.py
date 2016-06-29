@@ -8,12 +8,12 @@ from meredith.elements import Reverse, Fontpost, Line_break
 from layout.textanalysis import bidir_levels, find_breakpoint
 
 def cast_paragraph(linemaker, BLOCK, base):
-    runs = bidir_levels(base, BLOCK.content, BLOCK)
-    return runs[0][0], [line.fuse_glyphs(True) for line in cast_multi_line(runs, linemaker)]
+    totalstring, RUNS = bidir_levels(base, BLOCK.content, BLOCK)
+    return RUNS[0][0], [line.fuse_glyphs(True) for line in cast_multi_line(totalstring, RUNS, linemaker)]
 
-def _HB_cast_glyphs(cp, cpstart, a, n, font, factor, runinfo, FSTYLE):
+def _HB_cast_glyphs(cp, a, n, font, factor, runinfo, FSTYLE):
     HBB = hb.buffer_create()
-    hb.buffer_add_codepoints(HBB, cp, a - cpstart, n)
+    hb.buffer_add_codepoints(HBB, cp, a, n)
     hb.buffer_guess_segment_properties(HBB)
     hb.shape(font, HBB, [])
     x = 0
@@ -23,14 +23,14 @@ def _HB_cast_glyphs(cp, cpstart, a, n, font, factor, runinfo, FSTYLE):
     for N, P in zip(hb.buffer_get_glyph_infos(HBB), hb.buffer_get_glyph_positions(HBB)):
         gx = x + P.x_offset*factor
         x += P.x_advance*factor
-        glyphs.append((N.codepoint, gx, x, y, N.cluster + cpstart))
+        glyphs.append((N.codepoint, gx, x, y, N.cluster))
         x += tracking
     if glyphs:
         x -= tracking
     return int(hb.buffer_get_direction(HBB)) - 4, x, glyphs
     
-def shape_right_glyphs(cp, cpstart, a, b, glyphs, font, factor, runinfo, FSTYLE, limit):
-    direction, x, glyphs = _HB_cast_glyphs(cp, cpstart, a, b - a, font, factor, runinfo, FSTYLE)
+def shape_right_glyphs(cp, a, b, glyphs, font, factor, runinfo, FSTYLE, limit):
+    direction, x, glyphs = _HB_cast_glyphs(cp, a, b - a, font, factor, runinfo, FSTYLE)
     if limit < x:
         if direction:
             I = bisect([g[1] for g in glyphs], x - limit)
@@ -40,12 +40,12 @@ def shape_right_glyphs(cp, cpstart, a, b, glyphs, font, factor, runinfo, FSTYLE,
         I = None
     return glyphs, I
     
-def shape_left_glyphs(cp, cpstart, a, b, glyphs, font, factor, runinfo, FSTYLE, sep=''):
-    cp = cp[:b - cpstart]
+def shape_left_glyphs(cp, a, b, glyphs, font, factor, runinfo, FSTYLE, sep=''):
+    cp = cp[:b]
     if sep:
         cp.append(ord(sep))
         b += 1
-    direction, x, glyphs = _HB_cast_glyphs(cp, cpstart, a, b - a, font, factor, runinfo, FSTYLE) # this is the opposite of what it should be, direction should be dictated, not read
+    direction, x, glyphs = _HB_cast_glyphs(cp, a, b - a, font, factor, runinfo, FSTYLE) # this is the opposite of what it should be, direction should be dictated, not read
     return glyphs, x 
 
 def _yield_line(LINE, i, FSTYLE):
@@ -58,67 +58,63 @@ def _next_line(linemaker, i):
     LINE['i'] = i
     return LINE, LINE['width']
 
-def cast_multi_line(runs, linemaker):
-    i = 0
-    LINE, space = _next_line(linemaker, i)
-    
+def cast_multi_line(totalstring, runs, linemaker):
+    LINE, space = _next_line(linemaker, 0)
+    totalcp = list(map(ord, totalstring))
     newline = False
     R = 0
     RL = len(runs)
     while R < RL:
-        l, is_text, V, runinfo, (FSTYLE, * fontinfo ) = runs[R]
+        l, is_text, i, V, runinfo, (FSTYLE, * fontinfo ) = runs[R]
         R += 1
         if is_text:
+            j = V
+            i_c = i
             font, factor, get_emoji = fontinfo
-            
-            i0 = i
-            i_limit = i0 + len(V)
-            CP = list(map(ord, V))
             
             r_glyphs = []
             
-            while i0 <= i < i_limit:
+            while i <= i_c < j:
                 if newline:
-                    yield _yield_line(LINE, i, FSTYLE)
-                    LINE, space = _next_line(linemaker, i)
+                    yield _yield_line(LINE, i_c, FSTYLE)
+                    LINE, space = _next_line(linemaker, i_c)
                     newline = False
                 
-                r_glyphs, I = shape_right_glyphs(CP, i0, i, i_limit, r_glyphs, font, factor, runinfo, FSTYLE, space)
+                r_glyphs, I = shape_right_glyphs(totalcp, i_c, j, r_glyphs, font, factor, runinfo, FSTYLE, space)
                 if I is None: # entire line fits
                     LINE.add_text(l, FSTYLE, r_glyphs, is_text == 1, get_emoji)
                     space -= r_glyphs[-1][2]
-                    i = i_limit
                     break
                     
                 else:
                     try:
-                        searchlen = r_glyphs[I][4] - i0 - 1
+                        j_search = r_glyphs[I][4] - 1
                         if l % 2:
-                            searchlen = min(len(V) - 1, searchlen + 2)
+                            j_search = min(j - 1, j_search + 2)
                     except IndexError:
                         if l % 2:
-                            searchlen = 0
+                            j_search = i
                         else:
-                            searchlen = len(V) - 1
+                            j_search = j - 1
                     
                     is_first = not bool(LINE.L)
-                    for breakpoint, sep in find_breakpoint(V, i - i0, searchlen, hyphenate=True, is_first=is_first):
-                        if not is_first and not breakpoint:
+                    for breakpoint, sep in find_breakpoint(totalstring, i_c, j_search, hyphenate=True, is_first=is_first):
+                        if not is_first and breakpoint == i:
                             # find last run to go back to
                             if is_text == 1:
                                 backtrack = len(LINE.L) - 1 - next(r for r in range(len(LINE.L) - 1, -1, -1) if not (type(LINE.L[r][2]) is tuple and (-6 <= LINE.L[r][2][0] <= -4)))
                                 if backtrack:
                                     del LINE.L[-backtrack:]
-                                    i -= backtrack # only works because each zero width object is one char
+                                    i_c -= backtrack # only works because each zero width object is one char
                                     R -= 2
                             newline = True
                             break
-                        l_glyphs, x = shape_left_glyphs(CP, i0, i, breakpoint + i0, r_glyphs, font, factor, runinfo, FSTYLE, sep)
+                        l_glyphs, x = shape_left_glyphs(totalcp, i_c, breakpoint, r_glyphs, font, factor, runinfo, FSTYLE, sep)
                         
                         if x < space or not sep:
                             if l_glyphs:
                                 LINE.add_text(l, FSTYLE, l_glyphs, is_text == 1, get_emoji)
-                            i = breakpoint + i0
+                            i_c = breakpoint
                             newline = True # this is necessary because whitespace chars at the end of the line are the only time we are allowed to “borrow” space from the end of the line.
                             break
         elif V is not None:
@@ -131,13 +127,11 @@ def cast_multi_line(runs, linemaker):
             tV = type(V)
             if issubclass(tV, Fontpost):
                 LINE.L.append((l, FSTYLE, (-5 + tV.countersign, 0, 0, 0, i)))
-                i += 1
             elif tV is str:
                 O = (SPACES[V], 0, FSTYLE['__spacemetrics__'][SPACES[V]], 0, i)
                 while True:
                     if O[2] <= space:
                         LINE.L.append((l, FSTYLE, O))
-                        i += 1
                         space -= O[2]
                         break
                     else:
@@ -145,18 +139,15 @@ def cast_multi_line(runs, linemaker):
                         LINE, space = _next_line(linemaker, i)
             elif tV is Line_break:
                 LINE.L.append((l, FSTYLE, (-9, 0, 0, 0, i)))
-                i += 1
                 yield _yield_line(LINE, i, FSTYLE)
                 LINE, space = _next_line(linemaker, i)
             elif tV is Reverse:
                 LINE.L.append((l, FSTYLE, (-6, 0, 0, 0, i)))
-                i += 1
             else:
                 while True:
                     V.layout_inline(LINE, runinfo, fstat, FSTYLE)
                     if V.width <= space:
                         LINE.L.append((l, FSTYLE, (-89, 0, V.width, 0, i, V)))
-                        i += 1
                         space -= V.width
                         break
                     else:
@@ -164,8 +155,9 @@ def cast_multi_line(runs, linemaker):
                         LINE, space = _next_line(linemaker, i)
     
     LINE['fstyle'] = FSTYLE
-    LINE['j'] = i + 1
+    i = len(totalstring)
     LINE.L.append((l, FSTYLE, (-3, 0, 0, 0, i))) # final </p> cap
+    LINE['j'] = i + 1
     yield LINE
 
 def cast_mono_line(PARENT, letters, runinfo, F=None, length_only=False):
@@ -182,11 +174,12 @@ def cast_mono_line(PARENT, letters, runinfo, F=None, length_only=False):
             'c': PARENT['c'], 
             'page': PARENT['page']
             })
-
-    for l, is_text, V, runinfo, (FSTYLE, * fontinfo ) in bidir_levels(runinfo, letters, BLOCK, F):
+    totalstring, RUNS = bidir_levels(runinfo, letters, BLOCK, F)
+    totalcp = list(map(ord, totalstring))
+    for l, is_text, i, V, runinfo, (FSTYLE, * fontinfo ) in RUNS:
         if is_text:
-            font, factor, get_emoji = fontinfo
-            direction, x, glyphs = _HB_cast_glyphs(list(map(ord, V)), 0, 0, len(V), font, factor, runinfo, FSTYLE)
+            font, factor, get_emoji = fontinfo              # int
+            direction, x, glyphs = _HB_cast_glyphs(totalcp, i, V - i, font, factor, runinfo, FSTYLE)
             LINE.add_text(l, FSTYLE, glyphs, is_text == 1, get_emoji)
 
         elif V is not None:

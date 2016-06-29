@@ -77,9 +77,9 @@ def find_breakpoint(string, start, n, hyphenate=False, is_first=False):
 def _raise_digits(string):
     ranges = list(chain((0,), * ((i, j) for i, j in (m.span() for m in finditer("[-+]?\d+[\.,]?\d*", string)) if j - i > 1) , (len(string),)))
     if ranges:
-        return (string[i:j] for i, j in zip(ranges, ranges[1:]))
+        return zip(ranges, ranges[1:])
     else:
-        return string,
+        return (0, len(string)),
 
 def _get_fontinfo(BLOCK, F):
     FSTYLE = datablocks.BSTYLES.project_t(BLOCK, F)
@@ -103,11 +103,13 @@ def bidir_levels(runinfo, text, BLOCK, F=None):
     else:
         F = F.copy()
     i = 0
+    j = i
+    SS = []
     o_fontinfo, t_fontinfo, e_fontinfo = _get_fontinfo(BLOCK, F)
     
     runinfo_stack = [runinfo]
     l = runinfo[0]
-    RUNS = [(l, False, None, runinfo, o_fontinfo)]
+    RUNS = [(l, False, i, None, runinfo, o_fontinfo)]
     
     SP = _S_SPACES
     EMSP = _EMOJI_SPACES
@@ -125,26 +127,33 @@ def bidir_levels(runinfo, text, BLOCK, F=None):
     
     emojijoin = False
     for K, G in groupby(text, key=sorting):
-        if K == 1:
+        if K >= 0:
             string = ''.join(G)
-            if emojijoin and string == '\u200D':
-                RUNS.append((l, True, string, runinfo, t_fontinfo))
-                emojijoin += 1
+            j += len(string)
+            if K == 1:
+                if emojijoin and string == '\u200D':
+                    RUNS.append((l, True, i, j, runinfo, t_fontinfo))
+                    emojijoin += 1
+                else:
+                    emojijoin = False
+                    if t_fontinfo[0]['capitals']:
+                        string = string.upper()
+                    if l % 2:
+                        RUNS.extend((l + n % 2, True, i + p, i + q, runinfo, t_fontinfo) for n, (p, q) in enumerate(_raise_digits(string)) if q - p)
+                    else:
+                        RUNS.append((l, True, i, j, runinfo, t_fontinfo))
+            elif K == 2:
+                if emojijoin > 1:
+                    del RUNS[-(emojijoin - 1):]
+                    RUNS[-1][3] = j
+                else:
+                    RUNS.append([l, 2, i, j, runinfo, e_fontinfo])
+                emojijoin = True
             else:
                 emojijoin = False
-                if t_fontinfo[0]['capitals']:
-                    string = string.upper()
-                if l % 2:
-                    RUNS.extend((l + i % 2, True, s, runinfo, t_fontinfo) for i, s in enumerate(_raise_digits(string)) if s)
-                else:
-                    RUNS.append((l, True, string, runinfo, t_fontinfo))
-        elif K == 2:
-            if emojijoin > 1:
-                del RUNS[-(emojijoin - 1):]
-                RUNS[-1][2] += '\u200D' * (emojijoin - 1) + ''.join(G)
-            else:
-                RUNS.append([l, 2, ''.join(G), runinfo, e_fontinfo])
-            emojijoin = True
+                RUNS.extend((l, False, i + ii, sp, runinfo, o_fontinfo) for ii, sp in enumerate(string))
+            i = j
+            SS.append(string)
         else:
             emojijoin = False
             for v in G:
@@ -155,27 +164,33 @@ def bidir_levels(runinfo, text, BLOCK, F=None):
                             runinfo = runinfo_stack[-1]
                             if old_runinfo[0] != runinfo[0]:
                                 l -= 1
-                            RUNS.append((l, False, v, runinfo, o_fontinfo))
+                            RUNS.append((l, False, i, v, runinfo, o_fontinfo))
                     else:
-                        RUNS.append((l, False, v, runinfo, o_fontinfo))
+                        RUNS.append((l, False, i, v, runinfo, o_fontinfo))
                         
                         runinfo = generate_runinfo(v['language'])
                         if runinfo[0] != runinfo_stack[-1][0]:
                             l += 1
                         runinfo_stack.append(runinfo)
-                        
+                
                 elif v is not None:
                     if isinstance(v, Fontpost):
                         F = o_fontinfo[1].copy()
                         if v.countersign:
                             F += v['class']
                             o_fontinfo, t_fontinfo, e_fontinfo = _get_fontinfo(BLOCK, F)
-                            RUNS.append((l, False, v, runinfo, o_fontinfo))
+                            RUNS.append((l, False, i, v, runinfo, o_fontinfo))
                         else:
                             F -= v['class']
-                            RUNS.append((l, False, v, runinfo, o_fontinfo))
+                            RUNS.append((l, False, i, v, runinfo, o_fontinfo))
                             o_fontinfo, t_fontinfo, e_fontinfo = _get_fontinfo(BLOCK, F)
                     else:
-                        RUNS.append((l, False, v, runinfo, o_fontinfo))
-    
-    return RUNS
+                        RUNS.append((l, False, i, v, runinfo, o_fontinfo))
+                if type(v) is str:
+                    SS.append(v)
+                else:
+                    SS.append('\u00A0')
+                j += 1
+                i = j
+
+    return ''.join(SS), RUNS

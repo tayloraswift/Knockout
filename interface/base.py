@@ -60,7 +60,7 @@ def text(x, y, text, font, fontsize=None, align=1, sub_minus=False, upper=False,
         hb.buffer_add_codepoints(HBB, cp, 0, len(cp))
         hb.buffer_guess_segment_properties(HBB)
         hb.shape(font['__hb_font__'], HBB, [])
-        factor = fontsize/font['__upem__']
+        factor = font['__factor__']
         for N, P in zip(hb.buffer_get_glyph_infos(HBB), hb.buffer_get_glyph_positions(HBB)):
             line.append((N.codepoint, x + P.x_offset*factor, y))
             x += P.x_advance*factor + tracking

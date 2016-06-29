@@ -187,27 +187,23 @@ class Blockstyles(_Has_tagged_members):
             
             # text font
             try:
-                hb_face, projection['font'] = get_ot_font(projection['path'])
+                upem, hb_face, projection['__hb_font__'], projection['font'] = get_ot_font(projection['path'])
             except FileNotFoundError:
                 path = Textstyle.BASE['path']
                 projection['color'] = (1, 0.15, 0.2, 1)
-                hb_face, projection['font'] = get_ot_font(path)
-            projection['__hb_font__'] = hb_font = hb.font_create(hb_face)
-            hb.font_set_scale(hb_font, projection['fontsize'], projection['fontsize'])
-            hb.ot_font_set_funcs(hb_font)
-            
-            hmetrics = hb.font_get_h_extents(hb_font)[1]
-            projection['__fontmetrics__'] = hmetrics.ascender + projection['shift'], hmetrics.descender + projection['shift']
-            projection['__spacemetrics__'] = get_ot_space_metrics(hb_font)
+                upem, hb_face, projection['__hb_font__'], projection['font'] = get_ot_font(path)
+
+            projection['__factor__'] = factor = projection['fontsize']/upem
+            hmetrics = hb.font_get_h_extents(projection['__hb_font__'])[1]
+            projection['__fontmetrics__'] = hmetrics.ascender*factor + projection['shift'], hmetrics.descender*factor + projection['shift']
+            projection['__spacemetrics__'] = get_ot_space_metrics(projection['__hb_font__'], projection['fontsize'], factor)
             
             # emoji font
             try:
-                hb_emoji_face, projection['__emoji__'] = get_emoji_font(projection['path_emoji'])
+                e_upem, projection['__hb_emoji__'], projection['__emoji__'] = get_emoji_font(projection['path_emoji'])
             except FileNotFoundError:
-                hb_emoji_face, projection['__emoji__'] = get_emoji_font(Textstyle.BASE['path_emoji'])
-            projection['__hb_emoji__'] = hb_emoji_font = hb.font_create(hb_emoji_face)
-            hb.font_set_scale(hb_emoji_font, projection['fontsize'], projection['fontsize'])
-            hb.ot_font_set_funcs(hb_emoji_font)
+                e_upem, projection['__hb_emoji__'], projection['__emoji__'] = get_emoji_font(Textstyle.BASE['path_emoji'])
+            projection['__factor_emoji__'] = projection['fontsize']/e_upem
             
             ###
             

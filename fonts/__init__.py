@@ -86,16 +86,27 @@ def get_ot_font(path, overwrite=False):
             filepath = path
         print('\033[92mLoading font\033[0m      :', filepath)
         HB_face = _hb_face_from_path(filepath)
+        HB_font = hb.font_create(HB_face)
+        upem = hb.face_get_upem(HB_face)
+        hb.font_set_scale(HB_font, upem, upem)
+        hb.ot_font_set_funcs(HB_font)
+
         CR_face = fontloader.create_cairo_font_face_for_file(filepath)
-        _ot_type_registry[path] = HB_face, CR_face
+        _ot_type_registry[path] = upem, HB_face, HB_font, CR_face
         
     return _ot_type_registry[path]
+
+def get_emoji_font(path, overwrite=False):
+    if path not in _emoji_type_registry or overwrite:
+        print('\033[92mLoading emoji font\033[0m:', path)
+        upem, HB_face, HB_font, CR_face = get_ot_font(path)
+        _emoji_type_registry[path] = upem, HB_font, Emoji_font(path)
+    return _emoji_type_registry[path]
 
 def _hb_get_advance(hb_font, char):
     return hb.font_get_glyph_h_advance(hb_font, hb.font_get_glyph(hb_font, ord(char), 0)[1])
 
-def get_ot_space_metrics(hb_font):
-    xppem = hb.font_get_scale(hb_font)[0]
+def get_ot_space_metrics(hb_font, fontsize, factor):
     proportions =  (('\u2003', 1   ), # em
                     ('\u2002', 0.5 ), # en
                     ('\u2004', 1/3 ), # 1/3
@@ -105,21 +116,59 @@ def get_ot_space_metrics(hb_font):
                     ('\u200A', 0.1 ), # hair
                     ('\u202F', 0.2 ), # narrow nbsp
                     ('\u205F', 4/18)) # math med
-    widths = {SPACES[c]: x*xppem for c, x in proportions}
+    widths = {SPACES[c]: x*fontsize for c, x in proportions}
     widths[SPACES['\t']]     = 0
-    widths[SPACES['\u00A0']] = _hb_get_advance(hb_font, ' ') # nbsp
-    widths[SPACES['\u2007']] = _hb_get_advance(hb_font, '0') # figure
-    widths[SPACES['\u2008']] = _hb_get_advance(hb_font, ',') # punctuation
+    widths[SPACES['\u00A0']] = _hb_get_advance(hb_font, ' ')*factor # nbsp
+    widths[SPACES['\u2007']] = _hb_get_advance(hb_font, '0')*factor # figure
+    widths[SPACES['\u2008']] = _hb_get_advance(hb_font, ',')*factor # punctuation
     return widths
 
-def get_emoji_font(path, overwrite=False):
-    if path not in _emoji_type_registry or overwrite:
-        print('\033[92mLoading emoji font\033[0m:', path)
-        HB_face = _hb_face_from_path(path)
-        _emoji_type_registry[path] = HB_face, Emoji_font(path, get_ot_font(path)[0])
-    return _emoji_type_registry[path]
+def _print_emoji_error(cr, fontsize):
+    unit = int(round(fontsize*0.05))
+    cr.set_source_rgb(0.4, 0.4, 0.4)
+    cr.rectangle(unit, unit, fontsize - 2*unit, fontsize - 2*unit)
+    cr.fill()
+    cr.set_line_width(2*unit)
+    cr.move_to(4*unit, 4*unit)
+    cr.line_to(fontsize - 4*unit, fontsize - 4*unit)
+    cr.move_to(fontsize - 4*unit, 4*unit)
+    cr.line_to(4*unit, fontsize - 4*unit)
+    cr.set_source_rgb(1, 1, 1)
+    cr.stroke()
 
-# extended fontface class
+class Emoji_font(object):
+    def __init__(self, path):
+        self._emojis = {}
+        if TTFont is not None:
+            self._vectors = dict(chain.from_iterable(((n, SVG) for n in range(i, j + 1)) for SVG, i, j in TTFont(path)['SVG '].docList))
+        else:
+            self._vectors = {}
+    
+    def generate_paint_function(self, i, fontsize, factor):
+        try:
+            return self._emojis[(i, fontsize)]
+        except KeyError:
+            try:
+                BS = self._vectors[i]
+            except KeyError:
+                self._emojis[(i, fontsize)] = E = lambda cr, render: _print_emoji_error(cr, fontsize)
+                return E
+            
+            E = Emoji(SVG_image(bytestring=BS, dx=0, dy=1788, hfactor=2.5, kfactor=2.5), factor)
+            self._emojis[(i, fontsize)] = E.render_bubble
+            return E.render_bubble
+
+class Emoji(object):
+    def __init__(self, SVGI, factor):
+        self._SVGI = SVGI
+        self._factor = factor/0.045
+    
+    def render_bubble(self, cr, render=False):
+        cr.save()
+        cr.scale(self._factor, self._factor)
+        self._SVGI.paint(cr, render)
+        cr.restore()
+
 class Grid_font(object):
     def __init__(self, hb_font, upem):
         self._upem_fac = 1/upem
@@ -140,53 +189,3 @@ class Grid_font(object):
         except KeyError:
             self._ordinals[character] = i = hb.font_get_glyph(self._hb_font, ord(character), 0)[1]
             return i
-
-def _print_emoji_error(cr, fontsize):
-    unit = int(round(fontsize*0.05))
-    cr.set_source_rgb(0.4, 0.4, 0.4)
-    cr.rectangle(unit, unit, fontsize - 2*unit, fontsize - 2*unit)
-    cr.fill()
-    cr.set_line_width(2*unit)
-    cr.move_to(4*unit, 4*unit)
-    cr.line_to(fontsize - 4*unit, fontsize - 4*unit)
-    cr.move_to(fontsize - 4*unit, 4*unit)
-    cr.line_to(4*unit, fontsize - 4*unit)
-    cr.set_source_rgb(1, 1, 1)
-    cr.stroke()
-
-class Emoji_font(object):
-    def __init__(self, path, hb_face):
-        upem = hb.face_get_upem(hb_face)
-        
-        self._emojis = {}
-        self._fac = fac = 1/(upem*0.045)
-        if TTFont is not None:
-            self._vectors = dict(chain.from_iterable(((n, SVG) for n in range(i, j + 1)) for SVG, i, j in TTFont(path)['SVG '].docList))
-        else:
-            self._vectors = {}
-    
-    def generate_paint_function(self, i, fontsize):
-        try:
-            return self._emojis[(i, fontsize)]
-        except KeyError:
-            try:
-                BS = self._vectors[i]
-            except KeyError:
-                self._emojis[(i, fontsize)] = E = lambda cr, render: _print_emoji_error(cr, fontsize)
-                return E
-            
-            E = Emoji(SVG_image(bytestring=BS, dx=0, dy=1788, hfactor=2.5, kfactor=2.5), 
-                      fontsize*self._fac)
-            self._emojis[(i, fontsize)] = E.render_bubble
-            return E.render_bubble
-
-class Emoji(object):
-    def __init__(self, SVGI, factor):
-        self._SVGI = SVGI
-        self._factor = factor
-    
-    def render_bubble(self, cr, render=False):
-        cr.save()
-        cr.scale(self._factor, self._factor)
-        self._SVGI.paint(cr, render)
-        cr.restore()

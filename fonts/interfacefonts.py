@@ -19,14 +19,9 @@ def _create_interface():
             projection.update(TS)
 
         # set up fonts
-        hb_face, projection['font'] = get_ot_font(projection['path'])
-        
-        upem = hb.face_get_upem(hb_face)
-        projection['__hb_font__'] = hb_font = hb.font_create(hb_face)
-        hb.font_set_scale(hb_font, upem, upem)
-        hb.ot_font_set_funcs(hb_font)
-        projection['__upem__'] = upem
-        projection['__gridfont__'] = Grid_font(hb_font, upem)
+        upem, hb_face, projection['__hb_font__'], projection['font'] = get_ot_font(projection['path'])
+        projection['__factor__'] = projection['fontsize']/upem
+        projection['__gridfont__'] = Grid_font(projection['__hb_font__'], upem)
         
         yield U, projection
 

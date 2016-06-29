@@ -98,22 +98,24 @@ def cast_liquid_line(LINE, R, RUNS, totalstring, totalcp):
                 
                 is_first = not bool(LINE.L)
                 for breakpoint, sep in find_breakpoint(totalstring, i_c, overrun, hyphenate=True, is_first=is_first):
-                    if breakpoint == j:
+                    if breakpoint == i_c:
+                        if is_first:
+                            return _return_line(LINE, breakpoint, FSTYLE, R)
+                        else:
+                            # find last run to go back to
+                            if is_text == 1:
+                                backtrack = len(LINE.L) - 1 - next(r for r in range(len(LINE.L) - 1, -1, -1) if not (type(LINE.L[r][2]) is tuple and (-6 <= LINE.L[r][2][0] <= -4)))
+                                if backtrack:
+                                    del LINE.L[-backtrack:]
+                                    i = i_c - backtrack # only works because each zero width object is one char
+                                    R -= 1
+                            break
+                    elif breakpoint == j:
                         LINE.add_text(l, FSTYLE, glyphs, is_text == 1, get_emoji)
                         if R < RL:
                             return _return_line(LINE, breakpoint, FSTYLE, R + 1) # the overrun is a whitespace char
                         else:
                             return _return_cap_line(LINE, len(totalstring), FSTYLE, l)
-                    
-                    elif not is_first and breakpoint == i:
-                        # find last run to go back to
-                        if is_text == 1:
-                            backtrack = len(LINE.L) - 1 - next(r for r in range(len(LINE.L) - 1, -1, -1) if not (type(LINE.L[r][2]) is tuple and (-6 <= LINE.L[r][2][0] <= -4)))
-                            if backtrack:
-                                del LINE.L[-backtrack:]
-                                i_c -= backtrack # only works because each zero width object is one char
-                                R -= 1
-                        break
                     
                     l_glyphs, x = shape_left_glyphs(totalcp, i_c, breakpoint, glyphs, font, factor, runinfo, FSTYLE, sep)
                     if x < space or not sep:

@@ -14,7 +14,11 @@ def cast_paragraph(linemaker, BLOCK, base):
 def _HB_cast_glyphs(cp, a, n, font, factor, runinfo, FSTYLE):
     HBB = hb.buffer_create()
     hb.buffer_add_codepoints(HBB, cp, a, n)
-    hb.buffer_guess_segment_properties(HBB)
+    if runinfo[0]:
+        hb.buffer_set_direction(HBB, hb.direction_t.RTL)
+    else:
+        hb.buffer_set_direction(HBB, hb.direction_t.LTR)
+    hb.buffer_set_script(HBB, runinfo[1])
     hb.shape(font, HBB, [])
     x = 0
     y = -FSTYLE['shift']
@@ -48,117 +52,117 @@ def shape_left_glyphs(cp, a, b, glyphs, font, factor, runinfo, FSTYLE, sep=''):
     direction, x, glyphs = _HB_cast_glyphs(cp, a, b - a, font, factor, runinfo, FSTYLE) # this is the opposite of what it should be, direction should be dictated, not read
     return glyphs, x 
 
-def _yield_line(LINE, i, FSTYLE):
-    LINE['fstyle'] = FSTYLE
-    LINE['j'] = i
-    return LINE
-
 def _next_line(linemaker, i):
     LINE = next(linemaker)
     LINE['i'] = i
-    return LINE, LINE['width']
+    return LINE
 
-def cast_multi_line(totalstring, runs, linemaker):
-    LINE, space = _next_line(linemaker, 0)
-    totalcp = list(map(ord, totalstring))
-    newline = False
-    R = 0
-    RL = len(runs)
+def _return_line(LINE, i, FSTYLE, R):
+    LINE['fstyle'] = FSTYLE
+    LINE['j'] = i
+    return R - 1
+
+def _return_cap_line(LINE, i, FSTYLE, l):
+    LINE['fstyle'] = FSTYLE
+    LINE.L.append((l, FSTYLE, (-3, 0, 0, 0, i))) # final </p> cap
+    LINE['j'] = i + 1
+    return None
+
+def cast_liquid_line(LINE, R, RUNS, totalstring, totalcp):
+    space = LINE['width']
+    i_c = LINE['i']
+    RL = len(RUNS)
     while R < RL:
-        l, is_text, i, V, runinfo, (FSTYLE, * fontinfo ) = runs[R]
+        l, is_text, i, V, runinfo, (FSTYLE, * fontinfo ) = RUNS[R]
         R += 1
         if is_text:
+            i_c = max(i, i_c)
             j = V
-            i_c = i
             font, factor, get_emoji = fontinfo
             
-            r_glyphs = []
+            glyphs, I = shape_right_glyphs(totalcp, i_c, j, [], font, factor, runinfo, FSTYLE, space)
+            if I is None: # fits
+                LINE.add_text(l, FSTYLE, glyphs, is_text == 1, get_emoji)
+                space -= glyphs[-1][2]
             
-            while i <= i_c < j:
-                if newline:
-                    yield _yield_line(LINE, i_c, FSTYLE)
-                    LINE, space = _next_line(linemaker, i_c)
-                    newline = False
+            else:
+                try:
+                    overrun = glyphs[I][4] - 1
+                    if l % 2:
+                        overrun = min(j - 1, overrun + 2)
+                except IndexError:
+                    if l % 2:
+                        overrun = i_c
+                    else:
+                        overrun = j - 1
                 
-                r_glyphs, I = shape_right_glyphs(totalcp, i_c, j, r_glyphs, font, factor, runinfo, FSTYLE, space)
-                if I is None: # entire line fits
-                    LINE.add_text(l, FSTYLE, r_glyphs, is_text == 1, get_emoji)
-                    space -= r_glyphs[-1][2]
-                    break
-                    
-                else:
-                    try:
-                        j_search = r_glyphs[I][4] - 1
-                        if l % 2:
-                            j_search = min(j - 1, j_search + 2)
-                    except IndexError:
-                        if l % 2:
-                            j_search = i
+                is_first = not bool(LINE.L)
+                for breakpoint, sep in find_breakpoint(totalstring, i_c, overrun, hyphenate=True, is_first=is_first):
+                    if breakpoint == j:
+                        LINE.add_text(l, FSTYLE, glyphs, is_text == 1, get_emoji)
+                        if R < RL:
+                            return _return_line(LINE, breakpoint, FSTYLE, R + 1) # the overrun is a whitespace char
                         else:
-                            j_search = j - 1
+                            return _return_cap_line(LINE, len(totalstring), FSTYLE, l)
                     
-                    is_first = not bool(LINE.L)
-                    for breakpoint, sep in find_breakpoint(totalstring, i_c, j_search, hyphenate=True, is_first=is_first):
-                        if not is_first and breakpoint == i:
-                            # find last run to go back to
-                            if is_text == 1:
-                                backtrack = len(LINE.L) - 1 - next(r for r in range(len(LINE.L) - 1, -1, -1) if not (type(LINE.L[r][2]) is tuple and (-6 <= LINE.L[r][2][0] <= -4)))
-                                if backtrack:
-                                    del LINE.L[-backtrack:]
-                                    i_c -= backtrack # only works because each zero width object is one char
-                                    R -= 2
-                            newline = True
-                            break
-                        l_glyphs, x = shape_left_glyphs(totalcp, i_c, breakpoint, r_glyphs, font, factor, runinfo, FSTYLE, sep)
-                        
-                        if x < space or not sep:
-                            if l_glyphs:
-                                LINE.add_text(l, FSTYLE, l_glyphs, is_text == 1, get_emoji)
-                            i_c = breakpoint
-                            newline = True # this is necessary because whitespace chars at the end of the line are the only time we are allowed to “borrow” space from the end of the line.
-                            break
+                    elif not is_first and breakpoint == i:
+                        # find last run to go back to
+                        if is_text == 1:
+                            backtrack = len(LINE.L) - 1 - next(r for r in range(len(LINE.L) - 1, -1, -1) if not (type(LINE.L[r][2]) is tuple and (-6 <= LINE.L[r][2][0] <= -4)))
+                            if backtrack:
+                                del LINE.L[-backtrack:]
+                                i_c -= backtrack # only works because each zero width object is one char
+                                R -= 1
+                        break
+                    
+                    l_glyphs, x = shape_left_glyphs(totalcp, i_c, breakpoint, glyphs, font, factor, runinfo, FSTYLE, sep)
+                    if x < space or not sep:
+                        if l_glyphs:
+                            LINE.add_text(l, FSTYLE, l_glyphs, is_text == 1, get_emoji)
+                        i = breakpoint
+                        break
+                return _return_line(LINE, i, FSTYLE, R)
+
         elif V is not None:
             fstat, = fontinfo
-            if newline:
-                yield _yield_line(LINE, i, FSTYLE)
-                LINE, space = _next_line(linemaker, i)
-                newline = False
             
             tV = type(V)
             if issubclass(tV, Fontpost):
                 LINE.L.append((l, FSTYLE, (-5 + tV.countersign, 0, 0, 0, i)))
             elif tV is str:
                 O = (SPACES[V], 0, FSTYLE['__spacemetrics__'][SPACES[V]], 0, i)
-                while True:
-                    if O[2] <= space:
-                        LINE.L.append((l, FSTYLE, O))
-                        space -= O[2]
-                        break
-                    else:
-                        yield _yield_line(LINE, i, FSTYLE)
-                        LINE, space = _next_line(linemaker, i)
+                if O[2] <= space:
+                    LINE.L.append((l, FSTYLE, O))
+                    space -= O[2]
+                else:
+                    return _return_line(LINE, i, FSTYLE, R)
+            
             elif tV is Line_break:
                 LINE.L.append((l, FSTYLE, (-9, 0, 0, 0, i)))
-                yield _yield_line(LINE, i, FSTYLE)
-                LINE, space = _next_line(linemaker, i)
+                return _return_line(LINE, i + 1, FSTYLE, R + 1)
+            
             elif tV is Reverse:
                 LINE.L.append((l, FSTYLE, (-6, 0, 0, 0, i)))
             else:
-                while True:
-                    V.layout_inline(LINE, runinfo, fstat, FSTYLE)
-                    if V.width <= space:
-                        LINE.L.append((l, FSTYLE, (-89, 0, V.width, 0, i, V)))
-                        space -= V.width
-                        break
-                    else:
-                        yield _yield_line(LINE, i, FSTYLE)
-                        LINE, space = _next_line(linemaker, i)
+                V.layout_inline(LINE, runinfo, fstat, FSTYLE)
+                if V.width <= space:
+                    LINE.L.append((l, FSTYLE, (-89, 0, V.width, 0, i, V)))
+                    space -= V.width
+                else:
+                    return _return_line(LINE, i, FSTYLE, R)
     
-    LINE['fstyle'] = FSTYLE
-    i = len(totalstring)
-    LINE.L.append((l, FSTYLE, (-3, 0, 0, 0, i))) # final </p> cap
-    LINE['j'] = i + 1
-    yield LINE
+    else:
+        return _return_cap_line(LINE, len(totalstring), FSTYLE, l)
+
+def cast_multi_line(totalstring, RUNS, linemaker):
+    i = 0
+    R = 0
+    totalcp = list(map(ord, totalstring))
+    while R is not None:
+        LINE = _next_line(linemaker, i)
+        R = cast_liquid_line(LINE, R, RUNS, totalstring, totalcp)
+        i = LINE['j']
+        yield LINE
 
 def cast_mono_line(PARENT, letters, runinfo, F=None, length_only=False):
     BLOCK = PARENT['BLOCK']

@@ -77,9 +77,9 @@ def find_breakpoint(string, start, n, hyphenate=False, is_first=False):
 def _raise_digits(string):
     ranges = list(chain((0,), * ((i, j) for i, j in (m.span() for m in finditer("[-+]?\d+[\.,]?\d*", string)) if j - i > 1) , (len(string),)))
     if ranges:
-        return zip(ranges, ranges[1:])
+        return ((n % 2, k) for n, k in enumerate(zip(ranges, ranges[1:])))
     else:
-        return (0, len(string)),
+        return (False, (0, len(string))),
 
 def _get_fontinfo(BLOCK, F):
     FSTYLE = datablocks.BSTYLES.project_t(BLOCK, F)
@@ -97,6 +97,7 @@ def _get_fontinfo(BLOCK, F):
     #      nontextual |              text               |               emoji
     return (FSTYLE, F), (FSTYLE, t_font, t_factor, None), (FSTYLE, e_font, e_factor, get_emoji)
 
+numeric_runinfo = generate_runinfo('numeric')
 def bidir_levels(runinfo, text, BLOCK, F=None):
     if F is None:
         F = Tagcounter()
@@ -139,7 +140,8 @@ def bidir_levels(runinfo, text, BLOCK, F=None):
                     if t_fontinfo[0]['capitals']:
                         string = string.upper()
                     if l % 2:
-                        RUNS.extend((l + n % 2, True, i + p, i + q, runinfo, t_fontinfo) for n, (p, q) in enumerate(_raise_digits(string)) if q - p)
+                        choose_runinfo = runinfo, numeric_runinfo
+                        RUNS.extend((l + flip, True, i + p, i + q, choose_runinfo[flip], t_fontinfo) for flip, (p, q) in _raise_digits(string) if q - p)
                     else:
                         RUNS.append((l, True, i, j, runinfo, t_fontinfo))
             elif K == 2:

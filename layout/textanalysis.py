@@ -28,7 +28,7 @@ _APOSTROPHES = frozenset("'’")
 _S_SPACES = frozenset(SPACES)
 _EMOJI_SPACES = _S_SPACES | EMOJIS # for shortcircuiting codepoint sorting
 
-def find_breakpoint(string, start, n, hyphenate=False):
+def find_breakpoint(string, start, n, hyphenate=False, is_first=False):
     CHAR = string[n]
     if CHAR in _BREAK_WHITESPACE:
         yield n + 1, ''
@@ -68,7 +68,11 @@ def find_breakpoint(string, start, n, hyphenate=False):
                 
                 yield i + k, '-'
         
-        yield i, ''
+        if is_first:
+            for i in range(n, start - 1, -1):
+                yield i, ''
+        else:
+            yield i, ''
 
 def _raise_digits(string):
     ranges = list(chain((0,), * ((i, j) for i, j in (m.span() for m in finditer("[-+]?\d+[\.,]?\d*", string)) if j - i > 1) , (len(string),)))

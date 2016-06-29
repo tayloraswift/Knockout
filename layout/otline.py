@@ -63,7 +63,11 @@ def cast_multi_line(runs, linemaker):
     LINE, space = _next_line(linemaker, i)
     
     newline = False
-    for l, is_text, V, runinfo, (FSTYLE, * fontinfo ) in runs:
+    R = 0
+    RL = len(runs)
+    while R < RL:
+        l, is_text, V, runinfo, (FSTYLE, * fontinfo ) = runs[R]
+        R += 1
         if is_text:
             font, factor, get_emoji = fontinfo
             
@@ -73,7 +77,7 @@ def cast_multi_line(runs, linemaker):
             
             r_glyphs = []
             
-            while i < i_limit:
+            while i0 <= i < i_limit:
                 if newline:
                     yield _yield_line(LINE, i, FSTYLE)
                     LINE, space = _next_line(linemaker, i)
@@ -97,7 +101,18 @@ def cast_multi_line(runs, linemaker):
                         else:
                             searchlen = len(V) - 1
                     
-                    for breakpoint, sep in find_breakpoint(V, i - i0, searchlen, True):
+                    is_first = not bool(LINE.L)
+                    for breakpoint, sep in find_breakpoint(V, i - i0, searchlen, hyphenate=True, is_first=is_first):
+                        if not is_first and not breakpoint:
+                            # find last run to go back to
+                            if is_text == 1:
+                                backtrack = len(LINE.L) - 1 - next(r for r in range(len(LINE.L) - 1, -1, -1) if not (type(LINE.L[r][2]) is tuple and (-6 <= LINE.L[r][2][0] <= -4)))
+                                if backtrack:
+                                    del LINE.L[-backtrack:]
+                                    i -= backtrack # only works because each zero width object is one char
+                                    R -= 2
+                            newline = True
+                            break
                         l_glyphs, x = shape_left_glyphs(CP, i0, i, breakpoint + i0, r_glyphs, font, factor, runinfo, FSTYLE, sep)
                         
                         if x < space or not sep:
@@ -129,12 +144,12 @@ def cast_multi_line(runs, linemaker):
                         yield _yield_line(LINE, i, FSTYLE)
                         LINE, space = _next_line(linemaker, i)
             elif tV is Line_break:
-                LINE.L.append((l, FSTYLE, (-6, 0, 0, 0, i)))
+                LINE.L.append((l, FSTYLE, (-9, 0, 0, 0, i)))
                 i += 1
                 yield _yield_line(LINE, i, FSTYLE)
                 LINE, space = _next_line(linemaker, i)
             elif tV is Reverse:
-                LINE.L.append((l, FSTYLE, (-8, 0, 0, 0, i)))
+                LINE.L.append((l, FSTYLE, (-6, 0, 0, 0, i)))
                 i += 1
             else:
                 while True:

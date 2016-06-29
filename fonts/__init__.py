@@ -52,7 +52,7 @@ breaking_spaces = {
 
 SPACES = nonbreaking_spaces.copy()
 SPACES.update(breaking_spaces)
-SPACES['\t'] = -7
+SPACES['\t'] = -8
 
 SPACENAMES = {
     -30: 'nb', # nbsp

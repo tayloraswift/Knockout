@@ -658,7 +658,7 @@ class Document_view(ui.Cell):
                 cr.fill()
 
             #        '<br>'
-            elif a == -6:
+            elif a == -9:
                 cr.rectangle(x + 2, y - fontsize, 2, fontsize)
                 cr.rectangle(x + 2, y - 2, fontsize - 4, 2)
                 cr.fill()
@@ -687,7 +687,7 @@ class Document_view(ui.Cell):
                 cr.show_text(SN[a])
                 cr.fill()
             
-            elif a == -7:
+            elif a == -8:
                 cr.rectangle(x - 4, y + 4, 8, 2)
                 cr.rectangle(x - 1, y + 5, 2, 5)
                 cr.fill()

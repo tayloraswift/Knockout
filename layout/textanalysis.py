@@ -77,18 +77,33 @@ def _raise_digits(string):
     else:
         return string,
 
+def _get_fontinfo(BLOCK, F):
+    FSTYLE = datablocks.BSTYLES.project_t(BLOCK, F)
+    
+    t_font = FSTYLE['__hb_font__']
+    t_factor = FSTYLE['__factor__']
+    
+    e_font = FSTYLE['__hb_emoji__']
+    e_factor = FSTYLE['__factor_emoji__']
+    
+    emojifont = FSTYLE['__emoji__']
+    fontsize = FSTYLE['fontsize']
+    def get_emoji(glyph_index):
+        return emojifont.generate_paint_function(glyph_index, fontsize, e_factor)
+    #      nontextual |              text               |               emoji
+    return (FSTYLE, F), (FSTYLE, t_font, t_factor, None), (FSTYLE, e_font, e_factor, get_emoji)
+
 def bidir_levels(runinfo, text, BLOCK, F=None):
-    fontproject = datablocks.BSTYLES.project_t
     if F is None:
         F = Tagcounter()
     else:
         F = F.copy()
     i = 0
-    fontinfo = F, fontproject(BLOCK, F)
+    o_fontinfo, t_fontinfo, e_fontinfo = _get_fontinfo(BLOCK, F)
     
     runinfo_stack = [runinfo]
     l = runinfo[0]
-    RUNS = [(l, False, None, runinfo, fontinfo)]
+    RUNS = [(l, False, None, runinfo, o_fontinfo)]
     
     SP = _S_SPACES
     EMSP = _EMOJI_SPACES
@@ -109,21 +124,22 @@ def bidir_levels(runinfo, text, BLOCK, F=None):
         if K == 1:
             string = ''.join(G)
             if emojijoin and string == '\u200D':
-                RUNS.append((l, True, string, runinfo, fontinfo))
+                RUNS.append((l, True, string, runinfo, t_fontinfo))
                 emojijoin += 1
             else:
                 emojijoin = False
+                if t_fontinfo[0]['capitals']:
+                    string = string.upper()
                 if l % 2:
-                    RUNS.extend((l + i % 2, True, s, runinfo, fontinfo) for i, s in enumerate(_raise_digits(string)) if s)
+                    RUNS.extend((l + i % 2, True, s, runinfo, t_fontinfo) for i, s in enumerate(_raise_digits(string)) if s)
                 else:
-                    RUNS.append((l, True, string, runinfo, fontinfo))
+                    RUNS.append((l, True, string, runinfo, t_fontinfo))
         elif K == 2:
             if emojijoin > 1:
                 del RUNS[-(emojijoin - 1):]
-                RUNS[-1][2].append('\u200D' * (emojijoin - 1))
-                RUNS[-1][2].extend(G)
+                RUNS[-1][2] += '\u200D' * (emojijoin - 1) + ''.join(G)
             else:
-                RUNS.append((l, 2, list(G), runinfo, fontinfo))
+                RUNS.append([l, 2, ''.join(G), runinfo, e_fontinfo])
             emojijoin = True
         else:
             emojijoin = False
@@ -135,9 +151,9 @@ def bidir_levels(runinfo, text, BLOCK, F=None):
                             runinfo = runinfo_stack[-1]
                             if old_runinfo[0] != runinfo[0]:
                                 l -= 1
-                            RUNS.append((l, False, v, runinfo, fontinfo))
+                            RUNS.append((l, False, v, runinfo, o_fontinfo))
                     else:
-                        RUNS.append((l, False, v, runinfo, fontinfo))
+                        RUNS.append((l, False, v, runinfo, o_fontinfo))
                         
                         runinfo = generate_runinfo(v['language'])
                         if runinfo[0] != runinfo_stack[-1][0]:
@@ -146,16 +162,16 @@ def bidir_levels(runinfo, text, BLOCK, F=None):
                         
                 elif v is not None:
                     if isinstance(v, Fontpost):
-                        F = fontinfo[0].copy()
+                        F = o_fontinfo[1].copy()
                         if v.countersign:
                             F += v['class']
-                            fontinfo = F, fontproject(BLOCK, F)
-                            RUNS.append((l, False, v, runinfo, fontinfo))
+                            o_fontinfo, t_fontinfo, e_fontinfo = _get_fontinfo(BLOCK, F)
+                            RUNS.append((l, False, v, runinfo, o_fontinfo))
                         else:
                             F -= v['class']
-                            RUNS.append((l, False, v, runinfo, fontinfo))
-                            fontinfo = F, fontproject(BLOCK, F)
+                            RUNS.append((l, False, v, runinfo, o_fontinfo))
+                            o_fontinfo, t_fontinfo, e_fontinfo = _get_fontinfo(BLOCK, F)
                     else:
-                        RUNS.append((l, False, v, runinfo, fontinfo))
+                        RUNS.append((l, False, v, runinfo, o_fontinfo))
     
     return RUNS

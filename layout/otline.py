@@ -58,33 +58,14 @@ def _next_line(linemaker, i):
     LINE['i'] = i
     return LINE, LINE['width']
 
-def _check_emoji(is_text, V, FSTYLE):
-    is_not_emoji = not (is_text == 2)
-    if is_not_emoji:
-        font = FSTYLE['__hb_font__']
-        get_emoji = None
-        if FSTYLE['capitals']:
-            V = V.upper()
-        factor = FSTYLE['__factor__']
-    else:
-        V = ''.join(V)
-        font = FSTYLE['__hb_emoji__']
-        emojifont = FSTYLE['__emoji__']
-        factor = FSTYLE['__factor_emoji__']
-        fontsize = FSTYLE['fontsize']
-        def get_emoji(glyph_index):
-            return emojifont.generate_paint_function(glyph_index, fontsize, factor)
-        
-    return V, is_not_emoji, font, factor, get_emoji
-
 def cast_multi_line(runs, linemaker):
     i = 0
     LINE, space = _next_line(linemaker, i)
     
     newline = False
-    for l, is_text, V, runinfo, (fstat, FSTYLE) in runs:
+    for l, is_text, V, runinfo, (FSTYLE, * fontinfo ) in runs:
         if is_text:
-            V, is_not_emoji, font, factor, get_emoji = _check_emoji(is_text, V, FSTYLE)
+            font, factor, get_emoji = fontinfo
             
             i0 = i
             i_limit = i0 + len(V)
@@ -100,7 +81,7 @@ def cast_multi_line(runs, linemaker):
                 
                 r_glyphs, I = shape_right_glyphs(CP, i0, i, i_limit, r_glyphs, font, factor, runinfo, FSTYLE, space)
                 if I is None: # entire line fits
-                    LINE.add_text(l, FSTYLE, r_glyphs, is_not_emoji, get_emoji)
+                    LINE.add_text(l, FSTYLE, r_glyphs, is_text == 1, get_emoji)
                     space -= r_glyphs[-1][2]
                     i = i_limit
                     break
@@ -121,11 +102,12 @@ def cast_multi_line(runs, linemaker):
                         
                         if x < space or not sep:
                             if l_glyphs:
-                                LINE.add_text(l, FSTYLE, l_glyphs, is_not_emoji, get_emoji)
+                                LINE.add_text(l, FSTYLE, l_glyphs, is_text == 1, get_emoji)
                             i = breakpoint + i0
                             newline = True # this is necessary because whitespace chars at the end of the line are the only time we are allowed to “borrow” space from the end of the line.
                             break
         elif V is not None:
+            fstat, = fontinfo
             if newline:
                 yield _yield_line(LINE, i, FSTYLE)
                 LINE, space = _next_line(linemaker, i)
@@ -186,13 +168,14 @@ def cast_mono_line(PARENT, letters, runinfo, F=None, length_only=False):
             'page': PARENT['page']
             })
 
-    for l, is_text, V, runinfo, (fstat, FSTYLE) in bidir_levels(runinfo, letters, BLOCK, F):
+    for l, is_text, V, runinfo, (FSTYLE, * fontinfo ) in bidir_levels(runinfo, letters, BLOCK, F):
         if is_text:
-            V, is_not_emoji, font, factor, get_emoji = _check_emoji(is_text, V, FSTYLE)
+            font, factor, get_emoji = fontinfo
             direction, x, glyphs = _HB_cast_glyphs(list(map(ord, V)), 0, 0, len(V), font, factor, runinfo, FSTYLE)
-            LINE.add_text(l, FSTYLE, glyphs, is_not_emoji, get_emoji)
+            LINE.add_text(l, FSTYLE, glyphs, is_text == 1, get_emoji)
 
         elif V is not None:
+            fstat, = fontinfo
             tV = type(V)
             if issubclass(tV, Fontpost):
                 LINE.L.append((l, FSTYLE, (-5 + tV.countersign, 0, 0, 0, -1)))

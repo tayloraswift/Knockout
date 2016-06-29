@@ -224,8 +224,8 @@ class OT_line(dict):
             self.L.append((l, FSTYLE, glyphs))
         else:
             fontsize = FSTYLE['fontsize']
-            self.L.extend((l, FSTYLE, (-22, 0, x2 - x1, y - fontsize, i, get_emoji(cp))) for cp, x1, x2, y, i in glyphs)
-                        
+            self.L.append((l, FSTYLE, [(-22, x1, x2, y - fontsize, i, get_emoji(cp)) for cp, x1, x2, y, i in glyphs]))
+        
     def _rearrange_line(self):
         line = self.L
         line_segments = [(l % 2, * k ) for l, * k in line]
@@ -294,7 +294,11 @@ class OT_line(dict):
                 dx += glyphs[2]
             else:
                 SEARCH.extend((glyph[4], glyph[direction] + dx, fontstyle) for glyph in glyphs)
-                G.append((fontstyle['hash'], fontstyle, [(glyph[0], glyph[1] + dx, glyph[3]) for glyph in glyphs]))
+                if glyphs[0][0] == -22:
+                    for cp, x1, x2, * O in glyphs:
+                        IMG.append(((cp, 0, x2 - x1, * O ), dx + x1))
+                else:
+                    G.append((fontstyle['hash'], fontstyle, [(glyph[0], glyph[1] + dx, glyph[3]) for glyph in glyphs]))
                 dx += glyphs[-1][2]
         
         self['advance'] = dx

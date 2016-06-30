@@ -17,12 +17,11 @@ pyphen.language_fallback('en_US')
 hy = pyphen.Pyphen(lang='en_US')
 
 # linebreaking characters
-_BREAK_WHITESPACE = frozenset(chain(' ', breaking_spaces))
 _BREAK_ONLY_AFTER = frozenset('-”)]}>»&')
 _BREAK_AFTER_ELSE_BEFORE = frozenset('–—')
 _BREAK_ONLY_BEFORE = frozenset('“([{<«')
 
-_BREAK = _BREAK_WHITESPACE | _BREAK_ONLY_AFTER | _BREAK_AFTER_ELSE_BEFORE | _BREAK_ONLY_BEFORE
+_BREAK = frozenset(chain(' ', breaking_spaces)) | _BREAK_ONLY_AFTER | _BREAK_AFTER_ELSE_BEFORE | _BREAK_ONLY_BEFORE
 
 _BREAK_BEFORE = _BREAK_AFTER_ELSE_BEFORE | _BREAK_ONLY_BEFORE
 
@@ -31,11 +30,7 @@ _APOSTROPHES = frozenset("'’")
 _S_SPACES = frozenset(SPACES)
 _EMOJI_SPACES = _S_SPACES | EMOJIS # for shortcircuiting codepoint sorting
 
-def hyphenations(word, i, j, max_len):
-    word = ''.join(c if c in alphabet else "'" if c in _APOSTROPHES else ' ' for c in word)
-    if sum(c != ' ' for c in word) < 4:
-        return None
-    leading_spaces = j - i - len(word.lstrip(' '))
+def hyphenations(word, i, leading_spaces, max_len):
     for pair in hy.iterate(word.strip(' ')):
         k = len(pair[0]) + leading_spaces
         # no sense checking hyphenations that don’t fit, prevent too-short hyphenations
@@ -44,7 +39,7 @@ def hyphenations(word, i, j, max_len):
 
 def find_breakpoint(string, start, n, hyphenate=False, is_first=False):
     CHAR = string[n]
-    if CHAR in _BREAK_WHITESPACE:
+    if CHAR == ' ': # all other breaking spaces are handled at the inline-object level
         yield n + 1, ''
     else:
         try:
@@ -73,10 +68,13 @@ def find_breakpoint(string, start, n, hyphenate=False, is_first=False):
                 j = i
             
             word = string[i:j]
-            max_len = n - i
-            pyphen_hyphens = hyphenations(word, i, j, max_len)
-            if pyphen_hyphens is not None:
-                soft_hyphens = (i + k + 1 for k, c in enumerate(word) if c == '\u00AD' and 2 < k < max_len)
+            reduced_word = ''.join(c if c in alphabet else "'" if c in _APOSTROPHES else ' ' for c in word)
+            if sum(c != ' ' for c in reduced_word) >= 4:
+                leading_spaces = j - i - len(reduced_word.lstrip(' '))
+                max_len = n - i
+                min_len = leading_spaces + 2
+                pyphen_hyphens = hyphenations(reduced_word, i, leading_spaces, max_len)
+                soft_hyphens = (i + k + 1 for k, c in enumerate(word) if c == '\u00AD' and min_len < k < max_len)
                 yield from ((h, '-') for h in sorted(chain(pyphen_hyphens, soft_hyphens), reverse=True))
         
         if is_first:

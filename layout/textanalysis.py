@@ -64,7 +64,7 @@ def find_breakpoint(string, start, n, hyphenate=False):
             try:
                 j = i + next(i for i, v in enumerate(string[i:]) if v in _BREAK)
             except StopIteration:
-                j = i + 1989
+                j = len(string)
             except TypeError:
                 j = i
             

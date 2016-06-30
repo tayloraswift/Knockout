@@ -1,15 +1,10 @@
 from fonts import hb, breaking_spaces, SPACES
 
-from itertools import accumulate
 from bisect import bisect
 
 from meredith.elements import Reverse, Fontpost, Line_break
 
 from layout.textanalysis import bidir_levels, find_breakpoint
-
-def cast_paragraph(linemaker, BLOCK, base):
-    totalstring, RUNS = bidir_levels(base, BLOCK.content, BLOCK)
-    return RUNS[0][0], [line.fuse_glyphs(True) for line in cast_multi_line(totalstring, RUNS, linemaker)]
 
 def _HB_cast_glyphs(cp, a, n, font, factor, runinfo, FSTYLE):
     HBB = hb.buffer_create()
@@ -192,6 +187,47 @@ def cast_multi_line(totalstring, RUNS, linemaker):
         R = cast_liquid_line(LINE, R, RUNS, totalstring, totalcp)
         i = LINE['j']
         yield LINE
+
+def _align_left(LINES, * I ):
+    for LINE in LINES:
+        LINE['x'] = LINE['start']
+        yield LINE
+        
+def _align_other(LINES, align, * I ):
+    for LINE in LINES:
+        rag = LINE['width'] - LINE['advance']
+        LINE['x'] = LINE['start'] + rag * align
+        yield LINE
+
+def _align_to(LINES, align, align_chars, totalstring):
+    for LINE in LINES:
+        if LINE['j'] - LINE['i']:
+            searchtext = totalstring[LINE['i'] : LINE['j']]
+            ai = -1
+            for aligner in align_chars:
+                try:
+                    ai = searchtext.index(aligner)
+                    break
+                except ValueError:
+                    continue
+            anchor = LINE['start'] + LINE['width'] * align
+            LINE['x'] = anchor - LINE.X[ai]
+        else:
+            LINE['x'] = LINE['start']
+        yield LINE
+        
+def cast_paragraph(linemaker, BLOCK, runinfo, align, align_chars):
+    totalstring, RUNS = bidir_levels(runinfo, BLOCK.content, BLOCK)
+    if runinfo[0]:
+        align = 1 - align
+    if align_chars:
+        align_func = _align_to
+    elif align:
+        align_func = _align_other
+    else:
+        align_func = _align_left
+    return align_func((line.fuse_glyphs(True) for line in cast_multi_line(totalstring, RUNS, linemaker)), 
+                      align, align_chars, totalstring)
 
 def cast_mono_line(PARENT, letters, runinfo, F=None, length_only=False):
     BLOCK = PARENT['BLOCK']

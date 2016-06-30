@@ -529,36 +529,11 @@ class Paragraph_block(Blockelement):
             l += 1
     
     def _layout_block(self, frames, BSTYLE, overlay):
-        direction, LINES = cast_paragraph(self._yield_linespaces(frames, BSTYLE), self, BSTYLE['__runinfo__'])
-        
-        if direction:
-            align = 1 - BSTYLE['align']
-        else:
-            align = BSTYLE['align']
-        # alignment
         if BSTYLE['align_to']:
-            LIQUID = self.content
-            for LINE in LINES:
-                if LINE['j'] - LINE['i']:
-                    searchtext = LIQUID[LINE['i'] : LINE['j']]
-                    ai = -1
-                    for aligner in '\t' + BSTYLE['align_to']:
-                        try:
-                            ai = searchtext.index(aligner)
-                            break
-                        except ValueError:
-                            continue
-                    anchor = LINE['start'] + LINE['width'] * align
-                    LINE['x'] = anchor - LINE.X[ai]
-                else:
-                    LINE['x'] = LINE['start']
-        elif not align:
-            for LINE in LINES:
-                LINE['x'] = LINE['start']
+            align_chars = '\t' + BSTYLE['align_to']
         else:
-            for LINE in LINES:
-                rag = LINE['width'] - LINE['advance']
-                LINE['x'] = LINE['start'] + rag * align
+            align_chars = False
+        LINES = list(cast_paragraph(self._yield_linespaces(frames, BSTYLE), self, BSTYLE['__runinfo__'], BSTYLE['align'], align_chars))
         
         leading = BSTYLE['leading']
         self._UU = [line['u'] - leading for line in LINES]

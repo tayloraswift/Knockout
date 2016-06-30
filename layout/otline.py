@@ -1,6 +1,6 @@
 from fonts import hb, breaking_spaces, SPACES
 
-from bisect import bisect
+from bisect import bisect, bisect_left
 
 from meredith.elements import Reverse, Fontpost, Line_break
 
@@ -23,33 +23,55 @@ def _compose_glyphs(G, factor, vshift, tracking):
     return glyphs, x
 
 class _Glyph_template(object):
-    def __init__(self, cp, a, n, runinfo, fontinfo):
+    def __init__(self, cp, a, b, runinfo, fontinfo):
         self._cp     = cp
         self._FSTYLE = fontinfo[0]
         self._font   = font = fontinfo[1]
         self._factor = fontinfo[2]
         self._HBB    = HBB = hb.buffer_create()
-        self._d      = runinfo[0]
+        self._d = d  = runinfo[0]
         self._runinfo = runinfo
-        hb.buffer_add_codepoints(HBB, cp, a, n)
+        hb.buffer_add_codepoints(HBB, cp, a, b - a)
         hb.buffer_set_direction(HBB, runinfo[1])
         hb.buffer_set_script(HBB, runinfo[2])
         hb.shape(font, HBB, [])
         self._glyphs = list(_unpack_hb_buffer(HBB))
-        self._present = [G[0] for G in self._glyphs]
-        
-    def _segment(self, cp, a, b):
+        if d:
+            self._present = [G[0] for G in reversed(self._glyphs)]
+        else:
+            self._present = [G[0] for G in self._glyphs]
+        self._present.append(b)
+    
+    def _reset_buffer(self):
         hb.buffer_clear_contents(self._HBB)
-        hb.buffer_add_codepoints(self._HBB, cp, a, b - a)
-
         hb.buffer_set_direction(self._HBB, self._runinfo[1])
         hb.buffer_set_script(self._HBB, self._runinfo[2])
-
+        
+    def _segment(self, cp, a, b):
+        self._reset_buffer()
+        hb.buffer_add_codepoints(self._HBB, cp, a, b - a)
         hb.shape(self._font, self._HBB, [])
         return _compose_glyphs(_unpack_hb_buffer(self._HBB), self._factor, self._FSTYLE['shift'], self._FSTYLE['tracking'])
+
+    def _segment_right(self, cp, a, b):
+        gp = bisect_left(self._present, a)
+        gq = bisect_left(self._present, b)
+        p  = self._present[gp]
+        q  = self._present[gq]
+        if a == p and b == q:
+            glyphs = self._glyphs[gp:gq]
+        else:
+            print(a, p, b, q)
+            self._reset_buffer()
+            hb.buffer_add_codepoints(self._HBB, cp, a, b - a)
+            hb.shape(self._font, self._HBB, [])
+            
+            glyphs = _unpack_hb_buffer(self._HBB)
+        
+        return _compose_glyphs(glyphs, self._factor, self._FSTYLE['shift'], self._FSTYLE['tracking'])
     
     def seg_right(self, a, b, limit):
-        glyphs, x = self._segment(self._cp, a, b)
+        glyphs, x = self._segment_right(self._cp, a, b)
         if limit < x:
             if self._d:
                 I = bisect([g[1] for g in glyphs], x - limit)
@@ -68,9 +90,9 @@ class _Glyph_template(object):
             cp = self._cp
         return self._segment(cp, a, b)
 
-def _HB_cast_glyphs(cp, a, n, font, factor, runinfo, FSTYLE):
+def _HB_cast_glyphs(cp, a, b, font, factor, runinfo, FSTYLE):
     HBB = hb.buffer_create()
-    hb.buffer_add_codepoints(HBB, cp, a, n)
+    hb.buffer_add_codepoints(HBB, cp, a, b - a)
     hb.buffer_set_direction(HBB, runinfo[1])
     hb.buffer_set_script(HBB, runinfo[2])
     hb.shape(font, HBB, [])
@@ -195,7 +217,7 @@ def cast_liquid_line(LINE, R, RUNS, totalstring, totalcp, hyphenate):
                     if sep:
                         sep_cp = totalcp[:breakpoint]
                         sep_cp.append(ord(sep))
-                        seperator, sep_x = _HB_cast_glyphs(sep_cp, breakpoint, 1, hfont, hfactor, hruninfo, hFSTYLE)
+                        seperator, sep_x = _HB_cast_glyphs(sep_cp, breakpoint, breakpoint + 1, hfont, hfactor, hruninfo, hFSTYLE)
                         if sep_x < space:
                             LINE.add_text(l, FSTYLE, seperator, True, None)
                         else:
@@ -295,7 +317,7 @@ def cast_mono_line(PARENT, letters, runinfo, F=None, length_only=False):
     for l, is_text, i, V, runinfo, (FSTYLE, * fontinfo ) in RUNS:
         if is_text:
             font, factor, get_emoji = fontinfo              # int
-            glyphs, x = _HB_cast_glyphs(totalcp, i, V - i, font, factor, runinfo, FSTYLE)
+            glyphs, x = _HB_cast_glyphs(totalcp, i, V, font, factor, runinfo, FSTYLE)
             LINE.add_text(l, FSTYLE, glyphs, is_text == 1, get_emoji)
 
         elif V is not None:

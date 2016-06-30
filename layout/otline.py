@@ -1,4 +1,4 @@
-from fonts import hb, SPACES
+from fonts import hb, breaking_spaces, SPACES
 
 from itertools import accumulate
 from bisect import bisect
@@ -95,49 +95,25 @@ def cast_liquid_line(LINE, R, RUNS, totalstring, totalcp):
                         overrun = i_c
                     else:
                         overrun = j - 1
-                
-                is_first = not bool(LINE.L)
-                for breakpoint, sep in find_breakpoint(totalstring, i_c, overrun, hyphenate=True, is_first=is_first):
-                    if breakpoint == i_c:
-                        if is_first:
-                            return _return_line(LINE, breakpoint, FSTYLE, R)
-                        else:
-                            # find last run to go back to
-                            if is_text == 1:
-                                backtrack = len(LINE.L) - 1 - next(r for r in range(len(LINE.L) - 1, -1, -1) if not (type(LINE.L[r][2]) is tuple and (-6 <= LINE.L[r][2][0] <= -4)))
-                                if backtrack:
-                                    del LINE.L[-backtrack:]
-                                    i = i_c - backtrack # only works because each zero width object is one char
-                                    R -= 1
-                            break
-                    elif breakpoint == j:
-                        LINE.add_text(l, FSTYLE, glyphs, is_text == 1, get_emoji)
-                        if R < RL:
-                            return _return_line(LINE, breakpoint, FSTYLE, R + 1) # the overrun is a whitespace char
-                        else:
-                            return _return_cap_line(LINE, len(totalstring), FSTYLE, l)
-                    
-                    l_glyphs, x = shape_left_glyphs(totalcp, i_c, breakpoint, glyphs, font, factor, runinfo, FSTYLE, sep)
-                    if x < space or not sep:
-                        if l_glyphs:
-                            LINE.add_text(l, FSTYLE, l_glyphs, is_text == 1, get_emoji)
-                        i = breakpoint
-                        break
-                return _return_line(LINE, i, FSTYLE, R)
+                break
 
         elif V is not None:
-            fstat, = fontinfo
-            
             tV = type(V)
             if issubclass(tV, Fontpost):
                 LINE.L.append((l, FSTYLE, (-5 + tV.countersign, 0, 0, 0, i)))
             elif tV is str:
                 O = (SPACES[V], 0, FSTYLE['__spacemetrics__'][SPACES[V]], 0, i)
+                LINE.L.append((l, FSTYLE, O))
                 if O[2] <= space:
-                    LINE.L.append((l, FSTYLE, O))
                     space -= O[2]
+                elif V in breaking_spaces:
+                    return _return_line(LINE, i + 1, FSTYLE, R + 1)
                 else:
-                    return _return_line(LINE, i, FSTYLE, R)
+                    i_c = i
+                    overrun = i
+                    j = i + 1
+                    R += 1
+                    break
             
             elif tV is Line_break:
                 LINE.L.append((l, FSTYLE, (-9, 0, 0, 0, i)))
@@ -145,8 +121,8 @@ def cast_liquid_line(LINE, R, RUNS, totalstring, totalcp):
             
             elif tV is Reverse:
                 LINE.L.append((l, FSTYLE, (-6, 0, 0, 0, i)))
-            else:
-                V.layout_inline(LINE, runinfo, fstat, FSTYLE)
+            else:                            # fstat
+                V.layout_inline(LINE, runinfo, fontinfo[0], FSTYLE)
                 if V.width <= space:
                     LINE.L.append((l, FSTYLE, (-89, 0, V.width, 0, i, V)))
                     space -= V.width
@@ -155,6 +131,57 @@ def cast_liquid_line(LINE, R, RUNS, totalstring, totalcp):
     
     else:
         return _return_cap_line(LINE, len(totalstring), FSTYLE, l)
+    
+    is_first = not bool(LINE.L)
+    for breakpoint, sep in find_breakpoint(totalstring, LINE['i'], overrun, hyphenate=True, is_first=is_first):
+        if breakpoint <= i_c:
+            if is_first:
+                return _return_line(LINE, breakpoint, FSTYLE, R)
+            else:
+                ch = totalstring[breakpoint - 1: breakpoint + 2]
+                R -= 1
+                bR = next(r for r in range(R - 1, R - len(LINE.L) - 1, -1) if breakpoint > RUNS[r][2])
+                backtrack = R - bR
+                if backtrack > 1:
+                    del LINE.L[-backtrack + 1:]
+                cracked_run = LINE.L.pop()
+                glyphs = cracked_run[2]
+                space = LINE['width'] - LINE.get_length()
+                R = bR
+                l, is_text, i, V, runinfo, (FSTYLE, * fontinfo ) = RUNS[R]
+                R += 1
+                if is_text:
+                    i_c = max(i, LINE['i'])
+                    j = V
+                    font, factor, get_emoji = fontinfo
+                else: # we know that the None only occurs on run 0
+                    LINE.L.append(cracked_run)
+                    space -= cracked_run[2][2]
+                    i += 1
+                    R += 1
+                    if sep:
+                        seperator, sep_x = shape_left_glyphs(totalcp, breakpoint, breakpoint, [], font, factor, runinfo, FSTYLE, sep)
+                        if sep_x < space:
+                            LINE.add_text(l, FSTYLE, seperator, True, None)
+                        else:
+                            continue
+                    break
+        
+        if breakpoint == j:
+            LINE.add_text(l, FSTYLE, glyphs, is_text == 1, get_emoji)
+            if R < RL:
+                return _return_line(LINE, breakpoint, FSTYLE, R + 1) # the overrun is a whitespace char
+            else:
+                return _return_cap_line(LINE, len(totalstring), FSTYLE, l)
+        
+        l_glyphs, x = shape_left_glyphs(totalcp, i_c, breakpoint, glyphs, font, factor, runinfo, FSTYLE, sep)
+        if x < space or not sep:
+            if l_glyphs:
+                LINE.add_text(l, FSTYLE, l_glyphs, is_text == 1, get_emoji)
+            i = breakpoint
+            break
+    
+    return _return_line(LINE, i, FSTYLE, R)
 
 def cast_multi_line(totalstring, RUNS, linemaker):
     i = 0
@@ -340,6 +367,8 @@ class OT_line(dict):
                     i = self._ikey[-1]
             else:
                 i = self._ikey[0]
+            if i >= self['j']:
+                i = self['j'] - 1
         else:
             i = self['i']
         return i

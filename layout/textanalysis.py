@@ -18,15 +18,29 @@ hy = pyphen.Pyphen(lang='en_US')
 
 # linebreaking characters
 _BREAK_WHITESPACE = frozenset(chain(' ', breaking_spaces))
-_BREAK_ONLY_AFTER = frozenset('-')
+_BREAK_ONLY_AFTER = frozenset('-”)]}>»&')
 _BREAK_AFTER_ELSE_BEFORE = frozenset('–—')
+_BREAK_ONLY_BEFORE = frozenset('“([{<«')
 
-_BREAK = _BREAK_WHITESPACE | _BREAK_ONLY_AFTER | _BREAK_AFTER_ELSE_BEFORE
+_BREAK = _BREAK_WHITESPACE | _BREAK_ONLY_AFTER | _BREAK_AFTER_ELSE_BEFORE | _BREAK_ONLY_BEFORE
+
+_BREAK_BEFORE = _BREAK_AFTER_ELSE_BEFORE | _BREAK_ONLY_BEFORE
 
 _APOSTROPHES = frozenset("'’")
 
 _S_SPACES = frozenset(SPACES)
 _EMOJI_SPACES = _S_SPACES | EMOJIS # for shortcircuiting codepoint sorting
+
+def hyphenations(word, i, j, max_len):
+    word = ''.join(c if c in alphabet else "'" if c in _APOSTROPHES else ' ' for c in word)
+    if sum(c != ' ' for c in word) < 4:
+        return None
+    leading_spaces = j - i - len(word.lstrip(' '))
+    for pair in hy.iterate(word.strip(' ')):
+        k = len(pair[0]) + leading_spaces
+        # no sense checking hyphenations that don’t fit, prevent too-short hyphenations
+        if k < max_len and sum(c != ' ' for c in pair[0]) >= 2 and sum(c != ' ' for c in pair[1]) >= 2:
+            yield i + k
 
 def find_breakpoint(string, start, n, hyphenate=False, is_first=False):
     CHAR = string[n]
@@ -34,15 +48,20 @@ def find_breakpoint(string, start, n, hyphenate=False, is_first=False):
         yield n + 1, ''
     else:
         try:
-            if CHAR in _BREAK_ONLY_AFTER:
-                i = n - 1 - next(i for i, v in enumerate(reversed(string[start:n - 1])) if v in _BREAK)
-            elif CHAR in _BREAK_AFTER_ELSE_BEFORE:
+            if CHAR in _BREAK_BEFORE:
                 i = n
+                i0 = i
             else:
-                i = n - next(i for i, v in enumerate(reversed(string[start:n])) if v in _BREAK)
+                if CHAR in _BREAK_ONLY_AFTER:
+                    i = n - 1 - next(i for i, v in enumerate(reversed(string[start:n - 1])) if v in _BREAK)
+                else:
+                    i = n - next(i for i, v in enumerate(reversed(string[start:n])) if v in _BREAK)
+                
+                i0 = i - (string[i - 1] in _BREAK_ONLY_BEFORE)
         
         except StopIteration:
             i = start
+            i0 = i
         
         ### AUTO HYPHENATION
         if hyphenate:
@@ -53,26 +72,20 @@ def find_breakpoint(string, start, n, hyphenate=False, is_first=False):
             except TypeError:
                 j = i
             
-            word = ''.join(c if c in alphabet else "'" if c in _APOSTROPHES else ' ' for c in string[i:j])
-
-            leading_spaces = j - i - len(word.lstrip(' '))
-
-            for pair in hy.iterate(word.strip(' ')):
-                k = len(pair[0]) + leading_spaces
-                # no sense checking hyphenations that don’t fit
-                if k >= n - i:
-                    continue
-                # prevent too-short hyphenations
-                elif sum(c != ' ' for c in pair[0]) < 2 or sum(c != ' ' for c in pair[1]) < 2:
-                    continue
-                
-                yield i + k, '-'
+            word = string[i:j]
+            max_len = n - i
+            pyphen_hyphens = hyphenations(word, i, j, max_len)
+            if pyphen_hyphens is not None:
+                soft_hyphens = (i + k + 1 for k, c in enumerate(word) if c == '\u00AD' and 2 < k < max_len)
+                yield from ((h, '-') for h in sorted(chain(pyphen_hyphens, soft_hyphens), reverse=True))
         
         if is_first:
+            if i0 > start:
+                yield i0, ''
             for i in range(n, start - 1, -1):
                 yield i, ''
         else:
-            yield i, ''
+            yield i0, ''
 
 def _raise_digits(string):
     ranges = list(chain((0,), * ((i, j) for i, j in (m.span() for m in finditer("[-+]?\d+[\.,]?\d*", string)) if j - i > 1) , (len(string),)))
@@ -174,7 +187,7 @@ def bidir_levels(runinfo, text, BLOCK, F=None):
                         if runinfo[0] != runinfo_stack[-1][0]:
                             l += 1
                         runinfo_stack.append(runinfo)
-                
+                    SS.append('\u00A0')
                 elif v is not None:
                     if isinstance(v, Fontpost):
                         F = o_fontinfo[1].copy()
@@ -186,12 +199,10 @@ def bidir_levels(runinfo, text, BLOCK, F=None):
                             F -= v['class']
                             RUNS.append((l, False, i, v, runinfo, o_fontinfo))
                             o_fontinfo, t_fontinfo, e_fontinfo = _get_fontinfo(BLOCK, F)
+                        SS.append('\u00AD')
                     else:
                         RUNS.append((l, False, i, v, runinfo, o_fontinfo))
-                if type(v) is str:
-                    SS.append(v)
-                else:
-                    SS.append('\u00A0')
+                        SS.append('[')
                 j += 1
                 i = j
 

@@ -9,11 +9,8 @@ from layout.textanalysis import bidir_levels, find_breakpoint
 def _HB_cast_glyphs(cp, a, n, font, factor, runinfo, FSTYLE):
     HBB = hb.buffer_create()
     hb.buffer_add_codepoints(HBB, cp, a, n)
-    if runinfo[0]:
-        hb.buffer_set_direction(HBB, hb.direction_t.RTL)
-    else:
-        hb.buffer_set_direction(HBB, hb.direction_t.LTR)
-    hb.buffer_set_script(HBB, runinfo[1])
+    hb.buffer_set_direction(HBB, runinfo[1])
+    hb.buffer_set_script(HBB, runinfo[2])
     hb.shape(font, HBB, [])
     x = 0
     y = -FSTYLE['shift']
@@ -63,7 +60,7 @@ def _return_cap_line(LINE, i, FSTYLE, l):
     LINE['j'] = i + 1
     return None
 
-def cast_liquid_line(LINE, R, RUNS, totalstring, totalcp):
+def cast_liquid_line(LINE, R, RUNS, totalstring, totalcp, hyphenate):
     space = LINE['width']
     i_c = LINE['i']
     RL = len(RUNS)
@@ -94,15 +91,14 @@ def cast_liquid_line(LINE, R, RUNS, totalstring, totalcp):
 
         elif V is not None:
             tV = type(V)
-            if issubclass(tV, Fontpost):
-                LINE.L.append((l, FSTYLE, (-5 + tV.countersign, 0, 0, 0, i)))
-            elif tV is str:
+            if tV is str:
                 O = (SPACES[V], 0, FSTYLE['__spacemetrics__'][SPACES[V]], 0, i)
                 LINE.L.append((l, FSTYLE, O))
                 if O[2] <= space:
                     space -= O[2]
                 elif V in breaking_spaces:
-                    return _return_line(LINE, i + 1, FSTYLE, R + 1)
+                    if R < RL:
+                        return _return_line(LINE, i + 1, FSTYLE, R + 1)
                 else:
                     i_c = i
                     overrun = i
@@ -112,10 +108,14 @@ def cast_liquid_line(LINE, R, RUNS, totalstring, totalcp):
             
             elif tV is Line_break:
                 LINE.L.append((l, FSTYLE, (-9, 0, 0, 0, i)))
-                return _return_line(LINE, i + 1, FSTYLE, R + 1)
-            
+                if R < RL:
+                    return _return_line(LINE, i + 1, FSTYLE, R + 1)
+
+            elif issubclass(tV, Fontpost):
+                LINE.L.append((l, FSTYLE, (-5 + tV.countersign, 0, 0, 0, i)))
             elif tV is Reverse:
                 LINE.L.append((l, FSTYLE, (-6, 0, 0, 0, i)))
+            
             else:                            # fstat
                 V.layout_inline(LINE, runinfo, fontinfo[0], FSTYLE)
                 if V.width <= space:
@@ -128,12 +128,11 @@ def cast_liquid_line(LINE, R, RUNS, totalstring, totalcp):
         return _return_cap_line(LINE, len(totalstring), FSTYLE, l)
     
     is_first = not bool(LINE.L)
-    for breakpoint, sep in find_breakpoint(totalstring, LINE['i'], overrun, hyphenate=True, is_first=is_first):
+    for breakpoint, sep, is_whitespace in find_breakpoint(totalstring, LINE['i'], overrun, hyphenate=hyphenate):
         if breakpoint <= i_c:
             if is_first:
                 return _return_line(LINE, breakpoint, FSTYLE, R)
             else:
-                ch = totalstring[breakpoint - 1: breakpoint + 2]
                 R -= 1
                 bR = next(r for r in range(R - 1, R - len(LINE.L) - 1, -1) if breakpoint > RUNS[r][2])
                 backtrack = R - bR
@@ -142,9 +141,8 @@ def cast_liquid_line(LINE, R, RUNS, totalstring, totalcp):
                 cracked_run = LINE.L.pop()
                 glyphs = cracked_run[2]
                 space = LINE['width'] - LINE.get_length()
-                R = bR
-                l, is_text, i, V, runinfo, (FSTYLE, * fontinfo ) = RUNS[R]
-                R += 1
+                l, is_text, i, V, runinfo, (FSTYLE, * fontinfo ) = RUNS[bR]
+                R = bR + 1
                 if is_text:
                     i_c = max(i, LINE['i'])
                     j = V
@@ -170,7 +168,7 @@ def cast_liquid_line(LINE, R, RUNS, totalstring, totalcp):
                 return _return_cap_line(LINE, len(totalstring), FSTYLE, l)
         
         l_glyphs, x = shape_left_glyphs(totalcp, i_c, breakpoint, glyphs, font, factor, runinfo, FSTYLE, sep)
-        if x < space or not sep:
+        if x < space or is_whitespace:
             if l_glyphs:
                 LINE.add_text(l, FSTYLE, l_glyphs, is_text == 1, get_emoji)
             i = breakpoint
@@ -178,13 +176,13 @@ def cast_liquid_line(LINE, R, RUNS, totalstring, totalcp):
     
     return _return_line(LINE, i, FSTYLE, R)
 
-def cast_multi_line(totalstring, RUNS, linemaker):
+def cast_multi_line(totalstring, RUNS, linemaker, hyphenate):
     i = 0
     R = 0
     totalcp = list(map(ord, totalstring))
     while R is not None:
         LINE = _next_line(linemaker, i)
-        R = cast_liquid_line(LINE, R, RUNS, totalstring, totalcp)
+        R = cast_liquid_line(LINE, R, RUNS, totalstring, totalcp, hyphenate)
         i = LINE['j']
         yield LINE
 
@@ -216,7 +214,7 @@ def _align_to(LINES, align, align_chars, totalstring):
             LINE['x'] = LINE['start']
         yield LINE
         
-def cast_paragraph(linemaker, BLOCK, runinfo, align, align_chars):
+def cast_paragraph(linemaker, BLOCK, runinfo, hyphenate, align, align_chars):
     totalstring, RUNS = bidir_levels(runinfo, BLOCK.content, BLOCK)
     if runinfo[0]:
         align = 1 - align
@@ -226,7 +224,7 @@ def cast_paragraph(linemaker, BLOCK, runinfo, align, align_chars):
         align_func = _align_other
     else:
         align_func = _align_left
-    return align_func((line.fuse_glyphs(True) for line in cast_multi_line(totalstring, RUNS, linemaker)), 
+    return align_func((line.fuse_glyphs(True) for line in cast_multi_line(totalstring, RUNS, linemaker, hyphenate)), 
                       align, align_chars, totalstring)
 
 def cast_mono_line(PARENT, letters, runinfo, F=None, length_only=False):
@@ -368,23 +366,22 @@ class OT_line(dict):
         self['ascent'] = ascent
         self['descent'] = descent
         
-        _IXF_ = []
+        self.IXF = IXF = []
         if editable and SEARCH:
             SEARCH.sort()
             i_p = self['i'] - 1
             for i, x, FSTYLE in SEARCH:
                 if i - i_p == 1:
-                    _IXF_.append((i, x, FSTYLE))
+                    IXF.append((i, x, FSTYLE))
                 elif i - i_p > 1:
                     r = i - i_p
-                    x_p = _IXF_[-1][1]
+                    x_p = IXF[-1][1]
                     unitgap = (x - x_p)/r
-                    _IXF_.extend((i_p + j + 1, x_p + unitgap*(j + 1), FSTYLE) for j in range(r))
+                    IXF.extend((i_p + j + 1, x_p + unitgap*(j + 1), FSTYLE) for j in range(r))
                 i_p = i
-            del _IXF_[self['j']:]
-        self.X = [k[1] for k in _IXF_]
-        self.FS = [k[2] for k in _IXF_]
-        IX = sorted(_IXF_, key=lambda k: k[1])
+            del IXF[self['j']:]
+        self.X = [k[1] for k in IXF]
+        IX = sorted(IXF, key=lambda k: k[1])
         self._ikey = [k[0] for k in IX]
         self._xkey = [k[1] for k in IX]
         return self

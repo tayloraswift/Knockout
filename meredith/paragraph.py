@@ -533,7 +533,7 @@ class Paragraph_block(Blockelement):
             align_chars = '\t' + BSTYLE['align_to']
         else:
             align_chars = False
-        LINES = list(cast_paragraph(self._yield_linespaces(frames, BSTYLE), self, BSTYLE['__runinfo__'], BSTYLE['align'], align_chars))
+        LINES = list(cast_paragraph(self._yield_linespaces(frames, BSTYLE), self, BSTYLE['__runinfo__'], BSTYLE['hyphenate'], BSTYLE['align'], align_chars))
         
         leading = BSTYLE['leading']
         self._UU = [line['u'] - leading for line in LINES]
@@ -678,7 +678,7 @@ class Paragraph_block(Blockelement):
         except IndexError:
             line = self._editable_lines[-1]
         i = address[0] - line['i']
-        return l, line, line.X[i], line.FS[i]
+        return l, line, line.X[i], line.IXF[i][2]
     
     def _cursor(self, i):
         if i >= 0:

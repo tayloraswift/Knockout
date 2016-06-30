@@ -17,11 +17,12 @@ pyphen.language_fallback('en_US')
 hy = pyphen.Pyphen(lang='en_US')
 
 # linebreaking characters
+_BREAK_WHITESPACE = frozenset(chain(' ', breaking_spaces))
 _BREAK_ONLY_AFTER = frozenset('-”)]}>»&')
 _BREAK_AFTER_ELSE_BEFORE = frozenset('–—')
 _BREAK_ONLY_BEFORE = frozenset('“([{<«')
 
-_BREAK = frozenset(chain(' ', breaking_spaces)) | _BREAK_ONLY_AFTER | _BREAK_AFTER_ELSE_BEFORE | _BREAK_ONLY_BEFORE
+_BREAK = _BREAK_WHITESPACE | _BREAK_ONLY_AFTER | _BREAK_AFTER_ELSE_BEFORE | _BREAK_ONLY_BEFORE
 
 _BREAK_BEFORE = _BREAK_AFTER_ELSE_BEFORE | _BREAK_ONLY_BEFORE
 
@@ -37,10 +38,10 @@ def hyphenations(word, i, leading_spaces, max_len):
         if k < max_len and sum(c != ' ' for c in pair[0]) >= 2 and sum(c != ' ' for c in pair[1]) >= 2:
             yield i + k
 
-def find_breakpoint(string, start, n, hyphenate=False, is_first=False):
+def find_breakpoint(string, start, n, hyphenate=False):
     CHAR = string[n]
     if CHAR == ' ': # all other breaking spaces are handled at the inline-object level
-        yield n + 1, ''
+        yield n + 1, '', True
     else:
         try:
             if CHAR in _BREAK_BEFORE:
@@ -53,7 +54,7 @@ def find_breakpoint(string, start, n, hyphenate=False, is_first=False):
                     i = n - next(i for i, v in enumerate(reversed(string[start:n])) if v in _BREAK)
                 
                 i0 = i - (string[i - 1] in _BREAK_ONLY_BEFORE)
-        
+            
         except StopIteration:
             i = start
             i0 = i
@@ -71,19 +72,16 @@ def find_breakpoint(string, start, n, hyphenate=False, is_first=False):
             reduced_word = ''.join(c if c in alphabet else "'" if c in _APOSTROPHES else ' ' for c in word)
             if sum(c != ' ' for c in reduced_word) >= 4:
                 leading_spaces = j - i - len(reduced_word.lstrip(' '))
-                max_len = n - i
+                max_len = n - i + 1
                 min_len = leading_spaces + 2
                 pyphen_hyphens = hyphenations(reduced_word, i, leading_spaces, max_len)
                 soft_hyphens = (i + k + 1 for k, c in enumerate(word) if c == '\u00AD' and min_len < k < max_len)
-                yield from ((h, '-') for h in sorted(chain(pyphen_hyphens, soft_hyphens), reverse=True))
+                yield from ((h, '-', False) for h in sorted(chain(pyphen_hyphens, soft_hyphens), reverse=True))
         
-        if is_first:
-            if i0 > start:
-                yield i0, ''
-            for i in range(n, start - 1, -1):
-                yield i, ''
-        else:
-            yield i0, ''
+        if i0 > start:
+            yield i0, '', string[i0 - 1] in _BREAK_WHITESPACE
+        for i in range(n, start - 1, -1):
+            yield i, '', False
 
 def _raise_digits(string):
     ranges = list(chain((0,), * ((i, j) for i, j in (m.span() for m in finditer("[-+]?\d+[\.,]?\d*", string)) if j - i > 1) , (len(string),)))

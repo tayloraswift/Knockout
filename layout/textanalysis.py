@@ -150,9 +150,9 @@ def bidir_levels(runinfo, text, BLOCK, F=None):
                         string = string.upper()
                     if l % 2:
                         choose_runinfo = runinfo, numeric_runinfo
-                        RUNS.extend((l + flip, True, i + p, i + q, choose_runinfo[flip], t_fontinfo) for flip, (p, q) in _raise_digits(string) if q - p)
+                        RUNS.extend([l + flip, True, i + p, i + q, choose_runinfo[flip], t_fontinfo] for flip, (p, q) in _raise_digits(string) if q - p)
                     else:
-                        RUNS.append((l, True, i, j, runinfo, t_fontinfo))
+                        RUNS.append([l, True, i, j, runinfo, t_fontinfo])
             elif K == 2:
                 if emojijoin > 1:
                     del RUNS[-(emojijoin - 1):]

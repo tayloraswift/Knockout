@@ -1,3 +1,5 @@
+from itertools import chain
+
 from fonts import hb, breaking_spaces, SPACES
 
 from bisect import bisect, bisect_left
@@ -54,32 +56,32 @@ class _Glyph_template(object):
         hb.shape(self._font, self._HBB, [])
         return _compose_glyphs(_unpack_hb_buffer(self._HBB), self._factor, self._FSTYLE['shift'], self._FSTYLE['tracking'])
 
-    def _segment_right(self, cp, a, b):
+    def _slice_glyphs_right(self, cp, a):
         gp = bisect_left(self._present, a)
-        gq = bisect_left(self._present, b)
+       #gq = bisect_left(self._present, b)
 
         p  = self._present[gp]
-        q  = self._present[gq]
+       #q  = self._present[gq]
         
-        if a == p and b == q:
-            if not gp and gq == len(self._glyphs):
-                glyphs = self._glyphs
+        if a == p:
+            if not gp:
+                return self._glyphs
             else:
-                glyphs = self._logical_glyphs[gp:gq]
-                if self._d:
-                    glyphs = reversed(glyphs)
+                glyphs = self._logical_glyphs[gp:]
+
         else:
-            print(a, p, b, q)
+            k = self._present[gp + 1]
             self._reset_buffer()
-            hb.buffer_add_codepoints(self._HBB, cp, a, b - a)
+            hb.buffer_add_codepoints(self._HBB, cp, a, k - a)
             hb.shape(self._font, self._HBB, [])
-            
-            glyphs = _unpack_hb_buffer(self._HBB)
-        
-        return _compose_glyphs(glyphs, self._factor, self._FSTYLE['shift'], self._FSTYLE['tracking'])
+            reshape = (G for G in _unpack_hb_buffer(self._HBB) if G[0] < p)
+            glyphs = chain(reshape, self._logical_glyphs[gp:])
+        if self._d:
+            glyphs = reversed(glyphs)
+        return glyphs
     
-    def seg_right(self, a, b, limit):
-        glyphs, x = self._segment_right(self._cp, a, b)
+    def seg_right(self, a, limit):
+        glyphs, x = _compose_glyphs(self._slice_glyphs_right(self._cp, a), self._factor, self._FSTYLE['shift'], self._FSTYLE['tracking'])
         if limit < x:
             if self._d:
                 I = bisect([g[1] for g in glyphs], x - limit)
@@ -134,7 +136,7 @@ def cast_liquid_line(LINE, R, RUNS, totalstring, totalcp, hyphenate):
             j = V
             get_emoji = fontinfo[2]
             
-            glyphs, I = GT[0].seg_right(i_c, j, space)
+            glyphs, I = GT[0].seg_right(i_c, space)
             #glyphs, I = shape_right_glyphs(totalcp, i_c, j, [], font, factor, runinfo, FSTYLE, space)
             if I is None: # fits
                 LINE.add_text(l, FSTYLE, glyphs, is_text == 1, get_emoji)

@@ -398,7 +398,7 @@ class OT_line(dict):
             if change > 0:
                 del steps[:change]
         
-        for level in steps: # perform reversals
+        for level in reversed(steps): # perform reversals
             jumps = iter(level)
             for a, b in zip(jumps, jumps):
                 if b - a > 1:

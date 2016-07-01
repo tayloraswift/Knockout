@@ -26,62 +26,71 @@ def _compose_glyphs(G, factor, vshift, tracking):
 
 class _Glyph_template(object):
     def __init__(self, cp, a, b, runinfo, fontinfo):
-        self._cp     = cp
-        self._FSTYLE = fontinfo[0]
-        self._font   = font = fontinfo[1]
-        self._factor = fontinfo[2]
-        self._HBB    = HBB = hb.buffer_create()
-        self._d = d  = runinfo[0]
+        self._cp      = cp
+        self._font    = font = fontinfo[1]
+        self._compose = fontinfo[2], fontinfo[0]['shift'], fontinfo[0]['tracking']
+        self._HBB     = hb.buffer_create()
         self._runinfo = runinfo
-        hb.buffer_add_codepoints(HBB, cp, a, b - a)
-        hb.buffer_set_direction(HBB, runinfo[1])
-        hb.buffer_set_script(HBB, runinfo[2])
-        hb.shape(font, HBB, [])
-        self._glyphs = list(_unpack_hb_buffer(HBB))
-        if d:
+        self._d       = runinfo[0]
+        self._glyphs = list(self._reshape(cp, a, b))
+        if self._d:
             self._logical_glyphs = list(reversed(self._glyphs))
         else:
             self._logical_glyphs = self._glyphs
         self._present = [G[0] for G in self._logical_glyphs]
         self._present.append(b)
-    
-    def _reset_buffer(self):
+        
+        self._RIGHT_CACHE = {a: (self._logical_glyphs, 0, 0)}
+        
+    def _reshape(self, cp, a, b):
         hb.buffer_clear_contents(self._HBB)
         hb.buffer_set_direction(self._HBB, self._runinfo[1])
         hb.buffer_set_script(self._HBB, self._runinfo[2])
-        
-    def _segment(self, cp, a, b):
-        self._reset_buffer()
         hb.buffer_add_codepoints(self._HBB, cp, a, b - a)
         hb.shape(self._font, self._HBB, [])
-        return _compose_glyphs(_unpack_hb_buffer(self._HBB), self._factor, self._FSTYLE['shift'], self._FSTYLE['tracking'])
+        return _unpack_hb_buffer(self._HBB)
 
-    def _slice_glyphs_right(self, cp, a):
+    def _slice_glyphs_right(self, a):
         gp = bisect_left(self._present, a)
-       #gq = bisect_left(self._present, b)
-
         p  = self._present[gp]
-       #q  = self._present[gq]
         
         if a == p:
             if not gp:
                 return self._glyphs
             else:
                 glyphs = self._logical_glyphs[gp:]
+                self._RIGHT_CACHE[a] = glyphs, gp, gp
 
         else:
             k = self._present[gp + 1]
-            self._reset_buffer()
-            hb.buffer_add_codepoints(self._HBB, cp, a, k - a)
-            hb.shape(self._font, self._HBB, [])
-            reshape = (G for G in _unpack_hb_buffer(self._HBB) if G[0] < p)
-            glyphs = chain(reshape, self._logical_glyphs[gp:])
+            glyphs = [G for G in self._reshape(self._cp, a, k) if G[0] < p]
+            reshaped_len = len(glyphs)
+            glyphs += self._logical_glyphs[gp:]
+            self._RIGHT_CACHE[a] = glyphs, gp, gp - reshaped_len
         if self._d:
             glyphs = reversed(glyphs)
         return glyphs
+
+    def _slice_glyphs_left(self, cp, a, b, b2):
+        subglyphs_right, right_safe, right_start = self._RIGHT_CACHE[a]
+        gq = bisect(self._present, b) - 2 # floors it
+        if gq > right_safe:
+            q  = self._present[gq]
+            glyphs = subglyphs_right[:gq - right_start]
+            if self._d:
+                glyphs = reversed(glyphs)
+            if b2 != q:
+                reshaped = self._reshape(cp, q, b2)
+                if self._d:
+                    glyphs = chain(reshaped, glyphs)
+                else:
+                    glyphs = chain(glyphs, reshaped)
+            return glyphs
+        else:
+            return self._reshape(cp, a, b2)
     
     def seg_right(self, a, limit):
-        glyphs, x = _compose_glyphs(self._slice_glyphs_right(self._cp, a), self._factor, self._FSTYLE['shift'], self._FSTYLE['tracking'])
+        glyphs, x = _compose_glyphs(self._slice_glyphs_right(a), * self._compose )
         if limit < x:
             if self._d:
                 I = bisect([g[1] for g in glyphs], x - limit)
@@ -95,10 +104,11 @@ class _Glyph_template(object):
         if sep:
             cp = self._cp[:b]
             cp.append(ord(sep))
-            b += 1
+            b2 = b + 1
         else:
             cp = self._cp
-        return self._segment(cp, a, b)
+            b2 = b
+        return _compose_glyphs(self._slice_glyphs_left(cp, a, b, b2), * self._compose )
 
 def _HB_cast_glyphs(cp, a, b, font, factor, runinfo, FSTYLE):
     HBB = hb.buffer_create()
@@ -107,11 +117,6 @@ def _HB_cast_glyphs(cp, a, b, font, factor, runinfo, FSTYLE):
     hb.buffer_set_script(HBB, runinfo[2])
     hb.shape(font, HBB, [])
     return _compose_glyphs(_unpack_hb_buffer(HBB), factor, FSTYLE['shift'], FSTYLE['tracking'])
-
-def _next_line(linemaker, i):
-    LINE = next(linemaker)
-    LINE['i'] = i
-    return LINE
 
 def _return_line(LINE, i, FSTYLE, R):
     LINE['fstyle'] = FSTYLE
@@ -137,7 +142,6 @@ def cast_liquid_line(LINE, R, RUNS, totalstring, totalcp, hyphenate):
             get_emoji = fontinfo[2]
             
             glyphs, I = GT[0].seg_right(i_c, space)
-            #glyphs, I = shape_right_glyphs(totalcp, i_c, j, [], font, factor, runinfo, FSTYLE, space)
             if I is None: # fits
                 LINE.add_text(l, FSTYLE, glyphs, is_text == 1, get_emoji)
                 space -= glyphs[-1][2]
@@ -242,7 +246,6 @@ def cast_liquid_line(LINE, R, RUNS, totalstring, totalcp, hyphenate):
                 return _return_cap_line(LINE, len(totalstring), FSTYLE, l)
         
         l_glyphs, x = GT[0].seg_left(i_c, breakpoint, sep)
-        #l_glyphs, x = shape_left_glyphs(totalcp, i_c, breakpoint, glyphs, font, factor, runinfo, FSTYLE, sep)
         if x < space or is_whitespace:
             if l_glyphs:
                 LINE.add_text(l, FSTYLE, l_glyphs, is_text == 1, get_emoji)
@@ -262,7 +265,8 @@ def cast_multi_line(totalstring, RUNS, linemaker, hyphenate):
             RUN.append(_Glyph_template(totalcp, RUN[2], RUN[3], RUN[4], RUN[5]))
     
     while R is not None:
-        LINE = _next_line(linemaker, i)
+        LINE = next(linemaker)
+        LINE['i'] = i
         R = cast_liquid_line(LINE, R, RUNS, totalstring, totalcp, hyphenate)
         i = LINE['j']
         yield LINE
@@ -326,7 +330,7 @@ def cast_mono_line(PARENT, letters, runinfo, F=None, length_only=False):
     totalcp = list(map(ord, totalstring))
     for l, is_text, i, V, runinfo, (FSTYLE, * fontinfo ) in RUNS:
         if is_text:
-            font, factor, get_emoji = fontinfo              # int
+            font, factor, get_emoji = fontinfo
             glyphs, x = _HB_cast_glyphs(totalcp, i, V, font, factor, runinfo, FSTYLE)
             LINE.add_text(l, FSTYLE, glyphs, is_text == 1, get_emoji)
 
@@ -371,38 +375,36 @@ class OT_line(dict):
     def _rearrange_line(self):
         line = self.L
         line_segments = [(l % 2, * k ) for l, * k in line]
-        if len(line) < 1:
-            return line_segments
-        
-        max_bidi_level = max(k[0] for k in line)
-        first = line[0][0]
-        steps = [[0] if l < first else [] for l in range(max_bidi_level)] # we omit the 0th level
-        for i, (l1, l2) in enumerate((k1[0], k2[0]) for k1, k2 in zip(line, line[1:])):
-            if l1 != l2:
-                if l2 > l1: # step up
-                    steps[l2 - 1].append(i + 1)
-                else: # step down
-                    steps[l1 - 1].append(i + 1)
-        
-        i_top = len(line)
-        last = line[-1][0]
-        for level in steps[:last]:
-            level.append(i_top)
-        if len(steps) > 1: # skip reversals that cancel each other out
-            null_list = [0, i_top]
-            try:
-                change = next(i for i, level in enumerate(steps) if level != null_list)
-            except StopIteration:
-                change = len(steps)
-            change = change - (change % 2)
-            if change > 0:
-                del steps[:change]
-        
-        for level in reversed(steps): # perform reversals
-            jumps = iter(level)
-            for a, b in zip(jumps, jumps):
-                if b - a > 1:
-                    line_segments[a:b] = reversed(line_segments[a:b])
+        if len(line) > 1:
+            max_bidi_level = max(k[0] for k in line)
+            first = line[0][0]
+            steps = [[0] if l < first else [] for l in range(max_bidi_level)] # we omit the 0th level
+            for i, (l1, l2) in enumerate((k1[0], k2[0]) for k1, k2 in zip(line, line[1:])):
+                if l1 != l2:
+                    if l2 > l1: # step up
+                        steps[l2 - 1].append(i + 1)
+                    else: # step down
+                        steps[l1 - 1].append(i + 1)
+            
+            i_top = len(line)
+            last = line[-1][0]
+            for level in steps[:last]:
+                level.append(i_top)
+            if len(steps) > 1: # skip reversals that cancel each other out
+                null_list = [0, i_top]
+                try:
+                    change = next(i for i, level in enumerate(steps) if level != null_list)
+                except StopIteration:
+                    change = len(steps)
+                change = change - (change % 2)
+                if change > 0:
+                    del steps[:change]
+            
+            for level in reversed(steps): # perform reversals
+                jumps = iter(level)
+                for a, b in zip(jumps, jumps):
+                    if b - a > 1:
+                        line_segments[a:b] = reversed(line_segments[a:b])
         return line_segments
     
     def get_length(self):
@@ -437,8 +439,7 @@ class OT_line(dict):
             else:
                 SEARCH.extend((glyph[4], glyph[direction] + dx, fontstyle) for glyph in glyphs)
                 if glyphs[0][0] == -22:
-                    for cp, x1, x2, * O in glyphs:
-                        IMG.append(((cp, 0, x2 - x1, * O ), dx + x1))
+                    IMG.extend(((cp, 0, x2 - x1, * O ), dx + x1) for cp, x1, x2, * O in glyphs)
                 else:
                     G.append((fontstyle['hash'], fontstyle, [(glyph[0], glyph[1] + dx, glyph[3]) for glyph in glyphs]))
                 dx += glyphs[-1][2]
@@ -455,20 +456,18 @@ class OT_line(dict):
                 if i - i_p == 1:
                     IXF.append((i, x, FSTYLE))
                 elif i - i_p > 1:
-                    r = i - i_p
                     x_p = IXF[-1][1]
-                    unitgap = (x - x_p)/r
-                    IXF.extend((i_p + j + 1, x_p + unitgap*(j + 1), FSTYLE) for j in range(r))
+                    unitgap = (x - x_p)/(i - i_p)
+                    IXF.extend((i_p + j + 1, x_p + unitgap*(j + 1), FSTYLE) for j in range(i - i_p))
                 i_p = i
             del IXF[self['j']:]
         self.X = [k[1] for k in IXF]
-        IX = sorted(IXF, key=lambda k: k[1])
-        self._ikey = [k[0] for k in IX]
-        self._xkey = [k[1] for k in IX]
+        self._IX = sorted(IXF, key=lambda k: k[1])
+        self._xkey = [k[1] for k in self._IX]
         return self
     
     def I(self, x):
-        if self._ikey:
+        if self._IX:
             x -= self['x']
             bi = bisect(self._xkey, x)
             if bi:
@@ -476,11 +475,11 @@ class OT_line(dict):
                     # compare before and after glyphs
                     x1 = self._xkey[bi - 1]
                     x2 = self._xkey[bi]
-                    i = self._ikey[bi - (x2 - x > x - x1)]
+                    i = self._IX[bi - (x2 - x > x - x1)][0]
                 except IndexError:
-                    i = self._ikey[-1]
+                    i = self._IX[-1][0]
             else:
-                i = self._ikey[0]
+                i = self._IX[0][0]
             if i >= self['j']:
                 i = self['j'] - 1
         else:

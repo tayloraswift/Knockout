@@ -37,9 +37,10 @@ class _Glyph_template(object):
         hb.shape(font, HBB, [])
         self._glyphs = list(_unpack_hb_buffer(HBB))
         if d:
-            self._present = [G[0] for G in reversed(self._glyphs)]
+            self._logical_glyphs = list(reversed(self._glyphs))
         else:
-            self._present = [G[0] for G in self._glyphs]
+            self._logical_glyphs = self._glyphs
+        self._present = [G[0] for G in self._logical_glyphs]
         self._present.append(b)
     
     def _reset_buffer(self):
@@ -56,10 +57,17 @@ class _Glyph_template(object):
     def _segment_right(self, cp, a, b):
         gp = bisect_left(self._present, a)
         gq = bisect_left(self._present, b)
+
         p  = self._present[gp]
         q  = self._present[gq]
+        
         if a == p and b == q:
-            glyphs = self._glyphs[gp:gq]
+            if not gp and gq == len(self._glyphs):
+                glyphs = self._glyphs
+            else:
+                glyphs = self._logical_glyphs[gp:gq]
+                if self._d:
+                    glyphs = reversed(glyphs)
         else:
             print(a, p, b, q)
             self._reset_buffer()

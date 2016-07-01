@@ -78,3 +78,4 @@ Fontforge
 emoji
 emojis
 rgba
+polycyclic

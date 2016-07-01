@@ -1,12 +1,11 @@
 from itertools import chain
 
 from olivia.languages import generate_runinfo
-from olivia.opentype import common_features, feature_map
 
 from meredith.box import Box, Datablocks
 from meredith import datablocks
 
-from fonts import hb, get_ot_font, get_ot_space_metrics, get_emoji_font
+from fonts import hb, common_features, feature_map, get_ot_font, get_ot_space_metrics, get_emoji_font
 
 _text_DNA = [('fontsize',    'float',   13),
             ('path',        'str',      'fonts/Ubuntu-R.ttf'),

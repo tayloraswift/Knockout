@@ -7,7 +7,7 @@ from interface import kookies, fields, contents, ui, source
 
 from edit import caramel
 
-from olivia.opentype import common_features
+from fonts import common_features
 
 from meredith.styles import Blockstyle
 from meredith.datablocks import DOCUMENT, TTAGS, BTAGS, TSTYLES, BSTYLES

@@ -7,6 +7,8 @@ from interface import kookies, fields, contents, ui, source
 
 from edit import caramel
 
+from olivia.opentype import common_features
+
 from meredith.styles import Blockstyle
 from meredith.datablocks import DOCUMENT, TTAGS, BTAGS, TSTYLES, BSTYLES
 from meredith.meta import filedata
@@ -293,6 +295,30 @@ def _print_bcounter(node):
     else:
         return 'ELEMENT'
 
+_BLOCK_PROPERTIES =[[(0, fields.Blank_space, 'leading', 'LEADING')],
+                    [(0, fields.Blank_space, 'language', 'LANGUAGE')],
+                    [(0, fields.Blank_space, 'align', 'ALIGN') , (0.6, fields.Blank_space, 'align_to', 'ALIGN ON')],
+                    [(0, fields.Blank_space, 'indent', 'INDENT') , (0.6, fields.Blank_space, 'indent_range', 'FOR LINES')],
+                    [(0, fields.Blank_space, 'margin_left', 'SPACE LEFT'), (0.5, fields.Blank_space, 'margin_right', 'SPACE RIGHT')],
+                    [(0, fields.Blank_space, 'margin_top', 'SPACE BEFORE'), (0.5, fields.Blank_space, 'margin_bottom', 'SPACE AFTER')],
+                    [(0, fields.Checkbox, 'hyphenate', 'HYPHENATE')],
+                    [(0, fields.Checkbox, 'keep_together', 'KEEP TOGETHER'), (0.5, fields.Checkbox, 'keep_with_next', 'KEEP WITH NEXT')],
+                    [(0, fields.Blank_space, 'incr_place_value', 'INCREMENT'), (0.4, fields.Blank_space, 'incr_assign', 'BY')],
+                    [(0, fields.Blank_space, 'show_count', 'COUNTER TEXT'), (0.7, fields.Blank_space, 'counter_space', 'SPACE')],
+                    ]
+
+_TEXT_PROPERTIES = [[(0, fields.Blank_space, 'path', 'FONT FILE')],
+                    [(0, fields.Blank_space, 'path_emoji', 'EMOJI FONT FILE')],
+                    [(0, fields.Blank_space, 'fontsize', 'FONT SIZE')],
+                    [(0, fields.Blank_space, 'tracking', 'TRACKING')],
+                    [(0, fields.Blank_space, 'shift', 'VERTICAL SHIFT')],
+                    [(0, fields.Checkbox, 'capitals', 'CAPITALS')],
+                    [(0, fields.Blank_space, 'color', 'COLOR')]
+                    ]
+
+it_common_features = iter(common_features)
+_OT_TEXT_PROPERTIES = [[(0, fields.Checkbox, f1, f1.upper()), (0.5, fields.Checkbox, f2, f2.upper())] for f1, f2 in zip(it_common_features, it_common_features)]
+
 class Properties(_Properties_panel):
     def _text_panel(self, y, KW):
         if self._tab == 'font':
@@ -325,16 +351,11 @@ class Properties(_Properties_panel):
                     TS = contexts.Text.kbm['textstyle']
                     if TS is not None:
                         y += 55
-                        props = [[(0, fields.Blank_space, 'path', 'FONT FILE')],
-                                [(0, fields.Blank_space, 'path_emoji', 'EMOJI FONT FILE')],
-                                [(0, fields.Blank_space, 'fontsize', 'FONT SIZE')],
-                                [(0, fields.Blank_space, 'tracking', 'TRACKING')],
-                                [(0, fields.Blank_space, 'shift', 'VERTICAL SHIFT')],
-                                [(0, fields.Checkbox, 'capitals', 'CAPITALS')],
-                                [(0, fields.Blank_space, 'color', 'COLOR')]
-                                ]
-                        self._items.extend(_stack_properties(y, 45, KW, TS, lambda: contexts.Text.ts, props))
-                        y += 45*len(props)
+                        props_args = 45, KW, TS, lambda: contexts.Text.ts
+                        self._items.extend(_stack_properties(y, * props_args , _TEXT_PROPERTIES))
+                        y += 45*len(_TEXT_PROPERTIES) + 10
+                        
+                        self._items.extend(_stack_properties(y, * props_args , _OT_TEXT_PROPERTIES))
         
         elif self._tab == 'paragraph':
             self._heading = lambda: ', '.join(T['name'] if V == 1 else T['name'] + ' (' + str(V) + ')' for T, V in contexts.Text.bk['class'].items() if V)
@@ -361,19 +382,8 @@ class Properties(_Properties_panel):
                             refresh = self._style_synchronize))
                 y = self._y_incr() + 20
                 
-                props = [[(0, fields.Blank_space, 'leading', 'LEADING')],
-                        [(0, fields.Blank_space, 'language', 'LANGUAGE')],
-                        [(0, fields.Blank_space, 'align', 'ALIGN') , (0.6, fields.Blank_space, 'align_to', 'ALIGN ON')],
-                        [(0, fields.Blank_space, 'indent', 'INDENT') , (0.6, fields.Blank_space, 'indent_range', 'FOR LINES')],
-                        [(0, fields.Blank_space, 'margin_left', 'SPACE LEFT'), (0.5, fields.Blank_space, 'margin_right', 'SPACE RIGHT')],
-                        [(0, fields.Blank_space, 'margin_top', 'SPACE BEFORE'), (0.5, fields.Blank_space, 'margin_bottom', 'SPACE AFTER')],
-                        [(0, fields.Checkbox, 'hyphenate', 'HYPHENATE')],
-                        [(0, fields.Checkbox, 'keep_together', 'KEEP TOGETHER'), (0.5, fields.Checkbox, 'keep_with_next', 'KEEP WITH NEXT')],
-                        [(0, fields.Blank_space, 'incr_place_value', 'INCREMENT'), (0.4, fields.Blank_space, 'incr_assign', 'BY')],
-                        [(0, fields.Blank_space, 'show_count', 'COUNTER TEXT'), (0.7, fields.Blank_space, 'counter_space', 'SPACE')],
-                        ]
-                self._items.extend(_stack_properties(y, 45, KW, contexts.Text.kbs, lambda: contexts.Text.bs, props))
-                y += 45*len(props)
+                self._items.extend(_stack_properties(y, 45, KW, contexts.Text.kbs, lambda: contexts.Text.bs, _BLOCK_PROPERTIES))
+                y += 45*len(_BLOCK_PROPERTIES)
                 
         
         elif self._tab == 'tags':

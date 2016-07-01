@@ -1,6 +1,7 @@
 from itertools import chain
 
 from olivia.languages import generate_runinfo
+from olivia.opentype import common_features, feature_map
 
 from meredith.box import Box, Datablocks
 from meredith import datablocks
@@ -14,6 +15,8 @@ _text_DNA = [('fontsize',    'float',   13),
             ('shift',       'float',    0),
             ('capitals',    'bool',     False),
             ('color',       'rgba',     (1, 0.15, 0.2, 1))]
+
+_text_DNA.extend((feature, 'bool', False) for feature in common_features)
 
 class Textstyle(Box):
     name = 'textstyle'
@@ -182,7 +185,7 @@ class Blockstyles(_Has_tagged_members):
             # iterate through stack
             projection = _Layer(self._text_default)
             for memberstyles in (b.content for b in self.content if b.content is not None and b['class'] <= P):
-                for TS in (c['textstyle'] for c in memberstyles if c['class'] <= F and c['textstyle'] is not None):
+                for TS in (c['textstyle'] for c in memberstyles if c['textstyle'] is not None and c['class'] <= F):
                     projection.overlay(TS)
             
             # text font
@@ -204,8 +207,10 @@ class Blockstyles(_Has_tagged_members):
             except FileNotFoundError:
                 e_upem, projection['__hb_emoji__'], projection['__emoji__'] = get_emoji_font(Textstyle.BASE['path_emoji'])
             projection['__factor_emoji__'] = projection['fontsize']/e_upem
-            
             ###
+            
+            # opentype features
+            projection['__ot_features__'] = [feature_map[feature] for feature in common_features if projection[feature]]
             
             projection['hash'] = H
             

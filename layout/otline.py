@@ -26,13 +26,14 @@ def _compose_glyphs(G, factor, vshift, tracking):
 
 class _Glyph_template(object):
     def __init__(self, cp, a, b, runinfo, fontinfo):
-        self._cp      = cp
-        self._font    = font = fontinfo[1]
-        self._compose = fontinfo[2], fontinfo[0]['shift'], fontinfo[0]['tracking']
-        self._HBB     = hb.buffer_create()
-        self._runinfo = runinfo
-        self._d       = runinfo[0]
-        self._glyphs = list(self._reshape(cp, a, b))
+        self._cp       = cp
+        self._font     = font = fontinfo[1]
+        self._compose  = fontinfo[2], fontinfo[0]['shift'], fontinfo[0]['tracking']
+        self._features = fontinfo[0]['__ot_features__']
+        self._HBB      = hb.buffer_create()
+        self._runinfo  = runinfo
+        self._d        = runinfo[0]
+        self._glyphs   = list(self._reshape(cp, a, b))
         if self._d:
             self._logical_glyphs = list(reversed(self._glyphs))
         else:
@@ -47,7 +48,7 @@ class _Glyph_template(object):
         hb.buffer_set_direction(self._HBB, self._runinfo[1])
         hb.buffer_set_script(self._HBB, self._runinfo[2])
         hb.buffer_add_codepoints(self._HBB, cp, a, b - a)
-        hb.shape(self._font, self._HBB, [])
+        hb.shape(self._font, self._HBB, self._features)
         return _unpack_hb_buffer(self._HBB)
 
     def _slice_glyphs_right(self, a):

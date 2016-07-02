@@ -15,10 +15,15 @@ def interpret_bool(b):
         return False
 
 def interpret_int(n, fail=0):
-    if type(n) is int:
+    t = type(n)
+    if t is int:
         return n
-    elif type(n) is float:
+    elif t is float:
         return int(n)
+    elif t is bool:
+        return int(n)
+    elif n == 'True':
+        return 1
     else:
         try:
             return int(nsp.eval(n))

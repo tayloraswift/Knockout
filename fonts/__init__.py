@@ -69,15 +69,29 @@ SPACENAMES = {
     -41: 'mt', # math med
     }
 
-def ot_feature(name):
-    b, O = hb.feature_from_string(list(map(ord, name)))
+def ot_feature(bytename, value):
+    b, O = hb.feature_from_string(bytename)
     if b:
+        O.value = value
         return O
     else:
-        raise ValueError('invalid opentype feature name ' + repr(name))
+        raise ValueError('invalid opentype feature name ' + repr(str(bytename)))
+       
+class OT_feature_modes(dict):
+    def __init__(self, bytename):
+        self._bytename = bytename
+        dict.__init__(self)
+    
+    def __missing__(self, key):
+        self[key] = v = ot_feature(self._bytename, key)
+        return v
+
+def get_ot_feature_modes(name):
+    bytename = list(map(ord, name))
+    return ot_feature(bytename, 0), ot_feature(bytename, 1), OT_feature_modes(bytename)
 
 common_features = ['calt', 'case', 'c2pc', 'c2sc', 'hlig', 'ital', 'kern', 'liga', 'mgrk', 'onum', 'pcap', 'pnum', 'rand', 'salt', 'smcp', 'subs', 'sups', 'swsh', 'titl', 'tnum', 'unic', 'zero']
-feature_map = {feature: ot_feature(feature) for feature in common_features}
+feature_map = {feature: get_ot_feature_modes(feature) for feature in common_features}
 
 def _hb_face_from_path(filepath):
     with open(filepath, 'rb') as fi:

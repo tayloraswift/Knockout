@@ -52,22 +52,23 @@ class Text_context(object):
             self.c = c
 
     def update_force(self):
+        self.update_context()
+        self.changed.update({'paragraph'})
+        self.changed.update({'font'})
+        self.changed.update({'character'})
+        self.changed.update({'frames', 'section'})
+
+    def update_context(self):
         BLOCK, TEXTSTYLE = cursor.fcursor.styling_at()
         C = cursor.fcursor.at()
         
-        self.changed.update({'paragraph'})
         self.bk = BLOCK
         self.bs = datablocks.BSTYLES.project_b(BLOCK)
-    
-        self.changed.update({'font'})
         self.ts = TEXTSTYLE
-    
-        self.changed.update({'character'})
         self.char = C
         
         self.sc, self.c = caramel.delight.at()
-        self.changed.update({'frames'})
-
+    
     def push_active(self, A, node):
         if A == 'kbs':
             self.kbs = node

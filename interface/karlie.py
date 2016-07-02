@@ -39,7 +39,7 @@ def _stack_row(i, row, y, gap, width, node, ctx):
                             node=node, 
                             A=A, 
                             Z=lambda N, A: _Z_state(N, A, ctx()),
-                            refresh=contexts.Text.update_force,
+                            refresh=contexts.Text.update_context,
                             name=name) for a, b, (_, TYPE, A, name) in divisions])
 
 def _stack_properties(y, gap, width, node, ctx, L):

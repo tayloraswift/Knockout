@@ -30,7 +30,7 @@ def cross(cr, x, y):
     cr.rel_move_to(0, -8)
     cr.rel_line_to(-8, 8)
 
-def text(x, y, text, font, fontsize=None, align=1, sub_minus=False, upper=False, grid=False):    
+def text(x, y, text, font, fontsize=None, align=1, left=None, sub_minus=False, upper=False, grid=False):
     if fontsize is None:
         fontsize = font['fontsize']
     xo = x
@@ -64,24 +64,25 @@ def text(x, y, text, font, fontsize=None, align=1, sub_minus=False, upper=False,
         for N, P in zip(hb.buffer_get_glyph_infos(HBB), hb.buffer_get_glyph_positions(HBB)):
             line.append((N.codepoint, x + P.x_offset*factor, y))
             x += P.x_advance*factor + tracking
-
     if align == 0:
         dx = (xo - x)/2
         line = [(g[0], g[1] + dx, g[2]) for g in line]
     elif align == -1:
         dx = xo - x
+        if left is not None:
+            dx = max(dx, left - xo)
         line = [(g[0], g[1] + dx, g[2]) for g in line]
     
-    return font['font'], font['fontsize'], line
+    return font['font'], font['fontsize'], line, x - xo - tracking
 
 def set_fonts(cr, font, fontsize):
     cr.set_font_face(font)
     cr.set_font_size(fontsize)
 
 def show_text(cr, textline):
-    * F, T = textline
-    set_fonts(cr, * F)
-    cr.show_glyphs(T)
+    cr.set_font_face(textline[0])
+    cr.set_font_size(textline[1])
+    cr.show_glyphs(textline[2])
 
 class Kookie(object):
     def __init__(self, x, y, width, height):

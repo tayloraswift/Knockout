@@ -6,16 +6,20 @@ from fonts import hb, get_ot_font, Grid_font
 
 from state import constants
 
-def _create_interface():
-    FD = {name: Textstyle(IT) for name, IT in constants.interface_fstyles.items()}
-    P = [(FD[F], Counter(tags)) for F, tags in constants.interface_pstyle]
-    ui_styles = ((), ('title',), ('strong',), ('label',), ('mono',))
-    for U in ui_styles:
+class Interface_fonts(dict):
+    def __init__(self, IBSTYLE, ITSTYLES, * combos ):
+        FD = {name: Textstyle(IT) for name, IT in ITSTYLES.items()}
+        self._P = [(FD[F], Counter(tags)) for F, tags in IBSTYLE]
+        dict.__init__(self)
+        for U in combos:
+            self.__missing__(U)
+        
+    def __missing__(self, U):
         F = Counter(U)
         # iterate through stack
         projection = Textstyle.BASE.copy()
         
-        for TS in (TS for TS, tags in P if tags <= F):
+        for TS in (TS for TS, tags in self._P if tags <= F):
             projection.update(TS)
 
         # set up fonts
@@ -23,6 +27,7 @@ def _create_interface():
         projection['__factor__'] = projection['fontsize']/upem
         projection['__gridfont__'] = Grid_font(projection['__hb_font__'], upem)
         
-        yield U, projection
+        self[U] = projection
+        return projection
 
-ISTYLES = dict(_create_interface())
+ISTYLES = Interface_fonts(constants.interface_bstyle, constants.interface_tstyles, (), ('title',), ('strong',), ('label',), ('mono',))

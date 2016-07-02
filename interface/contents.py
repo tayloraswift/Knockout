@@ -19,23 +19,34 @@ class Ordered(Kookie):
         self._slot = slot
         
         self._LMAX = len(node.content) + lcap
-        self._font = ISTYLES[('strong',)]
+        self._fonts = ISTYLES[('strong',)], ISTYLES[('emphasis',)]
         Kookie.__init__(self, x, y, width, self._itemheight * (self._LMAX + 1))
 
         # set hover function equal to press function
         self.is_over_hover = self.is_over
         
-        self.read()
-        
         x2 = x + width
         self._subdivisions = [x2 - 74, x2 - 50, x2 - 26]
+        
+        self.read()
 
     def _get_list(self):
         return self._content
 
+    def _multi_label(self, x1, x2, y, subtexts):
+        if type(subtexts) is str:
+            return text(x1, y, subtexts, self._fonts[0]),
+        elif len(subtexts) < 2 or not subtexts[1]:
+            return text(x1, y, subtexts[0], self._fonts[0]),
+        else:
+            T1 = text(x1, y, subtexts[0], self._fonts[0])
+            T2 = text(x2, y, subtexts[1], self._fonts[1], align=-1, left=x1 + T1[3] + 10)
+            return T1, T2
+    
     def read(self):
         self._fullcontent = self._get_list()
-        self._labels = [text(self._x + 10, self._y + self._itemheight*i + 17, self._display(node), self._font) for i, node in enumerate(self._get_list())]
+        self._labels = [self._multi_label(self._x + 10, self._subdivisions[0] - 10, self._y + self._itemheight*i + 17, 
+                                          self._display(node)) for i, node in enumerate(self._get_list())]
         
         active = getattr(self._context, self._slot)
         
@@ -119,86 +130,69 @@ class Ordered(Kookie):
         return True
     
     def draw(self, cr, hover=(None, None)):
-        if self._labels:
-            set_fonts(cr, * self._labels[0][:2] )
-        
-        cr.set_source_rgba(0, 0, 0, 0.7)
         cr.set_line_width(2)
         
         y1 = self._y
-        for i, (value, textline) in enumerate(zip(self._fullcontent, self._labels)):
-
+        for i, (value, textlines) in enumerate(zip(self._fullcontent, self._labels)):
             if value is self._active:
                 radius = 5
-
+                halfpi = pi*0.5
                 y2 = y1 + self._itemheight
-                cr.move_to(self._x, y1 + radius)
-                cr.arc(self._x + radius, y1 + radius, radius, 2*(pi/2), 3*(pi/2))
-                cr.arc(self._x_right - radius, y1 + radius, radius, 3*(pi/2), 4*(pi/2))
-                cr.arc(self._x_right - radius, y2 - radius, radius, 0*(pi/2), 1*(pi/2))
-                cr.arc(self._x + radius, y2 - radius, radius, 1*(pi/2), 2*(pi/2))
+                cr.move_to(self._x           , y1 + radius)
+                cr.arc(self._x       + radius, y1 + radius, radius, pi      , 3*halfpi)
+                cr.arc(self._x_right - radius, y1 + radius, radius, 3*halfpi, 2*pi    )
+                cr.arc(self._x_right - radius, y2 - radius, radius, 0       , halfpi  )
+                cr.arc(self._x       + radius, y2 - radius, radius, halfpi  , pi      )
                 cr.close_path()
                 
                 if self._colored(value):
-                    cr.set_source_rgb( * accent)
-                    cr.fill()
+                    cr.set_source_rgb( * accent )
                 else:
                     cr.set_source_rgb(0.7, 0.7, 0.7)
-                    cr.fill()
+                cr.fill()
 
                 cr.set_source_rgb(1, 1, 1)
-                
                 upchevron(cr, self._subdivisions[0], y1)
-                cr.stroke()
-                
                 downchevron(cr, self._subdivisions[1], y1)
-                cr.stroke()
-
                 cross(cr, self._subdivisions[2], y1)
                 cr.stroke()
 
-                cr.set_source_rgb(1, 1, 1)
-
             elif hover[1] is not None and hover[1][0] == i:
-                if hover[1][1] == 2:
-                    cr.set_source_rgb( * accent)
-                else:
-                    cr.set_source_rgba(0, 0, 0, 0.7)
+                colors = [(0.3, 0.3, 0.3)] * 3
+                if hover[1][1] > 1:
+                    colors[hover[1][1] - 2] = accent
+                
+                cr.set_source_rgba( * colors[0] )
                 upchevron(cr, self._subdivisions[0], y1)
                 cr.stroke()
 
-                if hover[1][1] == 3:
-                    cr.set_source_rgb( * accent)
-                else:
-                    cr.set_source_rgba(0, 0, 0, 0.7)
+                cr.set_source_rgba( * colors[1] )
                 downchevron(cr, self._subdivisions[1], y1)
                 cr.stroke()
 
-                if hover[1][1] == 4:
-                    cr.set_source_rgb( * accent)
-                else:
-                    cr.set_source_rgba(0, 0, 0, 0.7)
+                cr.set_source_rgba( * colors[2] )
                 cross(cr, self._subdivisions[2], y1)
                 cr.stroke()
                 
                 if self._colored(value):
-                    cr.set_source_rgb( * accent)
+                    cr.set_source_rgba( * accent )
                 else:
-                    cr.set_source_rgba(0, 0, 0, 0.4)
+                    cr.set_source_rgb(0.6, 0.6, 0.6)
 
             elif self._colored(value):
-                cr.set_source_rgba(0, 0, 0, 0.7)
+                cr.set_source_rgb(0.3, 0.3, 0.3)
 
             else:
-                cr.set_source_rgba(0, 0, 0, 0.4)
-                
-            cr.show_glyphs(textline[2])
+                cr.set_source_rgb(0.6, 0.6, 0.6)
+            
+            for textline in textlines:
+                show_text(cr, textline)
             y1 += self._itemheight
 
         if hover[1] is not None and hover[1][0] == self._LMAX:
-            cr.set_source_rgb( * accent)
+            cr.set_source_rgb( * accent )
         else:
-            cr.set_source_rgba(0, 0, 0, 0.7)
+            cr.set_source_rgb(0.3, 0.3, 0.3)
         plus_sign(cr, self._x, y1)
         cr.fill()
 

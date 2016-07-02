@@ -289,11 +289,14 @@ def _print_counter(node):
     else:
         return '{none}'
 
+def _print_tcounter(node):
+    return _print_counter(node), str(node['textstyle'])
+
 def _print_bcounter(node):
     if type(node) is Blockstyle:
-        return _print_counter(node)
+        return _print_counter(node), '▯' * len(node.content)
     else:
-        return 'ELEMENT'
+        return 'ELEMENT',
 
 _BLOCK_PROPERTIES =[[(0, fields.Blank_space, 'leading', 'LEADING')],
                     [(0, fields.Blank_space, 'language', 'LANGUAGE')],
@@ -326,7 +329,7 @@ class Properties(_Properties_panel):
                             node = contexts.Text.kbs, 
                             context = contexts.Text,
                             slot = 'kbm',
-                            display = _print_counter))
+                            display = _print_tcounter))
                 y = self._y_incr() + 20
                 
                 if contexts.Text.kbm is not None:

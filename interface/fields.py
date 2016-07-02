@@ -405,10 +405,11 @@ class SI(_Widget):
             ink = (1, 1, 1), (0  , 0  , 0  ), (0.2, 0.2, 0.2), negative_accent_dark
         if self._state:
             half_pi = pi*0.5
-            radius = 14
+            radius = 13
             centerline = self._from_top + 13
             cr.arc(self._zero + radius - 6, centerline, radius,  half_pi, -half_pi)
             cr.arc( self._one - radius + 6, centerline, radius, -half_pi,  half_pi)
+            cr.close_path()
             ink = ink[2 + (self._state < 0)], ink[0]
             cr.set_source_rgba( * ink[0] )
             cr.fill()

@@ -1,9 +1,9 @@
 import cProfile, pstats, io
-from main import main
+from kt import main
 
 PR = cProfile.Profile(timeunit=0.0001)
 PR.enable()
-main([None, 'test.html'])
+main((None, 'test.html'))
 PR.disable()
 
 s = io.StringIO()

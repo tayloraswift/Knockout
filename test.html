@@ -635,53 +635,55 @@
 </body>
 
 <textstyles>
-    <textstyle name="Sans serif semi" path="data/fonts/FiraSans-SemiBold.otf"/>
-
-    <textstyle name="Body bold" path="/home/kelvin/.fonts/Proforma/Proforma-Bold.otf"/>
-
-    <textstyle name="lowercase" capitals="False"/>
-
-    <textstyle name="Body italic" path="/home/kelvin/.fonts/Proforma/Proforma-MediumItalic.otf"/>
-
-    <textstyle name="h1" fontsize="36" path="/home/kelvin/.fonts/Kabel.otf"/>
-
-    <textstyle name="superscript" shift="5"/>
+    <textstyle name="All caps" capitals="True" case="1" cpsp="1"/>
 
     <textstyle name="Big" fontsize="20" path="/home/kelvin/.fonts/Proforma/Proforma-Book.otf" shift="-1"/>
 
-    <textstyle name="h2" fontsize="22" tracking="1" capitals="True"/>
+    <textstyle name="Black" color="#000000"/>
 
-    <textstyle name="Table size" fontsize="11"/>
+    <textstyle name="Body bold" path="/home/kelvin/.fonts/Proforma/Proforma-Bold.otf"/>
 
-    <textstyle name="h3" fontsize="14" tracking="2" capitals="True"/>
+    <textstyle name="Body bold italic" path="/home/kelvin/.fonts/Proforma/Proforma-BoldItalic.otf"/>
+
+    <textstyle name="Body italic" path="/home/kelvin/.fonts/Proforma/Proforma-MediumItalic.otf"/>
+
+    <textstyle name="Body regular" fontsize="13" path="/home/kelvin/.fonts/Proforma/Proforma-Medium.otf"/>
 
     <textstyle name="Body small" fontsize="9" path="/home/kelvin/.fonts/Proforma/Proforma-Semibold.otf"/>
 
-    <textstyle name="Caption" fontsize="12" tracking="0" capitals="False"/>
+    <textstyle name="Body small italic" fontsize="9" path="/home/kelvin/.fonts/Proforma/Proforma-SemiboldItalic.otf"/>
 
-    <textstyle name="Table units" fontsize="9" path="data/fonts/FiraSans-Medium.otf"/>
+    <textstyle name="Caption" fontsize="12" tracking="0" capitals="False" case="0" cpsp="0"/>
+
+    <textstyle name="Sans serif book" path="data/fonts/FiraSans-Book.otf"/>
 
     <textstyle name="Sans serif book italic" path="data/fonts/FiraSans-BookItalic.otf"/>
 
     <textstyle name="Sans serif light" path="data/fonts/FiraSans-Light.otf"/>
 
+    <textstyle name="Sans serif semi" path="data/fonts/FiraSans-SemiBold.otf"/>
+
     <textstyle name="Smallcaps" path="/home/kelvin/.fonts/Proforma/Proforma_MediumSC.ttf" capitals="False"/>
 
-    <textstyle name="Body bold italic" path="/home/kelvin/.fonts/Proforma/Proforma-BoldItalic.otf"/>
+    <textstyle name="Table heading" tracking="1"/>
 
-    <textstyle name="Table heading" tracking="1" capitals="True"/>
+    <textstyle name="Table size" fontsize="11" onum="1" tnum="1"/>
 
-    <textstyle name="Black" color="#000000"/>
+    <textstyle name="Table units" fontsize="9" path="data/fonts/FiraSans-Medium.otf"/>
 
-    <textstyle name="h4" fontsize="14" tracking="2" capitals="True"/>
+    <textstyle name="h1" fontsize="36" path="/home/kelvin/.fonts/Kabel.otf"/>
+
+    <textstyle name="h2" fontsize="22" tracking="1"/>
+
+    <textstyle name="h3" fontsize="14" tracking="2"/>
+
+    <textstyle name="h4" fontsize="14" tracking="2"/>
+
+    <textstyle name="lowercase" capitals="False"/>
 
     <textstyle name="subscript" shift="-2"/>
 
-    <textstyle name="Body small italic" fontsize="9" path="/home/kelvin/.fonts/Proforma/Proforma-SemiboldItalic.otf"/>
-
-    <textstyle name="Body regular" fontsize="13" path="/home/kelvin/.fonts/Proforma/Proforma-Medium.otf"/>
-
-    <textstyle name="Sans serif book" path="data/fonts/FiraSans-Book.otf"/>
+    <textstyle name="superscript" shift="5"/>
 </textstyles>
 
 <blockstyles>
@@ -724,17 +726,23 @@
     </blockstyle>
 
     <blockstyle class="h1" hyphenate="True" leading="40" margin_bottom="10">
+        <memberstyle class="" textstyle="All caps"/>
+
         <memberstyle class="" textstyle="h1"/>
     </blockstyle>
 
     <blockstyle class="h2" leading="24" margin_bottom="12" margin_top="12" incr_place_value="1" incr_assign="n + 1" show_count="'.'.join(str(i) for i in A[1:2])">
         <memberstyle class="" textstyle="Sans serif light"/>
 
+        <memberstyle class="" textstyle="All caps"/>
+
         <memberstyle class="" textstyle="h2"/>
     </blockstyle>
 
     <blockstyle class="h3" leading="24" margin_bottom="4" margin_top="12" incr_place_value="2" incr_assign="n + 1" show_count="'.'.join(str(i) for i in A[1:3])">
         <memberstyle class="" textstyle="Sans serif book"/>
+
+        <memberstyle class="" textstyle="All caps"/>
 
         <memberstyle class="emphasis" textstyle="Sans serif book italic"/>
 
@@ -743,6 +751,8 @@
 
     <blockstyle class="h4" incr_place_value="3" incr_assign="n + 1" show_count="'.'.join(str(i) for i in A[1:4])">
         <memberstyle class="" textstyle="h4"/>
+
+        <memberstyle class="" textstyle="All caps"/>
 
         <memberstyle class="" textstyle="Sans serif book italic"/>
     </blockstyle>
@@ -805,5 +815,5 @@
 </blockstyles>
 
 <!-- #############
-{'channels': (1, 0), 'text': ([1], (2, 50), (2, 50)), 'view': {'H': 247, 'Hc': 360.0, 'K': -35, 'Kc': 208.0, 'Zoom': 16, 'mode': 'text'}}
+{'channels': (1, 0), 'text': ([1], (9, 19), (9, 19)), 'view': {'H': 664, 'Hc': 1189.0, 'K': 216, 'Kc': 718.0, 'Zoom': 16, 'mode': 'text'}}
 ############# -->

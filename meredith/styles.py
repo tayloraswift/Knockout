@@ -47,6 +47,7 @@ class Textstyles(Datablocks):
     def __init__(self, * II, ** KII ):
         Box.__init__(self, * II, ** KII )
         self.__class__.dblibrary.update_datablocks(self)
+        self.content.sort(key=lambda k: k['name'])
 
     def after(self, A):
         datablocks.BSTYLES.text_projections.clear()

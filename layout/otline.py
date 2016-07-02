@@ -15,10 +15,11 @@ def _compose_glyphs(G, factor, vshift, tracking):
     x = 0
     y = -vshift
     glyphs = []
+    glyphappend = glyphs.append
     for cluster, codepoint, x_advance, x_offset in G:
         gx = x + x_offset*factor
         x += x_advance*factor
-        glyphs.append((codepoint, gx, x, y, cluster))
+        glyphappend((codepoint, gx, x, y, cluster))
         x += tracking
     if glyphs:
         x -= tracking
@@ -116,7 +117,7 @@ def _HB_cast_glyphs(cp, a, b, font, factor, runinfo, FSTYLE):
     hb.buffer_add_codepoints(HBB, cp, a, b - a)
     hb.buffer_set_direction(HBB, runinfo[1])
     hb.buffer_set_script(HBB, runinfo[2])
-    hb.shape(font, HBB, [])
+    hb.shape(font, HBB, FSTYLE['__ot_features__'])
     return _compose_glyphs(_unpack_hb_buffer(HBB), factor, FSTYLE['shift'], FSTYLE['tracking'])
 
 def _return_line(LINE, i, FSTYLE, R):
@@ -451,11 +452,12 @@ class OT_line(dict):
         
         self.IXF = IXF = []
         if editable and SEARCH:
+            IXFappend = IXF.append
             SEARCH.sort()
             i_p = self['i'] - 1
             for i, x, FSTYLE in SEARCH:
                 if i - i_p == 1:
-                    IXF.append((i, x, FSTYLE))
+                    IXFappend((i, x, FSTYLE))
                 elif i - i_p > 1:
                     x_p = IXF[-1][1]
                     unitgap = (x - x_p)/(i - i_p)

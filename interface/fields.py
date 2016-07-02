@@ -13,6 +13,8 @@ from state.constants import accent
 from interface.base import Kookie, text, set_fonts, show_text, plus_sign, minus_sign, downchevron, upchevron, cross
 from interface.menu import menu
 
+negative_accent      = 1, 0.3, 0.35
+negative_accent_dark = 1, 0.2, 0.25
 z_colors = ((0.6, 0.6, 0.6), (0.7, 0.7, 0.7), accent, accent, (0.55, 0.55, 0.55))
 z_hover_colors = ((0.4, 0.4, 0.4), (0.5, 0.5, 0.5), tuple(v + 0.2 for v in accent), tuple(v + 0.2 for v in accent), (0.35, 0.35, 0.35))
 
@@ -267,7 +269,7 @@ class CE(_Widget):
                     bg = accent
                 else:
                     R = reversed(range(0, count, -1))
-                    bg = (1, 0.3, 0.35)
+                    bg = negative_accent
                 for c in R:
                     cr.set_source_rgba(1, 1, 1, 0.5)
                     cr.rectangle(cx + 2*c - 1, cy - 2*c + 1, ch, ck)
@@ -320,7 +322,7 @@ class CB(_Widget):
     
     def __init__(self, width, name):
         self.k = 36
-        self._label = text(24, self.k - 10, name, ISTYLES[('label',)])
+        self._label = text(24, self.k - 11, name, ISTYLES[('label',)])
 
     def store(self, value):
         self._value = bool(value)
@@ -344,11 +346,11 @@ class CB(_Widget):
         show_text(cr, self._label)
         
         if self._state:
-            cr.arc(10, self.k - 14, 6, 0, 2*pi)
+            cr.arc(10, self.k - 16, 6, 0, 2*pi)
             cr.fill()
         else:
             cr.set_line_width(1.5)
-            cr.arc(10, self.k - 14, 5.25, 0, 2*pi)
+            cr.arc(10, self.k - 16, 5.25, 0, 2*pi)
             cr.stroke()
 
 class Checkbox(_Attribute):
@@ -357,6 +359,86 @@ class Checkbox(_Attribute):
     
     def __init__(self, x, y, width, node, A, Z=_binary_Z, name='', refresh=lambda: None, no_z=False, override_in=None):        
         _Attribute.__init__(self, ((name,), {}), x, y, width, node, A, Z, name, refresh, no_z, override_in)
+
+class SI(_Widget):
+    exit = 'f'
+    
+    def __init__(self, width, name):
+        self.k = 36
+        self._from_top = self.k - 29
+        
+        self._zero = int(width*0.5) - 55
+        self._one  = int(width*0.5) + 55
+        self._anchors = anchors = self._zero, self._zero + 24, self._one - 52 + 12, self._one - 26 + 6
+        
+        self._label   = text((anchors[1] + anchors[2])*0.5 - 6, self.k - 11, name, ISTYLES[('strong',)], align=0)
+    
+    def store(self, value):
+        self._value = int(value)
+        self._state = self._value
+        self._number  = text((self._anchors[0] + self._anchors[1])*0.5, self.k - 11, str(self._state), ISTYLES[('strong',)], align=0, sub_minus=True)
+
+    def value(self):
+        return self._state, self._state != self._value
+
+    def hover(self, x, y):        
+        if x < self._anchors[2]:
+            return 1
+        elif x < self._anchors[3]:
+            return 2
+        else:
+            return 3
+    
+    def focus(self, x, y):
+        if x < self._anchors[2]:
+            self._state = int(not self._state)
+        elif x < self._anchors[3]:
+            if self._state > -1:
+                self._state -= 1
+        else:
+            self._state += 1
+
+    def draw(self, cr, hover=None):
+        if hover is None:
+            ink = (1, 1, 1), (0.4, 0.4, 0.4), (0.4, 0.4, 0.4), negative_accent
+        else:
+            ink = (1, 1, 1), (0  , 0  , 0  ), (0.2, 0.2, 0.2), negative_accent_dark
+        if self._state:
+            half_pi = pi*0.5
+            radius = 14
+            centerline = self._from_top + 13
+            cr.arc(self._zero + radius - 6, centerline, radius,  half_pi, -half_pi)
+            cr.arc( self._one - radius + 6, centerline, radius, -half_pi,  half_pi)
+            ink = ink[2 + (self._state < 0)], ink[0]
+            cr.set_source_rgba( * ink[0] )
+            cr.fill()
+            hover = None
+        
+        inks = [ink[1]] * 3
+        if hover is not None:
+            inks[hover - 1] = accent
+        
+        cr.set_source_rgba( * inks[0] )
+        show_text(cr, self._label)
+        if self._state < 0:
+            cr.fill()
+            cr.set_line_width(2)
+            cross(cr, self._anchors[0], self._from_top)
+            cr.stroke()
+        else:
+            show_text(cr, self._number)
+            cr.fill()
+        
+        cr.set_source_rgba( * inks[1] )
+        minus_sign(cr, self._anchors[2] - 6, self._from_top)
+        cr.fill()
+        
+        cr.set_source_rgba( * inks[2] )
+        plus_sign (cr, self._anchors[3] - 6, self._from_top)
+        cr.fill()
+
+class Small_int(Checkbox):
+    widgetclass = SI
 
 class BS(_Widget):
     exit = 'd'
@@ -706,7 +788,7 @@ class OM(_Widget):
     
     def type_box(self, name, char):
         if self._O is not None:
-            self._NAMEWIDGET.type_box(name, char)
+            return self._NAMEWIDGET.type_box(name, char)
     
     def defocus(self):
         self._dropdown_active = False

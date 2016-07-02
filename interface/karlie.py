@@ -33,8 +33,8 @@ def _Z_state(N, A, layer):
 
 def _stack_row(i, row, y, gap, width, node, ctx):
     width += 10
-    divisions = [r[0] * width for r in row]
-    divisions = zip(divisions, divisions[1:] + [width], row)
+    divisions = [int(r[0] * width) for r in row]
+    divisions = zip(divisions, chain(divisions[1:], (width,)), row)
     return _columns([TYPE(15 + a, y + i*gap, b - a - 10, 
                             node=node, 
                             A=A, 
@@ -316,9 +316,6 @@ _TEXT_PROPERTIES = [[(0, fields.Blank_space, 'path', 'FONT FILE')],
                     [(0, fields.Blank_space, 'color', 'COLOR')]
                     ]
 
-it_common_features = iter(common_features)
-_OT_TEXT_PROPERTIES = [[(0, fields.Checkbox, f1, f1.upper()), (0.5, fields.Checkbox, f2, f2.upper())] for f1, f2 in zip(it_common_features, it_common_features)]
-
 class Properties(_Properties_panel):
     def _text_panel(self, y, KW):
         if self._tab == 'font':
@@ -355,6 +352,9 @@ class Properties(_Properties_panel):
                         self._items.extend(_stack_properties(y, * props_args , _TEXT_PROPERTIES))
                         y += 45*len(_TEXT_PROPERTIES) + 10
                         
+                        it_common_features = iter(common_features)
+                        _OT_TEXT_PROPERTIES = [[(f / len(FF), fields.Small_int, F, F.upper()) for f, F in enumerate(FF)] 
+                                                for FF in zip( * (it_common_features,) * max(KW // 145, 1) )]
                         self._items.extend(_stack_properties(y, * props_args , _OT_TEXT_PROPERTIES))
         
         elif self._tab == 'paragraph':

@@ -15,7 +15,7 @@ _text_DNA = [('fontsize',    'float',   13),
             ('capitals',    'bool',     False),
             ('color',       'rgba',     (1, 0.15, 0.2, 1))]
 
-_text_DNA.extend((feature, 'int', -1) for feature in common_features)
+_text_DNA.extend((feature, 'int', 0) for feature in common_features)
 
 class Textstyle(Box):
     name = 'textstyle'
@@ -209,8 +209,8 @@ class Blockstyles(_Has_tagged_members):
             ###
             
             # opentype features
-            projection['__ot_features__'] = [feature_map[feature][mode] if mode < 2 else feature_map[feature][2][mode] 
-                                             for mode, feature in ((projection[feature], feature) for feature in common_features) if mode >= 0]
+            projection['__ot_features__'] = [feature_map[feature][mode == 1] if mode < 2 else feature_map[feature][2][mode] 
+                                             for mode, feature in ((projection[feature], feature) for feature in common_features) if mode]
             
             projection['hash'] = H
             

@@ -20,7 +20,8 @@ _text_DNA.extend((feature, 'int', 0) for feature in common_features)
 class Textstyle(Box):
     name = 'textstyle'
 
-    DNA  = [('name',        'str', 'Untitled fontstyle')] + [A[:2] for A in _text_DNA]
+    DNA  = [('name',        'str', 'Untitled fontstyle')]
+    DNA.extend(A[:2] for A in _text_DNA)
     BASE = {A: D for A, TYPE, D in _text_DNA}
 
     def __init__(self, * II, ** KII ):
@@ -164,30 +165,30 @@ class Blockstyles(_Has_tagged_members):
         except KeyError:
             # iterate through stack
             projection = _Layer(self._block_default)
-            for B in chain((b for b in self.content if b['class'] <= P), [BLOCK]):
+            for B in chain((b for b in self.content if b['class'] <= P), (BLOCK,)):
                 projection.overlay(B)
             
             projection['__runinfo__'] = generate_runinfo(projection['language'])
             self.block_projections[H] = projection
             return projection
 
-    def project_t(self, BLOCK, F):
+    def project_t(self, BLOCK, F, CHAR_STYLES):
         if BLOCK.implicit_ is None:
             P = BLOCK['class']
         else:
             P = BLOCK['class'] + BLOCK.implicit_
         
         H = 22 * hash(frozenset(P.items())) + hash(frozenset(F.items())) # we must give paragraph a different factor if a style has the same name as a fontstyle
-        
+        if CHAR_STYLES:
+            H += 13 * sum(fp.hash for fp in CHAR_STYLES)
         try:
             return self.text_projections[H]
         except KeyError:
             # iterate through stack
             projection = _Layer(self._text_default)
-            for memberstyles in (b.content for b in self.content if b.content is not None and b['class'] <= P):
-                for TS in (c['textstyle'] for c in memberstyles if c['textstyle'] is not None and c['class'] <= F):
-                    projection.overlay(TS)
-            
+            iter_blockstyles = (b.content for b in self.content if b.content is not None and b['class'] <= P)
+            for TS in chain((c['textstyle'] for c in chain.from_iterable(iter_blockstyles) if c['textstyle'] is not None and c['class'] <= F), CHAR_STYLES):
+                projection.overlay(TS)
             # text font
             try:
                 upem, hb_face, projection['__hb_font__'], projection['font'] = get_ot_font(projection['path'])

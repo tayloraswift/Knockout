@@ -90,8 +90,8 @@ def _raise_digits(string):
     else:
         return (False, (0, len(string))),
 
-def _get_fontinfo(BLOCK, F):
-    FSTYLE = datablocks.BSTYLES.project_t(BLOCK, F)
+def _get_fontinfo(BLOCK, F, CHAR_STYLES):
+    FSTYLE = datablocks.BSTYLES.project_t(BLOCK, F, CHAR_STYLES)
     
     t_font = FSTYLE['__hb_font__']
     t_factor = FSTYLE['__factor__']
@@ -115,7 +115,9 @@ def bidir_levels(runinfo, text, BLOCK, F=None):
     i = 0
     j = i
     SS = []
-    o_fontinfo, t_fontinfo, e_fontinfo = _get_fontinfo(BLOCK, F)
+    CHAR_STYLES = []
+    o_fontinfo, t_fontinfo, e_fontinfo = _get_fontinfo(BLOCK, F, CHAR_STYLES)
+    
     
     runinfo_stack = [runinfo]
     l = runinfo[0]
@@ -189,12 +191,16 @@ def bidir_levels(runinfo, text, BLOCK, F=None):
                         F = o_fontinfo[1].copy()
                         if v.countersign:
                             F += v['class']
-                            o_fontinfo, t_fontinfo, e_fontinfo = _get_fontinfo(BLOCK, F)
+                            if len(v) > 1 or 'class' not in v:
+                                CHAR_STYLES.append(v)
+                            o_fontinfo, t_fontinfo, e_fontinfo = _get_fontinfo(BLOCK, F, CHAR_STYLES)
                             RUNS.append((l, False, i, v, runinfo, o_fontinfo))
                         else:
                             F -= v['class']
+                            if v['pop'] > 0:
+                                del CHAR_STYLES[-v['pop']:]
                             RUNS.append((l, False, i, v, runinfo, o_fontinfo))
-                            o_fontinfo, t_fontinfo, e_fontinfo = _get_fontinfo(BLOCK, F)
+                            o_fontinfo, t_fontinfo, e_fontinfo = _get_fontinfo(BLOCK, F, CHAR_STYLES)
                         SS.append('\u00AD')
                     else:
                         RUNS.append((l, False, i, v, runinfo, o_fontinfo))

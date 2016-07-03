@@ -1,9 +1,12 @@
+from random import randint
+
 from meredith.box import Box
+from meredith.styles import _text_DNA
 
 class Fontpost(Box):
     name = '_f_'
     inline = True
-    DNA = [('class', 'texttc', '_undefined_')]
+    DNA = [('class', 'texttc', '')]
 
     def copy(self):
         return self.__class__(self.attrs)
@@ -14,12 +17,25 @@ class Fontpost(Box):
 class PosFontpost(Fontpost):
     name = 'fo'
     countersign = True
+    isbase = False
+    
+    DNA = Fontpost.DNA + [A[:2] for A in _text_DNA]
+    
+    def __init__(self, * I , ** KI ):
+        super().__init__( * I , ** KI )
+        self.after('__attrs__')
+    
+    def after(self, A):
+        self.hash = randint(0, 1989000000)
+    
     def __str__(self):
         return '<fo/>'
 
 class NegFontpost(Fontpost):
     name = 'fc'
     countersign = False
+    
+    DNA = Fontpost.DNA + [('pop', 'int', 0)]
     def __str__(self):
         return '<fc/>'
 

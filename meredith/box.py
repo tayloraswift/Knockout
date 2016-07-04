@@ -1,8 +1,16 @@
 from itertools import chain
+from random import randint
 
 from olivia import literal, reformat, standard
 
 from meredith import datablocks
+
+def random_serial():
+    R = set()
+    while True:
+        r = randint(0, 1989000000)
+        if r not in R:
+            yield r
 
 def new_name(name, namelist):
     if name in namelist:

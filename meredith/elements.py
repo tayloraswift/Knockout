@@ -1,7 +1,7 @@
-from random import randint
-
-from meredith.box import Box
+from meredith.box import Box, random_serial
 from meredith.styles import _text_DNA
+
+font_serial_generator = random_serial()
 
 class Fontpost(Box):
     name = '_f_'
@@ -17,16 +17,23 @@ class Fontpost(Box):
 class PosFontpost(Fontpost):
     name = 'fo'
     countersign = True
-    isbase = False
     
+    fixed_attrs = {a[0] for a in _text_DNA}
     DNA = Fontpost.DNA + [A[:2] for A in _text_DNA]
     
     def __init__(self, * I , ** KI ):
         super().__init__( * I , ** KI )
-        self.after('__attrs__')
-    
+        self.isbase = False
+        self._update_hash()
+
+    def _update_hash(self):
+        if self.keys() & self.__class__.fixed_attrs:
+            self.stylehash = next(font_serial_generator)
+        else:
+            self.stylehash = None
+        
     def after(self, A):
-        self.hash = randint(0, 1989000000)
+        self._update_hash()
     
     def __str__(self):
         return '<fo/>'

@@ -2,11 +2,11 @@ from bisect import bisect
 from itertools import groupby, chain
 from math import inf as infinity
 
-from meredith.box import Box
+from meredith.box import Box, random_serial
 from meredith import datablocks
 from olivia import Tagcounter
 from olivia.frames import Margined
-from meredith.styles import Blockstyle, block_styling_attrs
+from meredith.styles import Blockstyle
 
 from layout.otline import OT_line, cast_paragraph, cast_mono_line
 
@@ -318,7 +318,9 @@ class Wheels(list):
 def _split_paint_pages(S, key, functions):
         for page, FF in groupby(functions, lambda k: k[0]):
             S[page][key].extend(F[1] for F in FF)
-            
+
+block_serial_generator = random_serial()
+
 class Blockelement(Blockstyle):
     planelevel = True
     
@@ -335,15 +337,22 @@ class Blockelement(Blockstyle):
         
         self._preceeding = None
         
+        self._update_hash()
+        
         self._load()
     
     def _load(self):
         pass
 
+    def _update_hash(self):
+        if self.keys() & self.__class__.fixed_attrs:
+            self.stylehash = next(block_serial_generator)
+        else:
+            self.stylehash = None
+    
     def after(self, A):
-        if A in block_styling_attrs:
-            datablocks.BSTYLES.block_projections.clear()
-            datablocks.BSTYLES.text_projections.clear()
+        if A in self.__class__.fixed_attrs:
+            self._update_hash()
         datablocks.DOCUMENT.layout_all()
 
     def which(self, x, u, r):

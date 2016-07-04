@@ -82,8 +82,6 @@ _block_DNA = [('hyphenate',       'bool',   False),
             ('show_count',      'farray',   None),
             ('counter_space',   'float',    0.5)]
 
-block_styling_attrs = [a[0] for a in _block_DNA]
-
 class _Has_tagged_members(Box):
     def content_new(self, active=None, i=None):
         if active is None:
@@ -98,6 +96,8 @@ class _Has_tagged_members(Box):
 
 class Blockstyle(_Has_tagged_members):
     name = 'blockstyle'
+    
+    fixed_attrs = {a[0] for a in _block_DNA}
     
     DNA  = [('class',           'blocktc',  'body')] + [A[:2] for A in _block_DNA]
     BASE = {A: D for A, TYPE, D in _block_DNA}
@@ -157,8 +157,8 @@ class Blockstyles(_Has_tagged_members):
             P = BLOCK['class'] + BLOCK.implicit_
         
         H = hash(frozenset(P.items()))
-        if len(BLOCK) > 1:
-            H += 13 * id(BLOCK)
+        if BLOCK.stylehash is not None:
+            H += 13 * BLOCK.stylehash
         
         try:
             return self.block_projections[H]
@@ -180,7 +180,8 @@ class Blockstyles(_Has_tagged_members):
         
         H = 22 * hash(frozenset(P.items())) + hash(frozenset(F.items())) # we must give paragraph a different factor if a style has the same name as a fontstyle
         if CHAR_STYLES:
-            H += 13 * sum(fp.hash for fp in CHAR_STYLES)
+            H += 13 * sum(fp.stylehash for fp in CHAR_STYLES)
+        
         try:
             return self.text_projections[H]
         except KeyError:
@@ -189,6 +190,7 @@ class Blockstyles(_Has_tagged_members):
             iter_blockstyles = (b.content for b in self.content if b.content is not None and b['class'] <= P)
             for TS in chain((c['textstyle'] for c in chain.from_iterable(iter_blockstyles) if c['textstyle'] is not None and c['class'] <= F), CHAR_STYLES):
                 projection.overlay(TS)
+            
             # text font
             try:
                 upem, hb_face, projection['__hb_font__'], projection['font'] = get_ot_font(projection['path'])

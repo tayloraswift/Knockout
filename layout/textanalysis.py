@@ -191,7 +191,7 @@ def bidir_levels(runinfo, text, BLOCK, F=None):
                         F = o_fontinfo[1].copy()
                         if v.countersign:
                             F += v['class']
-                            if len(v) > 1 or 'class' not in v:
+                            if v.stylehash is not None:
                                 CHAR_STYLES.append(v)
                             o_fontinfo, t_fontinfo, e_fontinfo = _get_fontinfo(BLOCK, F, CHAR_STYLES)
                             RUNS.append((l, False, i, v, runinfo, o_fontinfo))

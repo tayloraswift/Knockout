@@ -121,7 +121,10 @@ class Axis(Plane):
     
     def _calculate_vectors(self):
         totalvector = self._line[1][0] - self._line[0][0], self._line[1][1] - self._line[0][1]
-        inv_hyp = 1/sqrt(totalvector[0]**2 + totalvector[1]**2)
+        try:
+            inv_hyp = 1/sqrt(totalvector[0]**2 + totalvector[1]**2)
+        except ZeroDivisionError:
+            inv_hyp = 0
         vector = totalvector[0]*inv_hyp, totalvector[1]*inv_hyp
         perpendicular = vector[1], -vector[0]
         

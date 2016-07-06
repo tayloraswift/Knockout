@@ -590,7 +590,26 @@
             </mod:fx>
         </mod:plot>
 
-        <p class="caption^h4">3D plot</p>
+        <mod:plot class="figure" height="250" azm="0.7" alt="0.8" rot="0.5">
+            <mod:plot:axis variable="x" range="-6:6" number="2" line_width="1.5" arrowhead="True" axis="True" ticks="True">
+                <p>X axis</p>
+            </mod:plot:axis>
+
+            <mod:plot:axis variable="y" range="-6:6" number="2" line_width="1.5" arrowhead="True" axis="True" ticks="True"/>
+
+            <mod:plot:axis variable="z" range="-6:6" number="2" line_width="1.5" arrowhead="True" axis="True" ticks="True"/>
+
+            <mod:scatter data="
+1,1,1 
+1,-1.5,2 
+1,0,-1 
+-3,1,-5
+-2.2,0.5,1.1" color="#ff3085">
+                <p>3D scatterplot</p>
+            </mod:scatter>
+        </mod:plot>
+
+        <p class="caption^h4">3D scatterplot</p>
 
         <mod:pie class="figure" radius="80" center="0.3" rotate="-1.5707963267948966">
             <mod:pie:slice prop="39.19" color="#7080ff">
@@ -817,5 +836,5 @@
 </blockstyles>
 
 <!-- #############
-{'channels': (1, 0), 'text': ([1], (2, 173), (2, 173)), 'view': {'H': 429, 'Hc': 782.0, 'K': 72, 'Kc': 376.0, 'Zoom': 16, 'mode': 'text'}}
+{'channels': (1, 0), 'text': ([1], (67,), (67,)), 'view': {'H': -375, 'Hc': 928.0, 'K': -990, 'Kc': 671.0, 'Zoom': 11, 'mode': 'text'}}
 ############# -->

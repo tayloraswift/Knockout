@@ -4,7 +4,7 @@ from .data import Data
 
 class Slope(Data):
     name = 'mod:plot:slope'
-    DNA = Data.DNA + [('m', 'fx', 'x + y'), ('dx', 'float', 1), ('dy', 'float', 1), ('pill_width', 'float', 1), ('pill_length', 'float', 5), ('color', 'rgba', '#ff0085')]
+    DNA = Data.DNA + [('m', ('f', ('x', 'y')), 'x + y'), ('dx', 'float', 1), ('dy', 'float', 1), ('pill_width', 'float', 1), ('pill_length', 'float', 5), ('color', 'rgba', '#ff0085')]
     
     def compact(self, system, height):
         P = []

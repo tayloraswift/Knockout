@@ -219,32 +219,32 @@ def interpret_tsquared(value):
 
 # for function plotter
 from data.userfunctions import *
-import parser
+try:
+    from sympy.utilities import lambdify
+except ImportError:
+    print('WARNING: SymPy not available')
 
-def _f(expression, template):
+    def lambdify(variables, expression):
+        return lambda * args: None
+
+def _f(variables, expression):
     if not expression or expression == 'None':
         return None
     elif callable(expression):
         return expression
     else:
-        code = parser.expr(expression).compile()
-        return template(code)
+        return lambdify(variables, expression)
 
-def function_x(expression):
-    return _f(expression, lambda code: lambda x, y=0: eval(code))
+class Standard_types(dict):
+    def __missing__(self, key):
+        if type(key) is tuple:
+            if key[0] == 'f':
+                self[key] = v = lambda expression: _f(key[1], expression)
+                return v
+        raise KeyError
 
-def function_n(expression):
-    return _f(expression, lambda code: lambda n: eval(code))
-
-def function_array(expression):
-    return _f(expression, lambda code: lambda A: eval(code))
-
-
-standard = {'str': str,
-            'float tuple': interpret_float_tuple,
-            'rgba': interpret_rgba, 
-            '1D': interpret_haylor,
-            'multi_D': interpret_tsquared,
-            'fx': function_x,
-            'fn': function_n,
-            'farray': function_array}
+standard =   Standard_types((('str'          , str),
+                            ('float tuple'  , interpret_float_tuple),
+                            ('rgba'         , interpret_rgba), 
+                            ('1D'           , interpret_haylor),
+                            ('multi_D'      , interpret_tsquared)))

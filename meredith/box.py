@@ -64,7 +64,7 @@ class Box(dict):
                 elif default:
                     yield A, literal[TYPE](default[0])
             
-            elif TYPE in standard:
+            elif TYPE in standard or type(TYPE) is tuple:
                 if A in attrs:
                     self.attrs[A] = attrs[A]
                     yield A, standard[TYPE](attrs[A])
@@ -101,7 +101,7 @@ class Box(dict):
             self.attrs[A] = v
             self[A] = v
         
-        elif TYPE in standard:
+        elif TYPE in standard or type(TYPE) is tuple:
             self.attrs[A] = S
             self[A] = standard[TYPE](S)
         

@@ -1,9 +1,9 @@
 from math import pi
 from .data import Data
 
-class Function(Data):
-    name = 'mod:fx'
-    DNA = Data.DNA + [('x', ('f', ('x',)), lambda t: t), ('y', ('f', ('x',)), lambda t: t), ('z', ('f', ('x',)), lambda t: t), ('range', 'open range', ':'), ('step', 'float', 1), ('color', 'rgba', '#ff3085'), ('radius', 'float', 2), ('line_width', 'float', 2), ('clip', 'bool', False)]
+class Parametric_Surface(Data):
+    name = 'mod:ruv'
+    DNA = Data.DNA + [('x', 'fx', lambda t: t), ('y', 'fx', lambda t: t), ('z', 'fx', lambda t: t), ('range', 'open range', ':'), ('step', 'float', 1), ('color', 'rgba', '#ff3085'), ('radius', 'float', 2), ('line_width', 'float', 2), ('clip', 'bool', False)]
 
     def compact(self, system, height):
         to = system.to

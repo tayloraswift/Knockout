@@ -25,7 +25,7 @@ class Scatterplot(Data):
 
 class Bubbleplot(Data):
     name = 'mod:bubble'
-    DNA = Data.DNA + [('data', 'multi_D', ()), ('color', 'rgba', '#ff3085'), ('radius', 'fx', lambda a: sqrt(abs(a)))]
+    DNA = Data.DNA + [('data', 'multi_D', ()), ('color', 'rgba', '#ff3085'), ('radius', ('f', ('x',)), lambda a: sqrt(abs(a)))]
 
     def compact(self, system, height):
         to = system.to

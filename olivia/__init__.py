@@ -252,11 +252,13 @@ class Gradient(object):
 from data.userfunctions import *
 try:
     from sympy.utilities import lambdify
+    from sympy import sympify, Symbol
 except ImportError:
     print('WARNING: SymPy not available')
 
     def lambdify(variables, expression):
         return lambda * args: None
+    Symbol = None
 
 def _f(variables, expression):
     if not expression or expression == 'None':
@@ -264,6 +266,17 @@ def _f(variables, expression):
     elif callable(expression):
         return expression
     else:
+        if len(variables) == 1 and '|' in variables[0] and Symbol is not None:
+            expression = sympify(expression)
+            present_variables = expression.free_symbols
+            for preferred in map(Symbol, variables[0].split('|')):
+                if preferred in present_variables:
+                    present_variables.remove(preferred)
+                    preferred = preferred,
+                    break
+            else:
+                preferred = ()
+            variables = * preferred, * (str(v) + '=0' for v in present_variables)
         return lambdify(variables, expression)
 
 class Standard_types(dict):

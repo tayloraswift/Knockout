@@ -8,16 +8,16 @@ class Image(Inline):
     
     def _load(self):
         if self['src'][-4:] == '.svg':
-            self._image = SVG_image(url=self['src'])
+            self._image = SVG_image(self['width'], url=self['src'])
         else:
-            self._image = Bitmap_image(self['src'], self['resolution'])
+            self._image = Bitmap_image(self['width'], self['src'], self['resolution'])
     
     def _cast_inline(self, LINE, runinfo, F, FSTYLE):
-        self._image.inflate(self['width'], LINE['leading'])
+        self._image.inflate(LINE['leading'])
         self._y_offset = -LINE['leading']
         return [], self['width'], LINE['leading'], self._image.height - LINE['leading']
 
     def deposit_glyphs(self, repository, x, y):
-        repository['_images'].append((self._image.paint, x, self._y_offset + y))
+        repository['_images'].append((self._image.paint, x, self._y_offset + y, 0))
 
 members = [Image]

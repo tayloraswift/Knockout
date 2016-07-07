@@ -504,7 +504,7 @@ class OT_line(dict):
         for inline, dx in self._INL:
             inline.deposit_glyphs(repository, dx + x, y)
         
-        repository['_images'].extend((glyph[5], glyph[1] + dx + x, glyph[3] + y) for glyph, dx in self._IMG)
+        repository['_images'].extend((glyph[5], glyph[1] + dx + x, glyph[3] + y, 0) for glyph, dx in self._IMG)
         repository['_annot'].extend((glyph[0], glyph[1] + dx + x, glyph[3] + y, BLOCK, FSTYLE) for glyph, FSTYLE, dx in self._ANO)
 
     def nail_to(self, x, y, k=None, align=1):

@@ -3,6 +3,8 @@ from math import pi, sqrt
 import os
 import cairo
 
+from itertools import chain
+
 from fonts.interfacefonts import ISTYLES
 from fonts import SPACENAMES
 
@@ -230,7 +232,7 @@ class Document_view(ui.Cell):
         
         self._stake = None
         
-        self._scroll_notches = [0.1, 0.13, 0.15, 0.2, 0.22, 0.3, 0.4, 0.5, 0.6, 0.8, 0.89, 1, 1.25, 1.5, 1.75, 1.989, 2, 2.5, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20, 30, 40]
+        self._scroll_notches = [0.1, 0.13, 0.15, 0.2, 0.22, 0.3, 0.4, 0.5, 0.6, 0.8, 0.89, 1, 1.25, 1.5, 1.75, 1.989, 2, 2.5, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20, 30]
         self._scroll_notch_i = state['Zoom']
         
         # transform parameters
@@ -512,23 +514,26 @@ class Document_view(ui.Cell):
     def print_page(self, cr, p, page):
         m = self._mode
         self._mode = 'render'
-        self._draw_images(cr, page['_images'])
-        for operation, x, y, z in page['_paint']:
+        for operation, x, y, z in chain(page['_images'], page['_paint']):
             cr.save()
             cr.translate(x, y)
-            operation(cr)
+            operation(cr, 0)
             cr.restore()
         self._print_sorted(cr, page)
         self._mode = m
             
     def _draw_by_page(self, cr, mx_cx, my_cy, cx, cy, A=1):
-        medium = DOCUMENT
+        medium  = DOCUMENT
         PHEIGHT = medium['height']
-        PWIDTH = medium['width']
+        PWIDTH  = medium['width']
         
-        max_page = 0
+        max_page      = 0
         sorted_glyphs = DOCUMENT.transfer()
-        section = self.planecursor.plane_address[0]
+        section       = self.planecursor.plane_address[0]
+        if self._mode == 'render':
+            zoom = 0
+        else:
+            zoom = self._A
         for page, P in (PP for PP in sorted_glyphs.items() if PP[0] is not None):
             max_page = max(max_page, page)
             
@@ -540,12 +545,11 @@ class Document_view(ui.Cell):
             cr.save()
             cr.translate(A*medium.map_X(mx_cx, page) + cx, A*medium.map_Y(my_cy, page) + cy)
             cr.scale(A, A)
-
-            self._draw_images(cr, P['_images'])
-            for operation, x, y, z in P['_paint']:
+            
+            for operation, x, y, z in chain(P['_images'], P['_paint']):
                 cr.save()
                 cr.translate(x, y)
-                operation(cr)
+                operation(cr, zoom)
                 cr.restore()
             self._print_sorted(cr, P)
 
@@ -616,16 +620,6 @@ class Document_view(ui.Cell):
             
             if self._mode == 'frames':
                 caramel.delight.render_grid(cr, px1, py1, PWIDTH, PHEIGHT, self._A)
-
-    def _draw_images(self, cr, images):
-        mode = self._mode == 'render'
-        for IMAGE, x, y in images:
-            cr.save()
-            cr.translate(x, y)
-            
-            IMAGE(cr, mode)
-            
-            cr.restore()
 
     def _draw_annotations(self, cr, annot, page):
         afs = int(6 * sqrt(self._A))

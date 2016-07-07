@@ -19,7 +19,7 @@ class Root(Inline):
     def _load(self):
         self._index, self._radicand = self.find_nodes(Index, Radicand)
     
-    def _draw_radix(self, cr):
+    def _paint(self, cr, render):
         cr.set_source_rgba( * self._color )
         cr.move_to(self._radix[0][0], self._radix[0][1])
         for u, v in self._radix[1:]:
@@ -71,6 +71,6 @@ class Root(Inline):
         
         width = kx + rfs * 0.35 + rad['advance']
         
-        return NL, width, rad_asc + rfs*0.2, rad_desc, (self._draw_radix, 0, 0, 0)
+        return NL, width, rad_asc + rfs*0.2, rad_desc, (self._paint, 0, 0, 0)
 
 members = (Root, Index, Radicand)

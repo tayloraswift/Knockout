@@ -31,7 +31,7 @@ class Slope(Data):
         self._inflated = inflated
         return (), ((0, self.paint),), ()
     
-    def paint(self, cr):
+    def paint(self, cr, render):
         cr.set_source_rgba( * self['color'] )
         cr.set_line_width(self['pill_width'])
         for p1, p2 in self._inflated:

@@ -7,7 +7,7 @@ class Data(Plane):
     def set_key_height(self, k):
         self._key_height = k
     
-    def paint_key(self, cr):
+    def paint_key(self, cr, render):
         cr.set_source_rgba( * self['color'] )
         cr.rectangle(0, 0, 4, self._key_height)
         cr.fill()

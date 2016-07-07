@@ -14,7 +14,7 @@ class Scatterplot(Data):
         self._inflated = [(x*width, y) for x, y in self._compact]
         return (), ((self._z_center, self.paint),), ()
     
-    def paint(self, cr):
+    def paint(self, cr, render):
         cr.set_source_rgba( * self['color'] )
         circle_t = 2*pi
         r = self['radius']
@@ -38,7 +38,7 @@ class Bubbleplot(Data):
         self._inflated = [((x*width, y), r) for (x, y), r in self._compact]
         return (), ((self._z_center, self.paint),), ()
     
-    def paint(self, cr):
+    def paint(self, cr, render):
         cr.set_source_rgba( * self['color'] )
         circle_t = 2*pi
         for (x, y), size in self._inflated:

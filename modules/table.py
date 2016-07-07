@@ -169,7 +169,7 @@ class Table(Blockelement):
                 cr.rectangle(int(x) - 3.25, y, 7, 0.5)
             cr.fill()
 
-    def _paint_table_hrules(self, cr, hrules):
+    def _paint_table_hrules(self, cr, render, hrules):
         e = (self['rule_width'] % 2) / 2
         p = self['rule_margin']
         cr.set_line_width(self['rule_width'])
@@ -187,7 +187,7 @@ class Table(Blockelement):
                 cr.line_to(b[0], b[1] + e)
                 cr.stroke()
 
-    def _paint_table_vrules(self, cr):
+    def _paint_table_vrules(self, cr, render):
         e = (self['rule_width'] % 2) / 2
         p = self['rule_margin']
         cr.set_line_width(self['rule_width'])

@@ -226,7 +226,7 @@ class Axis(Plane):
         for x, y, u in positions:
             yield (x + dx1, y + dy1), (x + dx2, y + dy2)
     
-    def paint(self, cr):
+    def paint(self, cr, render):
         cr.set_source_rgba( * self['color'] )
         cr.set_line_width(self['line_width'])
         if self['axis']:

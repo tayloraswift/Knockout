@@ -7,15 +7,17 @@ class Rule(Blockelement):
     def _load(self):
         pass
     
+    def _paint(self, cr, render):
+        cr.set_source_rgba( * self['color'] )
+        cr.rectangle( * self._rect_info )
+        cr.fill()
+    
     def _layout_block(self, frames, BSTYLE, overlay):
         frames.fit(BSTYLE['leading'])
         u = frames.read_u()
         x1, x2, y, pn = frames.at(u)
-        def draw(cr):
-            cr.set_source_rgba( * self['color'] )
-            cr.rectangle(0, -BSTYLE['leading']*0.5, x2 - x1, self['rule_width'])
-            cr.fill()
+        self._rect_info = 0, -BSTYLE['leading']*0.5, x2 - x1, self['rule_width']
         
-        return u, [], [], [], [(pn, (draw, x1, y, 0))]
+        return u, [], [], [], [(pn, (self._paint, x1, y, 0))]
 
 members = [Rule]

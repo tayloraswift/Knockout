@@ -183,7 +183,7 @@ class Emoji_font(object):
                 self._emojis[(i, fontsize)] = E = lambda cr, render: _print_emoji_error(cr, fontsize)
                 return E
             
-            E = Emoji(SVG_image(bytestring=BS, dx=0, dy=1788, hfactor=2.5, kfactor=2.5), factor)
+            E = Emoji(SVG_image(bytestring=BS, dx=0, dy=1788, hfactor=2.5, kfactor=2.5, width=None), factor)
             self._emojis[(i, fontsize)] = E.render_bubble
             return E.render_bubble
 

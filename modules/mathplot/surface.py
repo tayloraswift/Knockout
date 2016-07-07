@@ -1,6 +1,8 @@
 from itertools import chain
 from .data import Data
 
+from IO.vectorcache import Vector_cache
+
 def yield_for_haylor(Fx, Fy, Fz, to, height, u, iter_v):
     for v in iter_v:
         try:
@@ -60,12 +62,13 @@ class Parametric_Surface(Data):
         
         self._compact  = sorted(polygons)
         self._z_center = system.z_center
+        self._k = -height
 
     def inflate(self, width, * I ):
         self._inflated = [(color, [(x*width, y) for x, y in polygon]) for Z, color, polygon in self._compact]
-        return (), ((self._z_center, self.paint),), ()
+        return (), ((self._z_center, Vector_cache(self._paint_full, width, self._k).paint),), ()
     
-    def paint(self, cr):
+    def _paint_full(self, cr):
         for color, polygon in self._inflated:
             polygon = iter(polygon)
             cr.set_source_rgba( * color )
@@ -73,5 +76,4 @@ class Parametric_Surface(Data):
             for p in polygon:
                 cr.line_to( * p )
             cr.fill()
-
 members = [Parametric_Surface]

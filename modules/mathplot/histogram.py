@@ -18,7 +18,7 @@ class Bars(Data):
         else:
             self._bi = True
 
-    def paint_key(self, cr):
+    def paint_key(self, cr, render):
         if self._bi:
             height = self._key_height*0.5
             cr.set_source_rgba( * self['colorneg'] )
@@ -69,7 +69,7 @@ class Histogram(Data):
         self._inflated = [(tuple(tuple((x*width, y) for x, y in poly) for poly in segments), color) for segments, color in self._compact]
         return (), ((0, self.paint),), ()
         
-    def paint(self, cr):
+    def paint(self, cr, render):
         for barset, color in self._inflated:
             cr.set_source_rgba( * color )
             for P1, P2, P3, P4 in barset:

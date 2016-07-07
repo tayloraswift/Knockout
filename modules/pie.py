@@ -27,7 +27,7 @@ class PieChart(Blockelement):
         self._keys = Plot_keys(self._pieslices)
         self._planes = set(self._pieslices)
     
-    def _paint_pie(self, cr):
+    def _paint_pie(self, cr, render):
         r = self['radius']
         t = self['rotate']
         for percent, arc, color in self._slices:

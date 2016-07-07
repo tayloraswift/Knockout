@@ -3,7 +3,7 @@ from .data import Data
 
 class Function(Data):
     name = 'mod:fx'
-    DNA = Data.DNA + [('x', ('f', ('x',)), lambda t: t), ('y', ('f', ('x',)), lambda t: t), ('z', ('f', ('x',)), lambda t: t), ('range', 'open range', ':'), ('step', 'float', 1), ('color', 'rgba', '#ff3085'), ('radius', 'float', 2), ('line_width', 'float', 2), ('clip', 'bool', False)]
+    DNA = Data.DNA + [('x', ('f', ('t|x',)), lambda t: t), ('y', ('f', ('t|x',)), lambda t: t), ('z', ('f', ('t|x',)), lambda t: t), ('range', 'open range', ':'), ('step', 'float', 1), ('color', 'rgba', '#ff3085'), ('radius', 'float', 2), ('line_width', 'float', 2), ('clip', 'bool', False)]
 
     def compact(self, system, height):
         to = system.to
@@ -34,7 +34,7 @@ class Function(Data):
         self._clip_h = width
         return (), ((self._z_center, self.paint),), ()
     
-    def paint(self, cr):
+    def paint(self, cr, render):
         cr.set_source_rgba( * self['color'] )
         circle_t = 2*pi
         cr.set_line_width(self['line_width'])

@@ -7,11 +7,12 @@ class Scatterplot(Data):
 
     def compact(self, system, height):
         to = system.to
-        self._compact = [(x, y*height) for x, y in (to( * coord ) for coord in self['data'])]
+        self._compact  = [(x, y*height) for x, y in (to( * coord ) for coord in self['data'])]
+        self._z_center = system.z_center
 
     def inflate(self, width, * I ):
         self._inflated = [(x*width, y) for x, y in self._compact]
-        return (), (self.paint,), ()
+        return (), ((self._z_center, self.paint),), ()
     
     def paint(self, cr):
         cr.set_source_rgba( * self['color'] )
@@ -31,10 +32,11 @@ class Bubbleplot(Data):
         to = system.to
         size = self['radius']
         self._compact = [((x, y*height), r) for (x, y), r in ((to( * coord[:-1] ), size(coord[-1])) if len(coord) > 2 else (to( * coord ), size(-1)) for coord in self['data'])]
-
+        self._z_center = system.z_center
+    
     def inflate(self, width, * I ):
         self._inflated = [((x*width, y), r) for (x, y), r in self._compact]
-        return (), (self.paint,), ()
+        return (), ((self._z_center, self.paint),), ()
     
     def paint(self, cr):
         cr.set_source_rgba( * self['color'] )

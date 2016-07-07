@@ -29,7 +29,7 @@ class Slope(Data):
             dy = -m*factor # because screen coordinates are opposite the virtual space (“downward sloping” is positive)
             inflated.append(((x - dx, y - dy), (x + dx, y + dy)))
         self._inflated = inflated
-        return (), (self.paint,), ()
+        return (), ((0, self.paint),), ()
     
     def paint(self, cr):
         cr.set_source_rgba( * self['color'] )

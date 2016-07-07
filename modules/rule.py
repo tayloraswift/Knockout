@@ -16,6 +16,6 @@ class Rule(Blockelement):
             cr.rectangle(0, -BSTYLE['leading']*0.5, x2 - x1, self['rule_width'])
             cr.fill()
         
-        return u, [], [], [], [(pn, (draw, x1, y))]
+        return u, [], [], [], [(pn, (draw, x1, y, 0))]
 
 members = [Rule]

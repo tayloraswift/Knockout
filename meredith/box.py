@@ -252,7 +252,7 @@ class Inline(Box):
         for line in self._LINES:
             line.deposit(repository, x, y)
         if self.__paint is not None:
-            repository['_paint'].append((self.__paint[0], self.__paint[1] + x, self.__paint[2] + y))
+            repository['_paint'].append((self.__paint[0], self.__paint[1] + x, self.__paint[2] + y, self.__paint[3]))
         if self.__paint_annot is not None:
             repository['_paint_annot'].append((self.__paint_annot[0], self.__paint_annot[1] + x, self.__paint_annot[2] + y))
   

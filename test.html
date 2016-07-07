@@ -591,7 +591,7 @@
             </mod:fx>
         </mod:plot>
 
-        <mod:plot class="figure" height="200" azm="0.6632251157578453" alt="0.8">
+        <mod:plot class="figure" margin_top="50" height="200" azm="0.6632251157578453" alt="0.8">
             <mod:plot:axis variable="x" range="-2:2" number="2" floor="True" line_width="1.5" arrowhead="True" axis="True" ticks="True">
                 <p>X axis</p>
             </mod:plot:axis>
@@ -616,7 +616,7 @@
 
         <p class="caption^h4">3D scatterplot</p>
 
-        <mod:plot class="figure" margin_bottom="100" height="270" azm="0.4" alt="1.2">
+        <mod:plot class="figure" height="270" azm="0.4" alt="1.2">
             <mod:plot:axis variable="x" range="-3:3" number="2" floor="True" line_width="1.5" arrowhead="True" axis="True" ticks="True">
                 <p>X axis</p>
             </mod:plot:axis>
@@ -625,9 +625,8 @@
 
             <mod:plot:axis variable="z" range="-2:4" major="500" number="500" floor="True" line_width="1.5" arrowhead="True" axis="True" ticks="True"/>
 
-            <mod:surface x="sqrt(1 + 4*v**2)*cos(u)" y="v" z="sqrt(1 + 4*v**2)*sin(u)" range_u="0:6.283185307179586" range_v="-0.8:0.8" step_u="0.09817477042468103" color="
+            <mod:surface x="sqrt(1 + 4*v**2)*cos(u)" y="v" z="sqrt(1 + 4*v**2)*sin(u)" range_u="0:6.283185307179586" range_v="-0.8:0.8" step_u="0.1308996938995747" color="
 0   : #ff2030 |
-
 1   : #ffff00">
                 <p><mi>x</mi> = <mod:root>
                         <mod:root:rad>1 + 4<mi>v</mi><sup>2</sup></mod:root:rad>
@@ -637,7 +636,21 @@
             </mod:surface>
         </mod:plot>
 
-        <p class="caption^h4">3D scatterplot</p>
+        <mod:plot class="figure" margin_bottom="100" height="270" azm="0.4" alt="0.8">
+            <mod:plot:axis variable="x" range="-3:3" number="2" floor="True" line_width="1.5" arrowhead="True" axis="True" ticks="True">
+                <p>X axis</p>
+            </mod:plot:axis>
+
+            <mod:plot:axis variable="y" range="-3:3" number="2" floor="True" line_width="1.5" arrowhead="True" axis="True" ticks="True"/>
+
+            <mod:plot:axis variable="z" range="-2:4" major="500" number="500" floor="True" line_width="1.5" arrowhead="True" axis="True" ticks="True"/>
+
+            <mod:surface x="2*sin(u)*cos(v)" y="2*cos(u)*cos(v)" z="2*sin(v)" range_u="0:6.283185307179586" range_v="-1.5707963267948966:1.5707963267948966" step_u="0.09817477042468103" color="
+0   : #ff2030 |
+1   : #ffff00">
+                <p><mi>x</mi> = 2 sin <mi>u</mi> cos <mi>v</mi><br/><mi>y</mi> = 2 cos <mi>u</mi> cos <mi>v</mi><br/><mi>z</mi> = 2 sin <mi>v</mi></p>
+            </mod:surface>
+        </mod:plot>
 
         <mod:pie class="figure" radius="80" center="0.3" rotate="-1.5707963267948966">
             <mod:pie:slice prop="39.19" color="#7080ff">
@@ -864,5 +877,5 @@
 </blockstyles>
 
 <!-- #############
-{'channels': (1, 8), 'text': ([1, 69, 3], (0, 27), (0, 27)), 'view': {'H': -651, 'Hc': 1203.0, 'K': -1172, 'Kc': 636.0, 'Zoom': 11, 'mode': 'text'}}
+{'channels': (1, 8), 'text': ([1], (67,), (67,)), 'view': {'H': -585, 'Hc': 672.0, 'K': -1190, 'Kc': 485.0, 'Zoom': 11, 'mode': 'text'}}
 ############# -->

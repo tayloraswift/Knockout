@@ -11,7 +11,7 @@ def yield_for_haylor(Fx, Fy, Fz, to, height, u, iter_v):
             yield (x, y, z), (hx, hy*height)
             
         except (ZeroDivisionError, ValueError):
-            yield (None, None, None), (None, None)
+            yield (0, 0, 0), (0, 0)
 
 def tile(A):
     h = len(A)
@@ -58,13 +58,12 @@ class Parametric_Surface(Data):
             mx, my, mz = tuple(sum(dim)*0.25 for dim in zip( * numeric ))
             polygons.append((get_Z(mx, my, mz), get_color(mx, my, mz), screen))
         
-        self._compact = sorted(polygons)
-        self._clip_k = height
+        self._compact  = sorted(polygons)
+        self._z_center = system.z_center
 
     def inflate(self, width, * I ):
         self._inflated = [(color, [(x*width, y) for x, y in polygon]) for Z, color, polygon in self._compact]
-        self._clip_h = width
-        return (), (self.paint,), ()
+        return (), ((self._z_center, self.paint),), ()
     
     def paint(self, cr):
         for color, polygon in self._inflated:

@@ -513,7 +513,7 @@ class Document_view(ui.Cell):
         m = self._mode
         self._mode = 'render'
         self._draw_images(cr, page['_images'])
-        for operation, x, y in page['_paint']:
+        for operation, x, y, z in page['_paint']:
             cr.save()
             cr.translate(x, y)
             operation(cr)
@@ -542,7 +542,7 @@ class Document_view(ui.Cell):
             cr.scale(A, A)
 
             self._draw_images(cr, P['_images'])
-            for operation, x, y in P['_paint']:
+            for operation, x, y, z in P['_paint']:
                 cr.save()
                 cr.translate(x, y)
                 operation(cr)

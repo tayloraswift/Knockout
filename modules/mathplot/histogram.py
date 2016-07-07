@@ -67,7 +67,7 @@ class Histogram(Data):
 
     def inflate(self, width, * I ):
         self._inflated = [(tuple(tuple((x*width, y) for x, y in poly) for poly in segments), color) for segments, color in self._compact]
-        return (), (self.paint,), ()
+        return (), ((0, self.paint),), ()
         
     def paint(self, cr):
         for barset, color in self._inflated:

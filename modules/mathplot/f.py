@@ -26,13 +26,13 @@ class Function(Data):
             if P[-1]:
                 P.append([])
         self._compact = P
-        
+        self._z_center = system.z_center
         self._clip_k = height
 
     def inflate(self, width, * I ):
         self._inflated = [[(x*width, y) for x, y in segment] for segment in self._compact]
         self._clip_h = width
-        return (), (self.paint,), ()
+        return (), ((self._z_center, self.paint),), ()
     
     def paint(self, cr):
         cr.set_source_rgba( * self['color'] )

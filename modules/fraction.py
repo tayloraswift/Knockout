@@ -55,6 +55,6 @@ class Fraction(Inline):
         fascent = vy + vgap+ numerator['ascent'] - numerator['descent']
         fdescent = vy - vgap - denominator['ascent'] + denominator['descent']
         self._fracwidth = fracwidth
-        return [numerator, denominator], fracwidth, fascent, fdescent, (self._draw_vinculum, 0, -vy)
+        return [numerator, denominator], fracwidth, fascent, fdescent, (self._draw_vinculum, 0, -vy, 0)
 
 members = [Fraction, Numerator, Denominator]

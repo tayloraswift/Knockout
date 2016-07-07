@@ -78,7 +78,7 @@ class PieChart(Blockelement):
         self._extreme = x2
         
         planes = []
-        paint_functions = [(pn, (self._paint_pie,) + center)]
+        paint_functions = [(pn, (self._paint_pie, * center, 0))]
         # key
         u = self._keys.layout_keys(frames, overlay + self['cl_key'], planes, paint_functions, u - 2*r, u, self['key_shift'], self['key_bottom'])
         

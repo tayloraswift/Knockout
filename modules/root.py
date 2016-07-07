@@ -71,6 +71,6 @@ class Root(Inline):
         
         width = kx + rfs * 0.35 + rad['advance']
         
-        return NL, width, rad_asc + rfs*0.2, rad_desc, (self._draw_radix, 0, 0)
+        return NL, width, rad_asc + rfs*0.2, rad_desc, (self._draw_radix, 0, 0, 0)
 
 members = (Root, Index, Radicand)

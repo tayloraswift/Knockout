@@ -35,6 +35,7 @@ class Cartesian(list):
             axis.make_bubble_f()
         
         self.center()
+        self.z_center = self.Z( * ((axis['range'][0] + axis['range'][1])*0.5 for axis in self) )
     
     def center(self):
         self._centering = (0, 0)
@@ -106,6 +107,8 @@ class Axis(Plane):
             self._major = list(self._enum(self['major']))
             majorticks = set(u for U, u in self._major)
             self._minor = [tick for tick in self._enum(self['minor']) if tick[1] not in majorticks]
+        
+        self._z_center = system.Z( * ((a + b)*0.5 for a, b in zip(begin, end)) )
         
     def _round_2sided(self, x):
         halfwidth = self['line_width']*0.5
@@ -200,7 +203,7 @@ class Axis(Plane):
         self.lettervector = letterspacing*perpendicular[0], letterspacing*perpendicular[1]
         mono = chain((variable,), self._generate_numbers(self._positions_to_xy(self._numbers, ox + self._line[0][0] + self.lettervector[0], 
                                                                                             oy + self._line[0][1] + self.lettervector[1], * totalvector), PARENTLINE, BSTYLE['__runinfo__'], k))
-        return mono, (self.paint,), ()
+        return mono, ((self._z_center, self.paint),), ()
     
     def _positions_to_xy(self, positions, ox, oy, dx, dy):
         if self.floating:

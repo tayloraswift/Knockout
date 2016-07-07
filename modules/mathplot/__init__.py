@@ -1,4 +1,4 @@
-from math import sqrt
+from math import sqrt, inf
 from itertools import chain
 from bisect import bisect
 
@@ -42,7 +42,7 @@ class Plot_keys(object):
             
             keycell.space(key_bottom)
             
-            paint_functions.append((kpn, (dataset.paint_key, kx2, ky1)))
+            paint_functions.append((kpn, (dataset.paint_key, kx2, ky1, inf)))
             planes.append(dataset)
         u_key_bottom = frames.read_u()
         frames.restore_u()
@@ -135,8 +135,9 @@ class Plot(Blockelement):
         for E in chain(self._CS, self._DS):
             mono, paint, paint_annot = E.inflate(width, x1, y, PARENTLINE, BSTYLE)
             monos.extend(mono)
-            paint_functions.extend((pn, (F, x1, y)) for F in paint)
+            paint_functions.extend((pn, (F, x1, y, Z)) for Z, F in paint)
             #paint_annot_functions.extend((pn, (F, x1, y)) for F in paint_annot)
+        paint_functions.sort(key=lambda k: k[1][3])
         
         if all(A.floating for A in self._CS):
             perp_x, perp_y = map(sum, zip( * (A.lettervector for A in self._CS) ))

@@ -154,10 +154,10 @@ class Table(Blockelement):
         paint_annot_functions = [(page, (lambda * args: self._paint_annot( * args, rows), 0, 0)) for page, rows in grouped_rows]
         # calculate grid
         grouped_rules = ((page, list(G)) for page, G in groupby(self._hrules, key=lambda h: pgrid[h]))
-        paint_functions = [(page, (lambda * args: self._paint_table_hrules( * args, rows), 0, 0)) for page, rows in grouped_rules]
+        paint_functions = [(page, (lambda * args: self._paint_table_hrules( * args, rows), 0, 0, 0)) for page, rows in grouped_rules]
         p0 = pgrid[0]
         if self._vrules and len(paint_annot_functions) == 1:
-            paint_functions.append((p0, (self._paint_table_vrules, 0, 0)))
+            paint_functions.append((p0, (self._paint_table_vrules, 0, 0, 0)))
         
         return row_u[-1], [], [], self._FLOW, paint_functions, paint_annot_functions, lambda O: O in self._planes, accent_light
 

@@ -13,14 +13,7 @@ class Function(Data):
         Fy = self['y']
         Fz = self['z']
         
-        domain = {}
-        start, stop = self['range']
-        if start is not None:
-            domain['start'] = start
-        if stop is not None:
-            domain['stop'] = stop
-        
-        for t in system[0].step(self['step'], ** domain ):
+        for t in system[0].step(self['step'], * self['range'] ):
             try:
                 x = Fx(t)
                 y = Fy(t)
@@ -51,15 +44,14 @@ class Function(Data):
         if self['clip']:
             cr.rectangle(0, 0, self._clip_h, self._clip_k)
             cr.clip()
-        for segment in (p for p in self._inflated if p):
-            cr.move_to( * segment[0] )
-            curve = segment[1:]
-            if curve:
-                for x, y in curve:
+        for n, segment in ((len(p), iter(p)) for p in self._inflated if p):
+            if n > 1:
+                cr.move_to( * next(segment) )
+                for x, y in segment:
                     cr.line_to(x, y)
                 cr.stroke()
             else:
-                cr.arc( * segment[0], r, 0, circle_t)
+                cr.arc( * next(segment), r, 0, circle_t)
                 cr.close_path()
                 cr.fill()
         cr.restore()

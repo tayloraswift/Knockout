@@ -1,4 +1,5 @@
 from itertools import groupby, chain
+from bisect import bisect
 
 from bulletholes.counter import TCounter as Counter
 
@@ -162,7 +163,7 @@ def interpret_open_range(S):
         else:
             j = None
         return i, j
-    
+
 reformat = {'binomial': (pack_binomial, read_binomial),
             'int set': (interpret_enumeration, lambda S: ', '.join(str(i) for i in sorted(S))),
             'range': (interpret_range, lambda R: ':'.join(str(r) for r in R)),
@@ -217,6 +218,36 @@ def interpret_tsquared(value):
     else:
         return tuple(tuple(interpret_float_tuple(val)) for val in value.split())
 
+class Gradient(object):
+    def __init__(self, string):
+        if type(string) is self.__class__:
+            self._stops, self._colors = string.get_stops_colors()
+        else:
+            stops = [stop for stop in (stop.split(':') for stop in string.split('|')) if len(stop) > 1]
+            if stops:
+                self._stops, self._colors = zip( * sorted((interpret_float(stop[0]), interpret_rgba(stop[1])) for stop in stops) )
+            else:
+                self._stops  = 0,
+                self._colors = interpret_rgba(string),
+    
+    def calc_color(self, x):
+        i = bisect(self._stops, x) - 1 # round down
+        if i < 0:
+            return self._colors[0]
+        elif i >= len(self._stops) - 1:
+            return self._colors[-1]
+        else:
+            r1, g1, b1, a1 = self._colors[i]
+            r2, g2, b2, a2 = self._colors[i + 1]
+            percent = (x - self._stops[i])/(self._stops[i + 1] - self._stops[i])
+            return r1 + (r2 - r1)*percent, g1 + (g2 - g1)*percent, b1 + (b2 - b1)*percent, a1 + (a2 - a1)*percent
+    
+    def get_stops_colors(self):
+        return self._stops[:], self._colors[:]
+    
+    def __iter__(self):
+        yield from self._colors[0]
+    
 # for function plotter
 from data.userfunctions import *
 try:
@@ -246,5 +277,6 @@ class Standard_types(dict):
 standard =   Standard_types((('str'          , str),
                             ('float tuple'  , interpret_float_tuple),
                             ('rgba'         , interpret_rgba), 
+                            ('gradient'     , Gradient),
                             ('1D'           , interpret_haylor),
                             ('multi_D'      , interpret_tsquared)))

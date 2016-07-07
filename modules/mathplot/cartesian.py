@@ -9,6 +9,12 @@ from meredith.paragraph import Plane
 def _vector_rotate(x, y, t):
     return x*cos(t) - y*sin(t), (y*cos(t) + x*sin(t))
 
+def _spherical_to_cartesian(azm, alt):
+    xf  = cos(azm)
+    yf  = sin(azm)
+    fac = cos(alt)
+    return xf*fac, yf*fac, sin(alt)
+
 class Cartesian(list):
     def __init__(self, axes, azimuth=0, altitude=0, rotate=0):
         self.a = azimuth
@@ -16,10 +22,13 @@ class Cartesian(list):
         self.c = rotate
 
         # form axal unit vectors
-        xhat = cos(self.a), sin(self.a) * cos(self.b)
-        yhat = cos(self.a + pi*0.5), sin(self.a + pi*0.5) * cos(self.b)
-        zhat = 0, sin(self.b)
-        self._unitaxes = (_vector_rotate( * xhat , self.c), _vector_rotate( * yhat , self.c), _vector_rotate( * zhat , self.c))
+        xhat =  cos(azimuth), sin(azimuth) * cos(altitude)
+        yhat = -sin(azimuth), cos(azimuth) * cos(altitude)
+        zhat =  0           , sin(altitude)
+        self._unitaxes = (_vector_rotate( * xhat , rotate), _vector_rotate( * yhat , rotate), _vector_rotate( * zhat , rotate))
+        
+        self.camera = _spherical_to_cartesian(-pi*0.5 - azimuth, pi*0.5 - altitude)
+        
         list.__init__(self, (axis for axis in axes if axis is not None))
 
         for axis in self:
@@ -38,6 +47,9 @@ class Cartesian(list):
     def to(self, * coord ):
         x, y = map(sum, zip( * ((U*avx, U*avy) for (avx, avy), U in zip(self._unitaxes, (axis.bubble(u) for axis, u in zip(self, chain(coord, (0, 0))))) ), self._centering ))
         return x, y
+    
+    def Z(self, * coord ):
+        return sum(a*b for a, b in zip(self.camera, coord))
     
     def in_range(self, * coord ):
         return all(axis['range'][0] <= u <= axis['range'][1] for axis, u in zip(self, coord))
@@ -94,7 +106,7 @@ class Axis(Plane):
             self._major = list(self._enum(self['major']))
             majorticks = set(u for U, u in self._major)
             self._minor = [tick for tick in self._enum(self['minor']) if tick[1] not in majorticks]
-
+        
     def _round_2sided(self, x):
         halfwidth = self['line_width']*0.5
         xminus = x - halfwidth
@@ -137,7 +149,7 @@ class Axis(Plane):
         
     def inflate(self, width, ox, oy, PARENTLINE, BSTYLE):
         x1, y1, x2, y2 = self._compact_line[0]*width, self._compact_line[1], self._compact_line[2]*width, self._compact_line[3]
-        self._line = (x1, y1), (x2, y2)        
+        self._line = (x1, y1), (x2, y2)
         return self._construct(x2, y2, ox, oy, PARENTLINE, BSTYLE)
         
     def _construct(self, x2, y2, ox, oy, PARENTLINE, BSTYLE):

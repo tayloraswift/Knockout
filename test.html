@@ -23,7 +23,8 @@
     80,100 80,910 ; 350,100 350,910 ; 2 |
     420,100 420,910 ; 690,100 690,910 ; 2 |
     80,100 80,910 ; 350,100 350,910 ; 3 |
-    420,100 420,910 ; 690,100 690,910 ; 3">
+    420,100 420,910 ; 690,100 690,910 ; 3 |
+    80,100 80,910 ; 350,100 350,910 ; 4">
         <p class="h1">Multiline Heading</p>
 
         <p class="h2">Text typesetting</p>
@@ -590,23 +591,50 @@
             </mod:fx>
         </mod:plot>
 
-        <mod:plot class="figure" height="250" azm="0.7" alt="0.8" rot="0.5">
-            <mod:plot:axis variable="x" range="-6:6" number="2" line_width="1.5" arrowhead="True" axis="True" ticks="True">
+        <mod:plot class="figure" height="200" azm="0.6632251157578453" alt="0.8">
+            <mod:plot:axis variable="x" range="-2:2" number="2" floor="True" line_width="1.5" arrowhead="True" axis="True" ticks="True">
                 <p>X axis</p>
             </mod:plot:axis>
 
-            <mod:plot:axis variable="y" range="-6:6" number="2" line_width="1.5" arrowhead="True" axis="True" ticks="True"/>
+            <mod:plot:axis variable="y" range="-1:3" number="2" floor="True" line_width="1.5" arrowhead="True" axis="True" ticks="True"/>
 
-            <mod:plot:axis variable="z" range="-6:6" number="2" line_width="1.5" arrowhead="True" axis="True" ticks="True"/>
+            <mod:plot:axis variable="z" range="0:2500" major="500" number="500" floor="True" line_width="1.5" arrowhead="True" axis="True" ticks="True"/>
 
-            <mod:scatter data="
-1,1,1 
-1,-1.5,2 
-1,0,-1 
--3,1,-5
--2.2,0.5,1.1" color="#ff3085">
-                <p>3D scatterplot</p>
-            </mod:scatter>
+            <mod:surface z="((1 - u)**2 + 100*(v - u**2)**2)" step_u="0.5" color="
+0   : #2000e0 |
+0.0008: #2065ff |
+0.002: #24c5ff |
+0.003: #30f5ff |
+0.01: #80ffa0 |
+0.04: #ffff00 |
+0.12: #ffa000 |
+0.3 : #ff0000 |
+1   : #a00050">
+                <p><mi>z</mi> = (1 − <mi>x</mi>)<sup>2</sup> + 100 (<mi>y</mi> − <mi>x</mi><sup>2</sup>)<sup>2</sup></p>
+            </mod:surface>
+        </mod:plot>
+
+        <p class="caption^h4">3D scatterplot</p>
+
+        <mod:plot class="figure" margin_bottom="100" height="270" azm="0.4" alt="1.2">
+            <mod:plot:axis variable="x" range="-3:3" number="2" floor="True" line_width="1.5" arrowhead="True" axis="True" ticks="True">
+                <p>X axis</p>
+            </mod:plot:axis>
+
+            <mod:plot:axis variable="y" range="-2:2" number="2" floor="True" line_width="1.5" arrowhead="True" axis="True" ticks="True"/>
+
+            <mod:plot:axis variable="z" range="-2:4" major="500" number="500" floor="True" line_width="1.5" arrowhead="True" axis="True" ticks="True"/>
+
+            <mod:surface x="sqrt(1 + 4*v**2)*cos(u)" y="v" z="sqrt(1 + 4*v**2)*sin(u)" range_u="0:6.283185307179586" range_v="-0.8:0.8" step_u="0.09817477042468103" color="
+0   : #ff2030 |
+
+1   : #ffff00">
+                <p><mi>x</mi> = <mod:root>
+                        <mod:root:rad>1 + 4<mi>v</mi><sup>2</sup></mod:root:rad>
+                    </mod:root>cos <mi>u</mi><br/><mi>y</mi> = <mi>v</mi><br/><mi>z</mi> = <mod:root>
+                        <mod:root:rad>1 + 4<mi>v</mi><sup>2</sup></mod:root:rad>
+                    </mod:root>sin <mi>u</mi></p>
+            </mod:surface>
         </mod:plot>
 
         <p class="caption^h4">3D scatterplot</p>
@@ -836,5 +864,5 @@
 </blockstyles>
 
 <!-- #############
-{'channels': (1, 0), 'text': ([1], (67,), (67,)), 'view': {'H': -375, 'Hc': 928.0, 'K': -990, 'Kc': 671.0, 'Zoom': 11, 'mode': 'text'}}
+{'channels': (1, 8), 'text': ([1, 69, 3], (0, 27), (0, 27)), 'view': {'H': -651, 'Hc': 1203.0, 'K': -1172, 'Kc': 636.0, 'Zoom': 11, 'mode': 'text'}}
 ############# -->

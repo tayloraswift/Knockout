@@ -1,67 +1,78 @@
-from math import pi
+from itertools import chain
 from .data import Data
 
+def yield_for_haylor(Fx, Fy, Fz, to, height, u, iter_v):
+    for v in iter_v:
+        try:
+            x = Fx(u, v)
+            y = Fy(u, v)
+            z = Fz(u, v)
+            hx, hy = to(x, y, z)
+            yield (x, y, z), (hx, hy*height)
+            
+        except (ZeroDivisionError, ValueError):
+            yield (None, None, None), (None, None)
+
+def tile(A):
+    h = len(A)
+    if h:
+        kk = list(range(len(A[0]) - 1))
+    return chain.from_iterable(((A[i][j], A[i + 1][j], A[i + 1][j + 1], A[i][j + 1]) for j in kk) for i in range(h - 1))
+
+def mesh(I, iter_u, iter_v):
+    iter_v = list(iter_v)
+    return [list(yield_for_haylor( * I , u, iter_v)) for u in iter_u]
+
+def _apply_height(screen, height):
+    return screen[0], screen[1]*height
+
 class Parametric_Surface(Data):
-    name = 'mod:ruv'
-    DNA = Data.DNA + [('x', 'fx', lambda t: t), ('y', 'fx', lambda t: t), ('z', 'fx', lambda t: t), ('range', 'open range', ':'), ('step', 'float', 1), ('color', 'rgba', '#ff3085'), ('radius', 'float', 2), ('line_width', 'float', 2), ('clip', 'bool', False)]
+    name = 'mod:surface'
+    DNA = Data.DNA + [('x', ('f', ('u', 'v')), lambda u, v: u), ('y', ('f', ('u', 'v')), lambda u, v: v), ('z', ('f', ('u', 'v')), lambda u, v: 0), 
+                      ('range_u', 'open range', ':'), ('range_v', 'open range', ':'), 
+                      ('step_u', 'float', 1), ('step_v', 'float', 0), 
+                      ('color', 'gradient', '0: #ff3085 | 1: #ff00aa')]
 
     def compact(self, system, height):
         to = system.to
+        ah = _apply_height
         
-        P = [[]]
-        Fx = self['x']
-        Fy = self['y']
-        Fz = self['z']
+        if not self['step_v']:
+            step_v = self['step_u']
+        else:
+            step_v = self['step_v']
+        iter_u = system[0].step(self['step_u'], * self['range_u'] )
+        iter_v = system[1].step(step_v        , * self['range_v'] )
         
-        domain = {}
-        start, stop = self['range']
-        if start is not None:
-            domain['start'] = start
-        if stop is not None:
-            domain['stop'] = stop
+        MESH = mesh((self['x'], self['y'], self['z'], to, height), iter_u, iter_v)
         
-        for t in system[0].step(self['step'], ** domain ):
-            try:
-                x = Fx(t)
-                y = Fy(t)
-                z = Fz(t)
-                hx, hy = to(x, y, z)
-                P[-1].append((hx, hy*height))
-                continue
-            except (ZeroDivisionError, ValueError):
-                pass
-            if P[-1]:
-                P.append([])
-        self._compact = P
+        polygons  = []
         
+        gradient  = self['color'].calc_color
+        z0        = system[-1]['range'][0]
+        inv_zrange= 1/(system[-1]['range'][1] - z0)
+        get_color = lambda x, y, z: gradient((z - z0)*inv_zrange)
+        get_Z     = system.Z
+        for vertices in tile(MESH):
+            numeric, screen = zip( * vertices )
+            mx, my, mz = tuple(sum(dim)*0.25 for dim in zip( * numeric ))
+            polygons.append((get_Z(mx, my, mz), get_color(mx, my, mz), screen))
+        
+        self._compact = sorted(polygons)
         self._clip_k = height
 
     def inflate(self, width, * I ):
-        self._inflated = [[(x*width, y) for x, y in segment] for segment in self._compact]
+        self._inflated = [(color, [(x*width, y) for x, y in polygon]) for Z, color, polygon in self._compact]
         self._clip_h = width
         return (), (self.paint,), ()
     
     def paint(self, cr):
-        cr.set_source_rgba( * self['color'] )
-        circle_t = 2*pi
-        cr.set_line_width(self['line_width'])
-        r = self['radius']
-        
-        cr.save()
-        if self['clip']:
-            cr.rectangle(0, 0, self._clip_h, self._clip_k)
-            cr.clip()
-        for segment in (p for p in self._inflated if p):
-            cr.move_to( * segment[0] )
-            curve = segment[1:]
-            if curve:
-                for x, y in curve:
-                    cr.line_to(x, y)
-                cr.stroke()
-            else:
-                cr.arc( * segment[0], r, 0, circle_t)
-                cr.close_path()
-                cr.fill()
-        cr.restore()
+        for color, polygon in self._inflated:
+            polygon = iter(polygon)
+            cr.set_source_rgba( * color )
+            cr.move_to( * next(polygon) )
+            for p in polygon:
+                cr.line_to( * p )
+            cr.fill()
 
-members = [Function]
+members = [Parametric_Surface]

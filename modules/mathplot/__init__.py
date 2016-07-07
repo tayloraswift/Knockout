@@ -9,7 +9,7 @@ from layout.otline import cast_mono_line
 
 from .data import Data
 from .cartesian import Cartesian, Axis, LogAxis
-from . import slope, histogram, scatterplot, f
+from . import slope, histogram, scatterplot, f, surface
 
 _internal_div = 0.15
 
@@ -150,4 +150,4 @@ class Plot(Blockelement):
         return u, monos, [], planes, paint_functions, [], lambda O: O in planes_set, self._keys.get_color()
 
 members = [Plot, Axis, LogAxis]
-members.extend(chain.from_iterable(D.members for D in (slope, histogram, scatterplot, f)))
+members.extend(chain.from_iterable(D.members for D in (slope, histogram, scatterplot, f, surface)))

@@ -3,7 +3,6 @@ from meredith import datablocks
 from edit import cursor, caramel
 
 from state import contexts
-import time
 
 class UN(object):
     def __init__(self, serialize, deserialize):

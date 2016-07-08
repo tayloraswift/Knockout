@@ -132,7 +132,7 @@ class Plane_cursor(Null):
             self._target_shallow(line['x'] + gx, line['u'] + (direction - 0.5)*line['leading'])
             self.i = self.j
         else:
-            self.i = self.increment_cursor((self.i[0] + direction,), 0, True)
+            self.i = self.increment_cursor((self.i[0] + direction,), 0)
             self.j = self.i
     
     def home_end(self, direction):
@@ -152,7 +152,7 @@ class Plane_cursor(Null):
         if self.i > self.j:
             self.i, self.j = self.j, self.i
     
-    def increment_cursor(self, a, da, clamp=False):
+    def increment_cursor(self, a, da, clamp=True):
         a = list(a)
         if len(a) == 2:
             a[1] += da

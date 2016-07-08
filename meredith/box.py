@@ -28,15 +28,19 @@ def new_name(name, namelist):
 class Null(object):
     name = '_nullbox'
     textfacing = False
-    plane = False
+    inline     = False
+    plane      = False
+    planelevel = False
+    
+    content    = ()
 
 class Box(dict):
     name = '_box'
     
     textfacing = False  # whether or not contents of this object are to be written on the same line          (contains inline boxes)
-    inline = False      # whether or not this object is to be written on the same line as the preceeding one (contained by a textfacing)
+    inline     = False  # whether or not this object is to be written on the same line as the preceeding one (contained by a textfacing)
     
-    plane = False       # whether or not this object can function as a plane                                 (contains block objects)
+    plane      = False  # whether or not this object can function as a plane                                 (contains block objects)
     planelevel = False  # whether or not this object is directly contained by a plane                        (contained by a plane)
     
     DNA = []

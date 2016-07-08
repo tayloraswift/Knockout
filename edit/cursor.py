@@ -1,9 +1,9 @@
 from itertools import chain
 
-from meredith.datablocks import DOCUMENT
-from meredith.elements import PosFontpost, NegFontpost
+from olivia.basictypes import interpret_int
 
-from IO.tree import serialize, deserialize
+from meredith.box import Null
+from meredith.elements import PosFontpost, NegFontpost
 
 from edit.wonder import words
 from edit.text import expand_cursors_word
@@ -15,18 +15,37 @@ def address(box, path):
 
 _zeros = {'<fc/>', '<fo/>', '\t'}
 
-class PlaneCursor(object):
-    def __init__(self, plane_address, i, j):
+def string_to_seq(string):
+    return map(interpret_int, string.split(','))
+
+def seq_to_string(seq):
+    return ', '.join(map(str, seq))
+
+class Plane_cursor(Null):
+    name = 'textcursor'
+    def __init__(self, attrs, content=None):
+        self.__orig_info = ( list(string_to_seq(attrs['plane'])), 
+                            tuple(string_to_seq(attrs['i'])), 
+                            tuple(string_to_seq(attrs['j'])))
+    
+    def reset_functions(self, DOCUMENT, serialize, deserialize):
+        self.serialize   = serialize
+        self.deserialize = deserialize
+        self.DOCUMENT    = DOCUMENT
+        self.normalize   = DOCUMENT.normalize_XY
+        self.initialize_from_params( * self.__orig_info )
+    
+    def initialize_from_params(self, plane_address, i, j):
         try:
-            self._set_plane(address(DOCUMENT, plane_address), plane_address)
+            self._set_plane(address(self.DOCUMENT, plane_address), plane_address)
         except IndexError:
             plane_address = [0]
             i = (0,)
             j = (0,)
-            self._set_plane(address(DOCUMENT, plane_address), plane_address)
+            self._set_plane(address(self.DOCUMENT, plane_address), plane_address)
         self.i = i
         self.j = j
-        self.section = DOCUMENT.content[plane_address[0]]
+        self.section = self.DOCUMENT.content[plane_address[0]]
         
         self.PG = 0 # stopgap
     
@@ -37,6 +56,11 @@ class PlaneCursor(object):
         self.plane_address = plane_address
         self._blocks = self.PLANE.content
 
+    def print_A(self):
+        return ' '.join(chain((self.name,), (''.join((a, '="', seq_to_string(v), '"')) for a, v in (('plane', self.plane_address), 
+                                                                                                    ('i'    , self.i),
+                                                                                                    ('j'    , self.j)))))
+    
     ## TARGETING SYSTEM ##
     
     def _to_c_global(self, x, y):
@@ -44,19 +68,19 @@ class PlaneCursor(object):
         c, p = S['frames'].which(x, y, 20)
         if c is None:
             # try other sections
-            for s, section in (ss for ss in enumerate(DOCUMENT.content) if ss[0] is not S): 
+            for s, section in (ss for ss in enumerate(self.DOCUMENT.content) if ss[0] is not S): 
                 c, _p = section['frames'].which(x, y, 20)
                 if c is not None:
                     self.section = section
                     self.plane_address[0] = s
                     self.PG = _p
-                    x, y = DOCUMENT.normalize_XY(x, y, _p)
+                    x, y = self.normalize(x, y, _p)
                     return x, section['frames'].y2u(y, c)
             
             c = self.PLANE.where(self.i)[1]['c']
         else:
             self.PG = p
-        x, y = DOCUMENT.normalize_XY(x, y, self.PG)
+        x, y = self.normalize(x, y, self.PG)
         return x, self.section['frames'].y2u(y, c)
 
     def _to_c_local(self, x, y):
@@ -65,7 +89,7 @@ class PlaneCursor(object):
             c = self.PLANE.where(self.j)[1]['c']
         else:
             self.PG = p
-        x, y = DOCUMENT.normalize_XY(x, y, self.PG)
+        x, y = self.normalize(x, y, self.PG)
         return x, self.section['frames'].y2u(y, c)
     
     def _next_textfacing(self, j, direction):
@@ -274,14 +298,14 @@ class PlaneCursor(object):
             B = P + self.j
 
         if A[:-1] == B[:-1]:
-            base = address(DOCUMENT, A[:-1]).content
-            return serialize(base[A[-1]:B[-1]])
+            base = address(self.DOCUMENT, A[:-1]).content
+            return self.serialize(base[A[-1]:B[-1]])
         elif A[:-2] == B[:-2]:
-            base = address(DOCUMENT, A[:-2]).content
-            return serialize(base[A[-2]:B[-2] + 1], trim=(A[-1], B[-1]))
+            base = address(self.DOCUMENT, A[:-2]).content
+            return self.serialize(base[A[-2]:B[-2] + 1], trim=(A[-1], B[-1]))
     
     def paste(self, L):
-        self.insert(deserialize(L, fragment=True))
+        self.insert(self.deserialize(L, fragment=True))
     
     ## NON-SPATIAL SELECTION TOOLS ##
     
@@ -348,3 +372,5 @@ class PlaneCursor(object):
             return line['BLOCK'], gfs
         except IndexError:
             return self._blocks[-1], None
+
+members = Plane_cursor,

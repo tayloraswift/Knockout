@@ -8,8 +8,6 @@ from itertools import chain
 from fonts.interfacefonts import ISTYLES
 from fonts import SPACENAMES
 
-from meredith.datablocks import DOCUMENT
-
 from edit import wonder
 from edit import cursor, caramel
 
@@ -21,7 +19,7 @@ from state import noticeboard, constants
 from state.contexts import Text as CText
 from state.constants import accent, accent_light
 
-from meredith.smoothing import fontsettings
+from meredith.settings import fontsettings
 from meredith.meta import filedata
 
 from interface import kookies, fields, ui
@@ -63,18 +61,6 @@ class Mode_switcher(object):
         self._hover_j = None
         noticeboard.redraw_becky.push_change()
 
-def PDF():
-    name = os.path.splitext(filedata['filepath'])[0]
-    surface = cairo.PDFSurface(name + '.pdf', DOCUMENT['width']*0.75, DOCUMENT['height']*0.75)
-    cr = cairo.Context(surface)
-    cr.scale(0.75, 0.75)
-    pages = DOCUMENT.transfer()
-    max_page = max(k for k in pages if k is not None)
-    for p in range(max_page + 1):
-        if p in pages:
-            becky.print_page(cr, p, pages[p])
-        cr.show_page()
-
 def _place_tags(key):
     un.history.undo_save(3)
     if not cursor.fcursor.bridge(keyboard[key], sign=True):
@@ -86,8 +72,10 @@ def _punch_tags(key):
         un.history.pop()
 
 class Document_toolbar(object):
-    def __init__(self, save):
+    def __init__(self, save, pdf, DOCUMENT):
         self._save = save
+        self._pdf  = pdf
+        self._DOCUMENT = DOCUMENT
         self.refresh_class()
     
     def refresh_class(self):
@@ -100,7 +88,7 @@ class Document_toolbar(object):
         y = 120
         self._items.append(kookies.Button(5, y, 90, 30, callback=self._save, name='Save'))
         y += 30
-        self._items.append(kookies.Button(5, y, 90, 30, callback=PDF, name='PDF'))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=self._pdf, name='PDF'))
         
         y += 40
         self._items.append(kookies.Button(5, y, 90, 30, callback=un.history.back, name='Undo'))
@@ -110,7 +98,7 @@ class Document_toolbar(object):
         y += 40
         self._items.append(kookies.Button(5, y, 90, 30, callback=caramel.delight.add_frame, name='Add frame'))
         y += 30
-        self._items.append(kookies.Button(5, y, 90, 30, callback=DOCUMENT.add_section, name='Add section'))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=self._DOCUMENT.add_section, name='Add section'))
         
         y += 50
         self._items.append(kookies.Button(5, y, 90, 30, callback=lambda: _place_tags('Ctrl i'), name='Emphasis'))
@@ -123,9 +111,9 @@ class Document_toolbar(object):
         self._items.append(kookies.Button(5, y, 90, 30, callback=lambda: _punch_tags('Ctrl B'), name='x Strong'))
 
         y += 40
-        self._items.append(fields.Checkbox(20, y, 70, node=DOCUMENT, A='dual', name='Dual'.upper(), no_z=True))
+        self._items.append(fields.Checkbox(20, y, 70, node=self._DOCUMENT, A='dual', name='Dual'.upper(), no_z=True))
         y += 35
-        self._items.append(fields.Checkbox(20, y, 70, node=DOCUMENT, A='even', name='Even'.upper(), no_z=True))
+        self._items.append(fields.Checkbox(20, y, 70, node=self._DOCUMENT, A='even', name='Even'.upper(), no_z=True))
         
         y += 50
         
@@ -223,50 +211,36 @@ def _replace_misspelled(word, label):
     cursor.fcursor.run_stats(spell=True) #probably only needs to be run on paragraph
 
 class Document_view(ui.Cell):
-    def __init__(self, save, state={'mode': 'text', 'Hc': 0, 'Kc': 0, 'H': 0, 'K': 0, 'Zoom': 11}):
-        self._mode = state['mode']
+    def __init__(self, save, DOCUMENT, VIEW):
+        self.DOCUMENT = DOCUMENT
+        
+        self.view = VIEW
+        self._mode = VIEW.mode # must be updated in sync
+        
+        self._X_to_screen = VIEW.X_to_screen
+        self._Y_to_screen = VIEW.Y_to_screen
+        self._T_1         = VIEW.T_1
+        
         self._region_active, self._region_hover = 'view', 'view'
-        self._toolbar = Document_toolbar(save)
+        self._toolbar = Document_toolbar(save, self.PDF, DOCUMENT)
         self._mode_switcher = Mode_switcher(self.change_mode, default= self._mode)
         self.planecursor = cursor.fcursor
         
         self._stake = None
         
-        self._scroll_notches = [0.1, 0.13, 0.15, 0.2, 0.22, 0.3, 0.4, 0.5, 0.6, 0.8, 0.89, 1, 1.25, 1.5, 1.75, 1.989, 2, 2.5, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20, 30]
-        self._scroll_notch_i = state['Zoom']
-        
-        # transform parameters
-        self._Hc = state['Hc']
-        self._Kc = state['Kc']
-        
-        self._H = state['H']
-        self._K = state['K']
-
-        self._A = self._scroll_notches[self._scroll_notch_i]
-        
         self._font = ISTYLES[('strong',)]
 
-    def read_display_state(self):
-        return {
-            'mode': self._mode,
-            'Hc': self._Hc,
-            'Kc': self._Kc,
-            'H': self._H,
-            'K': self._K,
-            'Zoom': self._scroll_notch_i
-            }
-    
-    # TRANSFORMATION FUNCTIONS
-    def _X_to_screen(self, x, pp):
-        return int(self._A * (DOCUMENT.map_X(x, pp) + self._H - self._Hc) + self._Hc)
-
-    def _Y_to_screen(self, y, pp):
-        return int(self._A * (DOCUMENT.map_Y(y, pp) + self._K - self._Kc) + self._Kc)
-    
-    def _T_1(self, x, y):
-        x = (x - self._Hc) / self._A - self._H + self._Hc
-        y = (y - self._Kc) / self._A - self._K + self._Kc
-        return x, y
+    def PDF(self):
+        name = os.path.splitext(filedata['filepath'])[0]
+        surface = cairo.PDFSurface(name + '.pdf', self.DOCUMENT['width']*0.75, self.DOCUMENT['height']*0.75)
+        cr = cairo.Context(surface)
+        cr.scale(0.75, 0.75)
+        pages = self.DOCUMENT.transfer()
+        max_page = max(k for k in pages if k is not None)
+        for p in range(max_page + 1):
+            if p in pages:
+                self.print_page(cr, p, pages[p])
+            cr.show_page()
     
     ##############
     
@@ -388,12 +362,12 @@ class Document_view(ui.Cell):
         if self._region_active == 'view':
 
             if y <= 5:
-                self._K += int(10 / sqrt(self._A))
+                self.view.move_vertical(10)
                 noticeboard.redraw_becky.push_change()
             elif y >= constants.window.get_k() - 5:
-                self._K -= int(10 / sqrt(self._A))
+                self.view.move_vertical(-10)
                 noticeboard.redraw_becky.push_change()
-
+            
             x, y = self._T_1(x, y)
 
             if self._mode == 'text':
@@ -410,29 +384,16 @@ class Document_view(ui.Cell):
             pass
     
     def press_mid(self, x, y):
-        self._stake = (x, y, self._H, self._K)
+        self._stake = (x, y, self.view.H, self.view.K)
     
-    def drag(self, x, y, reference=[0, 0]):
+    def drag(self, x, y):
         # release
         if x == -1:
             self._stake = None
-            self._H = int(round(self._H))
-            self._K = int(round(self._K))
-            
             noticeboard.redraw_becky.push_change()
         # drag
-        else:
-            
-            self._H = int(round( (x - self._stake[0]) / self._A + self._stake[2]))
-            self._K = int(round( (y - self._stake[1]) / self._A + self._stake[3]))
-            
-            # heaven knows why this expression works, but hey it works
-            dx = (self._H - self._stake[2]) * self._A
-            dy = (self._K - self._stake[3]) * self._A
-            
-            if [dx, dy] != reference:
-                reference[:] = [dx, dy]
-                noticeboard.redraw_becky.push_change()
+        elif self.view.pan(x - self._stake[0], y - self._stake[1], self._stake[2], self._stake[3]):
+            noticeboard.redraw_becky.push_change()
 
     def release(self, x, y):
         self._toolbar.release(x, y)
@@ -456,28 +417,13 @@ class Document_view(ui.Cell):
         
         if mod == 'ctrl':
             # zoom
-            if direction:
-                if self._scroll_notch_i > 0:
-                    self._scroll_notch_i -= 1
-            elif self._scroll_notch_i < len(self._scroll_notches) - 1:
-                self._scroll_notch_i += 1
-            
-            dhc = x - self._Hc
-            self._Hc += dhc
-            self._H -= int(dhc * (1 - self._A) / self._A)
-            
-            dkc = y - self._Kc
-            self._Kc += dkc
-            self._K -= int(dkc * (1 - self._A) / self._A)
-            
-            self._A = self._scroll_notches[self._scroll_notch_i]
-        
+            self.view.zoom(x, y, direction)
         else:
             # scroll
             if direction:
-                self._K -= int(50 / sqrt(self._A))
+                self.view.move_vertical(-50)
             else:
-                self._K += int(50 / sqrt(self._A))
+                self.view.move_vertical(50)
         
         noticeboard.redraw_becky.push_change()
 
@@ -500,6 +446,7 @@ class Document_view(ui.Cell):
         self._mode_switcher.resize(k)
 
     def change_mode(self, mode):
+        self.view.set_mode(mode)
         self._mode = mode
         CText.update()
         noticeboard.refresh_properties_type.push_change(mode)
@@ -512,39 +459,26 @@ class Document_view(ui.Cell):
             cr.show_glyphs(glyphs)
     
     def print_page(self, cr, p, page):
-        m = self._mode
-        self._mode = 'render'
         for operation, x, y, z in chain(page['_images'], page['_paint']):
             cr.save()
             cr.translate(x, y)
             operation(cr, 0)
             cr.restore()
         self._print_sorted(cr, page)
-        self._mode = m
             
-    def _draw_by_page(self, cr, mx_cx, my_cy, cx, cy, A=1):
-        medium  = DOCUMENT
-        PHEIGHT = medium['height']
-        PWIDTH  = medium['width']
-        
+    def _draw_by_page(self, cr):
         max_page      = 0
-        sorted_glyphs = DOCUMENT.transfer()
+        sorted_glyphs = self.DOCUMENT.transfer()
         section       = self.planecursor.plane_address[0]
         if self._mode == 'render':
             zoom = 0
         else:
-            zoom = self._A
+            zoom = self.view.A
         for page, P in (PP for PP in sorted_glyphs.items() if PP[0] is not None):
             max_page = max(max_page, page)
             
-            # Transform goes
-            # x' = A (x + m - c) + c
-            # x' = Ax + (Am - Ac + c)
-            
-            # Scale first (on bottom) is significantly faster in cairo
             cr.save()
-            cr.translate(A*medium.map_X(mx_cx, page) + cx, A*medium.map_Y(my_cy, page) + cy)
-            cr.scale(A, A)
+            self.view.transform_canvas(cr, page)
             
             for operation, x, y, z in chain(P['_images'], P['_paint']):
                 cr.save()
@@ -583,6 +517,12 @@ class Document_view(ui.Cell):
         else:
             page_highlight = None
 
+        PHEIGHT = self.DOCUMENT['height']
+        PWIDTH  = self.DOCUMENT['width']
+        A       = self.view.A
+        dpx     = int(round(PWIDTH*A))
+        dpy     = int(round(PHEIGHT*A))
+        prg     = int(round(10*sqrt(A)))
         for pp in range(max_page + 1):
             
             #draw page border
@@ -594,10 +534,8 @@ class Document_view(ui.Cell):
             px1 = self._X_to_screen(0, pp)
             py1 = self._Y_to_screen(0, pp)
             
-            px2 = px1 + int(round(PWIDTH*self._A))
-            py2 = py1 + int(round(PHEIGHT*self._A))
-            
-            prg = int(round(10*sqrt(self._A)))
+            px2 = px1 + dpx
+            py2 = py1 + dpy
             
             cr.rectangle(px1, py1, px2 - px1, 1         )
             cr.rectangle(px1, py1, 1        , py2 - py1 )
@@ -619,21 +557,25 @@ class Document_view(ui.Cell):
             cr.fill()
             
             if self._mode == 'frames':
-                caramel.delight.render_grid(cr, px1, py1, PWIDTH, PHEIGHT, self._A)
+                caramel.delight.render_grid(cr, px1, py1, PWIDTH, PHEIGHT, A)
 
     def _draw_annotations(self, cr, annot, page):
-        afs = int(6 * sqrt(self._A))
-        uscore = 1 + (self._A > 0.5)
+        A = self.view.A
+        X2S = self._X_to_screen
+        Y2S = self._Y_to_screen
+        
+        afs = int(6 * sqrt(A))
+        uscore = 1 + (A > 0.5)
         cr.set_font_size(afs)
         SN = SPACENAMES
         
         activeblock = self.planecursor.PLANE.content[self.planecursor.i[0]]
         for a, x, y, BLOCK, F in annot:
             
-            x = self._X_to_screen(x, page)
-            y = self._Y_to_screen(y, page)
+            x = X2S(x, page)
+            y = Y2S(y, page)
             
-            fontsize = F['fontsize'] * self._A
+            fontsize = F['fontsize'] * A
             
             if BLOCK is activeblock:
                 cr.set_source_rgba( * BLOCK.color )
@@ -676,7 +618,7 @@ class Document_view(ui.Cell):
                 cr.fill()
             
             elif -41 <= a <= -30: # nbsp
-                cr.rectangle(x, y, F['__spacemetrics__'][a] * self._A, uscore)
+                cr.rectangle(x, y, F['__spacemetrics__'][a] * A, uscore)
                 cr.rel_move_to(0, afs * 1.25)
                 cr.show_text(SN[a])
                 cr.fill()
@@ -691,23 +633,30 @@ class Document_view(ui.Cell):
                 cr.fill()
 
     def _draw_spelling(self, cr, underscores):
+        A   = self.view.A
+        X2S = self._X_to_screen
+        Y2S = self._Y_to_screen
         cr.set_source_rgba(1, 0.15, 0.2, 0.8)
         for y, x1, x2, page in underscores:
             if page is not None:
-                cr.rectangle(self._X_to_screen(x1, page), 
-                        self._Y_to_screen(y + 2, page), 
-                        int((x2 - x1) * self._A), 1)
+                cr.rectangle(X2S(x1, page), 
+                             Y2S(y + 2, page), 
+                             int((x2 - x1) * A), 1)
         cr.fill()
         
     def _draw_selection_highlight(self, cr, selections, signs):
+        A   = self.view.A
+        X2S = self._X_to_screen
+        Y2S = self._Y_to_screen
+        
         cr.push_group()
         cr.set_source_rgba(0, 0, 0, 0.1)
         for y, x1, x2, leading, page in selections:
             if page is not None:
-                cr.rectangle(self._X_to_screen(x1, page), 
-                        self._Y_to_screen(y - leading, page), 
-                        int((x2 - x1) * self._A), 
-                        int(leading * self._A))
+                cr.rectangle(X2S(x1, page), 
+                             Y2S(y - leading, page), 
+                             int((x2 - x1) * A), 
+                             int(leading * A))
         cr.fill()
         
         self._draw_cursor(cr, signs[0], selections[0], False)
@@ -720,7 +669,7 @@ class Document_view(ui.Cell):
         y1, x1, x2, leading, page = selection
         if page is None:
             return
-        height = int(leading * self._A)
+        height = int(leading * self.view.A)
         x = self._X_to_screen(selection[1 + side], page)
         y = self._Y_to_screen(y1, page)
         
@@ -763,13 +712,13 @@ class Document_view(ui.Cell):
         cr.clip()
         
         # text
-        self._draw_by_page(cr, self._H - self._Hc, self._K - self._Kc, self._Hc, self._Kc, self._A)
+        self._draw_by_page(cr)
         cr.set_font_face(self._font['font'])
         # frames
         if self._mode == 'text':
             caramel.delight.render(cr, self._X_to_screen, self._Y_to_screen, frames=self.planecursor.section['frames'])
         elif self._mode == 'frames':
-            caramel.delight.render(cr, self._X_to_screen, self._Y_to_screen, A=self._A)
+            caramel.delight.render(cr, self._X_to_screen, self._Y_to_screen, A=self.view.A)
         
         if self._mode != 'render':
             # DRAW TOOLBAR BACKGROUND
@@ -789,7 +738,7 @@ class Document_view(ui.Cell):
         cr.set_font_size(self._font['fontsize'])
         
         cr.move_to(130, k - 20)
-        cr.show_text('{0:g}'.format(self._A*100) + '%')
+        cr.show_text('{0:g}'.format(self.view.A*100) + '%')
         
         cr.move_to(constants.UI[1] - 150, k - 20)
         cr.show_text(str(self.planecursor.word_total) + ' words · page ' + str(self.planecursor.PG))

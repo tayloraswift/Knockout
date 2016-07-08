@@ -9,7 +9,7 @@ from IO import un
 from edit import cursor
 from keyboard import compose
 
-from meredith.smoothing import fontsettings
+from meredith.settings import fontsettings
 from meredith.meta import filedata
 
 from interface import karlie, taylor, menu

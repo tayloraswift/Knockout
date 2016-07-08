@@ -1,15 +1,19 @@
 from meredith import datablocks
-from IO.tree import miniserialize, deserialize
+
 from edit import cursor, caramel
+
 from state import contexts
 import time
 
 class UN(object):
-    def __init__(self):
+    def __init__(self, serialize, deserialize):
         self._history = []
         self._i = 0
         
         self._state = None
+        
+        self.serialize   = serialize
+        self.deserialize = deserialize
     
     def save(self):
         
@@ -20,8 +24,8 @@ class UN(object):
         if len(self._history) > self._i:
             del self._history[self._i:]
                 
-        kitty = list(map(lambda k: miniserialize([k]), (datablocks.TTAGS, datablocks.BTAGS, datablocks.DOCUMENT, datablocks.TSTYLES, datablocks.BSTYLES)))
-        DATA = {'text': (cursor.fcursor.plane_address, cursor.fcursor.i, cursor.fcursor.j), 'channels': caramel.delight.at()}
+        kitty = [self.serialize([k]) for k in (datablocks.TTAGS, datablocks.BTAGS, datablocks.DOCUMENT, datablocks.TSTYLES, datablocks.BSTYLES)]
+        DATA = (cursor.fcursor.plane_address[:], cursor.fcursor.i, cursor.fcursor.j), caramel.delight.at()
 
         self._history.append((kitty, DATA, contexts.Text.index_k()))
         self._i = len(self._history)
@@ -34,26 +38,26 @@ class UN(object):
         kitty, DATA, activity = self._history[i]
         
         kttags, kbtags, kdocument, ktstyles, kbstyles = kitty
-        TTAGS = deserialize(kttags)[0]
-        BTAGS = deserialize(kbtags)[0]
+        TTAGS   = self.deserialize(kttags)[0]
+        BTAGS   = self.deserialize(kbtags)[0]
         
         datablocks.TTAGS.__init__(TTAGS.attrs, TTAGS.content)
         datablocks.BTAGS.__init__(BTAGS.attrs, BTAGS.content)
         
-        TSTYLES = deserialize(ktstyles)[0]
+        TSTYLES = self.deserialize(ktstyles)[0]
         datablocks.TSTYLES.__init__(TSTYLES.attrs, TSTYLES.content)
         
-        BSTYLES = deserialize(kbstyles)[0]
+        BSTYLES = self.deserialize(kbstyles)[0]
         datablocks.BSTYLES.__init__(BSTYLES.attrs, BSTYLES.content)
         
-        DOC = deserialize(kdocument)[0]
+        DOC     = self.deserialize(kdocument)[0]
         datablocks.DOCUMENT.__init__(DOC.attrs, DOC.content)
         datablocks.DOCUMENT.layout_all()
         
         contexts.Text.__init__()
         
-        cursor.fcursor.__init__( * DATA['text'] )
-        caramel.delight.__init__( * DATA['channels'] )
+        cursor.fcursor.initialize_from_params ( * DATA[0] )
+        caramel.delight.initialize_from_params( * DATA[1] )
         
         contexts.Text.update_force()
         contexts.Text.turnover_k( * activity )

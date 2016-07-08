@@ -4,7 +4,9 @@ from itertools import chain
 from state import noticeboard
 from state.constants import accent_light
 
-from meredith.datablocks import DOCUMENT
+from olivia.basictypes import interpret_int
+
+from meredith.box import Null
 
 from IO import un
 
@@ -60,8 +62,18 @@ def overflow(cr, frames, Tx, Ty):
         cr.rel_line_to(10, -10)
         cr.stroke()
 
-class Channels_controls(object):
-    def __init__(self, s, c):
+class Frame_cursor(Null):
+    name = 'framecursor'
+    def __init__(self, attrs, content=None):
+        self.__orig_info = (interpret_int(attrs['section']), 
+                            interpret_int(attrs['frame']))
+    
+    def reset_functions(self, DOCUMENT):
+        self.DOCUMENT    = DOCUMENT
+        self.normalize   = DOCUMENT.normalize_XY
+        self.initialize_from_params( * self.__orig_info )
+    
+    def initialize_from_params(self, s, c):
         self._mode = 'outlines'
         if s is None:
             s = 0
@@ -69,9 +81,9 @@ class Channels_controls(object):
             c = 0
         
         try:
-            self.section = DOCUMENT.content[s]
+            self.section = self.DOCUMENT.content[s]
         except IndexError:
-            self.section = DOCUMENT.content[0]
+            self.section = self.DOCUMENT.content[0]
         self._FRAMES = self.section['frames']
 
         try:
@@ -89,11 +101,14 @@ class Channels_controls(object):
         self._hover_point = (None, None, None)
         self._hover_portal = (None, None)
                         
-        self._grid_controls = DOCUMENT['grid']
+        self._grid_controls = self.DOCUMENT['grid']
         self.render_grid = self._grid_controls.render
 
+    def print_A(self):
+        return ' '.join(chain((self.name,), (''.join((a, '="', str(v), '"')) for a, v in zip(('section', 'frame'), self.at()))))
+    
     def at(self):
-        return DOCUMENT.content.index(self.section), self._selected_point[0]
+        return self.DOCUMENT.content.index(self.section), self._selected_point[0]
 
     def add_frame(self):
         self.section['frames'].add_frame()
@@ -103,7 +118,7 @@ class Channels_controls(object):
         p, c, r, i = self._FRAMES.which_point(x, y, 20)
         if c is not None:
             self.HPG = p
-            xp, yp = DOCUMENT.normalize_XY(x, y, p)
+            xp, yp = self.normalize(x, y, p)
             if r is None:
                 ptype, dpx, dpy = self._FRAMES[c].which_portal(xp, yp, radius=5)
                 self._hover_portal = (c, ptype)
@@ -114,7 +129,7 @@ class Channels_controls(object):
         self._selected_point = [c, r, i]
         if c is not None:
             self.PG = p
-            xp, yp = DOCUMENT.normalize_XY(x, y, p)
+            xp, yp = self.normalize(x, y, p)
             if r is None:
                 self._selected_portal = self._FRAMES[c].which_portal(xp, yp, radius=5)
             else:
@@ -122,17 +137,17 @@ class Channels_controls(object):
             return xp, yp
         
         # try different tract
-        for section in DOCUMENT.content:
+        for section in self.DOCUMENT.content:
             p, c, r, i = section['frames'].which_point(x, y, 20)
             if c is not None:
                 self.PG = p
                 self._selected_point = [c, r, i]
                 self.section = section
                 self._FRAMES = section['frames']
-                return DOCUMENT.normalize_XY(x, y, p)
+                return self.normalize(x, y, p)
         
         self._selected_portal = (None, 0, 0)
-        return DOCUMENT.normalize_XY(x, y, self.PG)
+        return self.normalize(x, y, self.PG)
 
     def press(self, x, y, name):
         un.history.undo_save(3)
@@ -193,7 +208,7 @@ class Channels_controls(object):
             self._release_locale = None
     
     def press_motion(self, x, y):
-        x, y = DOCUMENT.normalize_XY(x, y, self.PG)
+        x, y = self.normalize(x, y, self.PG)
         if self._mode == 'outlines':
             c, r, i = self._selected_point
             portal, px, py = self._selected_portal
@@ -263,8 +278,8 @@ class Channels_controls(object):
                     # wipe out entire tract if it's the last one
                     if not self._FRAMES:
                         old_tract = self.section
-                        DOCUMENT.content.remove(old_tract)
-                        self.section = DOCUMENT.content[-1]
+                        self.DOCUMENT.content.remove(old_tract)
+                        self.section = self.DOCUMENT.content[-1]
                         self._FRAMES = self.section['frames']
                 
                 else:
@@ -346,7 +361,7 @@ class Channels_controls(object):
                 cr.show_text(str(c + 1))
             
             cr.set_line_width(1)
-            for frame in chain.from_iterable(section['frames'] for section in DOCUMENT.content if section is not self.section):
+            for frame in chain.from_iterable(section['frames'] for section in self.DOCUMENT.content if section is not self.section):
                 page = frame.page
                 
                 cr.set_source_rgba(0.3, 0.3, 0.3, 0.3)
@@ -366,3 +381,5 @@ class Channels_controls(object):
                 _draw_portals(cr, frame, Tx, Ty, (0.3, 0.3, 0.3, 0.5), (1, 0, 0.1, 0.5))
             
             overflow(cr, frames, Tx, Ty)
+
+members = Frame_cursor,

@@ -1,8 +1,3 @@
-from itertools import chain
-
-from pprint import pformat
-from ast import literal_eval
-
 from state import constants, noticeboard
 
 from meredith import datablocks, box, meta
@@ -10,16 +5,10 @@ from meredith import datablocks, box, meta
 from IO import tree
 
 def save():
-    FI = ('<head><meta charset="UTF-8"></head>\n<title>', meta.filedata.filename, '</title>\n\n',
-            tree.serialize([datablocks.DOCUMENT, datablocks.TSTYLES, datablocks.BSTYLES]))
-    
     from edit import cursor, caramel
     from interface import taylor
-    DATA = {'text': (cursor.fcursor.plane_address, cursor.fcursor.i, cursor.fcursor.j), 
-            'channels': caramel.delight.at(), 
-            'view': taylor.becky.read_display_state()}
-    
-    FT = ''.join(chain(FI, ('\n\n<!-- #############\n', pformat(DATA, width=189), '\n############# -->\n') ))
+    FT = ''.join(('<head><meta charset="UTF-8"></head>\n<title>', meta.filedata.filename, '</title>\n\n',
+                  tree.serialize([datablocks.DOCUMENT, datablocks.TSTYLES, datablocks.BSTYLES, cursor.fcursor, caramel.delight, taylor.becky.view]), '\n'))
     with open(meta.filedata['filepath'], 'w') as fi:
         fi.write(FT)
 
@@ -27,33 +16,35 @@ def load(name):
     with open(name, 'r') as fi:
         meta.filedata = meta.Metadata(name)
         doc = fi.read()
-
-    DATA = literal_eval(doc[doc.find('<!-- #############') + 18 : doc.find('############# -->')])
     
     datablocks.TTAGS, datablocks.BTAGS = tree.deserialize('<texttags/><blocktags/>')
-    datablocks.DOCUMENT, datablocks.TSTYLES, datablocks.BSTYLES = tree.deserialize(doc)
+    datablocks.DOCUMENT, datablocks.TSTYLES, datablocks.BSTYLES, * SETTINGS = tree.deserialize(doc)
+    document = datablocks.DOCUMENT
     
     import keyboard
     from state.contexts import Text
     from edit import cursor, caramel
     
     # aim editor objects
-    caramel.delight = caramel.Channels_controls( * DATA['channels'] )
     keyboard.keyboard = keyboard.Keyboard(constants.shortcuts)
-    cursor.fcursor = cursor.PlaneCursor( * DATA['text'] )
     
-    datablocks.DOCUMENT.layout_all()
+    cursor.fcursor, caramel.delight, VIEW = SETTINGS
+    cursor.fcursor.reset_functions(document, tree.serialize, tree.deserialize)
+    caramel.delight.reset_functions(document)
+    VIEW.reset_functions(document.map_X, document.map_Y)
+    
+    document.layout_all()
     Text.update()
 
     # start undo tracking
     from IO import un
-    un.history = un.UN()
+    un.history = un.UN(tree.miniserialize, tree.deserialize)
     box.Box.before = un.history.save
     
     from interface import karlie, taylor
     
-    taylor.becky = taylor.Document_view(save, DATA['view'])
-    noticeboard.refresh_properties_type.push_change(DATA['view']['mode'])
-    karlie.klossy = karlie.Properties(DATA['view']['mode'], partition=1 )
+    taylor.becky = taylor.Document_view(save, document, VIEW)
+    noticeboard.refresh_properties_type.push_change(VIEW.mode)
+    karlie.klossy = karlie.Properties(VIEW.mode, partition=1 )
 
     un.history.save()

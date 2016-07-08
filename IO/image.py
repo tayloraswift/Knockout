@@ -1,9 +1,9 @@
-from cairo import SVGSurface, Context
 from urllib.error import URLError
 
 import fonts
 
 from IO.bitmap import make_pixbuf, paint_pixbuf
+from IO.vectorcache import Vector_cache
 
 _fail = '\033[91m'
 _endc = '\033[0m'
@@ -41,79 +41,57 @@ class _Image_painter(object):
     def inflate(self, leading):
         self._leading = leading
     
-    def _set_dimensions(self, width):
-        if width is None:
-            self._factor = 1
+    def _set_dimensions(self, h, k, source_h, source_k, scale):
+        self.width  = h
+        factor = h/source_h
+        if k is None:
+            self.height = source_k*factor
         else:
-            self._factor = width / self.h
-        self.width = width
-        self.height = self.k*self._factor
+            self.height = k
+        if scale is None:
+            scale = factor
+        return scale
     
     def paint_Error(self, cr, render=False):
         _paint_fail_frame(cr, self.width, self._leading, self._msg)
 
-def make_image_surface(h, k):
-    return SVGSurface(None, h, k)
-
 class SVG_image(_Image_painter):
-    def __init__(self, width, ** kwargs ):
-        self._factor = 1
-        self._shift = kwargs.get('dx', 0), kwargs.get('dy', 0)
+    def __init__(self, src=None, bytestring=None, h=89, k=None, dx=0, dy=0, scale=None):
         if render_SVG is not None:
             try:
-                self._CSVG = render_SVG( ** kwargs )
-                self.h = int(self._CSVG.h * kwargs.get('hfactor', 1))
-                self.k = int(self._CSVG.k * kwargs.get('kfactor', 1))
-                self._set_dimensions(width)
-                self._surface_cache = self.generate_SC(self._CSVG)            
-                self.paint = self.paint_SVG
+                CSVG  = render_SVG(src, bytestring)
+                scale = self._set_dimensions(h, k, CSVG.h, CSVG.k, scale)
+                def paint_function(cr):
+                    cr.scale(scale, scale)
+                    cr.translate(dx, dy)
+                    CSVG.paint_SVG(cr)
+                
+                self.paint = Vector_cache(paint_function, self.width, self.height).paint
                 return
             except URLError:
                 self._msg = 'SVG not found'
         else:
             self._msg = 'CairoSVG not available'
-        self.h = 89 * kwargs.get('hfactor', 1)
-        self.k = 0
-        self._set_dimensions(width)
+            
+        self._set_dimensions(h, k, h, 0, None)
         self.paint = self.paint_Error
-    
-    def generate_SC(self, CSVG):
-        SC = make_image_surface(self.h, self.k)
-        sccr = Context(SC)
-        sccr.save()
-        sccr.translate( * self._shift )
-        CSVG.paint_SVG(sccr)
-        sccr.restore()
-        return SC
-
-    def paint_SVG(self, cr, render):
-        cr.save()
-        cr.scale(self._factor, self._factor)
-        if render:
-            cr.set_source_surface(self._surface_cache)
-            cr.paint()
-        else:
-            cr.translate( * self._shift )
-            self._CSVG.paint_SVG(cr)
-        cr.restore()
 
 class Bitmap_image(_Image_painter):
-    def __init__(self, width, url, resolution):
-        self._factor = 1
+    def __init__(self, src, h, resolution):
         try:
-            self._surface_cache = make_pixbuf(url, resolution)
+            self._img_cache = make_pixbuf(src, resolution)
+            source_h        = self._img_cache.get_width()
+            source_k        = self._img_cache.get_height()
             self.paint = self.paint_PNG
-            self.h = int(self._surface_cache.get_width())
-            self.k = int(self._surface_cache.get_height())
         except SystemError:
             self._msg = 'Image not found'
-            self.h = 89
-            self.k = 0
+            source_h = 89
+            source_k = 0
             self.paint = self.paint_Error
-        self._set_dimensions(width)
+        self._factor = self._set_dimensions(h, None, source_h, source_k, None)
         
     def paint_PNG(self, cr, render=False):
         cr.save()
         cr.scale(self._factor, self._factor)
-        paint_pixbuf(cr, self._surface_cache)
+        paint_pixbuf(cr, self._img_cache)
         cr.restore()

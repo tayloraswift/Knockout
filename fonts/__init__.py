@@ -181,22 +181,9 @@ class Emoji_font(object):
                 BS = self._vectors[i]
             except KeyError:
                 self._emojis[(i, fontsize)] = E = lambda cr, render: _print_emoji_error(cr, fontsize)
-                return E
-            
-            E = Emoji(SVG_image(bytestring=BS, dx=0, dy=1788, hfactor=2.5, kfactor=2.5, width=None), factor)
-            self._emojis[(i, fontsize)] = E.render_bubble
-            return E.render_bubble
-
-class Emoji(object):
-    def __init__(self, SVGI, factor):
-        self._SVGI = SVGI
-        self._factor = factor/0.045
-    
-    def render_bubble(self, cr, render=False):
-        cr.save()
-        cr.scale(self._factor, self._factor)
-        self._SVGI.paint(cr, render)
-        cr.restore()
+            else:
+                self._emojis[(i, fontsize)] = E = SVG_image(bytestring=BS, h=fontsize, k=fontsize, dx=0, dy=1788, scale=factor/0.045).paint
+            return E
 
 class Grid_font(object):
     def __init__(self, hb_font, upem):

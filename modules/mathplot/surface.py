@@ -66,7 +66,7 @@ class Parametric_Surface(Data):
 
     def inflate(self, width, * I ):
         self._inflated = [(color, [(x*width, y) for x, y in polygon]) for Z, color, polygon in self._compact]
-        return (), ((self._z_center, Vector_cache(self._paint_full, width, self._k).paint),), ()
+        return (), ((self._z_center, Vector_cache(self._paint_full, width, self._k, frameshift=(0, 1), radius=1).paint),), ()
     
     def _paint_full(self, cr):
         for color, polygon in self._inflated:

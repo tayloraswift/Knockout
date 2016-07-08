@@ -20,7 +20,6 @@ class RSurface(surface.Surface):
 
         self.tree_cache = {(tree.url, tree.get('id')): tree}
         self.TREE = tree
-        
     
     def paint_SVG(self, CR):
         self.context = CR
@@ -38,5 +37,5 @@ class RSurface(surface.Surface):
         
         self.draw(self.TREE)
 
-def render_SVG( ** kwargs ):
-    return RSurface(parser.Tree( ** kwargs ))
+def render_SVG(url, bytestring):
+    return RSurface(parser.Tree(url=url, bytestring=bytestring))

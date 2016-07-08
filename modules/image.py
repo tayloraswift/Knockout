@@ -8,9 +8,9 @@ class Image(Inline):
     
     def _load(self):
         if self['src'][-4:] == '.svg':
-            self._image = SVG_image(self['width'], url=self['src'])
+            self._image = SVG_image   (src=self['src'], h=self['width'])
         else:
-            self._image = Bitmap_image(self['width'], self['src'], self['resolution'])
+            self._image = Bitmap_image(src=self['src'], h=self['width'], resolution=self['resolution'])
     
     def _cast_inline(self, LINE, runinfo, F, FSTYLE):
         self._image.inflate(LINE['leading'])

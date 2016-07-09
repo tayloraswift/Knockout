@@ -73,7 +73,7 @@ def text(x, y, text, font, fontsize=None, align=1, left=None, sub_minus=False, u
             dx = max(dx, left - xo)
         line = [(g[0], g[1] + dx, g[2]) for g in line]
     
-    return font['font'], font['fontsize'], line, x - xo - tracking
+    return font['font'], fontsize, line, x - xo - tracking
 
 def set_fonts(cr, font, fontsize):
     cr.set_font_face(font)

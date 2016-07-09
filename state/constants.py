@@ -34,6 +34,7 @@ interface_tstyles = {'_interface:LABEL'  : {'fontsize'  : 11,
                      '_interface:ITALIC' : {'path'      : 'interface/FiraSans-BookItalic.otf'},
                      '_interface:STRONG' : {'path'      : 'interface/FiraSans-Medium.otf'},
                      '_interface:TITLE'  : {'fontsize'  : 18, 'tracking': 4},
+                     '_interface:SPLASH' : {'fontsize'  : 36, 'tracking': 0},
                      '_interface:CODE'   : {'path'      : 'interface/Share-TechMono.otf', 'fontsize': 16}}
 
 interface_bstyle =   [('_interface:REGULAR' , ()            ),
@@ -41,4 +42,5 @@ interface_bstyle =   [('_interface:REGULAR' , ()            ),
                       ('_interface:ITALIC'  , ('emphasis',) ),
                       ('_interface:STRONG'  , ('strong',)   ),
                       ('_interface:TITLE'   , ('title',)    ),
+                      ('_interface:SPLASH'  , ('splash',)   ),
                       ('_interface:CODE'    , ('mono',)     )]

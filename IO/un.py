@@ -4,6 +4,27 @@ from edit import cursor, caramel
 
 from state import contexts
 
+def reinitialize(kitty, deserialize):
+        kttags, kbtags, kdocument, ktstyles, kbstyles = kitty
+        TTAGS   = deserialize(kttags)[0]
+        BTAGS   = deserialize(kbtags)[0]
+        
+        datablocks.TTAGS.__init__(TTAGS.attrs, TTAGS.content)
+        datablocks.BTAGS.__init__(BTAGS.attrs, BTAGS.content)
+        
+        TSTYLES = deserialize(ktstyles)[0]
+        datablocks.TSTYLES.__init__(TSTYLES.attrs, TSTYLES.content)
+        
+        BSTYLES = deserialize(kbstyles)[0]
+        datablocks.BSTYLES.__init__(BSTYLES.attrs, BSTYLES.content)
+        
+        DOC     = deserialize(kdocument)[0]
+        datablocks.DOCUMENT.__init__(DOC.attrs, DOC.content)
+        datablocks.DOCUMENT.layout_all()
+        
+        contexts.Text.__init__()
+        # don’t forget to run update_force and turnover_k on the cursor
+        
 class UN(object):
     def __init__(self, serialize, deserialize):
         self._history = []
@@ -36,24 +57,7 @@ class UN(object):
     def _restore(self, i):
         kitty, DATA, activity = self._history[i]
         
-        kttags, kbtags, kdocument, ktstyles, kbstyles = kitty
-        TTAGS   = self.deserialize(kttags)[0]
-        BTAGS   = self.deserialize(kbtags)[0]
-        
-        datablocks.TTAGS.__init__(TTAGS.attrs, TTAGS.content)
-        datablocks.BTAGS.__init__(BTAGS.attrs, BTAGS.content)
-        
-        TSTYLES = self.deserialize(ktstyles)[0]
-        datablocks.TSTYLES.__init__(TSTYLES.attrs, TSTYLES.content)
-        
-        BSTYLES = self.deserialize(kbstyles)[0]
-        datablocks.BSTYLES.__init__(BSTYLES.attrs, BSTYLES.content)
-        
-        DOC     = self.deserialize(kdocument)[0]
-        datablocks.DOCUMENT.__init__(DOC.attrs, DOC.content)
-        datablocks.DOCUMENT.layout_all()
-        
-        contexts.Text.__init__()
+        reinitialize(kitty, self.deserialize)
         
         cursor.fcursor.initialize_from_params ( * DATA[0] )
         caramel.delight.initialize_from_params( * DATA[1] )

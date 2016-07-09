@@ -10,8 +10,8 @@ from edit import caramel
 from fonts import common_features
 
 from meredith.styles import Blockstyle
-from meredith.datablocks import DOCUMENT, TTAGS, BTAGS, TSTYLES, BSTYLES
-from meredith.meta import filedata
+from meredith import datablocks
+from meredith import meta
 
 from IO import un
 
@@ -334,14 +334,14 @@ class Properties(_Properties_panel):
                 
                 if contexts.Text.kbm is not None:
                     self._items.append(fields.Counter_editor(15, y, KW, (125, 28),
-                                superset = TTAGS.content, 
+                                superset = datablocks.TTAGS.content, 
                                 node = contexts.Text.kbm, 
                                 A = 'class',
                                 refresh = self._style_synchronize))
                     y = self._y_incr() + 20
                     
                     self._items.append(fields.Object_menu(15, y, KW,
-                                supernode = TSTYLES, 
+                                supernode = datablocks.TSTYLES, 
                                 partition = self._partition, 
                                 node = contexts.Text.kbm, 
                                 A = 'textstyle', 
@@ -364,14 +364,14 @@ class Properties(_Properties_panel):
             self._heading = lambda: ', '.join(T['name'] if V == 1 else T['name'] + ' (' + str(V) + ')' for T, V in contexts.Text.bk['class'].items() if V)
             
             self._items.append(fields.Counter_editor(15, y, KW, (125, 28),
-                        superset = BTAGS.content,
+                        superset = datablocks.BTAGS.content,
                         node = contexts.Text.bk,
                         A = 'class',
                         refresh = self._style_synchronize))
             y = self._y_incr() + 20
             
             self._items.append(contents.Para_control_panel(15, y, KW, 
-                    node = BSTYLES, 
+                    node = datablocks.BSTYLES, 
                     context = contexts.Text, 
                     slot = 'kbs', 
                     display = _print_bcounter))
@@ -379,7 +379,7 @@ class Properties(_Properties_panel):
             
             if contexts.Text.kbs is not None:
                 self._items.append(fields.Counter_editor(15, y, KW, (125, 28),
-                            superset = BTAGS.content,
+                            superset = datablocks.BTAGS.content,
                             node = contexts.Text.kbs,
                             A = 'class',
                             refresh = self._style_synchronize))
@@ -393,7 +393,7 @@ class Properties(_Properties_panel):
             self._heading = lambda: 'Document tags'
             
             self._items.append(contents.Ordered(15, y, KW - 50,
-                        node = BTAGS, 
+                        node = datablocks.BTAGS, 
                         context = contexts.Text, 
                         slot = 'kbt', 
                         display = lambda l: l['name']))
@@ -409,7 +409,7 @@ class Properties(_Properties_panel):
             y += 80
 
             self._items.append(contents.Ordered(15, y, KW - 50,
-                        node = TTAGS, 
+                        node = datablocks.TTAGS, 
                         context = contexts.Text, 
                         slot = 'ktt', 
                         display = lambda l: l['name']))
@@ -427,19 +427,19 @@ class Properties(_Properties_panel):
             self._heading = lambda: 'Document pages'
             
             self._items.append(fields.Blank_space(15, y, KW, 
-                        node = DOCUMENT,
+                        node = datablocks.DOCUMENT,
                         A = 'width',
                         name = 'WIDTH' ))
             
             y += 45
             self._items.append(fields.Blank_space(15, y, KW,
-                        node = DOCUMENT,
+                        node = datablocks.DOCUMENT,
                         A = 'height',
                         name = 'HEIGHT' ))
             y += 45
             
             self._items.append(fields.Blank_space(15, y, KW, 
-                        node=filedata, 
+                        node=meta.filedata, 
                         A='filepath', 
                         name='SAVE AS'))
             y += 30

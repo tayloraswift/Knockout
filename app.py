@@ -10,9 +10,11 @@ from edit import cursor
 from keyboard import compose
 
 from meredith.settings import fontsettings
-from meredith.meta import filedata
+from meredith import meta
 
-from interface import karlie, taylor, menu
+from interface import karlie, taylor, menu, splash
+
+from IO import sierra
 
 _dead_keys = set(('dead_tilde', 'dead_acute', 'dead_grave', 'dead_circumflex', 'dead_abovering', 'dead_macron', 'dead_breve', 'dead_abovedot', 'dead_diaeresis', 'dead_doubleacute', 'dead_caron', 'dead_cedilla', 'dead_ogonek', 'dead_iota', 'Multi_key'))
 _special_keys = compose.compose_keys | _dead_keys
@@ -36,17 +38,29 @@ def strike_menu(event, e):
     return True
 
 class Display(Gtk.Window):
-    def __init__(self):
+    def make_splash(self, recent):
+        SPLASH = Gtk.DrawingArea()
+        recent.set_reload_func(self.reload)
+        splash_object = splash.Splash(recent, SPLASH.queue_draw)
+        SPLASH.connect("draw", lambda w, cr: (cr.set_font_options(self._FO), splash_object.draw(cr)))
+        SPLASH.set_events(Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.POINTER_MOTION_MASK)
+        
+        def press_splash(w, e):
+            splash_object.press(e.x, e.y)
+            self.overlay.remove(SPLASH)
+        
+        SPLASH.connect("button-press-event", press_splash)
+        SPLASH.connect("motion_notify_event", lambda w, e: splash_object.hover(e.x, e.y))
+        self.overlay.add_overlay(SPLASH)
+
+    def __init__(self, recent):
         super(Display, self).__init__()
-        
-        self.init_ui()
-        
-    def init_ui(self):    
+          
         self._h = constants.window.get_h()
         self._k = constants.window.get_k()
         
         self.SCREEN = Gtk.DrawingArea()
-        self.SCREEN.connect("draw", self.on_draw)
+        self.SCREEN.connect("draw", self.DRAW_SCREEN)
         self.SCREEN.set_events(Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_RELEASE_MASK | Gdk.EventMask.POINTER_MOTION_MASK | Gdk.EventMask.SCROLL_MASK)
         
         self.BECKY = Gtk.DrawingArea()
@@ -61,18 +75,10 @@ class Display(Gtk.Window):
         box.pack_start(self.BECKY, True, True, 0)
         box.pack_start(self.KLOSSY, False, False, 0)    
         
-        self._REGIONS = [taylor.becky, karlie.klossy]
-        self._active = self._REGIONS[0]
-        self._active_hover = self._REGIONS[0]
-        self._active_pane = None
-        self._R = 0
-        
-        overlay = Gtk.Overlay()
+        self.overlay = overlay = Gtk.Overlay()
         overlay.add_overlay(box)
         overlay.add_overlay(self.SCREEN)
         self.add(overlay)
-
-        self.errorpanel = None
         
         self._compositor = compose.Compositor()
         
@@ -83,27 +89,40 @@ class Display(Gtk.Window):
         self.connect("key-press-event", self.on_key_press)
         self.connect("check-resize", self.on_resize)
         
-        self.set_title(filedata.filename)
-
-        self.resize(self._h, self._k)
-        
         self.set_position(Gtk.WindowPosition.CENTER)
         self.connect("delete-event", self.quit)
-        self.show_all()
         
         self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
         self._FO = fontsettings.fontoptions
         
         self._periodic = GObject.timeout_add(2000, self._on_periodic)
         self._on_periodic()
+        
+        if recent is not None:
+            self.make_splash(recent)
+        self.set_regions()
+        self.show_all()
     
     def _on_periodic(self):
         cursor.fcursor.run_stats(spell=True)
         self.BECKY.queue_draw()
         self.KLOSSY.queue_draw()
         self.SCREEN.queue_draw()
-        self.set_title(filedata.filename)
+        self.set_title(meta.filedata.filename + ' – Knockout')
         return True
+
+    def set_regions(self):
+        self.resize(self._h, self._k)
+        self._REGIONS = [taylor.becky, karlie.klossy]
+        self._active = self._REGIONS[0]
+        self._active_hover = self._REGIONS[0]
+        self._active_pane = None
+        self._R = 0
+    
+    def reload(self, name):
+        sierra.load(name)
+        self.set_regions()
+        self._on_periodic()
 
     def DRAW_BECKY(self, w, cr):
         cr.set_font_options(self._FO)
@@ -111,14 +130,11 @@ class Display(Gtk.Window):
         cr.paint()
         taylor.becky.render(cr, self._h, self._k)
 
-        if self.errorpanel is not None:
-            self.errorpanel.draw(cr, constants.UI[1])
-
     def DRAW_KLOSSY(self, w, cr):
         cr.set_font_options(self._FO)
         karlie.klossy.render(cr, self._h, self._k)
         
-    def on_draw(self, w, cr):
+    def DRAW_SCREEN(self, w, cr):
         self._compositor.draw(cr)
         menu.menu.render(cr)
     
@@ -320,7 +336,3 @@ class Display(Gtk.Window):
     def quit(self, w, e):
         GObject.source_remove(self._periodic)
         Gtk.main_quit()
-        
-def main():
-    app = Display()
-    Gtk.main()

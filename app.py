@@ -6,13 +6,12 @@ from gi.repository import Gtk, Gdk, GObject
 
 from state import noticeboard, constants
 from IO import un
-from edit import cursor
+
 from keyboard import compose
 
 from meredith.settings import fontsettings
-from meredith import meta
 
-from interface import karlie, taylor, menu, splash
+from interface import menu, splash
 
 from IO import sierra
 
@@ -49,15 +48,12 @@ class Display(Gtk.Window):
             splash_object.press(e.x, e.y)
             self.overlay.remove(SPLASH)
         
-        SPLASH.connect("button-press-event", press_splash)
+        SPLASH.connect("button-press-event" , press_splash)
         SPLASH.connect("motion_notify_event", lambda w, e: splash_object.hover(e.x, e.y))
         self.overlay.add_overlay(SPLASH)
 
-    def __init__(self, recent):
+    def __init__(self):
         super(Display, self).__init__()
-          
-        self._h = constants.window.get_h()
-        self._k = constants.window.get_k()
         
         self.SCREEN = Gtk.DrawingArea()
         self.SCREEN.connect("draw", self.DRAW_SCREEN)
@@ -68,7 +64,6 @@ class Display(Gtk.Window):
 
         self.KLOSSY = Gtk.DrawingArea()
         self.KLOSSY.connect("draw", self.DRAW_KLOSSY)
-        self.KLOSSY.set_size_request(self._h - constants.UI[1], 0)
         
         box = Gtk.Box()
         
@@ -82,10 +77,10 @@ class Display(Gtk.Window):
         
         self._compositor = compose.Compositor()
         
-        self.SCREEN.connect("button-press-event", self._press_sort)
-        self.SCREEN.connect("button-release-event", self._release_sort)
-        self.SCREEN.connect("scroll-event", self._scroll_sort)
-        self.SCREEN.connect("motion_notify_event", self._motion_sort)
+        self.SCREEN.connect("button-press-event"    , self._press_sort)
+        self.SCREEN.connect("button-release-event"  , self._release_sort)
+        self.SCREEN.connect("scroll-event"          , self._scroll_sort)
+        self.SCREEN.connect("motion_notify_event"   , self._motion_sort)
         self.connect("key-press-event", self.on_key_press)
         self.connect("check-resize", self.on_resize)
         
@@ -95,115 +90,63 @@ class Display(Gtk.Window):
         self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
         self._FO = fontsettings.fontoptions
         
-        self._periodic = GObject.timeout_add(2000, self._on_periodic)
-        self._on_periodic()
+        self.resize(1300, 800)
         
-        if recent is not None:
-            self.make_splash(recent)
-        self.set_regions()
-        self.show_all()
+        self._periodic = GObject.timeout_add(2000, self._on_periodic)
     
     def _on_periodic(self):
-        cursor.fcursor.run_stats(spell=True)
+        self._KT.PCURSOR.run_stats(spell=True)
         self.BECKY.queue_draw()
         self.KLOSSY.queue_draw()
         self.SCREEN.queue_draw()
-        self.set_title(meta.filedata.filename + ' – Knockout')
+        self.set_title(self._KT.filedata.filename + ' – Knockout')
         return True
 
-    def set_regions(self):
-        self.resize(self._h, self._k)
-        self._REGIONS = [taylor.becky, karlie.klossy]
-        self._active = self._REGIONS[0]
-        self._active_hover = self._REGIONS[0]
-        self._active_pane = None
-        self._R = 0
+    def set_regions(self, panes):
+        self.panes      = panes
+        self._KT        = panes.KT
+        self._REGIONS   = panes.panes
+        self._active_pane = False
+        self.on_resize(None)
+        self._internal_resize(panes.critical_width())
     
     def reload(self, name):
-        sierra.load(name)
-        self.set_regions()
+        self.set_regions(sierra.load(name))
         self._on_periodic()
 
     def DRAW_BECKY(self, w, cr):
         cr.set_font_options(self._FO)
-        cr.set_source_rgb(1, 1, 1)
-        cr.paint()
-        taylor.becky.render(cr, self._h, self._k)
+        self._REGIONS[0].render(cr)
 
     def DRAW_KLOSSY(self, w, cr):
         cr.set_font_options(self._FO)
-        karlie.klossy.render(cr, self._h, self._k)
+        self._REGIONS[1].render(cr)
         
     def DRAW_SCREEN(self, w, cr):
         self._compositor.draw(cr)
         menu.menu.render(cr)
     
     def on_resize(self, w):
-        h_old = self._h
-        self._h, self._k = self.get_size()
-        constants.UI[-1] +=  self._h - h_old
-        
-        constants.window.resize(self._h, self._k)
-        taylor.becky.resize(self._k)
+        self.panes.resize( * self.get_size() )
     
-    def _internal_resize(self):
-        taylor.becky.resize(self._k)
-        karlie.klossy.resize()
-        self.KLOSSY.set_size_request(karlie.klossy.width, 0)
+    def _internal_resize(self, w):
+        self.KLOSSY.set_size_request(w, 0)
         self.BECKY.queue_draw()
         self.KLOSSY.queue_draw()
-
-    def _pane(self, x):
-        # check for borders
-        R = self._R
-        UI = constants.UI
-        if not R:
-            B = ((R + 1, UI[R + 1]),)
-        elif R < len(UI) - 1:
-            B = ((R, UI[R]), (R + 1, UI[R + 1]))
-        else:
-            B = ((R, UI[R]),)
-        for r, border in B:
-            if -10 < x - border < 10:
-                self._active_pane = r
-                return True
-        return False
-
-    def _set_active_hover_region(self, x, y):
-        r = bisect(constants.UI, x) - 1
-        O = self._REGIONS[r]
-        if self._active_hover is not O:
-            self._active_hover.hover(-1, -1)
-            self._active_hover = O
-            self._R = r
-        return x - constants.UI[r], y
-
-    def _set_active_region(self, x, y):
-        r = bisect(constants.UI, x) - 1
-        O = self._REGIONS[r]
-        if self._active is not O:
-            if isinstance(O, karlie._Properties_panel):
-                O.press(-1, -1, None)
-            self._active = O
-        if self._active_hover is not O:
-            self._active_hover.hover(-1, -1)
-            self._active_hover = O
-        self._R = r
-        return x - constants.UI[r], y
-    
-    def _convert(self, x, y):
-        return x - constants.UI[self._R], y
         
     def _press_sort(self, w, e):
         if strike_menu(0, e):
             menu.menu.destroy()
-            if self._pane(e.x):
+            if self.panes.pane(e.x):
+                self._active_pane = True
                 return
-            x, y = self._set_active_region(e.x, e.y)
+            else:
+                self._active_pane = False
+            x, y = self.panes.set_active_region(e.x, e.y)
             
             if e.type == Gdk.EventType._2BUTTON_PRESS:
                 if e.button == 1:
-                    self._active.dpress()
+                    self.panes.active.dpress()
             
             elif e.type == Gdk.EventType.BUTTON_PRESS:
                 if e.button == 1:
@@ -211,13 +154,13 @@ class Display(Gtk.Window):
                         char = 'ctrl'
                     else:
                         char = None
-                    self._active.press(x, y, char)
+                    self.panes.active.press(x, y, char)
                 
                 elif e.button == 2:
-                    self._active.press_mid(x, y)
+                    self.panes.active.press_mid(x, y)
                 
                 elif e.button == 3:
-                    self._active.press_right(x, y)
+                    self.panes.active.press_right(x, y)
         
         self.BECKY.queue_draw()
         self.KLOSSY.queue_draw()
@@ -226,20 +169,17 @@ class Display(Gtk.Window):
     def _motion_sort(self, w, e):
         if strike_menu(1, e):
             if e.state & Gdk.ModifierType.BUTTON1_MASK:
-                if self._active_pane is None:
-                    self._active.press_motion( * self._convert(e.x, e.y))
+                if self._active_pane:
+                    self._internal_resize(self.panes.pane_resize(e.x))
                 else:
-                    limits = constants.UI + [self._h]
-                    ap = self._active_pane
-                    constants.UI[ap] = min(limits[ap + 1] - 175, max(limits[ap - 1] + 175, int(e.x)))
-                    self._internal_resize()
+                    self.panes.active.press_motion( * self.panes.convert(e.x, e.y, self.panes.A) )
 
             elif e.state & Gdk.ModifierType.BUTTON2_MASK:
-                self._active.drag( * self._convert(e.x, e.y))
+                self.panes.active.drag( * self.panes.convert(e.x, e.y, self.panes.A) )
                 
             else:
-                x, y = self._set_active_hover_region(e.x, e.y)
-                self._active_hover.hover(x, y)
+                x, y = self.panes.set_active_hover_region(e.x, e.y)
+                self.panes.hover.hover(x, y)
 
         if noticeboard.redraw_overlay.should_refresh():
             self.SCREEN.queue_draw()
@@ -249,13 +189,13 @@ class Display(Gtk.Window):
             self.BECKY.queue_draw()
         
     def _release_sort(self, w, e):
-        self._active_pane = None
+        self._active_pane = False
         if e.button == 1:
-            x, y = self._convert(e.x, e.y)
-            self._active.release(x, y)
+            x, y = self.panes.convert(e.x, e.y, self.panes.A)
+            self.panes.active.release(x, y)
         
         elif e.button == 2:
-            self._active.drag(-1, -1)
+            self.panes.active.drag(-1, -1)
             
         self.BECKY.queue_draw()
         self.KLOSSY.queue_draw()
@@ -263,7 +203,7 @@ class Display(Gtk.Window):
         
     def _scroll_sort(self, w, e):
         if strike_menu(2, e):
-            x, y = self._convert(e.x, e.y)
+            x, y = self.panes.convert(e.x, e.y, self.panes.H)
             
             if e.state & Gdk.ModifierType.CONTROL_MASK:
                 char = 'ctrl'
@@ -272,9 +212,9 @@ class Display(Gtk.Window):
 
             # direction of scrolling stored as sign
             if e.direction == 1:
-                self._active_hover.scroll(x, y, char)
+                self.panes.hover.scroll(x, y, char)
             elif e.direction == 0:
-                self._active_hover.scroll(x, -y, char)
+                self.panes.hover.scroll(x,-y, char)
         
         if noticeboard.redraw_overlay.should_refresh():
             self.SCREEN.queue_draw()
@@ -288,11 +228,11 @@ class Display(Gtk.Window):
         name = Gdk.keyval_name(e.keyval)
         
         if e.state & Gdk.ModifierType.SHIFT_MASK and name == 'Return':
-            self._active.key_input('paragraph', None)
+            self.panes.active.key_input('paragraph', None)
         
         elif e.state & Gdk.ModifierType.CONTROL_MASK:
             if e.state & Gdk.ModifierType.LOCK_MASK and name not in {'Shift_L', 'Shift_R'}:
-                self._active.key_input('Ctrl Lock', chr(Gdk.keyval_to_unicode(e.keyval)))
+                self.panes.active.key_input('Ctrl Lock', chr(Gdk.keyval_to_unicode(e.keyval)))
             
             elif name == 'z':
                 un.history.back()
@@ -300,22 +240,22 @@ class Display(Gtk.Window):
                 un.history.forward()
             
             elif name == 'v':
-                self._active.key_input('Paste', self.clipboard.wait_for_text())
+                self.panes.active.key_input('Paste', self.clipboard.wait_for_text())
 
             elif name in {'c', 'x'}:
                 if name == 'c':
-                    cp = self._active.key_input('Copy', None)
+                    cp = self.panes.active.key_input('Copy', None)
                 else:
-                    cp = self._active.key_input('Cut', None)
+                    cp = self.panes.active.key_input('Cut', None)
                     
                 if cp is not None: # must be preprocessed into string
                     self.clipboard.set_text(cp, -1)
             
             elif name == 'a':
-                self._active.key_input('All', None)
+                self.panes.active.key_input('All', None)
 
             elif name not in {'Shift_L', 'Shift_R', 'Alt_L', 'Alt_R'}:
-                self._active.key_input('Ctrl ' + name, chr(Gdk.keyval_to_unicode(e.keyval)))
+                self.panes.active.key_input('Ctrl ' + name, chr(Gdk.keyval_to_unicode(e.keyval)))
         
         elif name in _special_keys:
             if name in _dead_keys:
@@ -323,11 +263,11 @@ class Display(Gtk.Window):
                 self.SCREEN.queue_draw()
         
         elif self._compositor:
-            self._compositor.key_input(name, chr(Gdk.keyval_to_unicode(e.keyval)), self._active.key_input)
+            self._compositor.key_input(name, chr(Gdk.keyval_to_unicode(e.keyval)), self.panes.active.key_input)
             self.SCREEN.queue_draw()
         
         else:
-            self._active.key_input(name, chr(Gdk.keyval_to_unicode(e.keyval)))
+            self.panes.active.key_input(name, chr(Gdk.keyval_to_unicode(e.keyval)))
         
         self.SCREEN.queue_draw()
         self.KLOSSY.queue_draw()

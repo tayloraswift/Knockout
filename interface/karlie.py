@@ -1,17 +1,13 @@
 from bisect import bisect
 from itertools import chain
 
-from state import constants, contexts, noticeboard
+from state import constants, noticeboard
 
 from interface import kookies, fields, contents, ui, source
-
-from edit import caramel
 
 from fonts import common_features
 
 from meredith.styles import Blockstyle
-from meredith import datablocks
-from meredith import meta
 
 from IO import un
 
@@ -31,19 +27,20 @@ def _Z_state(N, A, layer):
         last = layer.Z[A]
         return - (last.isbase), last.attrs[A] # undefined, unapplicable
 
-def _stack_row(i, row, y, gap, width, node, ctx):
+def _stack_row(i, row, y, gap, width, node, get_layer, refresh):
     width += 10
     divisions = [int(r[0] * width) for r in row]
     divisions = zip(divisions, chain(divisions[1:], (width,)), row)
-    return _columns([TYPE(15 + a, y + i*gap, b - a - 10, 
-                            node=node, 
-                            A=A, 
-                            Z=lambda N, A: _Z_state(N, A, ctx()),
-                            refresh=contexts.Text.update_context,
-                            name=name) for a, b, (_, TYPE, A, name) in divisions])
+    return _columns([TYPE(15 + a    , y + i*gap, b - a - 10, 
+                            node    = node, 
+                            A       = A, 
+                            Z       = lambda N, A: _Z_state(N, A, get_layer()),
+                            refresh = refresh,
+                            name    = name) for a, b, (_, TYPE, A, name) in divisions])
 
-def _stack_properties(y, gap, width, node, ctx, L):
-    return chain.from_iterable(_stack_row(i, row, y, gap, width, node, ctx) for i, row in enumerate(L))
+def _stack_properties( * I ):
+    * I , L = I
+    return chain.from_iterable(_stack_row(i, row, * I ) for i, row in enumerate(L))
 
 class _MULTI_COLUMN(object):
     def __init__(self, * args):
@@ -60,18 +57,24 @@ def _columns(columns):
 
 # do not instantiate directly, requires a _reconstruct
 class _Properties_panel(ui.Cell):
-    def __init__(self, mode, partition=1 ):
-        self.width = None
+    def __init__(self, KT, context, partition=1):
+        self.KT         = KT
+        self.context    = context
+        
+        self.width      = None
+        self.height     = None
         self._partition = partition
-        self._swap_reconstruct(mode)
-        self.resize()
+        self._swap_reconstruct(KT.VIEW.mode)
         self._scroll_anchor = False
+
+    def shortcuts(self):
+        pass
     
-    def resize(self):
-        W = constants.window.get_h() - constants.UI[self._partition]
-        if W != self.width:
-            self.width = W
-            self._KW = W - 50
+    def resize(self, h, k):
+        self.height = k
+        if h != self.width:
+            self.width = h
+            self._KW = h - 50
             self._reconstruct()
 
     def _tab_switch(self, name):
@@ -111,19 +114,19 @@ class _Properties_panel(ui.Cell):
         self._reconstruct()
     
     def _synchronize(self):
-        contexts.Text.update()
+        self.context.update()
         for item in self._items:
             item.read()
         self._HI.read()
     
     def _style_synchronize(self):
-        contexts.Text.update_force()
+        self.context.update_force()
         for item in self._items:
             item.read()
         self._HI.read()
         
-    def render(self, cr, h, k):
-        self.resize()
+    def render(self, cr):
+        k = self.height
         width = self.width
         # DRAW BACKGROUND
         cr.rectangle(0, 0, width, k)
@@ -135,7 +138,7 @@ class _Properties_panel(ui.Cell):
         if ref:
             self._swap_reconstruct(mode)
             self._reconstruct()
-        elif self._tab in contexts.Text.changed:
+        elif self._tab in self.context.changed:
             self._reconstruct()
             if self._tab == 'character':
                 self._dy = 0
@@ -180,8 +183,6 @@ class _Properties_panel(ui.Cell):
                 k)
         cr.set_source_rgb(0.9, 0.9, 0.9)
         cr.fill()
-        
-        self._K = k
     
     def key_input(self, name, char):
         box = self._active_box_i
@@ -214,8 +215,7 @@ class _Properties_panel(ui.Cell):
 
         # defocus the other box, if applicable
         if b is None or b is not self._active_box_i:
-            if self._active_box_i is not None:
-                self._active_box_i.defocus()
+            self.exit()
             self._active_box_i = b
 
     def dpress(self):
@@ -225,8 +225,8 @@ class _Properties_panel(ui.Cell):
     def press_motion(self, x, y):
         yn = y - self._dy
         if self._scroll_anchor:
-            dy = -(y - 90 - self._K / self._total_height * (self._K - 100) * 0.5 ) * self._total_height / (self._K - 100)
-            dy = min(0, max(-self._total_height + self._K, dy))
+            dy = -(y - 90 - self.height / self._total_height * (self.height - 100) * 0.5 ) * self._total_height / (self.height - 100)
+            dy = min(0, max(-self._total_height + self.height, dy))
             if dy != self._dy:
                 self._dy = dy
                 noticeboard.redraw_klossy.push_change()
@@ -235,7 +235,12 @@ class _Properties_panel(ui.Cell):
     
     def release(self, x, y):
         self._scroll_anchor = False
-        
+    
+    def exit(self):
+        if self._active_box_i is not None:
+            self._active_box_i.defocus()
+            self._active_box_i = None
+    
     def hover(self, x, y, hovered=[None]):
         if y < 90:
             box = self._tabstrip
@@ -264,7 +269,7 @@ class _Properties_panel(ui.Cell):
 
     def scroll(self, x, y, char):
         if y > 0:
-            if self._dy >= -self._total_height + self._K:
+            if self._dy >= -self._total_height + self.height:
                 self._dy -= 22
                 noticeboard.redraw_klossy.push_change()
         elif self._dy <= -22:
@@ -272,7 +277,7 @@ class _Properties_panel(ui.Cell):
             noticeboard.redraw_klossy.push_change()
 
     def _reconstruct(self):
-        contexts.Text.done(self._tab)
+        self.context.done(self._tab)
         self._heading = lambda: ''
         self._items = []
         self._active_box_i = None
@@ -298,60 +303,60 @@ def _print_bcounter(node):
     else:
         return 'ELEMENT',
 
-_BLOCK_PROPERTIES =[[(0, fields.Blank_space, 'leading', 'LEADING')],
-                    [(0, fields.Blank_space, 'language', 'LANGUAGE')],
-                    [(0, fields.Blank_space, 'align', 'ALIGN') , (0.6, fields.Blank_space, 'align_to', 'ALIGN ON')],
-                    [(0, fields.Blank_space, 'indent', 'INDENT') , (0.6, fields.Blank_space, 'indent_range', 'FOR LINES')],
-                    [(0, fields.Blank_space, 'margin_left', 'SPACE LEFT'), (0.5, fields.Blank_space, 'margin_right', 'SPACE RIGHT')],
-                    [(0, fields.Blank_space, 'margin_top', 'SPACE BEFORE'), (0.5, fields.Blank_space, 'margin_bottom', 'SPACE AFTER')],
-                    [(0, fields.Checkbox, 'hyphenate', 'HYPHENATE')],
-                    [(0, fields.Checkbox, 'keep_together', 'KEEP TOGETHER'), (0.5, fields.Checkbox, 'keep_with_next', 'KEEP WITH NEXT')],
-                    [(0, fields.Blank_space, 'incr_place_value', 'INCREMENT'), (0.4, fields.Blank_space, 'incr_assign', 'BY')],
-                    [(0, fields.Blank_space, 'show_count', 'COUNTER TEXT'), (0.7, fields.Blank_space, 'counter_space', 'SPACE')],
+_BLOCK_PROPERTIES =[[(0, fields.Blank_space , 'leading'         , 'LEADING'      )],
+                    [(0, fields.Blank_space , 'language'        , 'LANGUAGE'     )],
+                    [(0, fields.Blank_space , 'align'           , 'ALIGN'        ), (0.6, fields.Blank_space, 'align_to'        , 'ALIGN ON'      )],
+                    [(0, fields.Blank_space , 'indent'          , 'INDENT'       ), (0.6, fields.Blank_space, 'indent_range'    , 'FOR LINES'     )],
+                    [(0, fields.Blank_space , 'margin_left'     , 'SPACE LEFT'   ), (0.5, fields.Blank_space, 'margin_right'    , 'SPACE RIGHT'   )],
+                    [(0, fields.Blank_space , 'margin_top'      , 'SPACE BEFORE' ), (0.5, fields.Blank_space, 'margin_bottom'   , 'SPACE AFTER'   )],
+                    [(0, fields.Checkbox    , 'hyphenate'       , 'HYPHENATE'    )],
+                    [(0, fields.Checkbox    , 'keep_together'   , 'KEEP TOGETHER'), (0.5, fields.Checkbox   , 'keep_with_next'  , 'KEEP WITH NEXT')],
+                    [(0, fields.Blank_space , 'incr_place_value', 'INCREMENT'    ), (0.4, fields.Blank_space, 'incr_assign'     , 'BY'            )],
+                    [(0, fields.Blank_space , 'show_count'      , 'COUNTER TEXT' ), (0.7, fields.Blank_space, 'counter_space'   , 'SPACE'         )],
                     ]
 
-_TEXT_PROPERTIES = [[(0, fields.Blank_space, 'path', 'FONT FILE')],
-                    [(0, fields.Blank_space, 'path_emoji', 'EMOJI FONT FILE')],
-                    [(0, fields.Blank_space, 'fontsize', 'FONT SIZE')],
-                    [(0, fields.Blank_space, 'tracking', 'TRACKING')],
-                    [(0, fields.Blank_space, 'shift', 'VERTICAL SHIFT')],
-                    [(0, fields.Checkbox, 'capitals', 'CAPITALS')],
-                    [(0, fields.Blank_space, 'color', 'COLOR')]
+_TEXT_PROPERTIES = [[(0, fields.Blank_space , 'path'        , 'FONT FILE'       )],
+                    [(0, fields.Blank_space , 'path_emoji'  , 'EMOJI FONT FILE' )],
+                    [(0, fields.Blank_space , 'fontsize'    , 'FONT SIZE'       )],
+                    [(0, fields.Blank_space , 'tracking'    , 'TRACKING'        )],
+                    [(0, fields.Blank_space , 'shift'       , 'VERTICAL SHIFT'  )],
+                    [(0, fields.Checkbox    , 'capitals'    , 'CAPITALS'        )],
+                    [(0, fields.Blank_space , 'color'       , 'COLOR'           )]
                     ]
 
 class Properties(_Properties_panel):
     def _text_panel(self, y, KW):
         if self._tab == 'font':
-            if contexts.Text.kbs is not None:
-                self._heading = lambda: ', '.join(T['name'] for T in contexts.Text.kbs['class'])
+            if self.context.kbs is not None:
+                self._heading = lambda: ', '.join(T['name'] for T in self.context.kbs['class'])
                 
                 self._items.append(contents.Ordered(15, y, KW,
-                            node = contexts.Text.kbs, 
-                            context = contexts.Text,
+                            node = self.context.kbs, 
+                            context = self.context,
                             slot = 'kbm',
                             display = _print_tcounter))
                 y = self._y_incr() + 20
                 
-                if contexts.Text.kbm is not None:
+                if self.context.kbm is not None:
                     self._items.append(fields.Counter_editor(15, y, KW, (125, 28),
-                                superset = datablocks.TTAGS.content, 
-                                node = contexts.Text.kbm, 
+                                superset = self.KT.TTAGS.content, 
+                                node = self.context.kbm, 
                                 A = 'class',
                                 refresh = self._style_synchronize))
                     y = self._y_incr() + 20
                     
                     self._items.append(fields.Object_menu(15, y, KW,
-                                supernode = datablocks.TSTYLES, 
+                                supernode = self.KT.TSTYLES, 
                                 partition = self._partition, 
-                                node = contexts.Text.kbm, 
+                                node = self.context.kbm, 
                                 A = 'textstyle', 
                                 refresh = self._style_synchronize,
                                 name = 'FONTSTYLE'))
 
-                    TS = contexts.Text.kbm['textstyle']
+                    TS = self.context.kbm['textstyle']
                     if TS is not None:
                         y += 55
-                        props_args = 45, KW, TS, lambda: contexts.Text.ts
+                        props_args = 45, KW, TS, lambda: self.context.ts, self.context.update_context
                         self._items.extend(_stack_properties(y, * props_args , _TEXT_PROPERTIES))
                         y += 45*len(_TEXT_PROPERTIES) + 10
                         
@@ -361,31 +366,31 @@ class Properties(_Properties_panel):
                         self._items.extend(_stack_properties(y, * props_args , _OT_TEXT_PROPERTIES))
         
         elif self._tab == 'paragraph':
-            self._heading = lambda: ', '.join(T['name'] if V == 1 else T['name'] + ' (' + str(V) + ')' for T, V in contexts.Text.bk['class'].items() if V)
+            self._heading = lambda: ', '.join(T['name'] if V == 1 else T['name'] + ' (' + str(V) + ')' for T, V in self.context.bk['class'].items() if V)
             
             self._items.append(fields.Counter_editor(15, y, KW, (125, 28),
-                        superset = datablocks.BTAGS.content,
-                        node = contexts.Text.bk,
+                        superset = self.KT.BTAGS.content,
+                        node = self.context.bk,
                         A = 'class',
                         refresh = self._style_synchronize))
             y = self._y_incr() + 20
             
             self._items.append(contents.Para_control_panel(15, y, KW, 
-                    node = datablocks.BSTYLES, 
-                    context = contexts.Text, 
+                    node = self.KT.BSTYLES, 
+                    context = self.context, 
                     slot = 'kbs', 
                     display = _print_bcounter))
             y = self._y_incr() + 20
             
-            if contexts.Text.kbs is not None:
+            if self.context.kbs is not None:
                 self._items.append(fields.Counter_editor(15, y, KW, (125, 28),
-                            superset = datablocks.BTAGS.content,
-                            node = contexts.Text.kbs,
+                            superset = self.KT.BTAGS.content,
+                            node = self.context.kbs,
                             A = 'class',
                             refresh = self._style_synchronize))
                 y = self._y_incr() + 20
                 
-                self._items.extend(_stack_properties(y, 45, KW, contexts.Text.kbs, lambda: contexts.Text.bs, _BLOCK_PROPERTIES))
+                self._items.extend(_stack_properties(y, 45, KW, self.context.kbs, lambda: self.context.bs, self.context.update_context, _BLOCK_PROPERTIES))
                 y += 45*len(_BLOCK_PROPERTIES)
                 
         
@@ -393,32 +398,32 @@ class Properties(_Properties_panel):
             self._heading = lambda: 'Document tags'
             
             self._items.append(contents.Ordered(15, y, KW - 50,
-                        node = datablocks.BTAGS, 
-                        context = contexts.Text, 
+                        node = self.KT.BTAGS, 
+                        context = self.context, 
                         slot = 'kbt', 
                         display = lambda l: l['name']))
             
             y = self._y_incr() + 20
             
-            if contexts.Text.kbt is not None:
+            if self.context.kbt is not None:
                 self._items.append(fields.Blank_space(15, y, KW, 
-                        node = contexts.Text.kbt,
+                        node = self.context.kbt,
                         A = 'name', 
                         refresh=self._synchronize, 
                         name='TAG NAME', no_z=True))
             y += 80
 
             self._items.append(contents.Ordered(15, y, KW - 50,
-                        node = datablocks.TTAGS, 
-                        context = contexts.Text, 
+                        node = self.KT.TTAGS, 
+                        context = self.context, 
                         slot = 'ktt', 
                         display = lambda l: l['name']))
             
             y = self._y_incr() + 20
             
-            if contexts.Text.ktt is not None:
+            if self.context.ktt is not None:
                 self._items.append(fields.Blank_space(15, y, KW, 
-                        node = contexts.Text.ktt,
+                        node = self.context.ktt,
                         A = 'name', 
                         refresh=self._synchronize, 
                         name='TAG NAME', no_z=True))
@@ -427,19 +432,19 @@ class Properties(_Properties_panel):
             self._heading = lambda: 'Document pages'
             
             self._items.append(fields.Blank_space(15, y, KW, 
-                        node = datablocks.DOCUMENT,
+                        node = self.KT.BODY,
                         A = 'width',
                         name = 'WIDTH' ))
             
             y += 45
             self._items.append(fields.Blank_space(15, y, KW,
-                        node = datablocks.DOCUMENT,
+                        node = self.KT.BODY,
                         A = 'height',
                         name = 'HEIGHT' ))
             y += 45
             
             self._items.append(fields.Blank_space(15, y, KW, 
-                        node=meta.filedata, 
+                        node=self.KT.filedata, 
                         A='filepath', 
                         name='SAVE AS'))
             y += 30
@@ -448,29 +453,29 @@ class Properties(_Properties_panel):
             self._heading = lambda: 'Element source'
             
             self._items.append(source.Rose_garden(10, y, width=KW + 10, 
-                    context = contexts.Text,
+                    context = self.context,
                     save = un.history.save))
             y = self._y_incr() + 20
         return y
 
     def _frames_panel(self, y, KW):
         if self._tab == 'frames':
-            c = contexts.Text.c
+            c = self.context.c
             self._heading = lambda: 'Frame ' + str(c)
             if c is not None:
                 self._items.append(fields.Blank_space(15, y, KW, 
-                        node = caramel.delight.section['frames'][c],
+                        node = self.KT.SCURSOR.section['frames'][c],
                         A = 'page', 
                         name = 'PAGE',
                         override_in = lambda N, A: N.page))
                 y += 30
 
         if self._tab == 'section':
-            section = contexts.Text.sc
+            section = self.context.sc
             self._heading = lambda: 'Section ' + str(section)
             if section is not None:
                 self._items.append(fields.Blank_space(15, y, KW, 
-                        node = caramel.delight.section,
+                        node = self.KT.SCURSOR.section,
                         A = 'repeat', 
                         name = 'REPEAT'))
                 y += 30

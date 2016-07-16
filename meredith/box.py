@@ -1,9 +1,7 @@
 from itertools import chain
 from random import randint
 
-from olivia import literal, reformat, standard
-
-from meredith import datablocks
+from IO.un import history
 
 def random_serial():
     R = set()
@@ -46,7 +44,13 @@ class Box(dict):
     DNA = []
     IMPLY = {}
     
-    def __init__(self, attrs, content=None):
+    def __init__(self, KT, attrs, content=None):
+        self._TTAGS_D, self._BTAGS_D, self._TSTYLES_D = KT.dicts
+        self.__literal  = KT.mint.literal
+        self.__reformat = KT.mint.reformat
+        self.__standard = KT.mint.standard
+        self.KT         = KT
+        
         if content is None:
             self.content = []
         else:
@@ -58,6 +62,11 @@ class Box(dict):
     def _load_attributes(self, attrs, DNA=None):
         if DNA is None:
             DNA = self.__class__.DNA
+        
+        literal  = self.__literal
+        reformat = self.__reformat
+        standard = self.__standard
+        
         for A, TYPE, * default in DNA:
             if TYPE in literal:
                 if A in attrs:
@@ -87,7 +96,7 @@ class Box(dict):
                     yield A, up(default[0])
 
     def before(self):
-        raise NotImplementedError
+        history.save() # we need to perform the dot lookup
     
     def after(self, A):
         pass
@@ -100,17 +109,17 @@ class Box(dict):
             return
         
         self.before()
-        if TYPE in literal:
-            v = literal[TYPE](S)
+        if TYPE in self.__literal:
+            v = self.__literal[TYPE](S)
             self.attrs[A] = v
             self[A] = v
         
-        elif TYPE in standard or type(TYPE) is tuple:
+        elif TYPE in self.__standard or type(TYPE) is tuple:
             self.attrs[A] = S
-            self[A] = standard[TYPE](S)
+            self[A] = self.__standard[TYPE](S)
         
-        elif TYPE in reformat:
-            up, down = reformat[TYPE]
+        elif TYPE in self.__reformat:
+            up, down = self.__reformat[TYPE]
             v = up(S)
             self.attrs[A] = down(v)
             self[A] = v
@@ -139,7 +148,7 @@ class Box(dict):
             content = type(self.content)(e if type(e) is str else e.copy() for e in self.content)
         else:
             content = [e.copy() for e in self.content]
-        return self.__class__(self.attrs, content)
+        return self.__class__(self.KT, self.attrs, content)
     
     def __repr__(self):
         if self.content:
@@ -168,66 +177,66 @@ class Box(dict):
     def filter_nodes(self, cls):
         return (b for b in self.content if isinstance(b, cls))
 
+
+_tagDNA = [('name', 'str', '_undef')]
+
+class Texttag(Box):
+    name = 'texttag'
+    DNA  = _tagDNA
+    
+    def after(self, A):
+        if A == 'name':
+            self._TTAGS_D.update_datablocks(self.KT.TTAGS)
+
+class Blocktag(Box):
+    name = 'blocktag'
+    DNA  = _tagDNA
+    
+    def after(self, A):
+        if A == 'name':
+            self._BTAGS_D.update_datablocks(self.KT.BTAGS)
+
 class Datablocks(Box):
     def content_new(self, active=None, i=None):
         if active is None:
             name = self.__class__.defmembername
         else:
             name = active['name']
-        O = self.__class__.contains({'name': new_name(name, self.__class__.dblibrary)})
+        O = self.__class__.contains(self.KT, {'name': new_name(name, self._dblibrary)})
         if i is None:
             self.content.append(O)
             self.sort_content()
         else:
             self.content.insert(i, O)
-        self.__class__.dblibrary.update_datablocks(self)
         self.after('__content__')
         return O
 
     def sort_content(self):
         self.content.sort(key=lambda O: O['name'])
-
-class _Tags(Datablocks):
-    name = '_abstract_taglist'
     
+    def after(self, A):
+        if A == 'name' or A == '__content__':
+            self._dblibrary.update_datablocks(self)
+
+class Texttags(Datablocks):
+    name = 'texttags'
     defmembername = 'Untitled tag'
+    contains = Texttag
     
     def __init__(self, * II, ** KII ):
         Box.__init__(self, * II, ** KII )
-        self.__class__.dblibrary.ordered = self
-        self.__class__.dblibrary.update_datablocks(self)
-
-    def after(self, A):
-        if A == 'name':
-            self.__class__.dblibrary.update_datablocks(self)
+        self._dblibrary = self._TTAGS_D
+        self._dblibrary.set_funcs(self)
     
-class _Tag(Box):
-    name = '_abstract_tag'
-    DNA = [('name', 'str', '_undef')]
-
-class Texttag(_Tag):
-    name = 'texttag'
-
-    def after(self, A):
-        if A == 'name':
-            datablocks.Texttags_D.update_datablocks(datablocks.TTAGS)
-
-class Texttags(_Tags):
-    name = 'texttags'
-    dblibrary = datablocks.Texttags_D
-    contains = Texttag
-
-class Blocktag(_Tag):
-    name = 'blocktag'
-
-    def after(self, A):
-        if A == 'name':
-            datablocks.Blocktags_D.update_datablocks(datablocks.BTAGS)
-
-class Blocktags(_Tags):
+class Blocktags(Datablocks):
     name = 'blocktags'
-    dblibrary = datablocks.Blocktags_D
+    defmembername = 'Untitled tag'
     contains = Blocktag
+
+    def __init__(self, * II, ** KII ):
+        Box.__init__(self, * II, ** KII )
+        self._dblibrary = self._BTAGS_D
+        self._dblibrary.set_funcs(self)
 
 ## MODULE BASE CLASSES ##
 

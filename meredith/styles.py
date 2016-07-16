@@ -3,7 +3,6 @@ from itertools import chain
 from olivia.languages import generate_runinfo
 
 from meredith.box import Box, Datablocks
-from meredith import datablocks
 
 from fonts import hb, common_features, feature_map, get_ot_font, get_ot_space_metrics, get_emoji_font
 
@@ -30,10 +29,10 @@ class Textstyle(Box):
     
     def after(self, A):
         if A == 'name':
-            Textstyles.dblibrary.update_datablocks(datablocks.TSTYLES)
+            self._TSTYLES_D.update_datablocks(self.KT.TSTYLES)
         else:
-            datablocks.BSTYLES.text_projections.clear()
-            datablocks.DOCUMENT.layout_all()
+            self.KT.BSTYLES.text_projections.clear()
+            self.KT.BODY.layout_all()
     
     def __str__(self):
         return self['name']
@@ -41,18 +40,18 @@ class Textstyle(Box):
 class Textstyles(Datablocks):
     name = 'textstyles'
     contains = Textstyle
-    dblibrary = datablocks.Textstyles_D
     
     defmembername = 'Untitled fontstyle'
     
     def __init__(self, * II, ** KII ):
         Box.__init__(self, * II, ** KII )
-        self.__class__.dblibrary.update_datablocks(self)
         self.content.sort(key=lambda k: k['name'])
+        self._dblibrary = self._TSTYLES_D
+        self._dblibrary.set_funcs(self)
 
     def after(self, A):
-        datablocks.BSTYLES.text_projections.clear()
-        datablocks.DOCUMENT.layout_all()
+        self.KT.BSTYLES.text_projections.clear()
+        self.KT.BODY.layout_all()
 
 class Memberstyle(Box):
     name = 'memberstyle'
@@ -60,8 +59,8 @@ class Memberstyle(Box):
             ('textstyle',       'textstyle', None)]
     
     def after(self, A):
-        datablocks.BSTYLES.text_projections.clear()
-        datablocks.DOCUMENT.layout_all()
+        self.KT.BSTYLES.text_projections.clear()
+        self.KT.BODY.layout_all()
 
 _block_DNA = [('hyphenate',       'bool'    ,   False),
             ('keep_together',   'bool'      ,   False),
@@ -109,9 +108,9 @@ class Blockstyle(_Has_tagged_members):
         self.isbase = False
     
     def after(self, A):
-        datablocks.BSTYLES.block_projections.clear()
-        datablocks.BSTYLES.text_projections.clear()
-        datablocks.DOCUMENT.layout_all()
+        self.KT.BSTYLES.block_projections.clear()
+        self.KT.BSTYLES.text_projections.clear()
+        self.KT.BODY.layout_all()
 
 class _Layer(dict):
     def __init__(self, BASE):
@@ -126,11 +125,6 @@ class _Layer(dict):
             self.Z[A] = B
         self.members.append(B)
 
-def _cast_default(cls):
-    D = cls.BASE.copy()
-    D['class'] = {}
-    return cls(D)
-
 class Blockstyles(_Has_tagged_members):
     name = 'blockstyles'
     
@@ -140,15 +134,20 @@ class Blockstyles(_Has_tagged_members):
         Box.__init__(self, * II, ** KII )
         
         self.block_projections = {}
-        self.text_projections = {}
+        self.text_projections  = {}
         
-        self._block_default = _cast_default(Blockstyle)
-        self._text_default = _cast_default(Textstyle)
+        self._block_default    = self._cast_default(Blockstyle)
+        self._text_default     = self._cast_default(Textstyle)
 
+    def _cast_default(self, cls):
+        D = cls.BASE.copy()
+        D['class'] = {}
+        return cls(self.KT, D)
+        
     def after(self, A):
         self.block_projections.clear()
         self.text_projections.clear()
-        datablocks.DOCUMENT.layout_all()
+        datablocks.BODY.layout_all()
     
     def project_b(self, BLOCK):
         if BLOCK.implicit_ is None:

@@ -4,9 +4,13 @@ from itertools import chain, groupby
 
 from state.exceptions import IO_Error
 
+from olivia import Mint
+
 # boxes
 from meredith.paragraph import Text
-from meredith import boxes
+from meredith import boxes, meta
+
+from meredith.datablocks import Datablock_lib, Tag_lib
 
 class Paine(parser.HTMLParser):
     def _cap(self):
@@ -18,14 +22,16 @@ class Paine(parser.HTMLParser):
     def _virtual_paragraph(self):
         pass
     
-    def feed(self, data):
+    def feed(self, data, KT):
         self.reset()
-        self._implicit = False
-        self._O = []
-        self._C = [(None, self._O)]
+        self._KT          = KT
+        
+        self._implicit    = False
+        self._O           = []
+        self._C           = [(None, None, self._O)]
         self._breadcrumbs = ['_nullbox']
         
-        self.rawdata = data
+        self.rawdata      = data
         self._virtual_paragraph()
         self.goahead(0)
         
@@ -36,13 +42,13 @@ class Paine(parser.HTMLParser):
         raise IO_Error('Syntax error: tag mismatch')
     
     def append_to(self):
-        return self._C[-1][1]
+        return self._C[-1][2]
     
     def _rawnode(self, name, attrs):
         if boxes[name].textfacing:
-            return dict(attrs), Text()
+            return self._KT, dict(attrs), Text()
         else:
-            return dict(attrs), []
+            return self._KT, dict(attrs), []
     
     def handle_starttag(self, name, attrs):
         if name in boxes:
@@ -101,13 +107,7 @@ OUT = {k: v for v, k in IN.items()}
 
 inpattern = re.compile("|".join([re.escape(k) for k in IN.keys()]), re.M)
 outpattern = re.compile("|".join([re.escape(k) for k in OUT.keys()]), re.M)
-
-def deserialize(text, fragment=False):
-    if fragment:
-        return R.feed( inpattern.sub(lambda x: IN[x.group(0)], text) )
-    else:
-        return Q.feed( inpattern.sub(lambda x: IN[x.group(0)], text) )
-
+        
 escape_chars = {'&': '&amp;',
                 '<': '&lt;',
                 '>': '&gt;',
@@ -175,18 +175,64 @@ def _write_L(L, indent=0):
     else:
         return chainwithseperator((_write_box(B, indent, True) for B in L), [0, ''])
 
-def miniserialize(L):
-    return ''.join(N[1] for N in chain.from_iterable(_write_box(B, 0, True) for B in L))
-
-def serialize(blocks, indent=0, trim=None):
-    if trim is None:
-        lines = _write_L(blocks, indent)
-    else: # blocks will always be at least len() == 2
-        begin, *middle, end = blocks
-        lines = _write_partial(begin, indent, a=trim[0])
-        lines.append([0, ''])
-        lines += _write_L(middle, indent)
-        if len(lines) > 2:
+class Knockout(object):
+    supermap = {'texttags'    : 'TTAGS',    # LIBRARY LEVEL
+                'blocktags'   : 'BTAGS',
+                'textstyles'  : 'TSTYLES',
+                
+                'body'        : 'BODY',     # DATA LEVEL
+                'blockstyles' : 'BSTYLES',
+                
+                'textcursor'  : 'PCURSOR',  # EDITOR LEVEL
+                'framecursor' : 'SCURSOR',
+                'view'        : 'VIEW',}
+    
+    def __init__(self, name=None):
+        self.dicts = Tag_lib(), Tag_lib(), Datablock_lib()
+        self.mint  = Mint(self)
+        
+        self.filedata = meta.Metadata(self, name)
+    
+    def _Q_(self, text):
+        return Q.feed( inpattern.sub(lambda x: IN[x.group(0)], text) , self)
+    
+    def deserialize_high(self, text, default_data=()):
+        nodes = {type(superblock).name: superblock for superblock in self._Q_(text)}
+        for name, default_node in default_data:
+            if name not in nodes:
+                nodes[name] = self._Q_(default_node)[0]
+        
+        for name, superblock in nodes.items():
+            setattr(self, self.__class__.supermap[type(superblock).name], superblock)
+    
+    def setup_editors(self):
+        self.PCURSOR.reactivate()
+        self.SCURSOR.reactivate()
+        self.VIEW.reactivate()
+    
+    def deserialize(self, text):
+        return R.feed( inpattern.sub(lambda x: IN[x.group(0)], text) , self)
+    
+    @staticmethod
+    def miniserialize(L):
+        return ''.join(N[1] for N in chain.from_iterable(_write_box(B, 0, True) for B in L))
+    
+    @staticmethod
+    def serialize(blocks, indent=0, trim=None):
+        if trim is None:
+            lines = _write_L(blocks, indent)
+        else: # blocks will always be at least len() == 2
+            begin, *middle, end = blocks
+            lines = _write_partial(begin, indent, a=trim[0])
             lines.append([0, ''])
-        lines += _write_partial(end, indent, b=trim[1])
-    return outpattern.sub(lambda x: OUT[x.group(0)], '\n'.join('    ' * ind + line for ind, line in lines))
+            lines += _write_L(middle, indent)
+            if len(lines) > 2:
+                lines.append([0, ''])
+            lines += _write_partial(end, indent, b=trim[1])
+        return outpattern.sub(lambda x: OUT[x.group(0)], '\n'.join('    ' * ind + line for ind, line in lines))
+
+    def save(self):
+        FT = ''.join(('<head><meta charset="UTF-8"></head>\n<title>', self.filedata.filename, '</title>\n\n',
+                      self.serialize([self.BODY, self.TSTYLES, self.BSTYLES, self.PCURSOR, self.SCURSOR, self.VIEW]), '\n'))
+        with open(self.filedata['filepath'], 'w') as fi:
+            fi.write(FT)

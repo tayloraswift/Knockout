@@ -11,7 +11,6 @@ from olivia.languages import generate_runinfo
 from olivia import Tagcounter
 
 from meredith.elements import Reverse, Fontpost, Line_break
-from meredith import datablocks
 
 pyphen.language_fallback('en_US')
 hy = pyphen.Pyphen(lang='en_US')
@@ -91,7 +90,7 @@ def _raise_digits(string):
         return (False, (0, len(string))),
 
 def _get_fontinfo(BLOCK, F, CHAR_STYLES):
-    FSTYLE = datablocks.BSTYLES.project_t(BLOCK, F, CHAR_STYLES)
+    FSTYLE = BLOCK.KT.BSTYLES.project_t(BLOCK, F, CHAR_STYLES)
     
     t_font = FSTYLE['__hb_font__']
     t_factor = FSTYLE['__factor__']

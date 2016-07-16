@@ -6,11 +6,8 @@ from pygments.token import Token
 
 from fonts.interfacefonts import ISTYLES
 
-from IO.tree import serialize, deserialize
-
 from meredith.box import Box
 
-from edit import cursor
 from edit.text import expand_cursors_word
 
 from olivia import interpret_rgba
@@ -62,8 +59,11 @@ def _paint_select(cl, sl, cx, sx, left, right):
 
 class Rose_garden(Kookie):
     def __init__(self, x, y, width, context, save):
-        self._save = save
-        self._context = context
+        self._save          = save
+        self._context       = context
+        self.pcursor        = context.KT.PCURSOR
+        self.serialize      = context.KT.serialize
+        self.deserialize    = context.KT.deserialize
 
         self.font = ISTYLES[('mono',)]
         fontsize = self.font['fontsize']
@@ -96,7 +96,7 @@ class Rose_garden(Kookie):
     def _read(self):
         self._element = self._context.char
         if self._element is not None:
-            self._value = serialize([self._element])
+            self._value = self.serialize([self._element])
         else:
             self._value = ''
         self._CHARS = list(self._value) + ['\n']
@@ -344,7 +344,7 @@ class Rose_garden(Kookie):
         success = False
         if isinstance(self._element, Box):
             try:
-                E = deserialize(B, fragment=True)
+                E = self.deserialize(B)
                 try: # locate object
                     L = [next(e for e in E if type(e) is type(self._element))]
                     success = True
@@ -362,7 +362,7 @@ class Rose_garden(Kookie):
         
         else:
             try:
-                L = deserialize(B, fragment=True)
+                L = self.deserialize(B)
                 success = True
             except IO_Error:
                 pass
@@ -371,12 +371,12 @@ class Rose_garden(Kookie):
             self._invalid = True
             return
         self._save()
-        i = cursor.fcursor.i
-        * j_r, jl = cursor.fcursor.j
-        cursor.fcursor.j = *j_r, jl + 1
-        cursor.fcursor.insert(L)
-        cursor.fcursor.i = i
-        cursor.fcursor.j = i
+        i               = self.pcursor.i
+        * j_r, jl       = self.pcursor.j
+        self.pcursor.j  = *j_r, jl + 1
+        self.pcursor.insert(L)
+        self.pcursor.i  = i
+        self.pcursor.j  = i
         self._read()
         self._context.update()
         

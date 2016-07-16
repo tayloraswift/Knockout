@@ -64,14 +64,17 @@ def overflow(cr, frames, Tx, Ty):
 
 class Frame_cursor(Null):
     name = 'framecursor'
-    def __init__(self, attrs, content=None):
+    def __init__(self, KT, attrs, content=None):
         self.__orig_info = (interpret_int(attrs['section']), 
                             interpret_int(attrs['frame']))
+        self.KT = KT
     
-    def reset_functions(self, DOCUMENT):
-        self.DOCUMENT    = DOCUMENT
-        self.normalize   = DOCUMENT.normalize_XY
-        self.initialize_from_params( * self.__orig_info )
+    def reactivate(self, info=None):
+        self.BODY       = self.KT.BODY
+        self.normalize  = self.KT.BODY.normalize_XY
+        if info is None:
+            info = self.__orig_info
+        self.initialize_from_params( * info )
     
     def initialize_from_params(self, s, c):
         self._mode = 'outlines'
@@ -81,9 +84,9 @@ class Frame_cursor(Null):
             c = 0
         
         try:
-            self.section = self.DOCUMENT.content[s]
+            self.section = self.BODY.content[s]
         except IndexError:
-            self.section = self.DOCUMENT.content[0]
+            self.section = self.BODY.content[0]
         self._FRAMES = self.section['frames']
 
         try:
@@ -101,14 +104,14 @@ class Frame_cursor(Null):
         self._hover_point = (None, None, None)
         self._hover_portal = (None, None)
                         
-        self._grid_controls = self.DOCUMENT['grid']
+        self._grid_controls = self.BODY['grid']
         self.render_grid = self._grid_controls.render
 
     def print_A(self):
         return ' '.join(chain((self.name,), (''.join((a, '="', str(v), '"')) for a, v in zip(('section', 'frame'), self.at()))))
     
     def at(self):
-        return self.DOCUMENT.content.index(self.section), self._selected_point[0]
+        return self.BODY.content.index(self.section), self._selected_point[0]
 
     def add_frame(self):
         self.section['frames'].add_frame()
@@ -137,7 +140,7 @@ class Frame_cursor(Null):
             return xp, yp
         
         # try different tract
-        for section in self.DOCUMENT.content:
+        for section in self.BODY.content:
             p, c, r, i = section['frames'].which_point(x, y, 20)
             if c is not None:
                 self.PG = p
@@ -278,8 +281,8 @@ class Frame_cursor(Null):
                     # wipe out entire tract if it's the last one
                     if not self._FRAMES:
                         old_tract = self.section
-                        self.DOCUMENT.content.remove(old_tract)
-                        self.section = self.DOCUMENT.content[-1]
+                        self.BODY.content.remove(old_tract)
+                        self.section = self.BODY.content[-1]
                         self._FRAMES = self.section['frames']
                 
                 else:
@@ -361,7 +364,7 @@ class Frame_cursor(Null):
                 cr.show_text(str(c + 1))
             
             cr.set_line_width(1)
-            for frame in chain.from_iterable(section['frames'] for section in self.DOCUMENT.content if section is not self.section):
+            for frame in chain.from_iterable(section['frames'] for section in self.BODY.content if section is not self.section):
                 page = frame.page
                 
                 cr.set_source_rgba(0.3, 0.3, 0.3, 0.3)

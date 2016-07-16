@@ -23,29 +23,32 @@ def seq_to_string(seq):
 
 class Plane_cursor(Null):
     name = 'textcursor'
-    def __init__(self, attrs, content=None):
+    def __init__(self, KT, attrs, content=None):
         self.__orig_info = ( list(string_to_seq(attrs['plane'])), 
                             tuple(string_to_seq(attrs['i'])), 
                             tuple(string_to_seq(attrs['j'])))
+        self.KT = KT
     
-    def reset_functions(self, DOCUMENT, serialize, deserialize):
-        self.serialize   = serialize
-        self.deserialize = deserialize
-        self.DOCUMENT    = DOCUMENT
-        self.normalize   = DOCUMENT.normalize_XY
-        self.initialize_from_params( * self.__orig_info )
+    def reactivate(self, info=None):
+        self.serialize   = self.KT.serialize
+        self.deserialize = self.KT.deserialize
+        self.BODY        = self.KT.BODY
+        self.normalize   = self.KT.BODY.normalize_XY
+        if info is None:
+            info = self.__orig_info
+        self.initialize_from_params( * info )
     
     def initialize_from_params(self, plane_address, i, j):
         try:
-            self._set_plane(address(self.DOCUMENT, plane_address), plane_address)
+            self._set_plane(address(self.BODY, plane_address), plane_address)
         except IndexError:
             plane_address = [0]
             i = (0,)
             j = (0,)
-            self._set_plane(address(self.DOCUMENT, plane_address), plane_address)
+            self._set_plane(address(self.BODY, plane_address), plane_address)
         self.i = i
         self.j = j
-        self.section = self.DOCUMENT.content[plane_address[0]]
+        self.section = self.BODY.content[plane_address[0]]
         
         self.PG = 0 # stopgap
     
@@ -68,7 +71,7 @@ class Plane_cursor(Null):
         c, p = S['frames'].which(x, y, 20)
         if c is None:
             # try other sections
-            for s, section in (ss for ss in enumerate(self.DOCUMENT.content) if ss[0] is not S): 
+            for s, section in (ss for ss in enumerate(self.BODY.content) if ss[0] is not S): 
                 c, _p = section['frames'].which(x, y, 20)
                 if c is not None:
                     self.section = section
@@ -251,7 +254,7 @@ class Plane_cursor(Null):
                 self.insert_chars([NegFontpost({'class': tag})])
             return True
         else:
-            signargs = PosFontpost({'class': tag}), NegFontpost({'class': tag}), sign
+            signargs = PosFontpost(self.KT, {'class': tag}), NegFontpost(self.KT, {'class': tag}), sign
             self._sort_cursors()
             if len(self.i) == 2:
                 affected = self._blocks[self.i[0]:self.j[0] + 1]
@@ -298,14 +301,14 @@ class Plane_cursor(Null):
             B = P + self.j
 
         if A[:-1] == B[:-1]:
-            base = address(self.DOCUMENT, A[:-1]).content
+            base = address(self.BODY, A[:-1]).content
             return self.serialize(base[A[-1]:B[-1]])
         elif A[:-2] == B[:-2]:
-            base = address(self.DOCUMENT, A[:-2]).content
+            base = address(self.BODY, A[:-2]).content
             return self.serialize(base[A[-2]:B[-2] + 1], trim=(A[-1], B[-1]))
     
     def paste(self, L):
-        self.insert(self.deserialize(L, fragment=True))
+        self.insert(self.deserialize(L))
     
     ## NON-SPATIAL SELECTION TOOLS ##
     

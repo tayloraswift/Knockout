@@ -6,7 +6,7 @@ from fonts.interfacefonts import ISTYLES
 
 from edit.text import expand_cursors_word
 
-from olivia import literal
+from olivia import literalnames
 
 from state.constants import accent
 
@@ -89,7 +89,7 @@ class _Attribute(Kookie): # abstract base class
             value = N.attrs[A]
         else:
             TYPE, default = next((TYPE, default) for a, TYPE, * default in type(N).DNA if a == A)
-            if TYPE in literal and self._read_Z is _binary_Z:
+            if TYPE in literalnames and self._read_Z is _binary_Z:
                 value = N[A]
             elif default:
                 value = default

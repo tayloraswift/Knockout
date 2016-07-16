@@ -1,25 +1,25 @@
 import bisect
 
 from state import noticeboard
-from meredith import datablocks
 
 from state.constants import accent_light
 
 class Sprinkles(object):
-    def __init__(self, xx, yy):
+    def __init__(self, KT, xx, yy):
         self._grid = [xx, yy]
         self.grid_selected = (None, None)
+        self.KT = KT
     
     def clear_selection(self):
         self.grid_selected = (None, None)
 
     def press(self, x, y):
-        if datablocks.DOCUMENT.gutter_horizontal(x, y):
+        if self.KT.BODY.gutter_horizontal(x, y):
             if not self._target_grid('x', x):
                 self._add_grid('x', x)
             return True
             
-        elif datablocks.DOCUMENT.gutter_vertical(x, y):
+        elif self.KT.BODY.gutter_vertical(x, y):
             if not self._target_grid('y', y):
                 self._add_grid('y', y)
             return True
@@ -60,12 +60,12 @@ class Sprinkles(object):
     def move_grid(self, x, y):
         if self.grid_selected[0] is not None:
             if self.grid_selected[0] == 0:
-                if 0 < x < datablocks.DOCUMENT['width']:
+                if 0 < x < self.KT.BODY['width']:
                     value = x
                 else:
                     return False
             else:
-                if 0 < y < datablocks.DOCUMENT['height']:
+                if 0 < y < self.KT.BODY['height']:
                     value = y
                 else:
                     return False

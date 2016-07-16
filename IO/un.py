@@ -1,95 +1,75 @@
-from meredith import datablocks
-
-from edit import cursor, caramel
-
-from state import contexts
-
-def reinitialize(kitty, deserialize):
-        kttags, kbtags, kdocument, ktstyles, kbstyles = kitty
-        TTAGS   = deserialize(kttags)[0]
-        BTAGS   = deserialize(kbtags)[0]
-        
-        datablocks.TTAGS.__init__(TTAGS.attrs, TTAGS.content)
-        datablocks.BTAGS.__init__(BTAGS.attrs, BTAGS.content)
-        
-        TSTYLES = deserialize(ktstyles)[0]
-        datablocks.TSTYLES.__init__(TSTYLES.attrs, TSTYLES.content)
-        
-        BSTYLES = deserialize(kbstyles)[0]
-        datablocks.BSTYLES.__init__(BSTYLES.attrs, BSTYLES.content)
-        
-        DOC     = deserialize(kdocument)[0]
-        datablocks.DOCUMENT.__init__(DOC.attrs, DOC.content)
-        datablocks.DOCUMENT.layout_all()
-        
-        contexts.Text.__init__()
-        # don’t forget to run update_force and turnover_k on the cursor
-        
 class UN(object):
-    def __init__(self, serialize, deserialize):
-        self._history = []
-        self._i = 0
-        
+    def __init__(self):
+        self._history   = []
+        self._secondary = []
+    
+    def reset(self, KT, context, panes):
+        del self._history[:]
+        del self._secondary[:]
         self._state = None
         
-        self.serialize   = serialize
-        self.deserialize = deserialize
+        self.serialize   = KT.miniserialize
+        self.deserialize = KT.deserialize_high
+        
+        self.KT          = KT
+        self.shortcuts()
+        self.pcursor     = KT.PCURSOR
+        self.scursor     = KT.SCURSOR
+        self.context     = context
+        
+        self.panes = panes
+    
+    def shortcuts(self):
+        KT = self.KT
+        self.TTAGS       = KT.TTAGS
+        self.BTAGS       = KT.BTAGS
+        self.BODY        = KT.BODY
+        self.TSTYLES     = KT.TSTYLES
+        self.BSTYLES     = KT.BSTYLES
     
     def save(self):
-        
         if len(self._history) > 989:
-            del self._history[:89]
-            self._i -= 89
+            del self._history[:-89]
 
-        if len(self._history) > self._i:
-            del self._history[self._i:]
-                
-        kitty = [self.serialize([k]) for k in (datablocks.TTAGS, datablocks.BTAGS, datablocks.DOCUMENT, datablocks.TSTYLES, datablocks.BSTYLES)]
-        DATA = (cursor.fcursor.plane_address[:], cursor.fcursor.i, cursor.fcursor.j), caramel.delight.at()
-
-        self._history.append((kitty, DATA, contexts.Text.index_k()))
-        self._i = len(self._history)
+        if self._secondary:
+            del self._secondary[:]
         
-    def pop(self):
-        del self._history[-1]
-        self._i = len(self._history)
+        self._history.append(self.record())
+    
+    def record(self):
+        kitty = self.serialize((self.TTAGS, self.BTAGS, self.BODY, self.TSTYLES, self.BSTYLES))
+        DATA  = (self.pcursor.plane_address[:], self.pcursor.i, self.pcursor.j), self.scursor.at()
+        return kitty, DATA, self.context.index_k()
+    
+    def _restore(self, record):
+        kitty, DATA, activity = record
+        print(DATA, activity)
+        self.deserialize(kitty)
+        self.shortcuts()
+        self.BODY.layout_all()
         
-    def _restore(self, i):
-        kitty, DATA, activity = self._history[i]
+        self.pcursor.reactivate(DATA[0])
+        self.scursor.reactivate(DATA[1])
+        self.context.__init__(self.KT)
+        self.context.turnover_k( * activity )
         
-        reinitialize(kitty, self.deserialize)
-        
-        cursor.fcursor.initialize_from_params ( * DATA[0] )
-        caramel.delight.initialize_from_params( * DATA[1] )
-        
-        contexts.Text.update_force()
-        contexts.Text.turnover_k( * activity )
+        self.panes.shortcuts()
     
     def back(self):
-        if self._i > 0:
-            if self._i == len(self._history):
-                self.save()
-                self._i -= 1
-            
-            self._i -= 1
-            self._restore(self._i)
-            
-            return True
+        if self._history:
+            self._secondary.append(self.record())
+            self._restore(self._history.pop())
         else:
             print('No steps to undo')
             self._state = -89
-            return False
     
     def forward(self):
-        try:
-            self._restore(self._i + 1)
-            self._i += 1
-            
-            return True
-        except IndexError:
+        if self._secondary:
+            self._history.append(self.record())
+            self._restore(self._secondary.pop())
+        else:
             print('No steps to redo')
             self._state = -89
-            return False
 
     # prevents excessive savings
     def undo_save(self, state):
@@ -98,3 +78,4 @@ class UN(object):
                 self.save()
             self._state = state
 
+history = UN()

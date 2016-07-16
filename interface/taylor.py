@@ -9,18 +9,15 @@ from fonts.interfacefonts import ISTYLES
 from fonts import SPACENAMES
 
 from edit import wonder
-from edit import cursor, caramel
 
 from IO import un
 
-from keyboard import keyboard
+import keyboard
 
 from state import noticeboard, constants
-from state.contexts import Text as CText
 from state.constants import accent, accent_light
 
 from meredith.settings import fontsettings
-from meredith.meta import filedata
 
 from interface import kookies, fields, ui
 from interface.menu import menu
@@ -35,14 +32,14 @@ class Mode_switcher(object):
     def is_over(self, x, y):
         return self._switcher.is_over(x - self._dx, y - self._dy)
 
-    def resize(self, k):
+    def resize(self, h, k):
         # center
-        self._dx = (constants.UI[1] - 100)/2 + 100 
+        self._dx = (h - 100)/2 + 100 
         self._dy = k
 
-    def render(self, cr, h, k):
+    def render(self, cr):
         cr.save()
-        cr.translate(self._dx , k)
+        cr.translate(self._dx , self._dy)
         
         self._switcher.draw(cr, hover=(None, self._hover_j))
         
@@ -61,22 +58,28 @@ class Mode_switcher(object):
         self._hover_j = None
         noticeboard.redraw_becky.push_change()
 
-def _place_tags(key):
-    un.history.undo_save(3)
-    if not cursor.fcursor.bridge(keyboard[key], sign=True):
-        un.history.pop()
-
-def _punch_tags(key):
-    un.history.undo_save(3)
-    if not cursor.fcursor.bridge(keyboard[key], sign=False):
-        un.history.pop()
-
 class Document_toolbar(object):
-    def __init__(self, save, pdf, DOCUMENT):
-        self._save = save
-        self._pdf  = pdf
-        self._DOCUMENT = DOCUMENT
+    def __init__(self, pdf, keyboard):
+        self._pdf   = pdf
+        self.keyboard= keyboard
+    
+    def shortcuts(self, KT):
+        self.KT     = KT
+        self.BODY   = KT.BODY
+        self.pcursor= KT.PCURSOR
+        self.scursor= KT.SCURSOR
+        
         self.refresh_class()
+
+    def _place_tags(self, key):
+        un.history.undo_save(3)
+        if not self.pcursor.bridge(self.keyboard[key], sign=True):
+            un.history.pop()
+
+    def _punch_tags(self, key):
+        un.history.undo_save(3)
+        if not self.pcursor.bridge(self.keyboard[key], sign=False):
+            un.history.pop()
     
     def refresh_class(self):
         
@@ -86,7 +89,7 @@ class Document_toolbar(object):
         self._hover_memory = (None, None)
         
         y = 120
-        self._items.append(kookies.Button(5, y, 90, 30, callback=self._save, name='Save'))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=self.KT.save, name='Save'))
         y += 30
         self._items.append(kookies.Button(5, y, 90, 30, callback=self._pdf, name='PDF'))
         
@@ -96,24 +99,24 @@ class Document_toolbar(object):
         self._items.append(kookies.Button(5, y, 90, 30, callback=un.history.forward, name='Redo'))
         
         y += 40
-        self._items.append(kookies.Button(5, y, 90, 30, callback=caramel.delight.add_frame, name='Add frame'))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=self.scursor.add_frame, name='Add frame'))
         y += 30
-        self._items.append(kookies.Button(5, y, 90, 30, callback=self._DOCUMENT.add_section, name='Add section'))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=self.BODY.add_section, name='Add section'))
         
         y += 50
-        self._items.append(kookies.Button(5, y, 90, 30, callback=lambda: _place_tags('Ctrl i'), name='Emphasis'))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=lambda: self._place_tags('Ctrl i'), name='Emphasis'))
         y += 30
-        self._items.append(kookies.Button(5, y, 90, 30, callback=lambda: _punch_tags('Ctrl I'), name='x Emphasis'))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=lambda: self._punch_tags('Ctrl I'), name='x Emphasis'))
 
         y += 40
-        self._items.append(kookies.Button(5, y, 90, 30, callback=lambda: _place_tags('Ctrl b'), name='Strong'))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=lambda: self._place_tags('Ctrl b'), name='Strong'))
         y += 30
-        self._items.append(kookies.Button(5, y, 90, 30, callback=lambda: _punch_tags('Ctrl B'), name='x Strong'))
+        self._items.append(kookies.Button(5, y, 90, 30, callback=lambda: self._punch_tags('Ctrl B'), name='x Strong'))
 
         y += 40
-        self._items.append(fields.Checkbox(20, y, 70, node=self._DOCUMENT, A='dual', name='Dual'.upper(), no_z=True))
+        self._items.append(fields.Checkbox(20, y, 70, node=self.BODY, A='dual', name='Dual'.upper(), no_z=True))
         y += 35
-        self._items.append(fields.Checkbox(20, y, 70, node=self._DOCUMENT, A='even', name='Even'.upper(), no_z=True))
+        self._items.append(fields.Checkbox(20, y, 70, node=self.BODY, A='even', name='Even'.upper(), no_z=True))
         
         y += 50
         
@@ -200,42 +203,43 @@ class Document_toolbar(object):
         self._hover_memory = (None, None)
         noticeboard.redraw_becky.push_change()
 
-
-def _replace_misspelled(word, label):
-    if label[0] == '“':
-        wonder.struck.add(word)
-        with open(wonder.additional_words_file, 'a') as A:
-            A.write(word + '\n')
-    else:
-        keyboard.type_document('Paste', word)
-    cursor.fcursor.run_stats(spell=True) #probably only needs to be run on paragraph
-
 class Document_view(ui.Cell):
-    def __init__(self, save, DOCUMENT, VIEW):
-        self.DOCUMENT = DOCUMENT
+    def __init__(self, KT, context):
+        self.keyboard = keyboard.Keyboard(KT, constants.shortcuts)
         
-        self.view = VIEW
-        self._mode = VIEW.mode # must be updated in sync
-        
-        self._X_to_screen = VIEW.X_to_screen
-        self._Y_to_screen = VIEW.Y_to_screen
-        self._T_1         = VIEW.T_1
+        self.context  = context
+        self.KT       = KT
+        self._toolbar = Document_toolbar(self.PDF, self.keyboard)
+        self.shortcuts()
         
         self._region_active, self._region_hover = 'view', 'view'
-        self._toolbar = Document_toolbar(save, self.PDF, DOCUMENT)
+        
         self._mode_switcher = Mode_switcher(self.change_mode, default= self._mode)
-        self.planecursor = cursor.fcursor
         
         self._stake = None
         
         self._font = ISTYLES[('strong',)]
+    
+    def shortcuts(self):
+        KT = self.KT
+        self._toolbar.shortcuts(KT)
+        self.BODY   = KT.BODY
+        
+        self.pcursor= KT.PCURSOR
+        self.scursor= KT.SCURSOR
+        self.view   = KT.VIEW
+        self._mode  = KT.VIEW.mode # must be updated in sync
+        
+        self._X_to_screen = KT.VIEW.X_to_screen
+        self._Y_to_screen = KT.VIEW.Y_to_screen
+        self._T_1         = KT.VIEW.T_1
 
     def PDF(self):
-        name = os.path.splitext(filedata['filepath'])[0]
-        surface = cairo.PDFSurface(name + '.pdf', self.DOCUMENT['width']*0.75, self.DOCUMENT['height']*0.75)
+        name = os.path.splitext(self.KT.filedata['filepath'])[0]
+        surface = cairo.PDFSurface(name + '.pdf', self.BODY['width']*0.75, self.BODY['height']*0.75)
         cr = cairo.Context(surface)
         cr.scale(0.75, 0.75)
-        pages = self.DOCUMENT.transfer()
+        pages = self.BODY.transfer()
         max_page = max(k for k in pages if k is not None)
         for p in range(max_page + 1):
             if p in pages:
@@ -243,7 +247,15 @@ class Document_view(ui.Cell):
             cr.show_page()
     
     ##############
-    
+    def _replace_misspelled(self, word, label):
+        if label[0] == '“':
+            wonder.struck.add(word)
+            with open(wonder.additional_words_file, 'a') as A:
+                A.write(word + '\n')
+        else:
+            self.keyboard.type_document('Paste', word)
+        self.pcursor.run_stats(spell=True) #probably only needs to be run on paragraph
+        
     def _check_region_press(self, x, y):
         if x < 100:
             region = 'toolbar'
@@ -274,14 +286,14 @@ class Document_view(ui.Cell):
 
     def key_input(self, name, char):
         if self._mode == 'text':
-            clipboard = keyboard.type_document(name, char)
+            clipboard = self.keyboard.type_document(name, char)
             # check if paragraph and font context changed
-            CText.update()
+            self.context.update()
             return clipboard
             
         elif self._mode == 'frames':
-            caramel.delight.key_input(name)
-            CText.update_frames()
+            self.scursor.key_input(name)
+            self.context.update_frames()
             
     def press(self, x, y, name):
         self._check_region_press(x, y)
@@ -294,21 +306,21 @@ class Document_view(ui.Cell):
             if self._mode == 'text':
 
                 un.history.undo_save(0)
-                self.planecursor.target(x, y)
+                self.pcursor.target(x, y)
                 
                 # used to keep track of ui redraws
-                self._sel_cursor = self.planecursor.j
+                self._sel_cursor = self.pcursor.j
                 
                 # check if paragraph context changed
-                CText.update()
+                self.context.update()
                 
                 # count words
-                self.planecursor.run_stats()
+                self.pcursor.run_stats()
             
             # frame EDITING MODE
             elif self._mode == 'frames':
-                caramel.delight.press(x, y, name=name)
-                CText.update_frames()
+                self.scursor.press(x, y, name=name)
+                self.context.update_frames()
 
         elif self._region_active == 'toolbar':
             self._toolbar.press(x, y)
@@ -319,9 +331,9 @@ class Document_view(ui.Cell):
         if self._region_active == 'view':
             # TEXT EDITING MODE
             if self._mode == 'text':
-                self.planecursor.expand_cursors_word()
+                self.pcursor.expand_cursors_word()
             elif self._mode == 'frames':
-                caramel.delight.dpress()
+                self.scursor.dpress()
     
     def press_right(self, x, y):
         self._check_region_press(x, y)
@@ -333,30 +345,30 @@ class Document_view(ui.Cell):
             # TEXT EDITING MODE
             if self._mode == 'text':
                 try:
-                    self.planecursor.target(xo, yo)
-                    if len(self.planecursor.i) != 2:
+                    self.pcursor.target(xo, yo)
+                    if len(self.pcursor.i) != 2:
                         return
-                    ib, it = self.planecursor.i
+                    ib, it = self.pcursor.i
                     
-                    ms = self.planecursor.PLANE.content[ib].content.misspellings
+                    ms = self.pcursor.PLANE.content[ib].content.misspellings
                     pair_i = bisect.bisect([pair[0] for pair in ms], it) - 1
 
                     if ms[pair_i][0] <= it <= ms[pair_i][1]:
-                        self.planecursor.i = (ib, ms[pair_i][0])
-                        self.planecursor.j = (self.planecursor.j[0], ms[pair_i][1])
+                        self.pcursor.i = (ib, ms[pair_i][0])
+                        self.pcursor.j = (self.pcursor.j[0], ms[pair_i][1])
                         
                         # used to keep track of ui redraws
-                        self._sel_cursor = self.planecursor.j
+                        self._sel_cursor = self.pcursor.j
                         suggestions = [ms[pair_i][2]] + [w.decode("utf-8") for w in wonder.struck.suggest(ms[pair_i][2].encode('latin-1', 'ignore'))]
                         labels = suggestions[:]
                         labels[0] = '“' + labels[0] + '”'
-                        menu.create(x, y, 200, list(zip(suggestions, labels)), _replace_misspelled)
+                        menu.create(x, y, 200, list(zip(suggestions, labels)), self._replace_misspelled)
 
                 except IndexError:
                     # occurs if an empty frame is selected
                     pass
                 # check if paragraph context changed
-                CText.update()
+                self.context.update()
     
     def press_motion(self, x, y):
         if self._region_active == 'view':
@@ -364,20 +376,20 @@ class Document_view(ui.Cell):
             if y <= 5:
                 self.view.move_vertical(10)
                 noticeboard.redraw_becky.push_change()
-            elif y >= constants.window.get_k() - 5:
+            elif y >= self.k - 5:
                 self.view.move_vertical(-10)
                 noticeboard.redraw_becky.push_change()
             
             x, y = self._T_1(x, y)
 
             if self._mode == 'text':
-                self.planecursor.target_select(x, y)
-                if self.planecursor.j != self._sel_cursor:
-                    self._sel_cursor = self.planecursor.j
+                self.pcursor.target_select(x, y)
+                if self.pcursor.j != self._sel_cursor:
+                    self._sel_cursor = self.pcursor.j
                     noticeboard.redraw_becky.push_change()
 
             elif self._mode == 'frames':
-                caramel.delight.press_motion(x, y)
+                self.scursor.press_motion(x, y)
         elif self._region_active == 'toolbar':
             pass
         elif self._region_active == 'switcher':
@@ -400,12 +412,15 @@ class Document_view(ui.Cell):
 
         if self._region_active == 'view':
             if self._mode == 'frames':
-                caramel.delight.release()
+                self.scursor.release()
         elif self._region_active == 'toolbar':
             pass
         elif self._region_active == 'switcher':
             pass
-
+    
+    def exit(self):
+        pass
+    
     def scroll(self, x, y, mod):
         x = int(x)
         y = int(y)
@@ -435,20 +450,22 @@ class Document_view(ui.Cell):
                 pass
 
             elif self._mode == 'frames':
-                caramel.delight.hover( * self._T_1(x, y) )
+                self.scursor.hover( * self._T_1(x, y) )
                 
         elif self._region_hover == 'toolbar':
             self._toolbar.hover(x, y)
         elif self._region_hover == 'switcher':
             self._mode_switcher.hover(x)
 
-    def resize(self, k):
-        self._mode_switcher.resize(k)
+    def resize(self, h, k):
+        self.h = h
+        self.k = k
+        self._mode_switcher.resize(h, k)
 
     def change_mode(self, mode):
         self.view.set_mode(mode)
         self._mode = mode
-        CText.update()
+        self.context.update()
         noticeboard.refresh_properties_type.push_change(mode)
     
     def _print_sorted(self, cr, classed_glyphs):
@@ -468,8 +485,8 @@ class Document_view(ui.Cell):
             
     def _draw_by_page(self, cr):
         max_page      = 0
-        sorted_glyphs = self.DOCUMENT.transfer()
-        section       = self.planecursor.plane_address[0]
+        sorted_glyphs = self.BODY.transfer()
+        section       = self.pcursor.plane_address[0]
         if self._mode == 'render':
             zoom = 0
         else:
@@ -490,7 +507,7 @@ class Document_view(ui.Cell):
             # only annotate active tract
             if self._mode == 'text':
                 annot, paint_annot = sorted_glyphs.annot[section].get(page, ((), ()))
-                O = self.planecursor.PLANE
+                O = self.pcursor.PLANE
                 for operation, x, y in paint_annot:
                     cr.save()
                     cr.translate(x, y)
@@ -504,21 +521,21 @@ class Document_view(ui.Cell):
                 cr.restore()
         
         if self._mode == 'text':
-            self._draw_spelling(cr, self.planecursor.section.highlight_spelling())
-            selections, signs = self.planecursor.paint_current_selection()
+            self._draw_spelling(cr, self.pcursor.section.highlight_spelling())
+            selections, signs = self.pcursor.paint_current_selection()
             if selections:
                 self._draw_selection_highlight(cr, selections, signs)
             
-            page_highlight = self.planecursor.PG
+            page_highlight = self.pcursor.PG
         
         elif self._mode == 'frames':
-            page_highlight = caramel.delight.PG
+            page_highlight = self.scursor.PG
         
         else:
             page_highlight = None
 
-        PHEIGHT = self.DOCUMENT['height']
-        PWIDTH  = self.DOCUMENT['width']
+        PHEIGHT = self.BODY['height']
+        PWIDTH  = self.BODY['width']
         A       = self.view.A
         dpx     = int(round(PWIDTH*A))
         dpy     = int(round(PHEIGHT*A))
@@ -557,7 +574,7 @@ class Document_view(ui.Cell):
             cr.fill()
             
             if self._mode == 'frames':
-                caramel.delight.render_grid(cr, px1, py1, PWIDTH, PHEIGHT, A)
+                self.scursor.render_grid(cr, px1, py1, PWIDTH, PHEIGHT, A)
 
     def _draw_annotations(self, cr, annot, page):
         A = self.view.A
@@ -569,7 +586,7 @@ class Document_view(ui.Cell):
         cr.set_font_size(afs)
         SN = SPACENAMES
         
-        activeblock = self.planecursor.PLANE.content[self.planecursor.i[0]]
+        activeblock = self.pcursor.PLANE.content[self.pcursor.i[0]]
         for a, x, y, BLOCK, F in annot:
             
             x = X2S(x, page)
@@ -705,42 +722,44 @@ class Document_view(ui.Cell):
         cr.fill()
 
 
-    def render(self, cr, h, k):
+    def render(self, cr):
         cr.rectangle(0, 0, 
-                constants.UI[1], 
-                k)
+                self.h, 
+                self.k)
         cr.clip()
+        cr.set_source_rgb(1, 1, 1)
+        cr.paint()
         
         # text
         self._draw_by_page(cr)
         cr.set_font_face(self._font['font'])
         # frames
         if self._mode == 'text':
-            caramel.delight.render(cr, self._X_to_screen, self._Y_to_screen, frames=self.planecursor.section['frames'])
+            self.scursor.render(cr, self._X_to_screen, self._Y_to_screen, frames=self.pcursor.section['frames'])
         elif self._mode == 'frames':
-            caramel.delight.render(cr, self._X_to_screen, self._Y_to_screen, A=self.view.A)
+            self.scursor.render(cr, self._X_to_screen, self._Y_to_screen, A=self.view.A)
         
         if self._mode != 'render':
             # DRAW TOOLBAR BACKGROUND
-            cr.rectangle(0, 0, 100, k)
+            cr.rectangle(0, 0, 100, self.k)
             cr.set_source_rgb(1, 1, 1)
             cr.fill()
             self._toolbar.render(cr)
             
-            cr.rectangle(100, 0, 2, k)
+            cr.rectangle(100, 0, 2, self.k)
             cr.set_source_rgb(0.9, 0.9, 0.9)
             cr.fill()
         
-        self._mode_switcher.render(cr, h, k)
+        self._mode_switcher.render(cr)
         
         # draw stats
         cr.set_source_rgba(0, 0, 0, 0.8)
         cr.set_font_size(self._font['fontsize'])
         
-        cr.move_to(130, k - 20)
+        cr.move_to(130, self.k - 20)
         cr.show_text('{0:g}'.format(self.view.A*100) + '%')
         
-        cr.move_to(constants.UI[1] - 150, k - 20)
-        cr.show_text(str(self.planecursor.word_total) + ' words · page ' + str(self.planecursor.PG))
+        cr.move_to(self.h - 150, self.k - 20)
+        cr.show_text(str(self.pcursor.word_total) + ' words · page ' + str(self.pcursor.PG))
         
         cr.reset_clip()

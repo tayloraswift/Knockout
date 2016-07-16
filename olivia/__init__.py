@@ -3,9 +3,6 @@ from bisect import bisect
 
 from bulletholes.counter import TCounter as Counter
 
-from meredith.datablocks import Texttags_D, Blocktags_D, Textstyles_D
-import meredith
-
 from olivia.frames import Frames
 from olivia.poptarts import Sprinkles
 from olivia.basictypes import interpret_bool, interpret_int, interpret_float
@@ -15,20 +12,6 @@ from olivia.languages import interpret_locale
 # stored as literals            : bool, int, float, float tuple
 # stored as reformatted string  : binomial, int set
 # stored as string              : str, rgba, 1_D, multi_D, fx, fn, fA, ftag, ptags
-
-def interpret_frame(S):
-    frames = ((c for c in C.split(';') if c) for C in S.split('|') if C)
-    F = Frames([[ [int(k) for k in P.split(',')] + ['False'] for P in R1.split()], 
-            [ [int(k) for k in P.split(',')] + ['False'] for P in R2.split()], int(page)] for R1, R2, page in frames)
-    return F
-
-def interpret_grid(S):
-    if type(S) is Sprinkles:
-        return S.copy()
-    if not S:
-        S = ';'
-    xx, yy, *_ = (list(map(interpret_int, (u for u in g.split(' ') if u))) for g in S.split(';'))
-    return Sprinkles(xx, yy)
 
 # special named datatypes
 
@@ -48,30 +31,7 @@ def _tagcounter(S, LIB):
     else:
         return Tagcounter()
 
-def blocktagcounter(S):
-    return _tagcounter(S, Blocktags_D)
-
-def texttagcounter(S):
-    return _tagcounter(S, Texttags_D)
-
-def textstyle(S):
-    if type(S) is meredith.styles.Textstyle:
-        return S
-    try:
-        return Textstyles_D[S]
-    except KeyError:
-        return None
-
-literal  = {'bool': interpret_bool,
-            'int': interpret_int,
-            'float': interpret_float,
-            
-            'frames': interpret_frame,
-            'pagegrid': interpret_grid,
-            
-            'blocktc': blocktagcounter,
-            'texttc': texttagcounter,
-            'textstyle': textstyle}
+### REFORMAT
 
 def read_binomial(S):
     C, SIGN, K = S
@@ -164,11 +124,7 @@ def interpret_open_range(S):
             j = None
         return i, j
 
-reformat = {'binomial': (pack_binomial, read_binomial),
-            'int set': (interpret_enumeration, lambda S: ', '.join(str(i) for i in sorted(S))),
-            'range': (interpret_range, lambda R: ':'.join(str(r) for r in R)),
-            'open range': (interpret_open_range, lambda R: ':'.join(str(r) if r is not None else '' for r in R)),
-            'language': (interpret_locale, str)}
+### STANDARD
 
 def interpret_float_tuple(value):
     L = (interpret_float(val, fail=None) for val in value.split(','))
@@ -287,9 +243,63 @@ class Standard_types(dict):
                 return v
         raise KeyError
 
-standard =   Standard_types((('str'          , str),
+_literal = (('bool'      , interpret_bool),
+            ('int'       , interpret_int),
+            ('float'     , interpret_float),
+            
+            ('frames'    , 'interpret_frame'),
+            ('pagegrid'  , 'interpret_grid'),
+            
+            ('blocktc'   , 'blocktagcounter'),
+            ('texttc'    , 'texttagcounter'),
+            ('textstyle' , 'textstyle'))
+literalnames = frozenset(t[0] for t in _literal)
+
+class Mint(object):
+    def __init__(self, KT):
+        self.KT = KT
+        self._TTAGS_D, self._BTAGS_D, self._TSTYLES_D = KT.dicts
+        
+        self.literal = {t: getattr(self, f) if type(f) is str else f for t, f in _literal}
+        
+        self.reformat = {'binomial' : (pack_binomial        , read_binomial),
+                        'int set'   : (interpret_enumeration, lambda S: ', '.join(str(i) for i in sorted(S))),
+                        'range'     : (interpret_range      , lambda R: ':'.join(str(r) for r in R)),
+                        'open range': (interpret_open_range , lambda R: ':'.join(str(r) if r is not None else '' for r in R)),
+                        'language'  : (interpret_locale     , str)}
+        
+        self.standard = Standard_types((('str'          , str),
                             ('float tuple'  , interpret_float_tuple),
                             ('rgba'         , interpret_rgba), 
                             ('gradient'     , Gradient),
                             ('1D'           , interpret_haylor),
                             ('multi_D'      , interpret_tsquared)))
+
+    def interpret_frame(self, S):
+        frames = ((c for c in C.split(';') if c) for C in S.split('|') if C)
+        F = Frames(self.KT, ([[ [int(k) for k in P.split(',')] + ['False'] for P in R1.split()], 
+                              [ [int(k) for k in P.split(',')] + ['False'] for P in R2.split()], int(page)] for R1, R2, page in frames))
+        return F
+
+    def interpret_grid(self, S):
+        if type(S) is Sprinkles:
+            return S.copy()
+        if not S:
+            S = ';'
+        xx, yy, *_ = (list(map(interpret_int, (u for u in g.split(' ') if u))) for g in S.split(';'))
+        return Sprinkles(self.KT, xx, yy)
+    
+    def blocktagcounter(self, S):
+        return _tagcounter(S, self._BTAGS_D)
+
+    def texttagcounter(self, S):
+        return _tagcounter(S, self._TTAGS_D)
+
+    def textstyle(self, S):
+        if type(S) is str:
+            try:
+                return self._TSTYLES_D[S]
+            except KeyError:
+                return None
+        else:
+            return S

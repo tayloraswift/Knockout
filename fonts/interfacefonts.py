@@ -1,14 +1,15 @@
 from bulletholes.counter import TCounter as Counter
 
 from meredith.styles import Textstyle
+from meredith.settings import interface_kt
 
-from fonts import hb, get_ot_font, Grid_font
+from fonts import get_ot_font, Grid_font
 
 from state import constants
 
 class Interface_fonts(dict):
-    def __init__(self, IBSTYLE, ITSTYLES, * combos ):
-        FD = {name: Textstyle(IT) for name, IT in ITSTYLES.items()}
+    def __init__(self, KT, IBSTYLE, ITSTYLES, * combos ):
+        FD = {name: Textstyle(KT, IT) for name, IT in ITSTYLES.items()}
         self._P = [(FD[F], Counter(tags)) for F, tags in IBSTYLE]
         dict.__init__(self)
         for U in combos:
@@ -30,4 +31,4 @@ class Interface_fonts(dict):
         self[U] = projection
         return projection
 
-ISTYLES = Interface_fonts(constants.interface_bstyle, constants.interface_tstyles, (), ('title',), ('strong',), ('label',), ('mono',))
+ISTYLES = Interface_fonts(interface_kt, constants.interface_bstyle, constants.interface_tstyles, (), ('title',), ('strong',), ('label',), ('mono',))

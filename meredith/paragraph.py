@@ -2,10 +2,10 @@ from bisect import bisect
 from itertools import groupby, chain
 from math import inf as infinity
 
-from meredith.box import Box, random_serial
-from meredith import datablocks
 from olivia import Tagcounter
 from olivia.frames import Margined
+
+from meredith.box import Box, random_serial
 from meredith.styles import Blockstyle
 
 from layout.otline import OT_line, cast_paragraph, cast_mono_line
@@ -66,7 +66,7 @@ class Meredith(Box):
         self._recalc_page()
     
     def add_section(self):
-        self.content.append(Section({}, [Paragraph_block({}, Text(list('{new}')))]))
+        self.content.append(Section(self.KT, {}, [Paragraph_block({}, Text(list('{new}')))]))
         self.content[-1].layout()
     # Page functions
     
@@ -134,7 +134,7 @@ class Plane(Box):
             detectexception = ()
             split=None
 
-        calc_bstyle = datablocks.BSTYLES.project_b
+        calc_bstyle = self.KT.BSTYLES.project_b
         if frames is None:
             frames = self['frames']
         
@@ -353,7 +353,7 @@ class Blockelement(Blockstyle):
     def after(self, A):
         if A in self.__class__.fixed_attrs:
             self._update_hash()
-        datablocks.DOCUMENT.layout_all()
+        self.KT.BODY.layout_all()
 
     def which(self, x, u, r):
         return ()
@@ -740,6 +740,6 @@ class Paragraph_block(Blockelement):
             A = {'class': self.attrs['class']}
         else:
             A = {}
-        return self.__class__(A, Text())
+        return self.__class__(self.KT, A, Text())
 
 members = (Meredith, Section, Paragraph_block)

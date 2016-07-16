@@ -6,8 +6,6 @@ from os import environ
 environ['LD_LIBRARY_PATH'] = '/usr/local/lib/girepository-1.0'
 environ['GI_TYPELIB_PATH'] = '/usr/local/lib/girepository-1.0'
 
-from IO import sierra
-
 from interface.splash import Recent
 
 _fail = '\033[91m'
@@ -16,22 +14,28 @@ _bold = '\033[1m'
 
 def main(argv):
     recent = Recent('data/recent.txt')
+    
+    from app import Gtk, Display
+    app = Display()
+    
+    splash = True
     if len(argv) > 1:
         try:
-            sierra.load(argv[1])
+            app.reload(argv[1])
         
         except FileNotFoundError:
-            print (_fail + _bold + 'ERROR:' + _endc + _fail + ' Document file \'' + filename + '\' does not exist!' + _endc)
-            sierra.load('default.html')
+            print (_fail + _bold + 'ERROR:' + _endc + _fail + ' Document file \'' + argv[1] + '\' does not exist!' + _endc)
+            app.reload('default.html')
         
         else:
             recent.add(argv[1])
-            recent = None
+            splash = False
     else:
-        sierra.load('default.html')
+        app.reload('default.html')
     
-    from app import Gtk, Display
-    app = Display(recent)
+    if splash:
+        app.make_splash(recent)
+    app.show_all()
     Gtk.main()
     
 if __name__ == "__main__":

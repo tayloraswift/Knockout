@@ -4,8 +4,6 @@ from bisect import bisect
 
 from itertools import chain
 
-from meredith import datablocks
-
 from state.exceptions import LineSplit
 
 from olivia.basictypes import interpret_int
@@ -31,15 +29,15 @@ def piecewise(points, y):
     return (x2 - x1)*(y - y1)/(y2 - y1) + x1
 
 class Frame(list):
-    def __init__(self, sides):
-        list.__init__(self, sides[:-1])
-        
-        self.page = sides[-1]
+    def __init__(self, KT, sides):
+        * sides , self.page = sides
+        list.__init__(self, sides)
+        self.KT = KT
     
     def assign(self, A, S):
         if A == 'page':
             self.page = interpret_int(S)
-            datablocks.DOCUMENT.layout_all()
+            self.KT.BODY.layout_all()
         
     def inside(self, x, y, radius):
         return y >= self[0][0][1] - radius and y <= self[1][-1][1] + radius and x >= piecewise(self[0], y) - radius and x <= piecewise(self[1], y) + radius
@@ -84,13 +82,14 @@ class Frame(list):
         return ' ; '.join(chain((' '.join(str(x) + ',' + str(y) for x, y, a in side) for side in self), (str(self.page),)))
 
 class Frames(list):
-    def __init__(self, frames):
-        list.__init__(self, (Frame(F) for F in frames))
+    def __init__(self, KT, frames):
+        list.__init__(self, (Frame(KT, F) for F in frames))
+        self.KT = KT
         self._savestack = []
         self._straighten()
     
     def make_page_copy(self, offset):
-        return self.__class__(((F[0], F[1], F.page + offset) for F in self))
+        return self.__class__(self.KT, ((F[0], F[1], F.page + offset) for F in self))
     
     def _straighten(self):
         left, right = zip( * self )
@@ -167,7 +166,7 @@ class Frames(list):
         return piecewise(self._run[0][c], u), piecewise(self._run[1][c], u), y, self._pn
         
     def which(self, x0, y0, radius):
-        norm = datablocks.DOCUMENT.normalize_XY
+        norm = self.KT.BODY.normalize_XY
         for c, frame in enumerate(self):
             x, y = norm(x0, y0, frame.page)
             if frame.inside(x, y, radius):
@@ -192,7 +191,7 @@ class Frames(list):
     
     def which_point(self, x0, y0, radius):
         P, C, R = None, None, None
-        norm = datablocks.DOCUMENT.normalize_XY
+        norm = self.KT.BODY.normalize_XY
         for c, frame in enumerate(self):
             x, y = norm(x0, y0, frame.page)
             inside = frame.inside_vertical(y)
@@ -288,7 +287,7 @@ class Frames(list):
     
     def add_frame(self):
         x1, y1, x2 = self[-1][0][-1][0], self[-1][0][-1][1] + 40, self[-1][1][-1][0]
-        F = Frame( ([[x1, y1, False], [x1, y1 + 40, False]], [[x2, y1, False], [x2, y1 + 40, False]], self[-1].page) )
+        F = Frame(self.KT, ([[x1, y1, False], [x1, y1 + 40, False]], [[x2, y1, False], [x2, y1 + 40, False]], self[-1].page) )
         self.append(F)
         self._straighten()
         

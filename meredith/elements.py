@@ -9,7 +9,7 @@ class Fontpost(Box):
     DNA = [('class', 'texttc', '')]
 
     def copy(self):
-        return self.__class__(self.attrs)
+        return self.__class__(self.KT, self.attrs)
 
     def __eq__(self, other):
         return type(other) is self.__class__ and other['class'] == self['class']

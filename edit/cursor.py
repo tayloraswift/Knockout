@@ -249,9 +249,9 @@ class Plane_cursor(Null):
     def bridge(self, tag, sign):
         if self.i == self.j and len(self.i) == 2:
             if sign:
-                self.insert_chars([PosFontpost({'class': tag})])
+                self.insert_chars([PosFontpost(self.KT, {'class': tag})])
             else:
-                self.insert_chars([NegFontpost({'class': tag})])
+                self.insert_chars([NegFontpost(self.KT, {'class': tag})])
             return True
         else:
             signargs = PosFontpost(self.KT, {'class': tag}), NegFontpost(self.KT, {'class': tag}), sign

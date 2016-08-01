@@ -101,3 +101,9 @@ class Panes(object):
     def shortcuts(self):
         self.panes[0].shortcuts()
         self.panes[1].shortcuts()
+    
+    def denormalize(self, x, y, p):
+        if p:
+            return int(round(x)) + self._p, int(round(y))
+        else:
+            return int(round(x)), int(round(y))

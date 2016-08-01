@@ -11,7 +11,8 @@ from keyboard import compose
 
 from meredith.settings import fontsettings
 
-from interface import menu, splash
+from interface import splash
+from interface.menu import menu
 
 from IO import sierra
 
@@ -19,20 +20,18 @@ _dead_keys = set(('dead_tilde', 'dead_acute', 'dead_grave', 'dead_circumflex', '
 _special_keys = compose.compose_keys | _dead_keys
 
 def strike_menu(event, e):
-    if menu.menu.menu():
+    if menu.menu():
         if event == 2: # scroll
-            if menu.menu.in_bounds(e.x, abs(e.y)):
-                menu.menu.scroll(e.direction)
-                menu.menu.test_change()
+            if menu.in_bounds(e.x, abs(e.y)):
+                menu.scroll(e.direction)
                 return False
             
-        elif menu.menu.in_bounds(e.x, e.y):
+        elif menu.in_bounds(e.x, e.y):
             if event == 1: # motion
-                menu.menu.hover(e.y)
-                menu.menu.test_change()
+                menu.hover(e.y)
             
             elif event == 0: # press
-                menu.menu.press(e.y)
+                menu.press(e.y)
             return False
     return True
 
@@ -103,6 +102,7 @@ class Display(Gtk.Window):
         return True
 
     def set_regions(self, panes):
+        menu.link_panes(panes)
         self.panes      = panes
         self._KT        = panes.KT
         self._REGIONS   = panes.panes
@@ -124,7 +124,7 @@ class Display(Gtk.Window):
         
     def DRAW_SCREEN(self, w, cr):
         self._compositor.draw(cr)
-        menu.menu.render(cr)
+        menu.render(cr)
     
     def on_resize(self, w):
         self.panes.resize( * self.get_size() )
@@ -136,7 +136,7 @@ class Display(Gtk.Window):
         
     def _press_sort(self, w, e):
         if strike_menu(0, e):
-            menu.menu.destroy()
+            menu.destroy()
             if self.panes.pane(e.x):
                 self._active_pane = True
                 return

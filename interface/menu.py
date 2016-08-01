@@ -64,27 +64,26 @@ class Menu(object):
         self._menu = None
         self._hovered = None
     
+    def link_panes(self, panes):
+        self._panes = panes
+    
     def create(self, x, y, width, options, callback, inform=(), extend_life=False, source=0):
-
         self._dy = 0
         
-        self._menu = _Menu_widget(int(round(x)) + constants.UI[source], int(round(y)), int(round(width)), 30, options)
+        self._menu = _Menu_widget( * self._panes.denormalize(x, y, source) , int(round(width)), 30, options)
         self._callback = callback
         self._inform = inform
         
         self._extend = extend_life
         
-        self.test_change()
+        self._force_change()
         
     def destroy(self):
         self._menu = None
         self._hovered = None
     
     def menu(self):
-        if self._menu is not None:
-            return True
-        else:
-            return False
+        return self._menu is not None
     
     def in_bounds(self, x, y):
         if self._menu.is_over(x, y - self._dy):
@@ -106,23 +105,24 @@ class Menu(object):
             F()
     
     def hover(self, y):
-        self._hovered = self._menu.hover(y - self._dy)
-    
+        h = self._menu.hover(y - self._dy)
+        if h != self._hovered:
+            noticeboard.redraw_overlay.push_change()
+            self._hovered = h
+        
     def scroll(self, direction):
         if direction:
             self._dy -= 22
         else:
             self._dy += 22
-        noticeboard.redraw_overlay.push_change()
+        self._force_change()
     
-    def test_change(self, hist=[None]):
-        if self._hovered != hist[0]:
-            noticeboard.redraw_overlay.push_change()
-            hist[0] = self._hovered
+    def _force_change(self):
+        noticeboard.redraw_overlay.push_change()
+        self._hovered = None
     
     def _clear_hover(self):
-        self._hovered = None
-        self.test_change()
+        self._force_change()
     
     def render(self, cr):
         if self._menu is not None:

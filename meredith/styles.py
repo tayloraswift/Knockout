@@ -84,9 +84,9 @@ _block_DNA = [('hyphenate',       'bool'    ,   False),
 class _Has_tagged_members(Box):
     def content_new(self, active=None, i=None):
         if active is None:
-            O = self.__class__.contains({})
+            O = self.__class__.contains(self.KT, {})
         else:
-            O = self.__class__.contains({'class': active['class']})
+            O = self.__class__.contains(self.KT, {'class': active['class']})
         if i is None:
             self.content.append(O)
         else:
@@ -147,7 +147,7 @@ class Blockstyles(_Has_tagged_members):
     def after(self, A):
         self.block_projections.clear()
         self.text_projections.clear()
-        datablocks.BODY.layout_all()
+        self.KT.BODY.layout_all()
     
     def project_b(self, BLOCK):
         if BLOCK.implicit_ is None:

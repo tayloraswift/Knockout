@@ -146,19 +146,18 @@ class Plane(Box):
         if overlay:
             for block in self.content:
                 block.implicit_ = overlay
-
-        if b1:
-            # find last unchained block
-            while True:
-                preceeding = self.content[b1 - 1]
-                pre_bstyle = calc_bstyle(preceeding)
-                if not pre_bstyle['keep_with_next']:
-                    break
-                else:
-                    b1 -= 1
-            frames.start(preceeding.u_bottom, split=split)
-            gap = pre_bstyle['margin_bottom']
-            wheels = preceeding.wheels
+        
+        # find last unchained block
+        while b1 > 0:
+            preceeding = self.content[b1 - 1]
+            pre_bstyle = calc_bstyle(preceeding)
+            if not pre_bstyle['keep_with_next']:
+                frames.start(preceeding.u_bottom, split=split)
+                gap = pre_bstyle['margin_bottom']
+                wheels = preceeding.wheels
+                break
+            else:
+                b1 -= 1
         else:
             preceeding = None
             frames.start(u, split=split)

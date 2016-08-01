@@ -1,0 +1,117 @@
+<head><meta charset="UTF-8"></head>
+<title>presets.html</title>
+
+<body width="816" height="1056" dual="True" even="True" grid="90 390 430 730;0 70 960">
+    <section frames="90,70 90,960 ; 390,70 390,960 ; 0 |
+    430,70 430,960 ; 730,70 730,960 ; 0 |
+    90,70 90,960 ; 390,70 390,960 ; 1 |
+    430,70 430,960 ; 730,70 730,960 ; 1">
+        <p class="firstchild^h1">Heading</p>
+
+        <p class="h2">Heading level two</p>
+
+        <p class="body">We begin our story in <strong>New York</strong>. ♥ There once was a girl 👸🏽 known by everyone and no one. Her heart belonged to someone who couldn’t stay. <strong>They loved each other <em>recklessly</em>.</strong> They paid the price. She danced to forget him. He drove past her street every night. She made friends and enemies. He only saw her in his dreams. Then one day he came back. Timing is a funny thing. And everyone was watching. She lost him but she found herself and somehow that was everything.</p>
+
+        <p class="body^quotation">Quotation block…</p>
+
+        <p class="h3">Heading level three</p>
+
+        <p class="body^firstchild^li">Numbered list</p>
+
+        <p class="body^li">Item two</p>
+
+        <p class="body^li">Item three</p>
+
+        <p class="body">Continuation paragraph</p>
+
+        <p class="body^li">Continuation list</p>
+
+        <p class="body">Paragraph</p>
+    </section>
+</body>
+
+<textstyles>
+    <textstyle name="Black" color="#000"/>
+
+    <textstyle name="Body text" fontsize="15"/>
+
+    <textstyle name="Body text smaller" fontsize="13.33333"/>
+
+    <textstyle name="Body text sub" shift="-2"/>
+
+    <textstyle name="Body text super" shift="5"/>
+
+    <textstyle name="Serif" path="/home/kelvin/.fonts/Proforma/Proforma-Medium.otf"/>
+
+    <textstyle name="Serif bold" path="/home/kelvin/.fonts/Proforma/Proforma-Bold.otf"/>
+
+    <textstyle name="Serif bold italic" path="/home/kelvin/.fonts/Proforma/Proforma-BoldItalic.otf"/>
+
+    <textstyle name="Serif italic" path="/home/kelvin/.fonts/Proforma/Proforma-MediumItalic.otf"/>
+
+    <textstyle name="Title text" fontsize="36" path="data/fonts/FiraSans-Light.otf" capitals="True" case="1" cpsp="1"/>
+
+    <textstyle name="h2 text" fontsize="20" path="data/fonts/FiraSans-Book.otf" tracking="1" capitals="False" cpsp="1" smcp="1"/>
+</textstyles>
+
+<blockstyles>
+    <blockstyle class="">
+        <memberstyle class="" textstyle="Black"/>
+    </blockstyle>
+
+    <blockstyle hyphenate="True" leading="20" margin_bottom="10">
+        <memberstyle class="" textstyle="Body text"/>
+
+        <memberstyle class="" textstyle="Serif"/>
+
+        <memberstyle class="emphasis" textstyle="Serif italic"/>
+
+        <memberstyle class="strong" textstyle="Serif bold"/>
+
+        <memberstyle class="emphasis^strong" textstyle="Serif bold italic"/>
+
+        <memberstyle class="small" textstyle="Body text smaller"/>
+
+        <memberstyle class="sub" textstyle="Body text sub"/>
+
+        <memberstyle class="sup" textstyle="Body text super"/>
+    </blockstyle>
+
+    <blockstyle class="body^quotation" margin_left="20">
+        <memberstyle textstyle="Serif italic"/>
+
+        <memberstyle class="emphasis" textstyle="Serif"/>
+
+        <memberstyle class="strong" textstyle="Serif bold italic"/>
+
+        <memberstyle class="emphasis^strong" textstyle="Serif bold"/>
+    </blockstyle>
+
+    <blockstyle class="body^firstchild" indent="0"/>
+
+    <blockstyle class="li" incr_assign="n + 1" show_count="str(A[-1]) + '.'"/>
+
+    <blockstyle class="h1" keep_with_next="True" leading="40" margin_bottom="20" incr_place_value="1" incr_assign="n + 1">
+        <memberstyle class="" textstyle="Title text"/>
+    </blockstyle>
+
+    <blockstyle class="h2" leading="30" margin_bottom="10" incr_place_value="2" incr_assign="n + 1">
+        <memberstyle textstyle="h2 text"/>
+    </blockstyle>
+
+    <blockstyle class="h3" keep_with_next="True" leading="20" margin_bottom="10" margin_top="10" incr_place_value="3" incr_assign="n + 1">
+        <memberstyle class="" textstyle="Body text"/>
+
+        <memberstyle class="" textstyle="Serif bold"/>
+
+        <memberstyle class="emphasis" textstyle="Serif bold italic"/>
+    </blockstyle>
+
+    <blockstyle class="firstchild" incr_assign="1"/>
+</blockstyles>
+
+<textcursor plane="0" i="2, 284" j="2, 284"/>
+
+<framecursor section="0" frame="0"/>
+
+<view h="530" k="168" hc="649" kc="398" zoom="16" mode="text"/>

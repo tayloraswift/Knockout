@@ -1,3 +1,4 @@
+presets.html
 default.html
 test.html
 ../Calctest.html

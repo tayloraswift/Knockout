@@ -114,6 +114,11 @@ class Document_toolbar(object):
         self._items.append(kookies.Button(5, y, 90, 30, callback=lambda: self._punch_tags('Ctrl B'), name='x Strong'))
 
         y += 40
+        self._items.append(kookies.Button(5, y, 90, 30, callback=lambda: self._place_tags('Ctrl grave'), name='Literal'))
+        y += 30
+        self._items.append(kookies.Button(5, y, 90, 30, callback=lambda: self._punch_tags('Ctrl tilde'), name='x Literal'))
+        
+        y += 40
         self._items.append(fields.Checkbox(20, y, 70, node=self.BODY, A='dual', name='Dual'.upper(), no_z=True))
         y += 35
         self._items.append(fields.Checkbox(20, y, 70, node=self.BODY, A='even', name='Even'.upper(), no_z=True))

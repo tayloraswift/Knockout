@@ -99,14 +99,16 @@ IN = dict((('<em>', '<fo class="emphasis"/>'),
     ('</em>', '<fc class="emphasis"/>'),
     ('<strong>', '<fo class="strong"/>'),
     ('</strong>', '<fc class="strong"/>'),
+    ('<code>', '<fo class="code"/>'),
+    ('</code>', '<fc class="code"/>'),
     ('<sup>', '<fo class="small^sup"/>'),
     ('</sup>', '<fc class="small^sup"/>'),
     ('<sub>', '<fo class="small^sub"/>'),
     ('</sub>', '<fc class="small^sub"/>')))
 OUT = {k: v for v, k in IN.items()}
 
-inpattern = re.compile("|".join([re.escape(k) for k in IN.keys()]), re.M)
-outpattern = re.compile("|".join([re.escape(k) for k in OUT.keys()]), re.M)
+inpattern = re.compile("|".join(re.escape(k) for k in IN.keys()), re.M)
+outpattern = re.compile("|".join(re.escape(k) for k in OUT.keys()), re.M)
         
 escape_chars = {'&': '&amp;',
                 '<': '&lt;',

@@ -739,15 +739,18 @@ class OM(_Widget):
         self._value = value
         self._O = self._value
         
-        self._name_sto()
-    
-    def _name_sto(self):
         self._menu_options = [(O, O['name']) for O in self._supernode.content]
         if self._O is not None:
             self._NAMEWIDGET.store(self._O['name'])
     
     def value(self):
-        return self._O, self._O is not self._value
+        if self._O is not None:
+            name, changed = self._NAMEWIDGET.value()
+            if changed:
+                self._O.assign('name', name)
+        else:
+            changed = False
+        return self._O, changed or self._O is not self._value
     
     def hover(self, x, y):        
         if x < self._d1:
@@ -795,10 +798,6 @@ class OM(_Widget):
         self._dropdown_active = False
         if self._O is not None:
             self._NAMEWIDGET.defocus()
-            name, changed = self._NAMEWIDGET.value()
-            if changed:
-                self._O.assign('name', name)
-                self._name_sto() # because when the name is changed, this fails to trigger a re-read() event
     
     def draw(self, cr, hover=None):
         cr.set_line_width(2)

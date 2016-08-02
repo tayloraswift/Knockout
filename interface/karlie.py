@@ -113,17 +113,18 @@ class _Properties_panel(ui.Cell):
         meredith.mipsy.recalculate_all() # must come before because it rewrites all the paragraph styles
         self._reconstruct()
     
-    def _synchronize(self):
-        self.context.update()
+    def _read(self):
         for item in self._items:
             item.read()
         self._HI.read()
     
+    def _synchronize(self):
+        self.context.update()
+        self._read()
+    
     def _style_synchronize(self):
         self.context.update_force()
-        for item in self._items:
-            item.read()
-        self._HI.read()
+        self._read()
         
     def render(self, cr):
         k = self.height

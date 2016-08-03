@@ -19,7 +19,7 @@ CairoSVG - A simple SVG converter based on Cairo.
 
 """
 
-__version__ = '2.0.0a1'
+__version__ = '2.0.0rc4'  # noqa (version is used by relative imports)
 
 
 import os
@@ -70,12 +70,16 @@ def main():
     parser.add_argument(
         '-H', '--height', default=None, type=float,
         help='height of the parent container in pixels')
+    parser.add_argument(
+        '-u', '--unsafe', action='store_true',
+        help='resolve XML entities and allow very large files '
+             '(WARNING: vulnerable to XXE attacks and various DoS)')
     parser.add_argument('-o', '--output', default='-', help='output filename')
 
     options = parser.parse_args()
     kwargs = {
         'parent_width': options.width, 'parent_height': options.height,
-        'dpi': options.dpi}
+        'dpi': options.dpi, 'unsafe': options.unsafe}
     kwargs['write_to'] = (
         sys.stdout.buffer if options.output == '-' else options.output)
     if options.input == '-':

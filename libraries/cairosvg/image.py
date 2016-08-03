@@ -24,7 +24,7 @@ from io import BytesIO
 
 from PIL import Image
 
-from .helpers import node_format, size, preserve_ratio
+from .helpers import node_format, preserve_ratio, preserved_ratio, size
 from .parser import Tree
 from .surface import cairo
 from .url import parse_url, read_url
@@ -71,7 +71,7 @@ def image(surface, node):
             surface, node)
         surface.set_context_size(
             *node_format(surface, tree, reference=False),
-            preserved_ratio=(scale_x == scale_y))
+            preserved_ratio=preserved_ratio(tree))
         surface.context.translate(*surface.context.get_current_point())
         surface.context.scale(scale_x, scale_y)
         surface.context.translate(translate_x, translate_y)
@@ -87,7 +87,8 @@ def image(surface, node):
 
     node.image_width = image_surface.get_width()
     node.image_height = image_surface.get_height()
-    scale_x, scale_y, translate_x, translate_y = preserve_ratio(surface, node)
+    scale_x, scale_y, translate_x, translate_y = preserve_ratio(
+        surface, node)
 
     surface.context.rectangle(x, y, width, height)
     pattern_pattern = cairo.SurfacePattern(image_surface)

@@ -21,7 +21,7 @@ Shapes drawers.
 
 from math import pi
 
-from .helpers import normalize, point, size, point_angle
+from .helpers import normalize, point, point_angle, size
 
 
 def circle(surface, node):
@@ -31,10 +31,6 @@ def circle(surface, node):
         return
     cx = size(surface, node.get('cx'), 'x')
     cy = size(surface, node.get('cy'), 'y')
-
-    # Set 'standard' values that may be used by gradients
-    node['width'], node['height'] = str(r * 2), str(r * 2)
-    node['x'], node['y'] = str(cx - r), str(cy - r)
 
     surface.context.new_sub_path()
     surface.context.arc(cx, cy, r, 0, 2 * pi)
@@ -48,10 +44,6 @@ def ellipse(surface, node):
         return
     cx = size(surface, node.get('cx'), 'x')
     cy = size(surface, node.get('cy'), 'y')
-
-    # Set 'standard' values that may be used by gradients
-    node['width'], node['height'] = str(rx * 2), str(ry * 2)
-    node['x'], node['y'] = str(cx - rx), str(cy - ry)
 
     ratio = ry / rx
     surface.context.new_sub_path()
@@ -80,7 +72,7 @@ def polygon(surface, node):
 
 def polyline(surface, node):
     """Draw a polyline ``node``."""
-    points = normalize(node.get('points'))
+    points = normalize(node.get('points', ''))
     if points:
         x, y, points = point(surface, points)
         surface.context.move_to(x, y)

@@ -239,17 +239,22 @@ class Document_view(ui.Cell):
         self._Y_to_screen = KT.VIEW.Y_to_screen
         self._T_1         = KT.VIEW.T_1
 
-    def PDF(self):
-        name = os.path.splitext(self.KT.filedata['filepath'])[0]
-        surface = cairo.PDFSurface(name + '.pdf', self.BODY['width']*0.75, self.BODY['height']*0.75)
+    def PDF(self, first_try=True):
+        name = os.path.splitext(self.KT.filedata['filepath'])[0] + '.pdf'
+        surface = cairo.PDFSurface(name, self.BODY['width']*0.75, self.BODY['height']*0.75)
         cr = cairo.Context(surface)
         cr.scale(0.75, 0.75)
-        pages = self.BODY.transfer()
-        max_page = max(k for k in pages if k is not None)
+        pages        = self.BODY.transfer()
+        max_page     = max(k for k in pages if k is not None)
+        shit_do_over = False
         for p in range(max_page + 1):
             if p in pages:
-                self.print_page(cr, p, pages[p])
-            cr.show_page()
+                if self.print_page(cr, p, pages[p]):
+                    shit_do_over = True
+            surface.show_page()
+        if first_try and shit_do_over:
+            print('Knockout has detected SVG drawings in your document; performing second pass rendering (Cairo wyd?)')
+            self.PDF(False)
     
     ##############
     def _replace_misspelled(self, word, label):
@@ -481,12 +486,14 @@ class Document_view(ui.Cell):
             cr.show_glyphs(glyphs)
     
     def print_page(self, cr, p, page):
-        for operation, x, y, z in chain(page['_images'], page['_paint']):
+        draw = list(chain(page['_images'], page['_paint']))
+        for operation, x, y, z in draw:
             cr.save()
             cr.translate(x, y)
             operation(cr, 0)
             cr.restore()
         self._print_sorted(cr, page)
+        return bool(draw)
             
     def _draw_by_page(self, cr):
         max_page      = 0

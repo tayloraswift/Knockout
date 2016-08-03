@@ -21,6 +21,7 @@ This module handles clips, gradients, masks, patterns and external nodes.
 
 """
 
+from .bounding_box import calculate_bounding_box, is_non_empty_bounding_box
 from .colors import color
 from .features import match_features
 from .helpers import paint, size, transform
@@ -29,14 +30,12 @@ from .shapes import rect
 from .surface import cairo
 from .url import parse_url
 
-
 BLEND_OPERATORS = {
-#    'darken': cairo.OPERATOR_DARKEN,
-#    'lighten': cairo.OPERATOR_LIGHTEN,
-#    'multiply': cairo.OPERATOR_MULTIPLY,
+    #'darken': cairo.OPERATOR_DARKEN,
+    #'lighten': cairo.OPERATOR_LIGHTEN,
+    #'multiply': cairo.OPERATOR_MULTIPLY,
     'normal': cairo.OPERATOR_OVER,
-#    'screen': cairo.OPERATOR_SCREEN,
-    'screen': cairo.OPERATOR_ADD
+    #'screen': cairo.OPERATOR_SCREEN,
 }
 
 EXTEND_OPERATORS = {
@@ -63,6 +62,18 @@ def update_def_href(surface, def_name, def_dict):
         for key, value in href_node.items():
             if key not in def_dict[def_name]:
                 def_dict[def_name][key] = value
+
+
+def parse_all_defs(surface, node):
+    """Recursively visit all child nodes and process definition elements."""
+
+    # Handle node
+    parse_def(surface, node)
+
+    # Visit all children recursively
+    if node.children:
+        for child in node.children:
+            parse_all_defs(surface, child)
 
 
 def parse_def(surface, node):
@@ -164,16 +175,17 @@ def draw_gradient(surface, node, name):
     """Gradients colors."""
     gradient_node = surface.gradients[name]
 
-    transform(surface, gradient_node.get('gradientTransform'))
-
     if gradient_node.get('gradientUnits') == 'userSpaceOnUse':
         width_ref, height_ref = 'x', 'y'
         diagonal_ref = 'xy'
     else:
-        x = size(surface, node.get('x'), 'x')
-        y = size(surface, node.get('y'), 'y')
-        width = size(surface, node.get('width', '1'), 'x')
-        height = size(surface, node.get('height', '1'), 'y')
+        bounding_box = calculate_bounding_box(surface, node)
+        if not is_non_empty_bounding_box(bounding_box):
+            return False
+        x = size(surface, bounding_box[0], 'x')
+        y = size(surface, bounding_box[1], 'y')
+        width = size(surface, bounding_box[2], 'x')
+        height = size(surface, bounding_box[3], 'y')
         width_ref = height_ref = diagonal_ref = 1
 
     if gradient_node.tag == 'linearGradient':
@@ -191,12 +203,16 @@ def draw_gradient(surface, node, name):
         fy = size(surface, gradient_node.get('fy', str(cy)), height_ref)
         gradient_pattern = cairo.RadialGradient(fx, fy, 0, cx, cy, r)
 
+    # Apply matrix to set coordinate system for gradient
     if gradient_node.get('gradientUnits') != 'userSpaceOnUse':
         gradient_pattern.set_matrix(cairo.Matrix(
             1 / width, 0, 0, 1 / height, - x / width, - y / height))
-    gradient_pattern.set_extend(EXTEND_OPERATORS.get(
-        node.get('spreadMethod', 'pad'), EXTEND_OPERATORS['pad']))
 
+    # Apply transform of gradient
+    transform(
+        surface, gradient_node.get('gradientTransform'), gradient_pattern)
+
+    # Apply gradient (<stop> by <stop>)
     offset = 0
     for child in gradient_node.children:
         offset = max(offset, size(surface, child.get('offset'), 1))
@@ -205,6 +221,7 @@ def draw_gradient(surface, node, name):
             float(child.get('stop-opacity', 1)))
         gradient_pattern.add_color_stop_rgba(offset, *stop_color)
 
+    # Set spread method for gradient outside target bounds
     gradient_pattern.set_extend(EXTEND_OPERATORS.get(
         gradient_node.get('spreadMethod', 'pad'), EXTEND_OPERATORS['pad']))
 
@@ -238,15 +255,19 @@ def draw_pattern(surface, node, name):
         x = size(surface, pattern_node.get('x'), 1) * width
         y = size(surface, pattern_node.get('y'), 1) * height
         pattern_width = (
-            size(surface, pattern_node.pop('width', '0'), 1) * width)
+            size(surface, pattern_node.pop('width', '1'), 1) * width)
         pattern_height = (
-            size(surface, pattern_node.pop('height', '0'), 1) * height)
+            size(surface, pattern_node.pop('height', '1'), 1) * height)
         if 'viewBox' not in pattern_node:
             pattern_node['width'] = pattern_width
             pattern_node['height'] = pattern_height
             if pattern_node.get('patternContentUnits') == 'objectBoundingBox':
                 pattern_node['transform'] = 'scale({}, {})'.format(
                     width, height)
+
+    # Fail if pattern has an invalid size
+    if pattern_width == 0.0 or pattern_height == 0.0:
+        return False
 
     from .surface import SVGSurface  # circular import
     pattern_surface = SVGSurface(pattern_node, None, surface.dpi, surface)
@@ -342,6 +363,7 @@ def use(surface, node):
     tree = Tree(url=href, parent=node, tree_cache=surface.tree_cache)
 
     if not match_features(tree.xml_tree):
+        surface.context.restore()
         return
 
     if tree.tag in ('svg', 'symbol'):
@@ -352,6 +374,6 @@ def use(surface, node):
             tree['width'], tree['height'] = node['width'], node['height']
 
     surface.draw(tree)
-    node.pop('fill', None)
-    node.pop('stroke', None)
+    node.get('fill', None)
+    node.get('stroke', None)
     surface.context.restore()

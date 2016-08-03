@@ -1,10 +1,12 @@
 #!/usr/bin/env python3.5
 
 import sys
-
-from os import environ
-environ['LD_LIBRARY_PATH'] = '/usr/local/lib/girepository-1.0'
-environ['GI_TYPELIB_PATH'] = '/usr/local/lib/girepository-1.0'
+from os import environ, execv
+hb_lib_path                = environ['HOME'] + '/HB/lib'
+environ['GI_TYPELIB_PATH'] = hb_lib_path + '/girepository-1.0'
+if environ.get('LD_LIBRARY_PATH') != hb_lib_path:
+    environ['LD_LIBRARY_PATH'] = hb_lib_path
+    execv(sys.argv[0], sys.argv)
 
 from interface.splash import Recent
 

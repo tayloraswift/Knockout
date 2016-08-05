@@ -8,8 +8,12 @@ from meredith.elements import Reverse, Fontpost, Line_break
 
 from layout.textanalysis import bidir_levels, find_breakpoint
 
-def _unpack_hb_buffer(HBB):
+def _unpack_hb_buffer_deprecated(HBB):
     return ((N.cluster, N.codepoint, P.x_advance, P.x_offset) for N, P in zip(hb.buffer_get_glyph_infos(HBB), hb.buffer_get_glyph_positions(HBB)))
+
+def _unpack_hb_buffer(HBB):
+    hb.buffer_compact_glyphs(HBB)
+    return (P.compact for P in hb.buffer_get_glyph_positions(HBB))
 
 def _compose_glyphs(G, factor, vshift, tracking):
     x = 0

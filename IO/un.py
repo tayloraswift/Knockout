@@ -2,6 +2,8 @@ class UN(object):
     def __init__(self):
         self._history   = []
         self._secondary = []
+        
+        self.pop = self._history.pop
     
     def reset(self, KT, context, panes):
         del self._history[:]

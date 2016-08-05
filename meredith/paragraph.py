@@ -197,7 +197,10 @@ class Plane(Box):
                 new = True
             except detectexception:
                 if chained:
-                    blocknumber -= next(i for i, B in enumerate(reversed(self.content[:blocknumber])) if not calc_bstyle(B)['keep_with_next'])
+                    try:
+                        blocknumber -= next(i for i, B in enumerate(reversed(self.content[:blocknumber])) if not calc_bstyle(B)['keep_with_next'])
+                    except StopIteration:
+                        blocknumber = 0
                     chained = False
                     new = 2
                 else:

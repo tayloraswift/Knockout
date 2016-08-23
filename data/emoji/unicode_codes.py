@@ -934,7 +934,7 @@ EMOJI_UNICODE = {
     u':top_with_upwards_arrow_above:': u'\U0001F51D',
     u':trackball:': u'\U0001F5B2',
     u':tractor:': u'\U0001F69C',
-    u':trade_mark_sign:': u'\U00002122',
+#    u':trade_mark_sign:': u'\U00002122',
     u':train:': u'\U0001F686',
     u':tram:': u'\U0001F68A',
     u':tram_car:': u'\U0001F68B',

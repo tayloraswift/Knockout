@@ -1,5 +1,0 @@
-presets.html
-test.html
-tutorial.html
-default.html
-../Calctest.html

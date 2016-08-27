@@ -738,16 +738,18 @@ class OM(_Widget):
     def store(self, value):
         self._value = value
         self._O = self._value
-        
         self._menu_options = [(O, O['name']) for O in self._supernode.content]
         if self._O is not None:
             self._NAMEWIDGET.store(self._O['name'])
     
     def value(self):
         if self._O is not None:
-            name, changed = self._NAMEWIDGET.value()
-            if changed:
-                self._O.assign('name', name)
+            if self._value is None:
+                changed = True
+            else:
+                name, changed = self._NAMEWIDGET.value()
+                if changed:
+                    self._O.assign('name', name)
         else:
             changed = False
         return self._O, changed or self._O is not self._value

@@ -66,7 +66,7 @@ class Meredith(Box):
         self._recalc_page()
     
     def add_section(self):
-        self.content.append(Section(self.KT, {}, [Paragraph_block({}, Text(list('{new}')))]))
+        self.content.append(Section(self.KT, {}, [Paragraph_block(self.KT, {}, Text(list('{new}')))]))
         self.content[-1].layout()
     # Page functions
     

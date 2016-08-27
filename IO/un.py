@@ -45,7 +45,6 @@ class UN(object):
     
     def _restore(self, record):
         kitty, DATA, activity = record
-        print(DATA, activity)
         self.deserialize(kitty)
         self.shortcuts()
         self.BODY.layout_all()

@@ -62,6 +62,9 @@ class View(Null):
     # UI INTERACTION
     def move_vertical(self, amount):
         self.K += int(amount / sqrt(self.A))
+    
+    def move_horizontal(self, amount):
+        self.H += int(amount / sqrt(self.A))
 
     def pan(self, dx, dy, h0, k0):
         self.H = int(round( (dx)/self.A + h0))

@@ -208,6 +208,8 @@ class Document_toolbar(object):
         self._hover_memory = (None, None)
         noticeboard.redraw_becky.push_change()
 
+key_directions = {'Ctrl Right': (-1, False), 'Ctrl Left': (1, False), 'Ctrl Up': (1, True), 'Ctrl Down': (-1, True), 'Ctrl equal': (False, None), 'Ctrl minus': (True, None)}
+
 class Document_view(ui.Cell):
     def __init__(self, KT, context):
         self.keyboard = keyboard.Keyboard(KT, constants.shortcuts)
@@ -222,6 +224,7 @@ class Document_view(ui.Cell):
         self._mode_switcher = Mode_switcher(self.change_mode, default= self._mode)
         
         self._stake = None
+        self._xy_at = 0, 0
         
         self._font = ISTYLES[('strong',)]
     
@@ -286,6 +289,7 @@ class Document_view(ui.Cell):
             region = 'switcher'
         else:
             region = 'view'
+            self._xy_at = x, y
         
         if self._region_hover != region:
             if self._region_hover == 'switcher':
@@ -296,10 +300,19 @@ class Document_view(ui.Cell):
 
     def key_input(self, name, char):
         if self._mode == 'text':
-            clipboard = self.keyboard.type_document(name, char)
-            # check if paragraph and font context changed
-            self.context.update()
-            return clipboard
+            if name in key_directions:
+                d, v = key_directions[name]
+                if v is None:
+                    self.view.zoom( * self._xy_at , d)
+                elif v:
+                    self.view.move_vertical(d*20)
+                else:
+                    self.view.move_horizontal(d*20)
+            else:
+                clipboard = self.keyboard.type_document(name, char)
+                # check if paragraph and font context changed
+                self.context.update()
+                return clipboard
             
         elif self._mode == 'frames':
             self.scursor.key_input(name)

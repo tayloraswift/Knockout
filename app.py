@@ -226,7 +226,6 @@ class Display(Gtk.Window):
     def on_key_press(self, w, e):
 
         name = Gdk.keyval_name(e.keyval)
-        
         if e.state & Gdk.ModifierType.SHIFT_MASK and name == 'Return':
             self.panes.active.key_input('paragraph', None)
         

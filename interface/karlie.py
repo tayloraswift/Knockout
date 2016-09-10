@@ -268,7 +268,7 @@ class _Properties_panel(ui.Cell):
             self._scroll_anchor = SA
             noticeboard.redraw_klossy.push_change()
 
-    def scroll(self, x, y, char):
+    def scroll(self, x, y, char, axis):
         if y > 0:
             if self._dy >= -self._total_height + self.height:
                 self._dy -= 22

@@ -5,9 +5,8 @@ class Cell(object):
     def hover(self, x, y=-1):
         pass
     
-    def scroll(self, x, y=-1, char=''):
+    def scroll(self, x, y=-1, char='', axis=False):
         pass
-    
     
     def press(self, x, y=-1, char=''):
         pass

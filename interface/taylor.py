@@ -444,7 +444,7 @@ class Document_view(ui.Cell):
     def exit(self):
         pass
     
-    def scroll(self, x, y, mod):
+    def scroll(self, x, y, mod, axis):
         x = int(x)
         y = int(y)
         if y < 0:
@@ -459,9 +459,13 @@ class Document_view(ui.Cell):
         else:
             # scroll
             if direction:
-                self.view.move_vertical(-50)
+                movement = -50
             else:
-                self.view.move_vertical(50)
+                movement = 50
+            if axis:
+                self.view.move_horizontal(movement)
+            else:
+                self.view.move_vertical(movement)
         
         noticeboard.redraw_becky.push_change()
 

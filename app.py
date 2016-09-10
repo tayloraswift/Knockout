@@ -209,12 +209,12 @@ class Display(Gtk.Window):
                 char = 'ctrl'
             else:
                 char = None
-
+            
+            d = e.direction
             # direction of scrolling stored as sign
-            if e.direction == 1:
-                self.panes.hover.scroll(x, y, char)
-            elif e.direction == 0:
-                self.panes.hover.scroll(x,-y, char)
+            if not d % 2:
+                y = -y
+            self.panes.hover.scroll(x,  y, char, d > 1)
         
         if noticeboard.redraw_overlay.should_refresh():
             self.SCREEN.queue_draw()

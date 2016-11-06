@@ -2,7 +2,8 @@
 
 import sys
 from os import environ, execv
-hb_lib_path                = environ['HOME'] + '/HB/lib'
+from pathlib import Path
+hb_lib_path                = str(Path(__file__).resolve().parents[1]) + '/HB/lib'
 environ['GI_TYPELIB_PATH'] = hb_lib_path + '/girepository-1.0'
 if environ.get('LD_LIBRARY_PATH') != hb_lib_path:
     environ['LD_LIBRARY_PATH'] = hb_lib_path

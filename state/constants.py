@@ -21,7 +21,7 @@ shortcuts =    [('Ctrl 6', 'Ctrl asciicircum', 'small^sup'),
                 ('Ctrl 7', 'Ctrl ampersand', 'small^sub'),
                 ('Ctrl b', 'Ctrl B', 'strong'),
                 ('Ctrl i', 'Ctrl I', 'emphasis'),
-                ('Ctrl grave', 'Ctrl tilde', 'code'),
+                ('Ctrl grave', 'Ctrl asciitilde', 'code'),
                 ]
 
 interface_tstyles = {'_interface:LABEL'  : {'fontsize'  : 11,

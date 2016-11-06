@@ -1,0 +1,128 @@
+<head><meta charset="UTF-8"></head>
+<title>grapher.html</title>
+
+<body width="816" height="1056" dual="True" even="True" grid="90 390 430 730;0 70 960">
+    <section frames="90,70 90,960 ; 390,70 390,960 ; 0 |
+    430,70 430,960 ; 730,70 730,960 ; 0 |
+    90,70 90,960 ; 390,70 390,960 ; 1 |
+    430,70 430,960 ; 730,70 730,960 ; 1">
+        <mod:plot class="figure" height="180">
+            <mod:plot:axis variable="x" range="-10:10" minor="1" major="2" number="2" arrowhead="True" axis="True" ticks="True"/>
+
+            <mod:plot:axis variable="y" range="-6:6" minor="1" major="2" number="2" arrowhead="True" axis="True" ticks="True"/>
+
+            <mod:fx y="sin(x) + x/3" step="0.1" color="#ff3085">
+                <p><mi>f</mi>(<mi>x</mi>) = sin <mi>x</mi> + <mi>x</mi>/3</p>
+            </mod:fx>
+
+            <mod:fx x="5*sin(x)" y="5*cos(x)" range="0:6.283185307179586" step="0.09817477042468103" color="#e030ff">
+                <p><mi>x</mi><sup>2</sup> + <mi>y</mi><sup>2</sup> = 25</p>
+            </mod:fx>
+
+            <mod:fx y="1/x" step="0.01" color="#666666" clip="True">
+                <p><mi>f</mi>(<mi>x</mi>) = <mod:frac>
+                        <mod:frac:n>1</mod:frac:n>
+                        <mod:frac:d><mi>x</mi></mod:frac:d>
+                    </mod:frac></p>
+            </mod:fx>
+        </mod:plot>
+
+        <p class="body">Graph</p>
+    </section>
+</body>
+
+<textstyles>
+    <textstyle name="Black" color="#000"/>
+
+    <textstyle name="Body text" fontsize="15"/>
+
+    <textstyle name="Body text smaller" fontsize="13.33333"/>
+
+    <textstyle name="Body text sub" shift="-2"/>
+
+    <textstyle name="Body text super" shift="5"/>
+
+    <textstyle name="Literal text" fontsize="14" color="#6065ff"/>
+
+    <textstyle name="Monospace" path="data/fonts/ShareTechMono-Regular.ttf"/>
+
+    <textstyle name="Serif" path="/home/kelvin/.fonts/Proforma/Proforma-Medium.otf"/>
+
+    <textstyle name="Serif bold" path="/home/kelvin/.fonts/Proforma/Proforma-Bold.otf"/>
+
+    <textstyle name="Serif bold italic" path="/home/kelvin/.fonts/Proforma/Proforma-BoldItalic.otf"/>
+
+    <textstyle name="Serif italic" path="/home/kelvin/.fonts/Proforma/Proforma-MediumItalic.otf"/>
+
+    <textstyle name="Title text" fontsize="36" path="data/fonts/FiraSans-Light.otf" capitals="True" case="1" cpsp="1"/>
+
+    <textstyle name="h2 text" fontsize="20" path="data/fonts/FiraSans-Book.otf" tracking="1" capitals="False" cpsp="1" smcp="1"/>
+</textstyles>
+
+<blockstyles>
+    <blockstyle class="">
+        <memberstyle class="" textstyle="Black"/>
+    </blockstyle>
+
+    <blockstyle hyphenate="True" leading="20" margin_bottom="10">
+        <memberstyle class="" textstyle="Body text"/>
+
+        <memberstyle class="" textstyle="Serif"/>
+
+        <memberstyle class="emphasis" textstyle="Serif italic"/>
+
+        <memberstyle class="strong" textstyle="Serif bold"/>
+
+        <memberstyle class="emphasis^strong" textstyle="Serif bold italic"/>
+
+        <memberstyle class="code" textstyle="Monospace"/>
+
+        <memberstyle class="code" textstyle="Literal text"/>
+
+        <memberstyle class="small" textstyle="Body text smaller"/>
+
+        <memberstyle class="sub" textstyle="Body text sub"/>
+
+        <memberstyle class="sup" textstyle="Body text super"/>
+    </blockstyle>
+
+    <blockstyle class="body^quotation" margin_left="20">
+        <memberstyle textstyle="Serif italic"/>
+
+        <memberstyle class="emphasis" textstyle="Serif"/>
+
+        <memberstyle class="strong" textstyle="Serif bold italic"/>
+
+        <memberstyle class="emphasis^strong" textstyle="Serif bold"/>
+    </blockstyle>
+
+    <blockstyle class="body^firstchild" indent="0"/>
+
+    <blockstyle class="li" incr_assign="n + 1" show_count="str(A[-1]) + '.'"/>
+
+    <blockstyle class="h1" keep_with_next="True" leading="40" margin_bottom="20" incr_place_value="1" incr_assign="n + 1">
+        <memberstyle class="" textstyle="Title text"/>
+    </blockstyle>
+
+    <blockstyle class="h2" leading="30" margin_bottom="10" incr_place_value="2" incr_assign="n + 1">
+        <memberstyle textstyle="h2 text"/>
+    </blockstyle>
+
+    <blockstyle class="h3" keep_with_next="True" leading="20" margin_bottom="10" margin_top="10" incr_place_value="3" incr_assign="n + 1">
+        <memberstyle class="" textstyle="Body text"/>
+
+        <memberstyle class="" textstyle="Serif bold"/>
+
+        <memberstyle class="emphasis" textstyle="Serif bold italic"/>
+    </blockstyle>
+
+    <blockstyle class="firstchild" incr_assign="1"/>
+
+    <blockstyle class="_right" align="1"/>
+</blockstyles>
+
+<textcursor plane="0" i="1, 5" j="1, 5"/>
+
+<framecursor section="0" frame="0"/>
+
+<view h="224" k="128" hc="661" kc="536" zoom="11" mode="text"/>

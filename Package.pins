@@ -1,0 +1,36 @@
+{
+  "autoPin": true,
+  "pins": [
+    {
+      "package": "Cairo",
+      "reason": null,
+      "repositoryURL": "/home/kelvin/Sandbox/Swift/Cairo",
+      "version": "1.0.0"
+    },
+    {
+      "package": "CJPEG",
+      "reason": null,
+      "repositoryURL": "/home/kelvin/Sandbox/Swift/CJPEG",
+      "version": "1.0.0"
+    },
+    {
+      "package": "GLFW",
+      "reason": null,
+      "repositoryURL": "/home/kelvin/Sandbox/Swift/GLFW",
+      "version": "1.0.0"
+    },
+    {
+      "package": "SGLOpenGL",
+      "reason": null,
+      "repositoryURL": "/home/kelvin/Sandbox/Swift/SGLOpenGL",
+      "version": "1.0.0"
+    },
+    {
+      "package": "swiftxml",
+      "reason": null,
+      "repositoryURL": "https://github.com/kelvin13/swiftxml.git",
+      "version": "1.0.0"
+    }
+  ],
+  "version": 1
+}

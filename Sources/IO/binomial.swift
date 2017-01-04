@@ -1,11 +1,11 @@
 import Taylor
 
-struct Binomial
+struct Binomial: Equatable
 {
     private static
     let minus = Set<UnicodeScalar>("--–".unicodeScalars),
         signs = Binomial.minus.union("+".unicodeScalars),
-        numbers = Set<UnicodeScalar>("1234567890.".unicodeScalars), 
+        numbers = Set<UnicodeScalar>("1234567890.".unicodeScalars),
         allowed_gray = Binomial.signs ∪ Binomial.numbers
     let β_1:Double, β_0:Double
 
@@ -144,5 +144,11 @@ struct Binomial
             }
         }
         return symbol
+    }
+
+    static
+    func == (lhs:Binomial, rhs:Binomial) -> Bool
+    {
+        return lhs.β_0 == rhs.β_0 && lhs.β_1 == rhs.β_1
     }
 }

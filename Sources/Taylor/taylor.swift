@@ -90,6 +90,48 @@ public func open_text_file(_ path:Cpath) -> String?
     return String(cString: cchar_buffer)
 }
 
+func bisect<T: Comparable>(_ a: [T], key: T) -> Int? {
+    var lowerBound = 0
+    var upperBound = a.count
+    while lowerBound < upperBound {
+        let midIndex = lowerBound + (upperBound - lowerBound) / 2
+        if a[midIndex] == key {
+            return midIndex
+        } else if a[midIndex] < key {
+            lowerBound = midIndex + 1
+        } else {
+            upperBound = midIndex
+        }
+    }
+    return nil
+}
+
+extension Array where Element: Comparable
+{
+    public
+    func bisect(_ item:Element, from i:Int = 0, to j:Int? = nil,
+        with comparator:((Element, Element) -> Bool) = (<)) -> Int
+    {
+        assert(i >= 0)
+        var low = i
+        var high = j ?? self.count
+        assert(high < Int.max - 1)
+        while low < high
+        {
+            let mid = low + (high - low) / 2
+            if comparator(item, self[mid])
+            {
+                high = mid
+            }
+            else
+            {
+                low = mid + 1
+            }
+        }
+        return low
+    }
+}
+
 public class MovingAverage<N: FloatingPoint>
 {
     let n:Int

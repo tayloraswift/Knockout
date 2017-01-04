@@ -50,7 +50,7 @@ class PolarDict<T>
     }
 }
 
-class SyncedDict<T>:PolarDict<T>
+class SyncedDict<T: Equatable>:PolarDict<T>
 {
     class
     func repr(_ v:T, gene:Gene) -> String

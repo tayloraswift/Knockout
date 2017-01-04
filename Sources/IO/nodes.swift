@@ -18,13 +18,16 @@ struct Gene
     let name:String
     let format:AttrFormat
     let defstr:String
+    let imply:Bool
     let formatinfo:GeneFormatInfo
 
-    init(name:String, format:AttrFormat, defstr:String, formatinfo:GeneFormatInfo)
+    init(name:String, format:AttrFormat, defstr:String,
+        imply:Bool = false, formatinfo:GeneFormatInfo = GeneFormatInfo())
     {
         self.name = name
         self.format = format
         self.defstr = defstr
+        self.imply = imply
         self.formatinfo = formatinfo
     }
 }
@@ -50,7 +53,7 @@ struct ElementDNA: Sequence
     private
     let DNA_lookup:[String: Gene]
 
-    init(_ genes:[Gene])
+    init(_ genes:Gene...)
     {
         var D:[String: Gene] = [:]
         for gene in genes
@@ -59,11 +62,6 @@ struct ElementDNA: Sequence
         }
         self.DNA_lookup = D
         self.DNA = genes
-    }
-
-    init(_ attrs:(name:String, format:AttrFormat, defstr:String)...)
-    {
-        self.init(attrs.map{Gene(name: $0, format: $1, defstr: $2, formatinfo: GeneFormatInfo())})
     }
 
     subscript(i:Int) -> Gene

@@ -3,6 +3,7 @@ import Taylor
 public
 func t()
 {
+    // all this does is test the binomials because i didn’t write actual tests for them
     let gene = Gene(name: "foo", format: AttrFormat.binomial, defstr: "", formatinfo: GeneFormatInfo(symbol: "C"))
     print(Binomial("21K + 3 - 1K -+ K", gene: gene).repr(gene: gene))
 }
@@ -105,7 +106,7 @@ class Node: Element
                         int         : IntDict(),
                         float       : FloatDict(),
                         binomial    : BinomialDict(),
-                        int_set     : FloatDict(),
+                        int_set     : IntSetDict(),
 
                         float_array : FloatDict(),
                         str         : StrDict())

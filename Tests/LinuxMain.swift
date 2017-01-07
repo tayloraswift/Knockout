@@ -1,3 +1,5 @@
 @testable import TaylorTests
+@testable import IOTests
 
-test_module()
+TaylorTests.test_module()
+IOTests.test_module()

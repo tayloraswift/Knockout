@@ -132,6 +132,30 @@ extension Array where Element: Comparable
     }
 }
 
+extension String.CharacterView
+{
+    static
+    let whitespace = Set<Character>([9, 10, 11, 12, 13, 32, 133, 160, 5760, 8192, 8193, 8194, 8195, 8196, 8197, 8198, 8199, 8200, 8201, 8202, 8203, 8232, 8233, 8239, 8287, 12288].map{Character(UnicodeScalar($0)!)})
+
+    public
+    func trim() -> String
+    {
+        return String(self.filter
+        {
+          !String.CharacterView.whitespace.contains($0)
+        })
+    }
+
+    public
+    func trim(_ removing:Character) -> String
+    {
+        return String(self.filter
+        {
+          $0 != removing
+        })
+    }
+}
+
 public class MovingAverage<N: FloatingPoint>
 {
     let n:Int

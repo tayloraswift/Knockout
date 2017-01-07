@@ -1,5 +1,4 @@
-# This Makefile assumes that you have swiftenv installed
-# To get going, start with `make init`
+# If i don’t build the first time, try me again, sometimes i am slow
 
 SWIFT_VERSION = DEVELOPMENT-SNAPSHOT-2016-12-15-a
 

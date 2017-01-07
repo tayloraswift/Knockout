@@ -1,3 +1,5 @@
+import Taylor
+
 protocol AssignableFormatDict: class
 {
     func assign(gene:Gene, valstr:String, strdict:inout [String: String])
@@ -142,6 +144,31 @@ class BinomialDict:SyncedDict<Binomial>, RepresentableFormatDict, AssignableForm
         return v.repr(gene: gene)
     }
 }
+
+final
+class IntSetDict:SyncedDict<Set<Int>>, RepresentableFormatDict, AssignableFormatDict
+{
+    static
+    let absolute_defval:Set<Int> = Set()
+    class
+    func interpret(_ str:String, gene:Gene) -> Set<Int>?
+    {
+        return Set(str.characters.split(separator: ",").flatMap{Int($0.trim())})
+    }
+
+    override class
+    func repr(_ v:Set<Int>, gene:Gene) -> String
+    {
+        return v.map{String(describing: $0)}.joined(separator: ", ")
+    }
+}
+/*
+def interpret_enumeration(e):
+    if type(e) is set:
+        return e
+    else:
+        return set(interpret_int(val) for val in e.split(',') if any(c in '0123456789' for c in val))
+*/
 
 final
 class StrDict:PolarDict<String>, StorableFormatDict, AssignableFormatDict

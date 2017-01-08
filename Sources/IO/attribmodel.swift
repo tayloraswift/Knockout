@@ -1,45 +1,84 @@
 import Taylor
 
+/*
+a helpful comment explaining our elegant but very unobvious and poorly named attribute model
+*/
+
 protocol AssignableFormatDict: class
 {
-    func assign(gene:Gene, valstr:String, strdict:inout [String: String])
+    func assign(valstr:String?, gene:Gene, dispdict:inout [String: Node.DisplayInfo])
 }
 
-protocol StorableFormatDict: class
+protocol ImmutableFormatDict:AssignableFormatDict
 {
     associatedtype T
+
+    static
+    func is_immutable(_:String) -> String? // this is a stupid function
+    static
+    func interpret(_ str:String, gene:Gene) -> T?
+
     static
     var absolute_defval:T { get }
     var dict:[String: T] { get set }
-    static
-    func interpret(_ str:String, gene:Gene) -> T?
 }
 
-extension StorableFormatDict where Self: AssignableFormatDict
+extension ImmutableFormatDict
 {
-    func assign(gene:Gene, valstr:String, strdict _:inout [String: String])
+    func assign(valstr:String?, gene:Gene, dispdict:inout [String: Node.DisplayInfo])
     {
-        self.dict[gene.name] = Self.interpret(valstr, gene: gene) ?? Self.interpret(gene.defstr, gene: gene) ?? Self.absolute_defval
+        let inputstr:String, exists:Bool
+        if let valstr = valstr
+        {
+            inputstr = valstr
+            exists = true
+        }
+        else
+        {
+            inputstr = gene.defstr
+            exists = false
+        }
+
+        let value:T, valid:Bool
+        if let v:T = Self.interpret(inputstr, gene: gene)
+        {
+            value = v
+            valid = true
+        }
+        else
+        {
+            value = Self.interpret(gene.defstr, gene: gene) ?? Self.absolute_defval
+            valid = false
+            // we should never need Self.absolute_defval but i am paranoid
+        }
+        self.dict[gene.name] = value
+        dispdict[gene.name] = Node.DisplayInfo(str: Self.is_immutable(inputstr),
+                                               exists: exists, valid: valid)
+    }
+
+    static
+    func is_immutable(_ inputstr:String) -> String?
+    {
+        return inputstr
     }
 }
 
-protocol RepresentableFormatDict:StorableFormatDict
+protocol MutatableFormatDict:ImmutableFormatDict
 {
     static
     func repr(_ v:T, gene:Gene) -> String
 }
 
-extension RepresentableFormatDict where Self: AssignableFormatDict
+extension MutatableFormatDict
 {
-    func assign(gene:Gene, valstr:String, strdict:inout [String: String])
+    static
+    func is_immutable(_:String) -> String?
     {
-        let v:T = Self.interpret(valstr, gene: gene) ?? Self.interpret(gene.defstr, gene: gene) ?? Self.absolute_defval
-        self.dict[gene.name] = v
-        strdict[gene.name] = Self.repr(v, gene: gene)
+        return nil
     }
 }
 
-class PolarDict<T>
+class BasicImmutableDict<T>
 {
     //fileprivate
     var dict:[String: T] = [:]
@@ -52,7 +91,7 @@ class PolarDict<T>
     }
 }
 
-class SyncedDict<T: Equatable>:PolarDict<T>
+class BasicMutableDict<T>:BasicImmutableDict<T>
 {
     class
     func repr(_ v:T, gene:Gene) -> String
@@ -61,12 +100,27 @@ class SyncedDict<T: Equatable>:PolarDict<T>
     }
 }
 
+class ObjectMutableDict<T: ObjectMutableDictElement>:BasicMutableDict<T>
+{
+    static
+    func interpret(_ str:String, gene:Gene) -> T?
+    {
+        return T(str, gene: gene)
+    }
+
+    override static
+    func repr(_ v:T, gene:Gene) -> String
+    {
+        return v.repr(gene: gene)
+    }
+}
+
 final
-class BoolDict:SyncedDict<Bool>, RepresentableFormatDict, AssignableFormatDict
+class BoolDict:BasicMutableDict<Bool>, MutatableFormatDict
 {
     static
     let absolute_defval:Bool = false
-    class
+    static
     func interpret(_ str:String, gene:Gene) -> Bool?
     {
         if str == "true" || str == "True"
@@ -89,7 +143,7 @@ class BoolDict:SyncedDict<Bool>, RepresentableFormatDict, AssignableFormatDict
 }
 
 final
-class IntDict:SyncedDict<Int>, RepresentableFormatDict, AssignableFormatDict
+class IntDict:BasicMutableDict<Int>, MutatableFormatDict
 {
     static
     let absolute_defval:Int = 0
@@ -101,17 +155,17 @@ class IntDict:SyncedDict<Int>, RepresentableFormatDict, AssignableFormatDict
 }
 
 final
-class FloatDict:SyncedDict<Double>, RepresentableFormatDict, AssignableFormatDict
+class FloatDict:BasicMutableDict<Double>, MutatableFormatDict
 {
     static
     let absolute_defval:Double = 0
-    class
+    static
     func interpret(_ str:String, gene:Gene) -> Double?
     {
         return Double(str) // add arithmetic functionality later
     }
 
-    override class
+    override static
     func repr(_ f:Double, gene:Gene) -> String
     {
         if f <= Double(Int.max) && abs(f.truncatingRemainder(dividingBy: 1)) < 0.00_000_1
@@ -123,59 +177,43 @@ class FloatDict:SyncedDict<Double>, RepresentableFormatDict, AssignableFormatDic
         {
             return String(describing: f)
         }
-
     }
 }
 
 final
-class BinomialDict:SyncedDict<Binomial>, RepresentableFormatDict, AssignableFormatDict
+class BinomialDict:ObjectMutableDict<Binomial>, MutatableFormatDict
 {
     static
     let absolute_defval:Binomial = Binomial(β_0: 0, β_1: 0)
-    class
-    func interpret(_ str:String, gene:Gene) -> Binomial?
-    {
-        return Binomial(str, gene: gene)
-    }
-
-    override class
-    func repr(_ v:Binomial, gene:Gene) -> String
-    {
-        return v.repr(gene: gene)
-    }
 }
 
 final
-class IntSetDict:SyncedDict<Set<Int>>, RepresentableFormatDict, AssignableFormatDict
+class IntSetDict:BasicMutableDict<Set<Int>>, MutatableFormatDict
 {
     static
     let absolute_defval:Set<Int> = Set()
-    class
+    static
     func interpret(_ str:String, gene:Gene) -> Set<Int>?
     {
-        return Set(str.characters.split(separator: ",").flatMap{Int($0.trim())})
+        return Set(str.characters.split(separator: ",").flatMap
+        {
+            IntDict.interpret($0.trim(), gene: gene)
+        })
     }
 
-    override class
+    override static
     func repr(_ v:Set<Int>, gene:Gene) -> String
     {
         return v.map{String(describing: $0)}.joined(separator: ", ")
     }
 }
-/*
-def interpret_enumeration(e):
-    if type(e) is set:
-        return e
-    else:
-        return set(interpret_int(val) for val in e.split(',') if any(c in '0123456789' for c in val))
-*/
 
 final
-class StrDict:PolarDict<String>, StorableFormatDict, AssignableFormatDict
+class StrDict:BasicImmutableDict<String>, ImmutableFormatDict
 {
     static
     let absolute_defval:String = "" // this is never used but we need it for the protocol
-    class
+    static
     func interpret(_ str:String, gene:Gene) -> String?
     {
         return str

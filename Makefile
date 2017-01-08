@@ -14,9 +14,11 @@ LINKER_FLAGS = -Xlinker -L/usr/local/lib
 PATH_TO_SWIFT = /home/Sandbox/Swift/swift-$(SWIFT_VERSION)-ubuntu16.10/usr/bin
 endif
 
+debug:
+	swift build $(SWIFTC_FLAGS) $(LINKER_FLAGS)
 
 build:
-	swift build $(SWIFTC_FLAGS) $(LINKER_FLAGS)
+	swift build -c release $(SWIFTC_FLAGS) $(LINKER_FLAGS)
 
 test: build
 	swift test $(SWIFTC_FLAGS) $(LINKER_FLAGS)

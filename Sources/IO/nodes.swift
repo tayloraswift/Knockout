@@ -6,6 +6,17 @@ func t()
     // all this does is test the binomials because i didn’t write actual tests for them
     let gene = Gene(name: "foo", format: AttrFormat.binomial, defstr: "", formatinfo: GeneFormatInfo(symbol: "C"))
     print(Binomial("21K + 3 - 1K -+ K", gene: gene).repr(gene: gene))
+
+    for _ in 0..<10
+    {
+        var a:Node = Page([:])
+        a = Node([:])
+        a = Node([:])
+        print(type(of: a).name)
+        a = Page([:])
+        print(type(of: a).name)
+        _ = a
+    }
 }
 
 enum AttrFormat
@@ -63,6 +74,7 @@ struct ElementDNA: Sequence
         }
         self.DNA_lookup = D
         self.DNA = genes
+        print("new")
     }
 
     subscript(i:Int) -> Gene
@@ -83,6 +95,14 @@ struct ElementDNA: Sequence
 
 /////////////
 
+protocol ObjectMutableDictElement
+{
+    init(_:String, gene:Gene)
+    func repr(gene:Gene) -> String
+}
+
+/////////////
+
 protocol Element
 {
     static var name:String { get }
@@ -93,15 +113,20 @@ protocol Element
 
 class Node: Element
 {
-    static
-    let name:String = "_nullbox"
-    static
-    let DNA:ElementDNA = ElementDNA()
+    private struct _Node_DNA // for some reason structs in classes are automatically static
+    {
+        static let name:String = "_nullbox"
+        static let DNA:ElementDNA = ElementDNA()
+    }
+    class var name:String { return _Node_DNA.name }
+    class var DNA:ElementDNA { return _Node_DNA.DNA }
 
-    private
-    var _ATTRS_:[String: String]
+    typealias DisplayInfo = (str:String?, exists:Bool, valid:Bool)
 
-    private
+    private final
+    var _DISPL_:[String: Node.DisplayInfo] = [:]
+
+    private final
     let _typedicts_ = ( bool        : BoolDict(),
                         int         : IntDict(),
                         float       : FloatDict(),
@@ -113,35 +138,35 @@ class Node: Element
 
     init(_ attributes:[String: String])
     {
-        self._ATTRS_ = attributes
-        self.load_attributes()
+        self.load_attributes(attributes)
     }
 
-    private
-    func load_attributes()
+    private final
+    func load_attributes(_ attributes:[String: String])
     {
         for gene in type(of: self).DNA // this discards extraneous attributes (bad for forwards compatibility)
         {
-            self._assign(gene: gene, valstr: self._ATTRS_[gene.name] ?? gene.defstr)
+            self._assign(valstr: attributes[gene.name], gene: gene)
         }
     }
 
-    func assign(name:String, valstr:String)
+    final
+    func assign(valstr:String, name:String)
     {
         if let gene = type(of: self).DNA.get(name: name)
         {
-            self._assign(gene: gene, valstr: valstr)
+            self._assign(valstr: valstr, gene: gene)
         }
     }
 
-    private
-    func _assign(gene:Gene, valstr:String)
+    private final
+    func _assign(valstr:String?, gene:Gene)
     {
         self.select_dict(format: gene.format)
-        .assign(gene: gene, valstr: valstr, strdict: &self._ATTRS_)
+        .assign(valstr: valstr, gene: gene, dispdict: &self._DISPL_)
     }
 
-    private
+    private final
     func select_dict(format:AttrFormat) -> AssignableFormatDict
     {
         switch format
@@ -163,4 +188,15 @@ class Node: Element
                 return self._typedicts_.str
         }
     }
+}
+
+class Page:Node
+{
+    private struct _Node_DNA
+    {
+        static let name:String = "doc"
+        static let DNA:ElementDNA = ElementDNA()
+    }
+    override class var name:String { return _Node_DNA.name }
+    override class var DNA:ElementDNA { return _Node_DNA.DNA }
 }

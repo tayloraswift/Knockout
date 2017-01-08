@@ -134,7 +134,7 @@ extension Array where Element: Comparable
 
 extension String.CharacterView
 {
-    static
+    private static
     let whitespace = Set<Character>([9, 10, 11, 12, 13, 32, 133, 160, 5760, 8192, 8193, 8194, 8195, 8196, 8197, 8198, 8199, 8200, 8201, 8202, 8203, 8232, 8233, 8239, 8287, 12288].map{Character(UnicodeScalar($0)!)})
 
     public
@@ -153,6 +153,15 @@ extension String.CharacterView
         {
           $0 != removing
         })
+    }
+
+    public
+    func split_on_whitespace() -> [String]
+    {
+        return self.split(whereSeparator:
+        {
+            String.CharacterView.whitespace.contains($0)
+        }).map(String.init)
     }
 }
 

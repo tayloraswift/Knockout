@@ -19,13 +19,13 @@ func t()
     }
 }
 
-enum AttrFormat
+enum AttrFormat:String
 {
-    case bool, int, float, binomial, int_set // reformatted
-    case float_array, str//, rgba, one_D, multi_D, function, font_tag, para_tag // string storage
+    case bool = "b", int = "z", float = "f", binomial = "f + fK", int_set = "*z," // reformatted
+    case float_array = "*f", str = ""//, rgba, one_D, multi_D, function, font_tag, para_tag // string storage
 }
 
-struct Gene
+struct Gene:CustomStringConvertible
 {
     let name:String
     let format:AttrFormat
@@ -41,6 +41,11 @@ struct Gene
         self.defstr = defstr
         self.imply = imply
         self.formatinfo = formatinfo
+    }
+
+    var description:String
+    {
+        return "<Gene '\(name)' of type '\(format)'>"
     }
 }
 
@@ -95,7 +100,7 @@ struct ElementDNA: Sequence
 
 /////////////
 
-protocol ObjectMutableDictElement
+protocol ObjectReprElement
 {
     init(_:String, gene:Gene)
     func repr(gene:Gene) -> String

@@ -1,6 +1,6 @@
 import Taylor
 
-struct Binomial: ObjectMutableDictElement, Equatable
+struct Binomial: ObjectReprElement, Equatable
 {
     private static
     let minus = Set<UnicodeScalar>("--–".unicodeScalars),

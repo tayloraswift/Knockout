@@ -40,8 +40,8 @@ extension Array where Element: Comparable
     }
 }
 
-public
-class Ruler
+public final
+class Ruler:ObjectReprElement
 {
     private(set)
     var ruler:[Int]
@@ -55,6 +55,17 @@ class Ruler
     {
         self.ruler = points
         self.increment = increment
+    }
+
+    convenience
+    init(_ str:String, gene:Gene)
+    {
+        self.init(str.characters.split_on_whitespace().flatMap{IntDict.interpret($0, gene: gene)})
+    }
+
+    func repr(gene _:Gene) -> String
+    {
+        return self.ruler.map(String.init).joined(separator: " ")
     }
 
     // covered: what do you think

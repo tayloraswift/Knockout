@@ -25,6 +25,7 @@ protocol ImmutableFormatDict:AssignableFormatDict
 
 extension ImmutableFormatDict
 {
+    final
     func assign(valstr:String?, gene:Gene, dispdict:inout [String: Node.DisplayInfo])
     {
         let inputstr:String, exists:Bool
@@ -47,9 +48,17 @@ extension ImmutableFormatDict
         }
         else
         {
-            value = Self.interpret(gene.defstr, gene: gene) ?? Self.absolute_defval
+            if let v:T = Self.interpret(gene.defstr, gene: gene)//!
+            {
+                value = v
+            }
+            else
+            {
+                value = Self.absolute_defval
+                // we should never need Self.absolute_defval but i am paranoid
+                print("gene \(gene) has a bad default value '\(gene.defstr)'")
+            }
             valid = false
-            // we should never need Self.absolute_defval but i am paranoid
         }
         self.dict[gene.name] = value
         dispdict[gene.name] = Node.DisplayInfo(str: Self.is_immutable(inputstr),
@@ -78,10 +87,12 @@ extension MutatableFormatDict
     }
 }
 
-class BasicImmutableDict<T>
+class CustomReprDict<T>
 {
     //fileprivate
+    final
     var dict:[String: T] = [:]
+    final
     subscript(name:String) -> T?
     {
         get
@@ -91,16 +102,16 @@ class BasicImmutableDict<T>
     }
 }
 
-class BasicMutableDict<T>:BasicImmutableDict<T>
+class DefaultReprDict<T>:CustomReprDict<T>
 {
-    class
+    static
     func repr(_ v:T, gene:Gene) -> String
     {
         return String(describing: v)
     }
 }
 
-class ObjectMutableDict<T: ObjectMutableDictElement>:BasicMutableDict<T>
+class ObjectReprDict<T: ObjectReprElement>:CustomReprDict<T>
 {
     static
     func interpret(_ str:String, gene:Gene) -> T?
@@ -108,7 +119,7 @@ class ObjectMutableDict<T: ObjectMutableDictElement>:BasicMutableDict<T>
         return T(str, gene: gene)
     }
 
-    override static
+    static
     func repr(_ v:T, gene:Gene) -> String
     {
         return v.repr(gene: gene)
@@ -116,7 +127,7 @@ class ObjectMutableDict<T: ObjectMutableDictElement>:BasicMutableDict<T>
 }
 
 final
-class BoolDict:BasicMutableDict<Bool>, MutatableFormatDict
+class BoolDict:DefaultReprDict<Bool>, MutatableFormatDict
 {
     static
     let absolute_defval:Bool = false
@@ -143,7 +154,7 @@ class BoolDict:BasicMutableDict<Bool>, MutatableFormatDict
 }
 
 final
-class IntDict:BasicMutableDict<Int>, MutatableFormatDict
+class IntDict:DefaultReprDict<Int>, MutatableFormatDict
 {
     static
     let absolute_defval:Int = 0
@@ -155,7 +166,7 @@ class IntDict:BasicMutableDict<Int>, MutatableFormatDict
 }
 
 final
-class FloatDict:BasicMutableDict<Double>, MutatableFormatDict
+class FloatDict:CustomReprDict<Double>, MutatableFormatDict
 {
     static
     let absolute_defval:Double = 0
@@ -165,7 +176,7 @@ class FloatDict:BasicMutableDict<Double>, MutatableFormatDict
         return Double(str) // add arithmetic functionality later
     }
 
-    override static
+    static
     func repr(_ f:Double, gene:Gene) -> String
     {
         if f <= Double(Int.max) && abs(f.truncatingRemainder(dividingBy: 1)) < 0.00_000_1
@@ -181,14 +192,14 @@ class FloatDict:BasicMutableDict<Double>, MutatableFormatDict
 }
 
 final
-class BinomialDict:ObjectMutableDict<Binomial>, MutatableFormatDict
+class BinomialDict:ObjectReprDict<Binomial>, MutatableFormatDict
 {
     static
     let absolute_defval:Binomial = Binomial(β_0: 0, β_1: 0)
 }
 
 final
-class IntSetDict:BasicMutableDict<Set<Int>>, MutatableFormatDict
+class IntSetDict:CustomReprDict<Set<Int>>, MutatableFormatDict
 {
     static
     let absolute_defval:Set<Int> = Set()
@@ -201,7 +212,7 @@ class IntSetDict:BasicMutableDict<Set<Int>>, MutatableFormatDict
         })
     }
 
-    override static
+    static
     func repr(_ v:Set<Int>, gene:Gene) -> String
     {
         return v.map{String(describing: $0)}.joined(separator: ", ")
@@ -209,7 +220,7 @@ class IntSetDict:BasicMutableDict<Set<Int>>, MutatableFormatDict
 }
 
 final
-class StrDict:BasicImmutableDict<String>, ImmutableFormatDict
+class StrDict:DefaultReprDict<String>, ImmutableFormatDict
 {
     static
     let absolute_defval:String = "" // this is never used but we need it for the protocol
@@ -218,4 +229,11 @@ class StrDict:BasicImmutableDict<String>, ImmutableFormatDict
     {
         return str
     }
+}
+
+final
+class RulerDict:ObjectReprDict<Ruler>, MutatableFormatDict
+{
+    static
+    let absolute_defval:Ruler = Ruler()
 }

@@ -23,6 +23,7 @@ enum AttrFormat:String
 {
     case bool = "b", int = "z", float = "f", binomial = "f + fK", int_set = "*z," // reformatted
     case float_array = "*f", str = ""//, rgba, one_D, multi_D, function, font_tag, para_tag // string storage
+    case ruler = "*z"
 }
 
 struct Gene:CustomStringConvertible
@@ -123,7 +124,7 @@ class Node: Element
         static let name:String = "_nullbox"
         static let DNA:ElementDNA = ElementDNA()
     }
-    class var name:String { return _Node_DNA.name }
+    class var name:String { return _Node_DNA.name } // these might as well be instance methods
     class var DNA:ElementDNA { return _Node_DNA.DNA }
 
     typealias DisplayInfo = (str:String?, exists:Bool, valid:Bool)
@@ -132,16 +133,19 @@ class Node: Element
     var _DISPL_:[String: Node.DisplayInfo] = [:]
 
     private final
-    let _typedicts_ = ( bool        : BoolDict(),
+    let _typedicts_ = (bool        : BoolDict(),
                         int         : IntDict(),
                         float       : FloatDict(),
                         binomial    : BinomialDict(),
                         int_set     : IntSetDict(),
 
-                        float_array : FloatDict(),
-                        str         : StrDict())
+                        float_array : FloatArrayDict(),
+                        str         : StrDict(),
 
-    init(_ attributes:[String: String])
+                        ruler       : RulerDict())
+
+    init(_ attributes:[String: String]/* = [:]*/)
+    // whatever you do, don’t call this with defargs in swift <3.1 or you will be sad
     {
         self.load_attributes(attributes)
     }
@@ -191,7 +195,34 @@ class Node: Element
                 return self._typedicts_.float_array
             case .str:
                 return self._typedicts_.str
+
+            case .ruler:
+                return self._typedicts_.ruler
         }
+    }
+
+    final
+    var description:String
+    {
+        return type(of: self).name + " " + type(of: self).DNA.flatMap
+        {
+            gene -> String? in
+
+            guard let (str, exists, _) = self._DISPL_[gene.name]
+            else
+            {
+                print("attribute '\(gene.name)' was not in display dictionary (y’all done fucked up)")
+                return nil
+            }
+            if exists
+            {
+                if let str = str ?? self.select_dict(format: gene.format).extract(gene)
+                {
+                    return "\(gene.name)=\"\(str)\""
+                }
+            }
+            return nil
+        }.joined(separator: " ")
     }
 }
 
@@ -202,6 +233,6 @@ class Page:Node
         static let name:String = "doc"
         static let DNA:ElementDNA = ElementDNA()
     }
-    override class var name:String { return _Node_DNA.name }
-    override class var DNA:ElementDNA { return _Node_DNA.DNA }
+    override static var name:String { return _Node_DNA.name }
+    override static var DNA:ElementDNA { return _Node_DNA.DNA }
 }

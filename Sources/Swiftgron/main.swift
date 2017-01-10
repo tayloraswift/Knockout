@@ -24,9 +24,9 @@ import func SGLOpenGL.glClear
 import func SGLOpenGL.glBlendFunc
 import func SGLOpenGL.glEnable
 
-import func IO.t
+import func Model.t
 
-IO.t()
+Model.t()
 
 func error_callback(_ error:Int32, _ description:UnsafePointer<CChar>?)
 {

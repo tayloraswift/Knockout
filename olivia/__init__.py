@@ -205,12 +205,15 @@ class Gradient(object):
         yield from self._colors[0]
     
 # for function plotter
+_fail = '\033[91m'
+_endc = '\033[0m'
+_bold = '\033[1m'
 from data.userfunctions import *
 try:
     from sympy.utilities import lambdify
     from sympy import sympify, Symbol
 except ImportError:
-    print('WARNING: SymPy not available')
+    print(_bold + _fail + 'WARNING: SymPy is not available. Style lambdas will fail.' + _endc + _fail + ' \n\tTry ' + _bold + 'pip3 install sympy' + _endc)
 
     def lambdify(variables, expression):
         return lambda * args: None

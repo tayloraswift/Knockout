@@ -64,7 +64,7 @@ class Table_td(Plane):
 
 class Table_tr(Box):
     name = 'tr'
-    DNA = [('class', 'blocktc', '')]
+    DNA = [('class', 'blocktc', ''), ('cell_top', 'float', 0), ('cell_bottom', 'float', 0)]
 
 class Table(Blockelement):
     name = 'table'
@@ -113,10 +113,11 @@ class Table(Blockelement):
         
         row_u = [frames.read_u()] * (len(self._MATRIX) + 1)
         part = self._MATRIX.partitions
+        cell_top    = self['cell_top']
         cell_bottom = self['cell_bottom']
         for r, row in enumerate(self.content):
             ol = P_table + row['class']
-            frames.space(self['cell_top'])
+            frames.space(cell_top + row['cell_top'])
             for i, cell in enumerate(row.content):
                 if not i:
                     cell_ol = ol + self['cl_tleft']
@@ -126,7 +127,7 @@ class Table(Blockelement):
                 frames.save_u()
                 cell.layout(Subcell(frames, part[cell.col], part[cell.col + cell['colspan']]), 
                             u = frames.read_u(), overlay = cell_ol)
-                bottom = frames.read_u() + cell_bottom
+                bottom = frames.read_u() + cell_bottom + row['cell_bottom']
                 frames.restore_u()
                 
                 ki = r + cell['rowspan']

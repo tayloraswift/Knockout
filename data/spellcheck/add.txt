@@ -99,3 +99,10 @@ SocketIO
 underserved
 urls
 usernames
+phototransistors
+photosensor
+lightpath
+photosensors
+phototransistor
+Arduino
+photocurrent

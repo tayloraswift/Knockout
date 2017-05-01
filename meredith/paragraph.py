@@ -183,8 +183,9 @@ class Plane(Box):
                     chained = True
                 if BSTYLE['keep_together']:
                     frames.freeze()
+                # print('    preparing to layout (freeze = ' + (str(frames._break_on_split) if hasattr(frames, '_break_on_split') else '') + ' chained = ' + str(chained)  + ')')
+                # print(block.content[:10])
             try:
-
                 halt, wheels = block.layout(frames, BSTYLE, wheels, overlay, preceeding, halt and blocknumber > b2)
                 if BSTYLE['keep_together']:
                     frames.unfreeze()
@@ -195,14 +196,18 @@ class Plane(Box):
                 preceeding = block
                 blocknumber += 1
                 new = True
+                # print('    successful layout (freeze = ' + (str(frames._break_on_split) if hasattr(frames, '_break_on_split') else '') + ' chained = ' + str(chained)  + ')')
             except detectexception:
+                # print(' -> failed layout (chained = ' + str(chained) + ', blockn = ' + str(blocknumber) + ')')
                 if chained:
                     try:
                         blocknumber -= next(i for i, B in enumerate(reversed(self.content[:blocknumber])) if not calc_bstyle(B)['keep_with_next'])
                     except StopIteration:
                         blocknumber = 0
                     chained = False
+                    frames.clearfreeze()
                     new = 2
+                    # print('    rewound to blockn = ' + str(blocknumber))
                 else:
                     new = False
                 continue

@@ -187,6 +187,9 @@ class Frames(list):
         if self._break_on_split < 0:
             raise RuntimeError
     
+    def clearfreeze(self):
+        self._break_on_split = 0
+        
     ## used by editor ##
     
     def which_point(self, x0, y0, radius):

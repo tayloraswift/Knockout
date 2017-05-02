@@ -176,6 +176,13 @@ class Plane(Box):
                 BSTYLE = calc_bstyle(block)
                 if new == 1:
                     frames.space(gap + BSTYLE['margin_top'])
+                elif new == 2:
+                    if blocknumber > 0:
+                        preceeding = self.content[blocknumber - 1]
+                        wheels = preceeding.wheels
+                    else:
+                        preceeding = None
+                        wheels = Wheels()
                 gap = BSTYLE['margin_bottom']
                 if BSTYLE['keep_with_next']:
                     if not chained:

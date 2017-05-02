@@ -106,3 +106,4 @@ photosensors
 phototransistor
 Arduino
 photocurrent
+photovoltage
